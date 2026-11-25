@@ -6,7 +6,7 @@
 set -euo pipefail
 for i in 1 2 3; do
   pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny dbus \
-    wireplumber pipewire-pulse libpulse pipewire-jack jack-example-tools >/dev/null && break
+    wireplumber pipewire-pulse libpulse pipewire-jack jack-example-tools fontconfig >/dev/null && break
   (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
 done
 id builder >/dev/null 2>&1 || useradd -m builder
