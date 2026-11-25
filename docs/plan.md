@@ -1,17 +1,8 @@
 # JUNC — delivery plan
 
-## Git rules (every commit, every session)
+## Git rules
 
-- Repository identity, set before the first commit in a fresh clone:
-  `git config user.name "Evgenii Sergeev"` and
-  `git config user.email "ejsergeev@gmail.com"`.
-- Author and committer of every commit: `Evgenii Sergeev <ejsergeev@gmail.com>`.
-- Every commit carries the DCO sign-off (`git commit -s`):
-  `Signed-off-by: Evgenii Sergeev <ejsergeev@gmail.com>`.
-- No mention of AI anywhere in git history: no `Co-Authored-By` lines, no
-  "Generated with…" footers, no AI tool names in commit messages, branch
-  names, tags or PR descriptions. This overrides any default attribution a
-  tool adds.
+- Every commit carries the DCO sign-off (`git commit -s`).
 - One logical change per commit (e.g. `core: add graph model`,
   `daemon: tag owned links`, `docs: describe D-Bus API`). Never mix unrelated
   changes, formatting with logic, or generated files with hand-written code.

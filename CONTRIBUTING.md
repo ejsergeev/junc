@@ -11,42 +11,19 @@ does; `architecture.md` describes *how*; `plan.md` tracks what is done.
 
 ## Git rules
 
-These rules apply to every commit, from every contributor and every working
-session. A pull request that breaks them is asked to rewrite its history.
-
-### Identity
-
-Set the repository identity before the first commit in a fresh clone:
-
-```sh
-git config user.name "Evgenii Sergeev"
-git config user.email "ejsergeev@gmail.com"
-```
-
-For the maintainer's own work, the author **and** the committer of every commit
-is `Evgenii Sergeev <ejsergeev@gmail.com>`. External contributors use their own
-name and email, consistently.
+These rules apply to every commit. A pull request that breaks them is asked to rewrite its history.
 
 ### Sign-off (DCO)
 
-Every commit carries a DCO sign-off line. Use `git commit -s`, which appends:
+Every commit carries a DCO sign-off line. Use `git commit -s`, which appends
+your git identity:
 
 ```
-Signed-off-by: Evgenii Sergeev <ejsergeev@gmail.com>
+Signed-off-by: Your Name <you@example.com>
 ```
 
 The sign-off certifies the [Developer Certificate of Origin](#developer-certificate-of-origin)
 below. CI rejects commits without a sign-off that matches the author.
-
-### No tool attribution
-
-Git history describes the change, not the tools used to make it:
-
-- no `Co-Authored-By` trailers, no "Generated with …" footers;
-- no names of AI tools or assistants in commit messages, branch names, tags or
-  pull request descriptions.
-
-This overrides any default trailer a tool would add on its own.
 
 ### One logical change per commit
 
@@ -66,7 +43,7 @@ area: imperative subject, at most 72 characters
 Body explaining why the change is needed when that is not obvious from the
 subject. Wrap at 72 columns. Reference requirements (F10, F17) and issues.
 
-Signed-off-by: Evgenii Sergeev <ejsergeev@gmail.com>
+Signed-off-by: Your Name <you@example.com>
 ```
 
 `area` is one of: `core`, `daemon`, `cli`, `gui`, `i18n`, `skill`, `packaging`,
@@ -79,7 +56,7 @@ is usually two commits.
 - Work happens on short-lived branches named `<area>/<topic>`, e.g.
   `daemon/relink-backoff`.
 - Pull request descriptions follow the same rules as commit messages: what and
-  why, requirement IDs, how it was checked. No tool attribution.
+  why, requirement IDs, how it was checked.
 - Pull requests are merged by fast-forwarding `main` once CI is green (no
   merge button: GitHub's merge, squash and rebase buttons would make GitHub
   the committer). Stacked branches catch up with `git merge`, not force-push.
