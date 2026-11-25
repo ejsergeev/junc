@@ -15,6 +15,11 @@ import { JPort } from "components/port.slint";
 import { JLink } from "components/link.slint";
 import { JMeter } from "components/meter.slint";
 import { JChannelGroup } from "components/channel-group.slint";
+import { JPicker } from "components/picker.slint";
+import { JMenu } from "components/menu.slint";
+import { JRadioGroup } from "components/radio-group.slint";
+import { JInlineField } from "components/inline-field.slint";
+import { JConfirm } from "components/confirm.slint";
 
 component Row inherits HorizontalLayout {
     in property <string> name;
@@ -37,6 +42,8 @@ export component GalleryWindow inherits Window {
     background: Tokens.surface-window;
     default-font-family: Tokens.font-family;
     default-font-size: Tokens.type-body;
+    // What the last callback was, for tests.
+    out property <string> last-event;
 
     VerticalLayout {
         padding: Tokens.space-panel-pad;
@@ -155,6 +162,58 @@ export component GalleryWindow inherits Window {
                 linked: 2;
                 expanded: true;
                 channels: [{ label: "In 1", level: -18, linked: true }, { label: "In 2", level: -22, linked: true }];
+            }
+        }
+        Row {
+            name: "Popovers";
+            picker := JPicker {
+                title: "Add input";
+                placeholder: "Search apps and devices";
+                items: [
+                    { group: "Apps", text: "Spotify", detail: "playing", added: true },
+                    { group: "", text: "Firefox", detail: "", added: false },
+                    { group: "Devices", text: "USB Microphone", detail: "2 ch", added: false },
+                ];
+                picked(i) => { root.last-event = "picked " + i; }
+                closed => { root.last-event = "picker closed"; }
+            }
+            JMenu {
+                title: "New";
+                items: [
+                    { text: "Junction", detail: "A virtual mic and speaker", shortcut: "Ctrl+Shift+J", enabled: true },
+                    { text: "Cable", detail: "One app straight into another", shortcut: "Ctrl+Shift+K", enabled: true },
+                    { text: "From template…", detail: "", shortcut: "", enabled: true },
+                    { text: "Import preset…", detail: "", shortcut: "", enabled: true },
+                ];
+                activated(i) => { root.last-event = "menu " + i; }
+            }
+            JRadioGroup {
+                width: 160px;
+                label: "Add Bus channels";
+                options: ["Stereo pair", "Mono", "Two pairs"];
+                changed(i) => { root.last-event = "radio " + i; }
+            }
+        }
+        Row {
+            name: "Rename";
+            JInlineField {
+                width: 420px;
+                label: "Junction name";
+                original: "Virtual Mic";
+                text: "Virtual Mic";
+                font-size: Tokens.type-title;
+                accepted(t) => { root.last-event = "renamed " + t; }
+                cancelled => { root.last-event = "rename cancelled"; }
+            }
+        }
+        Row {
+            name: "Confirm";
+            JConfirm {
+                title: "Delete “Virtual Mic for Zoom”?";
+                consequences: ["Its routing stops", "Apps using it fall back to the default mic"];
+                confirm-text: "Delete";
+                confirmed => { root.last-event = "confirmed"; }
+                cancelled => { root.last-event = "cancelled"; }
             }
         }
         Row {

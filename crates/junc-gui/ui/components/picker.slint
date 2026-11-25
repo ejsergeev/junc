@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Picker (Spec): a popover on surface.window with an accent popover border,
+// padding 14, width 320; a search field in the focus state; group captions
+// in type.caption; 28px rows. The cursor row has the hover fill and border
+// and accent text; added items are disabled with "added". ↑ ↓ move, Enter
+// adds, Esc closes. The owner filters the rows as the search text changes.
+// A11y fixes from the validation: the root is exposed as a labelled group
+// (Slint has no dialog role; the best available), the search field is
+// labelled, focus stays inside until it closes.
+
+import { Tokens } from "../tokens.slint";
+import { ControlState } from "state.slint";
+
+export struct PickerItem {
+    // Caption shown above this item when it starts a group.
+    group: string,
+    text: string,
+    detail: string,
+    added: bool,
+}
+
+export component JPicker inherits Rectangle {
+    in property <string> title;
+    in property <string> placeholder;
+    in property <[PickerItem]> items;
+    in-out property <string> search;
+    in-out property <int> cursor: 0;
+    callback picked(int);
+    callback closed();
+    callback search-edited(string);
+
+    width: 320px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: root.title;
+
+    public function open() { field.focus(); }
+    function step(d: int) {
+        root.cursor = clamp(root.cursor + d, 0, max(0, root.items.length - 1));
+    }
+    function choose() {
+        if root.cursor < root.items.length && !root.items[root.cursor].added {
+            root.picked(root.cursor);
+        }
+    }
+
+    VerticalLayout {
+        padding: Tokens.space-popup-pad;
+        spacing: Tokens.space-row-gap;
+        Rectangle {
+            height: Tokens.size-control;
+            background: Tokens.control-focus-fill;
+            border-width: Tokens.border;
+            border-color: Tokens.control-focus-border;
+            field := TextInput {
+                x: Tokens.space-control-pad-x;
+                width: parent.width - 2 * Tokens.space-control-pad-x;
+                height: parent.height;
+                vertical-alignment: center;
+                text <=> root.search;
+                color: Tokens.text-strong;
+                selection-background-color: Tokens.text-selection-fill;
+                font-size: Tokens.type-body;
+                single-line: true;
+                accessible-role: text-input;
+                accessible-label: root.placeholder;
+                accessible-placeholder-text: root.placeholder;
+                edited => { root.cursor = 0; root.search-edited(self.text); }
+                key-pressed(e) => {
+                    if e.text == Key.DownArrow { root.step(1); return accept; }
+                    if e.text == Key.UpArrow { root.step(-1); return accept; }
+                    if e.text == "\n" { root.choose(); return accept; }
+                    if e.text == Key.Escape { root.closed(); return accept; }
+                    // Focus trap: Tab stays in the picker.
+                    if e.text == Key.Tab || e.text == Key.Backtab { return accept; }
+                    reject
+                }
+            }
+            if root.search == "": Text {
+                x: Tokens.space-control-pad-x;
+                height: parent.height;
+                vertical-alignment: center;
+                text: root.placeholder;
+                color: Tokens.text-subtle;
+                accessible-role: none;
+            }
+        }
+        for item[i] in root.items: VerticalLayout {
+            if item.group != "": Text {
+                text: item.group;
+                font-size: Tokens.type-caption;
+                color: Tokens.text-subtle;
+                height: 18px;
+                vertical-alignment: bottom;
+            }
+            Rectangle {
+                height: Tokens.size-control;
+                property <bool> on: i == root.cursor;
+                background: self.on ? Tokens.control-hover-fill : transparent;
+                border-width: self.on ? Tokens.border : 0;
+                border-color: Tokens.control-hover-border;
+                accessible-role: list-item;
+                accessible-label: item.text;
+                accessible-description: item.added ? @tr("added") : item.detail;
+                accessible-enabled: !item.added;
+                accessible-item-selectable: true;
+                accessible-item-selected: self.on;
+                accessible-item-index: i;
+                accessible-item-count: root.items.length;
+                accessible-action-default => { root.cursor = i; root.choose(); }
+                TouchArea {
+                    clicked => { root.cursor = i; root.choose(); }
+                    moved => { root.cursor = i; }
+                }
+                HorizontalLayout {
+                    padding-left: Tokens.space-row-pad-x;
+                    padding-right: Tokens.space-row-pad-x;
+                    spacing: Tokens.space-row-gap;
+                    Text {
+                        text: item.text;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                        color: item.added ? Tokens.text-subtle : i == root.cursor ? Tokens.accent : Tokens.text-default;
+                        accessible-role: none;
+                    }
+                    Text {
+                        text: item.added ? @tr("added") : item.detail;
+                        vertical-alignment: center;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                        accessible-role: none;
+                    }
+                }
+            }
+        }
+    }
+}

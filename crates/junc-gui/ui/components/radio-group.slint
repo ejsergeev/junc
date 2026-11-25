@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Radio group (Spec: Add Bus channels popover): one choice of several;
+// ↑ ↓ change it, Space picks the focused one.
+
+import { Tokens } from "../tokens.slint";
+
+export component JRadioGroup inherits Rectangle {
+    forward-focus: keys;
+    in property <string> label;
+    in property <[string]> options;
+    in-out property <int> selected: 0;
+    callback changed(int);
+    accessible-role: radio-group;
+    accessible-label: root.label;
+
+    function pick(i: int) {
+        if i >= 0 && i < root.options.length && i != root.selected {
+            root.selected = i;
+            root.changed(i);
+        }
+    }
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.DownArrow { root.pick(root.selected + 1); return accept; }
+            if e.text == Key.UpArrow { root.pick(root.selected - 1); return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        spacing: Tokens.space-label-gap;
+        for o[i] in root.options: Rectangle {
+            height: Tokens.size-control;
+            accessible-role: radio-button;
+            accessible-label: o;
+            accessible-checkable: true;
+            accessible-checked: i == root.selected;
+            accessible-action-default => { root.pick(i); }
+            TouchArea { clicked => { keys.focus(); root.pick(i); } }
+            HorizontalLayout {
+                spacing: Tokens.space-row-gap;
+                Rectangle {
+                    width: 12px;
+                    height: 12px;
+                    y: (parent.height - self.height) / 2;
+                    border-width: Tokens.border;
+                    border-color: i == root.selected ? Tokens.accent : Tokens.control-normal-border;
+                    background: Tokens.surface-window;
+                    if i == root.selected: Rectangle {
+                        width: 6px;
+                        height: 6px;
+                        background: Tokens.accent;
+                    }
+                }
+                Text {
+                    text: o;
+                    vertical-alignment: center;
+                    color: keys.has-focus && i == root.selected ? Tokens.accent : Tokens.text-default;
+                    accessible-role: none;
+                }
+            }
+        }
+    }
+}

@@ -9,6 +9,7 @@ import { Tokens } from "../tokens.slint";
 import { ControlState } from "state.slint";
 
 export component JSwitch inherits Rectangle {
+    forward-focus: focus;
     // What it turns on and off, e.g. "Zoom Mic".
     in property <string> label;
     in property <bool> enabled: true;

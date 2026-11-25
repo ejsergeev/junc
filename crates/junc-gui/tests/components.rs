@@ -136,3 +136,65 @@ fn cards_ports_and_channel_groups_describe_their_state() {
         Some("2 of 2 linked")
     );
 }
+
+/// A list row (picker, menu) with this label; cards may share the name.
+fn item(w: &GalleryWindow, label: &str) -> ElementHandle {
+    ElementHandle::find_by_accessible_label(w, label)
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::ListItem))
+        .unwrap_or_else(|| panic!("no list item {label:?}"))
+}
+
+#[test]
+fn popovers_and_dialogs_follow_the_keyboard_rules() {
+    i_slint_backend_testing::init_no_event_loop();
+    let w = GalleryWindow::new().expect("gallery");
+    w.show().expect("show");
+
+    // Picker: a labelled root, a labelled search field, rows that say
+    // "added"; Enter on an added row does nothing, on another it picks.
+    let picker = one(&w, "Add input");
+    assert!(picker.accessible_role().is_some());
+    let search = one(&w, "Search apps and devices");
+    assert_eq!(
+        search.accessible_placeholder_text().as_deref(),
+        Some("Search apps and devices")
+    );
+    let spotify = item(&w, "Spotify");
+    assert_eq!(spotify.accessible_description().as_deref(), Some("added"));
+    assert_eq!(spotify.accessible_enabled(), Some(false));
+    spotify.invoke_accessible_default_action();
+    assert_eq!(w.get_last_event(), "", "an added row cannot be picked");
+    item(&w, "USB Microphone").invoke_accessible_default_action();
+    assert_eq!(w.get_last_event(), "picked 2");
+    assert_eq!(
+        item(&w, "USB Microphone").accessible_item_selected(),
+        Some(true)
+    );
+
+    // Menu items run; radio buttons are checkable and exclusive.
+    one(&w, "Cable").invoke_accessible_default_action();
+    assert_eq!(w.get_last_event(), "menu 1");
+    let mono = one(&w, "Mono");
+    mono.invoke_accessible_default_action();
+    assert_eq!(w.get_last_event(), "radio 1");
+    assert_eq!(mono.accessible_checked(), Some(true));
+    assert_eq!(one(&w, "Stereo pair").accessible_checked(), Some(false));
+
+    // Confirm: the destructive button needs Ctrl+Enter; Esc cancels.
+    let delete = ElementHandle::find_by_accessible_label(&w, "Delete")
+        .find(|e| e.accessible_description().as_deref() == Some("Ctrl+Enter"))
+        .expect("delete button");
+    delete.invoke_accessible_default_action();
+    assert_eq!(
+        w.get_last_event(),
+        "confirmed",
+        "a click (default action) confirms"
+    );
+
+    // Rename: labelled field.
+    assert!(
+        ElementHandle::find_by_accessible_label(&w, "Junction name")
+            .next()
+            .is_some()
+    );
+}

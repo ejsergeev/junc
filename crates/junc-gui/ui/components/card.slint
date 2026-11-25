@@ -15,6 +15,7 @@ import { JSlider } from "slider.slint";
 import { JButton } from "button.slint";
 
 export component JCard inherits Rectangle {
+    forward-focus: focus;
     in property <string> title;
     in property <string> glyph;
     in-out property <bool> on: true;

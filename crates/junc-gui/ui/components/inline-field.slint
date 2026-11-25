@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Inline text field (Spec: rename): the picker search's chrome (hover
+// fill, padding 10) with a 1px accent border while editing, in the type of
+// the text it replaces. The current text starts selected (fg 35 %). Enter
+// saves, Esc restores, leaving it saves. Hint chips sit beside it. A11y
+// fix: it is labelled.
+
+import { Tokens } from "../tokens.slint";
+import { JKbd } from "kbd.slint";
+
+export component JInlineField inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> original;
+    in property <length> font-size: Tokens.type-body;
+    in-out property <string> text;
+    callback accepted(string);
+    callback cancelled();
+    spacing: Tokens.space-row-gap;
+
+    public function edit() {
+        root.text = root.original;
+        input.focus();
+        input.select-all();
+    }
+
+    Rectangle {
+        horizontal-stretch: 1;
+        height: root.font-size + 2 * Tokens.space-control-pad-y + 4px;
+        background: Tokens.control-hover-fill;
+        border-width: Tokens.border;
+        border-color: Tokens.accent;
+        input := TextInput {
+            x: Tokens.space-control-pad-x;
+            width: parent.width - 2 * Tokens.space-control-pad-x;
+            height: parent.height;
+            vertical-alignment: center;
+            single-line: true;
+            text <=> root.text;
+            font-size: root.font-size;
+            color: Tokens.text-strong;
+            selection-background-color: Tokens.text-selection-fill;
+            accessible-label: root.label;
+            key-pressed(e) => {
+                if e.text == Key.Escape {
+                    root.text = root.original;
+                    root.cancelled();
+                    return accept;
+                }
+                reject
+            }
+            accepted => { root.accepted(self.text); }
+            changed has-focus => {
+                if !self.has-focus && root.text != root.original { root.accepted(root.text); }
+            }
+        }
+    }
+    JKbd { text: "Enter"; y: (parent.height - self.height) / 2; }
+    Text { text: @tr("save"); color: Tokens.text-subtle; vertical-alignment: center; font-size: Tokens.type-body-small; }
+    JKbd { text: "Esc"; y: (parent.height - self.height) / 2; }
+    Text { text: @tr("cancel"); color: Tokens.text-subtle; vertical-alignment: center; font-size: Tokens.type-body-small; }
+}

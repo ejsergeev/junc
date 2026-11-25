@@ -1,0 +1,93 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Menu (Spec: New menu, context menu): [popups] style, surface.window with
+// an accent 2px border, width 320, rows with a one-line description and a
+// shortcut. ↑ ↓ move, Enter runs, Esc closes.
+
+import { Tokens } from "../tokens.slint";
+import { JKbd } from "kbd.slint";
+
+export struct MenuItem {
+    text: string,
+    detail: string,
+    shortcut: string,
+    enabled: bool,
+}
+
+export component JMenu inherits Rectangle {
+    forward-focus: keys;
+    in property <string> title;
+    in property <[MenuItem]> items;
+    in-out property <int> cursor: 0;
+    callback activated(int);
+    callback closed();
+
+    width: 320px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: list;
+    accessible-label: root.title;
+
+    public function open() { keys.focus(); }
+    function run(i: int) {
+        if i < root.items.length && root.items[i].enabled { root.activated(i); }
+    }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.DownArrow { root.cursor = min(root.cursor + 1, root.items.length - 1); return accept; }
+            if e.text == Key.UpArrow { root.cursor = max(root.cursor - 1, 0); return accept; }
+            if e.text == "\n" { root.run(root.cursor); return accept; }
+            if e.text == Key.Escape { root.closed(); return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        padding: 6px;
+        for item[i] in root.items: Rectangle {
+            height: item.detail == "" ? Tokens.size-control : 42px * Tokens.scale;
+            property <bool> on: i == root.cursor;
+            background: self.on ? Tokens.control-hover-fill : transparent;
+            border-width: self.on ? Tokens.border : 0;
+            border-color: Tokens.control-hover-border;
+            opacity: item.enabled ? 1 : 0.45;
+            accessible-role: list-item;
+            accessible-label: item.text;
+            accessible-description: item.detail;
+            accessible-enabled: item.enabled;
+            accessible-item-selectable: true;
+            accessible-item-selected: self.on;
+            accessible-item-index: i;
+            accessible-item-count: root.items.length;
+            accessible-action-default => { root.run(i); }
+            TouchArea {
+                clicked => { root.run(i); }
+                moved => { root.cursor = i; }
+            }
+            HorizontalLayout {
+                padding-left: Tokens.space-row-pad-x;
+                padding-right: Tokens.space-row-pad-x;
+                spacing: Tokens.space-row-gap;
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 1;
+                    Text {
+                        text: item.text;
+                        color: i == root.cursor ? Tokens.accent : Tokens.text-strong;
+                        accessible-role: none;
+                    }
+                    if item.detail != "": Text {
+                        text: item.detail;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                        accessible-role: none;
+                    }
+                }
+                if item.shortcut != "": JKbd {
+                    y: (parent.height - self.height) / 2;
+                    text: item.shortcut;
+                }
+            }
+        }
+    }
+}

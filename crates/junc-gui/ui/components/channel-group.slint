@@ -15,6 +15,7 @@ export struct Channel {
 }
 
 export component JChannelGroup inherits Rectangle {
+    forward-focus: focus;
     in property <string> label;
     in property <[Channel]> channels;
     in-out property <bool> expanded;

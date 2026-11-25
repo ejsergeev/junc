@@ -9,6 +9,7 @@
 import { Tokens } from "../tokens.slint";
 
 export component JPort inherits Rectangle {
+    forward-focus: focus;
     // What a screen reader says, e.g. "Spotify Ch 1, linked to Bus Ch 1".
     in property <string> label;
     // "free", "linked", "offline", "valid", "snap"

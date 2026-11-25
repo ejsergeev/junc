@@ -11,6 +11,7 @@ import { ControlState } from "state.slint";
 import { JTooltip } from "tooltip.slint";
 
 export component JButton inherits Rectangle {
+    forward-focus: focus;
     in property <string> text;
     // A Nerd Font glyph, e.g. "\u{f0415}" (nf-md-plus).
     in property <string> icon;
@@ -19,6 +20,8 @@ export component JButton inherits Rectangle {
     in property <bool> enabled: true;
     in property <bool> primary;
     in property <bool> destructive;
+    // Destructive confirmations: only Ctrl+Enter (or a click) runs it.
+    in property <bool> needs-ctrl;
     // Toggle buttons (Show Listen).
     in property <bool> checkable;
     in-out property <bool> checked;
@@ -74,6 +77,13 @@ export component JButton inherits Rectangle {
     focus := FocusScope {
         enabled: root.enabled;
         key-pressed(e) => {
+            if root.needs-ctrl {
+                if e.text == "\n" && e.modifiers.control {
+                    root.activate();
+                    return accept;
+                }
+                return reject;
+            }
             if e.text == " " || e.text == "\n" {
                 root.activate();
                 return accept;

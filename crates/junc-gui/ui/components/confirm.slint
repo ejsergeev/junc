@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Confirm dialog (Spec): a panel on surface.window with the popover
+// border, padding 18; title in type.heading, the consequences listed on
+// surface.card, buttons right-aligned. Focus starts on Cancel; the
+// destructive button needs Ctrl+Enter; Esc cancels. The owner draws the
+// 50 % surface.window scrim behind it.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+import { JKbd } from "kbd.slint";
+
+export component JConfirm inherits Rectangle {
+    in property <string> title;
+    in property <[string]> consequences;
+    in property <string> confirm-text;
+    callback confirmed();
+    callback cancelled();
+
+    width: 420px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: root.title;
+
+    public function open() { cancel.focus(); }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.Escape { root.cancelled(); return accept; }
+            if e.text == "\n" && e.modifiers.control { root.confirmed(); return accept; }
+            reject
+        }
+        VerticalLayout {
+            padding: Tokens.space-panel-pad;
+            spacing: Tokens.space-panel-gap;
+            Text {
+                text: root.title;
+                font-size: Tokens.type-heading;
+                color: Tokens.text-strong;
+                wrap: word-wrap;
+            }
+            Rectangle {
+                background: Tokens.surface-card;
+                VerticalLayout {
+                    padding: 10px;
+                    spacing: Tokens.space-label-gap;
+                    for c in root.consequences: Text {
+                        text: "· " + c;
+                        color: Tokens.text-default;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+            HorizontalLayout {
+                alignment: end;
+                spacing: Tokens.space-row-gap;
+                cancel := JButton {
+                    text: @tr("Cancel");
+                    shortcut: "Esc";
+                    clicked => { root.cancelled(); }
+                }
+                JButton {
+                    text: root.confirm-text;
+                    destructive: true;
+                    needs-ctrl: true;
+                    shortcut: "Ctrl+Enter";
+                    clicked => { root.confirmed(); }
+                }
+            }
+        }
+    }
+}

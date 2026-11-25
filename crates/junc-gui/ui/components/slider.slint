@@ -7,6 +7,7 @@
 import { Tokens } from "../tokens.slint";
 
 export component JSlider inherits Rectangle {
+    forward-focus: focus;
     in property <string> label;
     in property <int> minimum: 0;
     in property <int> maximum: 100;
