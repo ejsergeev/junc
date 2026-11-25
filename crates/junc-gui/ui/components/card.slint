@@ -126,7 +126,8 @@ export component JCard inherits Rectangle {
                 padding-right: 10px * Tokens.scale;
                 spacing: Tokens.space-row-gap;
                 if root.state == "ok": JButton {
-                    text: (root.options-open ? "\u{f0140} " : "\u{f0142} ") + @tr("Options");
+                    icon: root.options-open ? "\u{f0140}" : "\u{f0142}";
+                    text: @tr("Options");
                     checkable: true;
                     checked <=> root.options-open;
                 }

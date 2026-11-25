@@ -23,7 +23,8 @@ export component JSlider inherits Rectangle {
 
     accessible-role: slider;
     accessible-label: root.label;
-    accessible-value: root.value + "%";
+    // A plain number: AT-SPI exposes its Value interface only for one.
+    accessible-value: root.value;
     accessible-value-minimum: root.minimum;
     accessible-value-maximum: root.maximum;
     accessible-value-step: 1;

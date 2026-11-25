@@ -62,25 +62,25 @@ fn controls_work_from_the_keyboard_and_describe_themselves() {
     key(&w, Key::Tab);
     key(&w, Key::Tab);
     let volume = one(&w, "Zoom Mic volume");
-    assert_eq!(volume.accessible_value().as_deref(), Some("50%"));
+    assert_eq!(volume.accessible_value().as_deref(), Some("50"));
     key(&w, Key::RightArrow);
-    assert_eq!(volume.accessible_value().as_deref(), Some("51%"));
+    assert_eq!(volume.accessible_value().as_deref(), Some("51"));
     with_shift(&w, Key::RightArrow);
-    assert_eq!(volume.accessible_value().as_deref(), Some("61%"));
+    assert_eq!(volume.accessible_value().as_deref(), Some("61"));
     key(&w, Key::PageDown);
-    assert_eq!(volume.accessible_value().as_deref(), Some("51%"));
+    assert_eq!(volume.accessible_value().as_deref(), Some("51"));
     key(&w, Key::Home);
-    assert_eq!(volume.accessible_value().as_deref(), Some("0%"));
+    assert_eq!(volume.accessible_value().as_deref(), Some("0"));
     key(&w, Key::End);
-    assert_eq!(volume.accessible_value().as_deref(), Some("100%"));
+    assert_eq!(volume.accessible_value().as_deref(), Some("100"));
     assert_eq!(volume.accessible_value_maximum(), Some(100.0));
     // A boost slider stops End at 100 %, not at its 150 % top.
     key(&w, Key::Tab);
     key(&w, Key::End);
     let boost = one(&w, "Boost");
-    assert_eq!(boost.accessible_value().as_deref(), Some("100%"));
+    assert_eq!(boost.accessible_value().as_deref(), Some("100"));
     boost.invoke_accessible_increment_action();
-    assert_eq!(boost.accessible_value().as_deref(), Some("101%"));
+    assert_eq!(boost.accessible_value().as_deref(), Some("101"));
 
     // Buttons: labels, shortcut as description, disabled state.
     let add = one(&w, "Add input");
@@ -116,7 +116,7 @@ fn cards_ports_and_channel_groups_describe_their_state() {
     // The card's volume slider is labelled after the card.
     assert_eq!(
         one(&w, "Spotify volume").accessible_value().as_deref(),
-        Some("70%")
+        Some("70")
     );
 
     // Ports say whether they are linked.
