@@ -400,6 +400,10 @@ dependencies = [
 [[package]]
 name = "juncd"
 version = "0.1.0"
+dependencies = [
+ "junc-core",
+ "junc-pw",
+]
 
 [[package]]
 name = "libc"

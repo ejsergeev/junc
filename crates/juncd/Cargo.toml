@@ -13,3 +13,5 @@ publish = false
 workspace = true
 
 [dependencies]
+junc-core.workspace = true
+junc-pw.workspace = true
