@@ -5,7 +5,7 @@
 # user (makepkg-style), with cargo's home inside the mounted workspace cache.
 set -euo pipefail
 for i in 1 2 3; do
-  pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny \
+  pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny dbus \
     wireplumber pipewire-pulse libpulse pipewire-jack jack-example-tools >/dev/null && break
   (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
 done
