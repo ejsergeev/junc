@@ -1,0 +1,1067 @@
+# JUNC CLI messages, German.
+# This file is distributed under the same license as the junc package
+# (GPL-3.0-or-later).
+# Machine-drafted; corrections welcome.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: junc\n"
+"Report-Msgid-Bugs-To: https://github.com/ejsergeev/junc/issues\n"
+"PO-Revision-Date: 2026-11-25 00:00+0000\n"
+"Last-Translator: machine-drafted\n"
+"Language-Team: none\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Junc-Machine-Drafted: yes\n"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "not running"
+msgstr "läuft nicht"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid ""
+"the config file has an error ({at}{msg}); the last good config is in use"
+msgstr "die Konfigurationsdatei hat einen Fehler ({at}{msg}); die letzte gültige Konfiguration ist in Gebrauch"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "running {v}, connected to PipeWire, config revision {rev}"
+msgstr "läuft {v}, mit PipeWire verbunden, Konfigurationsrevision {rev}"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "running, but {state}"
+msgstr "läuft, aber {state}"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "running {v}; JUNC needs 1.0 or newer"
+msgstr "läuft {v}; JUNC braucht 1.0 oder neuer"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "running {v}"
+msgstr "läuft {v}"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "installed but not running"
+msgstr "installiert, läuft aber nicht"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "not installed"
+msgstr "nicht installiert"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "running"
+msgstr "läuft"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "installed but not running; {why}"
+msgstr "installiert, läuft aber nicht; {why}"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "not installed; {why}"
+msgstr "nicht installiert; {why}"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "pipewire-jack: JACK apps go through PipeWire"
+msgstr "pipewire-jack: JACK-Apps laufen über PipeWire"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid ""
+"jack2 is installed: JACK apps bypass PipeWire and cannot be routed; replace "
+"it with pipewire-jack (pacman offers to remove jack2)"
+msgstr "jack2 ist installiert: JACK-Apps umgehen PipeWire und lassen sich nicht routen; ersetze es durch pipewire-jack (pacman bietet an, jack2 zu entfernen)"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "no JACK library; only JACK apps need one"
+msgstr "keine JACK-Bibliothek; nur JACK-Apps brauchen eine"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "cannot tell which JACK library is installed (no pacman)"
+msgstr "es lässt sich nicht feststellen, welche JACK-Bibliothek installiert ist (kein pacman)"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "cannot read the PipeWire settings"
+msgstr "die PipeWire-Einstellungen lassen sich nicht lesen"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "no clock settings found"
+msgstr "keine Takteinstellungen gefunden"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "{rate} Hz, quantum {q} ({ms} ms)"
+msgstr "{rate} Hz, Quantum {q} ({ms} ms)"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "; forced with pw-metadata"
+msgstr "; mit pw-metadata erzwungen"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "cannot read the devices' sample rates"
+msgstr "die Abtastraten der Geräte lassen sich nicht lesen"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "no clock rate found"
+msgstr "keine Taktrate gefunden"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "{rate}; no hardware devices"
+msgstr "{rate}; keine Hardwaregeräte"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "every hardware device can run at {rate}"
+msgstr "jedes Hardwaregerät kann mit {rate} laufen"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "{device} runs at {own}, the graph at {rate}: audio is resampled"
+msgstr "{device} läuft mit {own}, der Graph mit {rate}: der Ton wird umgerechnet"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "no Asahi DSP in front of the speakers: they sound thin and quiet"
+msgstr "kein Asahi-DSP vor den Lautsprechern: sie klingen dünn und leise"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "speakersafetyd is not running: the speakers stay quiet to protect them"
+msgstr "speakersafetyd läuft nicht: die Lautsprecher bleiben zu ihrem Schutz leise"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid ""
+"speakersafetyd is not installed: the speakers stay quiet to protect them"
+msgstr "speakersafetyd ist nicht installiert: die Lautsprecher bleiben zu ihrem Schutz leise"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+#, rust-format
+msgid "the speakers play through the Asahi DSP ({dsp}); speakersafetyd running"
+msgstr "die Lautsprecher spielen über den Asahi-DSP ({dsp}); speakersafetyd läuft"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "nothing gets connected without it"
+msgstr "ohne ihn wird nichts verbunden"
+
+#. machine-drafted
+#: crates/junc-cli/src/doctor.rs
+msgid "apps that use PulseAudio cannot be routed"
+msgstr "Apps, die PulseAudio nutzen, lassen sich nicht routen"
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "Did you mean '{s}'?"
+msgstr "Meintest du „{s}“?"
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs crates/junc-cli/src/main.rs
+#, rust-format
+msgid "No Junction called '{name}'."
+msgstr "Keine Junction namens „{name}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "Several Junctions are called '{name}'."
+msgstr "Mehrere Junctions heißen „{name}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' has no Input '{id}'."
+msgstr "„{j}“ hat keinen Eingang „{id}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' has no Listen output '{id}'."
+msgstr "„{j}“ hat keinen Abhörausgang „{id}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "{from} to {to}"
+msgstr "{from} nach {to}"
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "{name} copy"
+msgstr "{name} Kopie"
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' already has an Input '{id}'."
+msgstr "„{j}“ hat schon einen Eingang „{id}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' already has a Listen output '{id}'."
+msgstr "„{j}“ hat schon einen Abhörausgang „{id}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' has channels 1 to {n}; there is no channel {ch}."
+msgstr "„{j}“ hat die Kanäle 1 bis {n}; einen Kanal {ch} gibt es nicht."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' needs at least one Bus channel."
+msgstr "„{j}“ braucht mindestens einen Bus-Kanal."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{t}' is not a channel number."
+msgstr "„{t}“ ist keine Kanalnummer."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{j}' has Bus channels 1 to {n}; there is no channel {b}."
+msgstr "„{j}“ hat die Bus-Kanäle 1 bis {n}; einen Kanal {b} gibt es nicht."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "There is no link {a} → {b}."
+msgstr "Es gibt keine Verbindung {a} → {b}."
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid ""
+"{other} stays the default {role}; make this one the default with: junc "
+"switch {id}"
+msgstr "{other} bleibt Standard-{role}; mach diese zum Standard mit: junc switch {id}"
+
+#. machine-drafted
+#: crates/junc-cli/src/edit.rs
+#, rust-format
+msgid "'{id}' is not one app into another, so it cannot be a Cable."
+msgstr "„{id}“ führt nicht eine App in eine andere, also kann es kein Cable sein."
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "active"
+msgstr "aktiv"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "waiting"
+msgstr "wartet"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs crates/junc-cli/src/watch.rs
+msgid "off"
+msgstr "aus"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "unknown"
+msgstr "unbekannt"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "default input"
+msgstr "Standardeingang"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "default output"
+msgstr "Standardausgang"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "No Junctions yet. Create one: junc create junction \"Zoom Mic\""
+msgstr "Noch keine Junctions. Leg eine an: junc create junction \"Zoom Mic\""
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "NAME"
+msgstr "NAME"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "ID"
+msgstr "ID"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "STATUS"
+msgstr "STATUS"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "INPUTS"
+msgstr "EINGÄNGE"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "DEFAULT"
+msgstr "STANDARD"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid ""
+"The config file has errors; the last good config is in use. See: junc status"
+msgstr "Die Konfigurationsdatei hat Fehler; die letzte gültige Konfiguration ist in Gebrauch. Siehe: junc status"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "juncd {v}: {state}, config revision {rev}, {count}."
+msgstr "juncd {v}: {state}, Konfigurationsrevision {rev}, {count}."
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "{n} Junction"
+msgid_plural "{n} Junctions"
+msgstr[0] "{n} Junction"
+msgstr[1] "{n} Junctions"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "Config: {file}"
+msgstr "Konfiguration: {file}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "Capturing: {apps}"
+msgstr "Erfasst: {apps}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "hint: {h}"
+msgstr "Hinweis: {h}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "app"
+msgstr "App"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "device"
+msgstr "Gerät"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "monitor"
+msgstr "Monitor"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "Junction"
+msgstr "Junction"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "volume {p}%"
+msgstr "Lautstärke {p} %"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "{n} Bus channel"
+msgid_plural "{n} Bus channels"
+msgstr[0] "{n} Bus-Kanal"
+msgstr[1] "{n} Bus-Kanäle"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "node {node}"
+msgstr "Knoten {node}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "Delivers to {app}: {st}"
+msgstr "Liefert an {app}: {st}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "Inputs:"
+msgstr "Eingänge:"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "Listen:"
+msgstr "Abhören:"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "at {file}:{line}:{col}"
+msgstr "in {file}:{line}:{col}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "Dry run; nothing was changed. Applying would:"
+msgstr "Probelauf; nichts wurde geändert. Anwenden würde:"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "Applied:"
+msgstr "Angewendet:"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "{n} graph action in the first step"
+msgid_plural "{n} graph actions in the first step"
+msgstr[0] "{n} Graph-Aktion im ersten Schritt"
+msgstr[1] "{n} Graph-Aktionen im ersten Schritt"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "; links follow once the new nodes exist"
+msgstr "; Verbindungen folgen, sobald die neuen Knoten existieren"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "fix: {f}"
+msgstr "Lösung: {f}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "No agent skills folders found (~/.claude/skills, ~/.codex/skills, …)."
+msgstr "Keine Skill-Ordner von Agenten gefunden (~/.claude/skills, ~/.codex/skills, …)."
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "linked"
+msgstr "verknüpft"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "not linked"
+msgstr "nicht verknüpft"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+msgid "your own junc, kept"
+msgstr "dein eigenes junc, behalten"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "from {list}"
+msgstr "von {list}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "to {list}"
+msgstr "an {list}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "recorded by {list}"
+msgstr "aufgenommen von {list}"
+
+#. machine-drafted
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "suggested: {kind}"
+msgstr "vorgeschlagen: {kind}"
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "'{t}' is not a volume."
+msgstr "„{t}“ ist keine Lautstärke."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "cannot read {f}: {e}"
+msgstr "{f} lässt sich nicht lesen: {e}"
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{file}: valid"
+msgstr "{file}: gültig"
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "There is no config schema version {v}."
+msgstr "Es gibt keine Konfigurationsschema-Version {v}."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{editor} did not finish cleanly"
+msgstr "{editor} wurde nicht sauber beendet"
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Created {name} ({id})."
+msgstr "{name} ({id}) angelegt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Created a Cable from {from} to {to} ({id})."
+msgstr "Cable von {from} nach {to} angelegt ({id})."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Renamed {old} to {new}."
+msgstr "{old} in {new} umbenannt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Created {id} as a copy of {name}."
+msgstr "{id} als Kopie von {name} angelegt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Delete {name}? Its routing stops."
+msgstr "{name} löschen? Sein Routing endet."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Not deleting {name}."
+msgstr "{name} wird nicht gelöscht."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Deleted {name}."
+msgstr "{name} gelöscht."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Switched to {name} as the default {role}."
+msgstr "Auf {name} als Standard-{role} umgeschaltet."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{name} is no longer a default device."
+msgstr "{name} ist kein Standardgerät mehr."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{name} is now the default {role}."
+msgstr "{name} ist jetzt Standard-{role}."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{name} now has {n} Bus channels."
+msgstr "{name} hat jetzt {n} Bus-Kanäle."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{name} now plays to {output} ({id})."
+msgstr "{name} spielt jetzt auf {output} ({id})."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Removed Listen output {id} from {name}."
+msgstr "Abhörausgang {id} aus {name} entfernt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Turned {name} on."
+msgstr "{name} eingeschaltet."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Turned {name} off."
+msgstr "{name} ausgeschaltet."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{name} volume {p}%."
+msgstr "{name}: Lautstärke {p} %."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Listen output {id} volume {p}%."
+msgstr "Abhörausgang {id}: Lautstärke {p} %."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Input {id} volume {p}%."
+msgstr "Eingang {id}: Lautstärke {p} %."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Added Input {id} to {name}."
+msgstr "Eingang {id} zu {name} hinzugefügt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid ""
+"Note: this is a Bluetooth headset mic. Using it switches the headset to its "
+"call profile, so playback drops to call quality while the mic is in use."
+msgstr "Hinweis: Das ist ein Bluetooth-Headset-Mikrofon. Wird es benutzt, schaltet das Headset auf sein Anrufprofil, und die Wiedergabe fällt auf Telefonqualität, solange das Mikrofon in Gebrauch ist."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Removed Input {id} from {name}."
+msgstr "Eingang {id} aus {name} entfernt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Turned Input {id} on."
+msgstr "Eingang {id} eingeschaltet."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Turned Input {id} off."
+msgstr "Eingang {id} ausgeschaltet."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Linked {from} → {to}."
+msgstr "{from} → {to} verbunden."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "{from} → {to} was already linked."
+msgstr "{from} → {to} war schon verbunden."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "Unlinked {from} → {to}."
+msgstr "Verbindung {from} → {to} getrennt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid ""
+"It was not connected, so its default links were unknown: it now has only the "
+"links you set."
+msgstr "Es war nicht angeschlossen, daher waren seine Standardverbindungen unbekannt: Es hat jetzt nur die Verbindungen, die du gesetzt hast."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid "No null sinks or loopbacks to import."
+msgstr "Keine Null-Sinks oder Loopbacks zum Importieren."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "No setup '{id}' to import."
+msgstr "Kein Setup „{id}“ zum Importieren."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid ""
+"Imported as {ids}. The old setups still run; remove them when the new ones "
+"work."
+msgstr "Importiert als {ids}. Die alten Setups laufen weiter; entferne sie, wenn die neuen funktionieren."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid "Remove all JUNC devices and links and stop juncd? Your config stays."
+msgstr "Alle JUNC-Geräte und -Verbindungen entfernen und juncd stoppen? Deine Konfiguration bleibt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid "Nothing removed."
+msgstr "Nichts entfernt."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid "juncd still runs (it was started outside systemd)."
+msgstr "juncd läuft noch (es wurde außerhalb von systemd gestartet)."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+#, rust-format
+msgid "cannot run {juncd}: {e}"
+msgstr "{juncd} lässt sich nicht starten: {e}"
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid "Some JUNC objects could not be removed."
+msgstr "Einige JUNC-Objekte ließen sich nicht entfernen."
+
+#. machine-drafted
+#: crates/junc-cli/src/main.rs
+msgid ""
+"JUNC is removed from the audio system. Your config is kept in ~/.config/junc."
+msgstr "JUNC ist aus dem Audiosystem entfernt. Deine Konfiguration bleibt in ~/.config/junc."
+
+#. machine-drafted
+#: crates/junc-cli/src/preset.rs
+#, rust-format
+msgid "No template '{id}'."
+msgstr "Keine Vorlage „{id}“."
+
+#. machine-drafted
+#: crates/junc-cli/src/preset.rs
+#, rust-format
+msgid "'{a}' is not ID=VALUE."
+msgstr "„{a}“ ist nicht ID=WERT."
+
+#. machine-drafted
+#: crates/junc-cli/src/preset.rs
+#, rust-format
+msgid "Created {name} ({id}) from {source}."
+msgstr "{name} ({id}) aus {source} angelegt."
+
+#. machine-drafted
+#: crates/junc-cli/src/preset.rs
+#, rust-format
+msgid "cannot write {f}: {e}"
+msgstr "{f} lässt sich nicht schreiben: {e}"
+
+#. machine-drafted
+#: crates/junc-cli/src/preset.rs
+#, rust-format
+msgid "Exported {name} to {file}."
+msgstr "{name} nach {file} exportiert."
+
+#. machine-drafted
+#: crates/junc-cli/src/preset.rs
+#, rust-format
+msgid "Tied to this computer's devices: {list}."
+msgstr "An die Geräte dieses Computers gebunden: {list}."
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+#, rust-format
+msgid "cannot run systemctl: {e}"
+msgstr "systemctl lässt sich nicht ausführen: {e}"
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+#, rust-format
+msgid "{unit} is not installed"
+msgstr "{unit} ist nicht installiert"
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+#, rust-format
+msgid "systemctl failed: {m}"
+msgstr "systemctl ist fehlgeschlagen: {m}"
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+msgid "starts at login"
+msgstr "startet bei der Anmeldung"
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+msgid "does not start at login (it starts when needed)"
+msgstr "startet nicht bei der Anmeldung (es startet bei Bedarf)"
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+#, rust-format
+msgid "juncd {login}; service {active}{daemon}."
+msgstr "juncd {login}; Dienst {active}{daemon}."
+
+#. machine-drafted
+#: crates/junc-cli/src/service.rs
+#, rust-format
+msgid ", daemon {d}"
+msgstr ", Daemon {d}"
+
+#. machine-drafted
+#: crates/junc-cli/src/skill.rs
+#, rust-format
+msgid "no JUNC skill at {dir}"
+msgstr "kein JUNC-Skill unter {dir}"
+
+#. machine-drafted
+#: crates/junc-cli/src/skill.rs
+#, rust-format
+msgid "cannot change {f}: {e}"
+msgstr "{f} lässt sich nicht ändern: {e}"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+msgid "capturing: nothing"
+msgstr "erfasst: nichts"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+#, rust-format
+msgid "capturing: {apps}"
+msgstr "erfasst: {apps}"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+msgid "on"
+msgstr "an"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+#, rust-format
+msgid "{id}: removed"
+msgstr "{id}: entfernt"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+#, rust-format
+msgid "graph changed ({g})"
+msgstr "Graph geändert ({g})"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+msgid "juncd is running"
+msgstr "juncd läuft"
+
+#. machine-drafted
+#: crates/junc-cli/src/watch.rs
+msgid "juncd stopped"
+msgstr "juncd gestoppt"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "what {out} plays"
+msgstr "was {out} abspielt"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Junction {id}"
+msgstr "Junction {id}"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+msgid "the default output"
+msgstr "der Standardausgang"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Turn “{name}” on"
+msgstr "„{name}“ einschalten"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Turn “{name}” off"
+msgstr "„{name}“ ausschalten"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Stop using “{name}” as a default device"
+msgstr "„{name}“ nicht mehr als Standardgerät verwenden"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Make “{name}” the default input"
+msgstr "„{name}“ zum Standardeingang machen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Make “{name}” the default output"
+msgstr "„{name}“ zum Standardausgang machen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "{src} at {p}%"
+msgstr "{src} mit {p} %"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "{src}, exclusive (no longer heard on the speakers)"
+msgstr "{src}, exklusiv (nicht mehr auf den Lautsprechern zu hören)"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Add {src} to “{name}”, turned off"
+msgstr "{src} zu „{name}“ hinzufügen, ausgeschaltet"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Add {src} to “{name}”"
+msgstr "{src} zu „{name}“ hinzufügen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Add {src} to “{name}” (routed when it appears)"
+msgstr "{src} zu „{name}“ hinzufügen (wird geroutet, sobald es erscheint)"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Create Cable “{name}” from {from} to {to}"
+msgstr "Cable „{name}“ von {from} nach {to} anlegen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Create Junction “{name}” ({n} channel)"
+msgid_plural "Create Junction “{name}” ({n} channels)"
+msgstr[0] "Junction „{name}“ anlegen ({n} Kanal)"
+msgstr[1] "Junction „{name}“ anlegen ({n} Kanäle)"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Play “{name}” on {out}"
+msgstr "„{name}“ auf {out} abspielen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Rename “{old}” to “{new}”"
+msgstr "„{old}“ in „{new}“ umbenennen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Set “{name}” volume to {p}%"
+msgstr "Lautstärke von „{name}“ auf {p} % setzen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Give “{name}” {n} Bus channel"
+msgid_plural "Give “{name}” {n} Bus channels"
+msgstr[0] "„{name}“ {n} Bus-Kanal geben"
+msgstr[1] "„{name}“ {n} Bus-Kanäle geben"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Change the settings of “{name}”"
+msgstr "Einstellungen von „{name}“ ändern"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Turn Input {src} of “{name}” on"
+msgstr "Eingang {src} von „{name}“ einschalten"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Turn Input {src} of “{name}” off"
+msgstr "Eingang {src} von „{name}“ ausschalten"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Set Input {src} of “{name}” to {p}%"
+msgstr "Eingang {src} von „{name}“ auf {p} % setzen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Change how {src} is routed into “{name}”"
+msgstr "Ändern, wie {src} in „{name}“ geroutet wird"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Remove {src} from “{name}”"
+msgstr "{src} aus „{name}“ entfernen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Change how “{name}” plays on {out}"
+msgstr "Ändern, wie „{name}“ auf {out} spielt"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Stop playing “{name}” on {out}"
+msgstr "„{name}“ nicht mehr auf {out} abspielen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+#, rust-format
+msgid "Delete “{name}” and its routing"
+msgstr "„{name}“ und sein Routing löschen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+msgid "No changes"
+msgstr "Keine Änderungen"
+
+#. machine-drafted
+#: crates/junc-ipc/src/plan.rs
+msgid "Bring the audio graph in line with the config"
+msgstr "Den Audiograph an die Konfiguration angleichen"
