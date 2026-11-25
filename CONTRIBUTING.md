@@ -80,6 +80,9 @@ is usually two commits.
   `daemon/relink-backoff`.
 - Pull request descriptions follow the same rules as commit messages: what and
   why, requirement IDs, how it was checked. No tool attribution.
+- Pull requests are merged by fast-forwarding `main` once CI is green (no
+  merge button: GitHub's merge, squash and rebase buttons would make GitHub
+  the committer). Stacked branches catch up with `git merge`, not force-push.
 - Releases are tagged `vMAJOR.MINOR.PATCH` by the maintainer.
 
 ## Building

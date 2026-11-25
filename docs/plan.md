@@ -379,3 +379,4 @@ decisions log once the owner answers.
 | 2026-11-25 | The Junction node class follows spike S1 without another owner decision, unless S1 ends in the two-node fallback | owner |
 | 2026-11-25 | Spike S1 ended in the two-node fallback; every Junction is always both a source (`Audio/Source/Virtual`) and a sink (`Audio/Sink`), like a Loopback device | owner |
 | 2026-11-25 | Public repository `ejsergeev/junc` on GitHub | owner |
+| 2026-11-25 | The developer merges a PR once its CI is green, by fast-forwarding `main` (no GitHub merge commits, so every commit keeps the owner as author and committer); the owner reviews at will and signs off stages and releases | owner |
