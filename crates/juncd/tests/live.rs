@@ -27,7 +27,7 @@ match = { device = "fake.hwin" }
 id = "hp"
 target = "default"
 "#;
-const CHURN: usize = 20;
+const CHURN: usize = 60;
 
 fn enabled() -> bool {
     if std::env::var("JUNC_LIVE_PIPEWIRE").as_deref() != Ok("1") {
@@ -1065,6 +1065,80 @@ fn junctions_come_back_after_pipewire_restarts() {
     std::thread::sleep(Duration::from_millis(1000));
     drop(d);
     let mut g = Graph::default();
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// F10: a device Input whose device is unplugged and plugged back in ten
+/// times is re-linked every time.
+#[test]
+fn a_device_that_comes_and_goes_is_relinked_every_time() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-replug-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config = "schema = 1\n[[junction]]\nid = \"usb\"\nname = \"USB\"\n\
+                  [[junction.input]]\nid = \"dev\"\nmatch = { device = \"fake.usb\" }\n";
+    let (d, log) = run_juncd(&dir, "replug", config);
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let device_linked = |g: &Graph| {
+        g.node_by_name("fake.usb").is_some_and(|dev| {
+            g.links
+                .values()
+                .filter(|l| {
+                    l.output_node == dev.id
+                        && l.props
+                            .get("junc.ref")
+                            .is_some_and(|r| r.starts_with("in/dev/"))
+                })
+                .count()
+                == 2
+        })
+    };
+    let mut relink_ms = Vec::new();
+    for round in 0..10 {
+        // A stand-in for a USB input: a foreign null-audio source.
+        let plug = Kill(
+            Command::new("pw-cli")
+                .args([
+                    "-m",
+                    "create-node",
+                    "adapter",
+                    "{ factory.name=support.null-audio-sink node.name=fake.usb \
+                     media.class=Audio/Source audio.position=[FL FR] }",
+                ])
+                .stdin(Stdio::piped())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .expect("pw-cli"),
+        );
+        let t = Instant::now();
+        let linked = wait_for(&rx, &mut g, Duration::from_secs(5), device_linked)
+            .unwrap_or_else(|| panic!("round {round}: not re-linked\n{}", read(&log)));
+        relink_ms.push(linked.duration_since(t).as_secs_f64() * 1000.0);
+        // Unplug: the device goes when its client goes.
+        drop(plug);
+        assert!(
+            wait_for(&rx, &mut g, Duration::from_secs(5), |g| g
+                .node_by_name("fake.usb")
+                .is_none())
+            .is_some(),
+            "round {round}: device did not go away"
+        );
+    }
+    relink_ms.sort_by(f64::total_cmp);
+    eprintln!(
+        "device re-plug ×10: all re-linked; p50 {:.0} ms, max {:.0} ms (from pw-cli start)",
+        relink_ms[5], relink_ms[9]
+    );
+    drop(d);
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
