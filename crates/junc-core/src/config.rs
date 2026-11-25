@@ -543,15 +543,16 @@ fn find_cycles(config: &Config) -> Vec<Finding> {
         .collect();
     let mut out = Vec::new();
     let mut reported = HashSet::new();
-    for start in edges.keys() {
-        let mut stack = vec![(*start, vec![*start])];
+    // Config order, so the same file always reports the same loop.
+    for start in config.junction.iter().map(|j| j.id.as_str()) {
+        let mut stack = vec![(start, vec![start])];
         while let Some((node, trail)) = stack.pop() {
             for (next, j, i) in edges.get(node).into_iter().flatten() {
-                if *next == *start {
+                if *next == start {
                     let mut key: Vec<&str> = trail.clone();
                     key.sort_unstable();
                     if reported.insert(key) {
-                        let loop_text = [trail.as_slice(), &[*start]].concat().join(" → ");
+                        let loop_text = [trail.as_slice(), &[start]].concat().join(" → ");
                         out.push(Finding {
                             path: vec![
                                 Seg::Key("junction"),

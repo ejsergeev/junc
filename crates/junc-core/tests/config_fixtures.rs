@@ -199,3 +199,16 @@ fn published_schema_is_current() {
         path.display()
     );
 }
+
+#[test]
+fn the_same_file_always_reports_the_same_loop() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/configs/invalid/cycle.toml");
+    let src = fs::read_to_string(&path).expect("fixture");
+    // Every load builds fresh hash maps with new seeds; the report must not
+    // depend on them.
+    for _ in 0..32 {
+        let d = config::load(&src, "cycle.toml").expect_err("a loop");
+        assert_eq!(d[0].message, "nesting loop: a → b → a");
+    }
+}
