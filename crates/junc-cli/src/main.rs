@@ -545,11 +545,32 @@ fn input(c: &Client, cmd: InputCmd) -> Result<Done> {
                 let i = named(cfg, &name, &mut shown)?;
                 edit::input_add(cfg, i, &source, exclusive, pro_audio, id.as_deref())
             })?;
-            let text = trf(
+            let mut text = trf(
                 "Added Input {id} to {name}.",
                 &[("id", &id), ("name", &shown)],
             );
-            Ok(done(rev, json!({ "id": id }), text))
+            let mut data = json!({ "id": id });
+            // F18: a headset mic in A2DP switches the headset to its call
+            // profile once it is recorded from.
+            if let Source::Device(node) = &source
+                && let Some(bt) = c.describe().ok().and_then(|d| {
+                    d.candidates
+                        .into_iter()
+                        .find(|k| &k.node == node)
+                        .and_then(|k| k.bluetooth)
+                })
+                && bt.switches_to_call
+            {
+                text.push('\n');
+                text.push_str(&tr(
+                    "Note: this is a Bluetooth headset mic. Using it switches the \
+                     headset to its call profile, so playback drops to call quality \
+                     while the mic is in use.",
+                ));
+                data["warning"] = json!("bluetooth_call_profile");
+                data["bluetooth"] = json!(bt);
+            }
+            Ok(done(rev, data, text))
         }
         InputCmd::Remove { name, input } => {
             let mut shown = String::new();
