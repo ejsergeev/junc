@@ -647,18 +647,30 @@ raced it.
 { apps[], hardware_inputs[], outputs[], monitors[] }, devices[] (with profiles,
 channel counts, bluez profile) }` — everything an agent needs in one call.
 
-`junc apply FILE --dry-run --json` → `data.plan`:
+`junc apply FILE --dry-run --json` → `data.plan` (`junc_ipc::plan::PlanView`,
+the same JSON the D-Bus `Plan` and `Apply` return):
 
 ```json
 { "summary": ["Create Junction “Zoom Mic” (2 channels)",
-              "Capture Spotify into Zoom Mic Ch 1–2",
-              "Add USB Microphone to Zoom Mic Ch 1–2"],
-  "actions": [ { "op": "create_node", "ref": "junc.zoom_mic", … }, … ],
-  "warnings": [ { "code": "W_DEVICE_OFFLINE", "message": "…", "hint": "…" } ] }
+              "Add USB Microphone to “Zoom Mic”",
+              "Add spotify to “Zoom Mic” (routed when it appears)"],
+  "actions": [ { "op": "create_node", "node": "junc.zoom_mic", "media_class": "Audio/Source/Virtual",
+                 "channels": 2, "junction": "zoom-mic", "role": "junction" },
+               { "op": "create_link", "from": "alsa_input.usb-mic:1", "to": "junc.zoom_mic.in.mic:1",
+                 "junction": "zoom-mic", "ref": "in/mic/1->1" }, … ],
+  "complete": false, "deferred": [], "junctions": [ … ] }
 ```
 
-`junc doctor --json` → `data.checks[]`: `{ "id": "pipewire-pulse", "status":
-"ok|warn|missing|down", "detail": "…", "fix": "sudo pacman -S pipewire-pulse" }`.
+The summary comes from the difference between the config in use and the
+proposed one; `actions` are the next reconcile step with node names and
+1-based channels. A new Junction's first step only creates nodes
+(`complete: false`); its links follow once the nodes exist. Golden plans:
+`tests/golden/plan/`.
+
+`junc doctor --json` → `data.checks[]`: `{ "id": "pipewire|wireplumber|pipewire-pulse|jack|clock|juncd",
+"status": "ok|warn|missing|down", "detail": "…", "fix": "sudo pacman -S pipewire-pulse" }`.
+`doctor` and `schema`, `config validate FILE` and `config path` work without
+juncd; `--bug-report` arrives with F19's bundle in beta.
 
 `junc watch --json` lines: `{"event":"graph","generation":7}`,
 `{"event":"capture","apps":["Spotify"]}`, `{"event":"notice", …}`,
