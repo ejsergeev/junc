@@ -1,0 +1,118 @@
+{
+  "summary": [
+    "Create Junction “Line In” (2 channels)",
+    "Add Loopback Analog Stereo to “Line In”",
+    "Add spotify to “Line In” (routed when it appears)",
+    "Play “Line In” on Loopback Analog Stereo",
+    "Make “Line In” the default input"
+  ],
+  "actions": [
+    {
+      "op": "create_node",
+      "node": "junc.line",
+      "media_class": "Audio/Source/Virtual",
+      "channels": 2,
+      "junction": "line",
+      "role": "junction"
+    },
+    {
+      "op": "create_node",
+      "node": "junc.line.sink",
+      "media_class": "Audio/Sink",
+      "channels": 2,
+      "junction": "line",
+      "role": "junction-sink"
+    },
+    {
+      "op": "create_node",
+      "node": "junc.line.in.aloop",
+      "media_class": "Audio/Duplex/Internal",
+      "channels": 2,
+      "junction": "line",
+      "role": "input-gain"
+    },
+    {
+      "op": "create_node",
+      "node": "junc.line.in.spotify",
+      "media_class": "Audio/Duplex/Internal",
+      "channels": 2,
+      "junction": "line",
+      "role": "input-gain"
+    },
+    {
+      "op": "create_node",
+      "node": "junc.line.listen.out",
+      "media_class": "Audio/Duplex/Internal",
+      "channels": 2,
+      "junction": "line",
+      "role": "listen-gain"
+    }
+  ],
+  "complete": false,
+  "deferred": [],
+  "junctions": [
+    {
+      "id": "line",
+      "name": "Line In",
+      "kind": "junction",
+      "enabled": true,
+      "volume": 100,
+      "default": "input",
+      "channels": 2,
+      "node": "junc.line",
+      "path": "/io/github/ejsergeev/Junc1/junction/line",
+      "status": "active",
+      "inputs": [
+        {
+          "id": "aloop",
+          "match": {
+            "device": "alsa_input.platform-snd_aloop.0.analog-stereo"
+          },
+          "enabled": true,
+          "volume": 100,
+          "exclusive": false,
+          "status": "waiting",
+          "matched": [],
+          "links": [],
+          "custom_links": false,
+          "suppressed": []
+        },
+        {
+          "id": "spotify",
+          "match": {
+            "binary": "spotify"
+          },
+          "enabled": true,
+          "volume": 100,
+          "exclusive": false,
+          "status": "waiting",
+          "matched": [],
+          "links": [],
+          "custom_links": false,
+          "suppressed": []
+        }
+      ],
+      "listens": [
+        {
+          "id": "out",
+          "target": "alsa_output.platform-snd_aloop.0.analog-stereo",
+          "enabled": true,
+          "volume": 100,
+          "status": "unknown",
+          "links": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "custom_links": false,
+          "suppressed": []
+        }
+      ]
+    }
+  ]
+}

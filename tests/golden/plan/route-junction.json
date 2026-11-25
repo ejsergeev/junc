@@ -1,0 +1,169 @@
+{
+  "summary": [
+    "Bring the audio graph in line with the config"
+  ],
+  "actions": [
+    {
+      "op": "create_link",
+      "from": "alsa_input.platform-snd_aloop.0.analog-stereo:2",
+      "to": "junc.line.in.aloop:2",
+      "junction": "line",
+      "ref": "in/aloop/2->2"
+    },
+    {
+      "op": "create_link",
+      "from": "alsa_input.platform-snd_aloop.0.analog-stereo:1",
+      "to": "junc.line.in.aloop:1",
+      "junction": "line",
+      "ref": "in/aloop/1->1"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line:1",
+      "to": "junc.line.listen.out:1",
+      "junction": "line",
+      "ref": "listen/out/bus/1"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line:2",
+      "to": "junc.line.listen.out:2",
+      "junction": "line",
+      "ref": "listen/out/bus/2"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.sink:1",
+      "to": "junc.line:1",
+      "junction": "line",
+      "ref": "sink/1"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.sink:2",
+      "to": "junc.line:2",
+      "junction": "line",
+      "ref": "sink/2"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.in.aloop:1",
+      "to": "junc.line:1",
+      "junction": "line",
+      "ref": "gain/aloop/1"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.in.aloop:2",
+      "to": "junc.line:2",
+      "junction": "line",
+      "ref": "gain/aloop/2"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.in.spotify:1",
+      "to": "junc.line:1",
+      "junction": "line",
+      "ref": "gain/spotify/1"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.in.spotify:2",
+      "to": "junc.line:2",
+      "junction": "line",
+      "ref": "gain/spotify/2"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.listen.out:1",
+      "to": "alsa_output.platform-snd_aloop.0.analog-stereo:1",
+      "junction": "line",
+      "ref": "listen/out/1->1"
+    },
+    {
+      "op": "create_link",
+      "from": "junc.line.listen.out:2",
+      "to": "alsa_output.platform-snd_aloop.0.analog-stereo:2",
+      "junction": "line",
+      "ref": "listen/out/2->2"
+    }
+  ],
+  "complete": true,
+  "deferred": [],
+  "junctions": [
+    {
+      "id": "line",
+      "name": "Line In",
+      "kind": "junction",
+      "enabled": true,
+      "volume": 100,
+      "default": "input",
+      "channels": 2,
+      "node": "junc.line",
+      "path": "/io/github/ejsergeev/Junc1/junction/line",
+      "status": "active",
+      "inputs": [
+        {
+          "id": "aloop",
+          "match": {
+            "device": "alsa_input.platform-snd_aloop.0.analog-stereo"
+          },
+          "enabled": true,
+          "volume": 100,
+          "exclusive": false,
+          "status": "active",
+          "matched": [
+            "alsa_input.platform-snd_aloop.0.analog-stereo"
+          ],
+          "links": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "custom_links": false,
+          "suppressed": []
+        },
+        {
+          "id": "spotify",
+          "match": {
+            "binary": "spotify"
+          },
+          "enabled": true,
+          "volume": 100,
+          "exclusive": false,
+          "status": "waiting",
+          "matched": [],
+          "links": [],
+          "custom_links": false,
+          "suppressed": []
+        }
+      ],
+      "listens": [
+        {
+          "id": "out",
+          "target": "alsa_output.platform-snd_aloop.0.analog-stereo",
+          "enabled": true,
+          "volume": 100,
+          "status": "active",
+          "links": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "custom_links": false,
+          "suppressed": []
+        }
+      ]
+    }
+  ]
+}

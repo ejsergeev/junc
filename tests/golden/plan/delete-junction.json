@@ -1,0 +1,35 @@
+{
+  "summary": [
+    "Delete “Line In” and its routing"
+  ],
+  "actions": [
+    {
+      "op": "destroy_node",
+      "node": "junc.line",
+      "junction": "line"
+    },
+    {
+      "op": "destroy_node",
+      "node": "junc.line.in.aloop",
+      "junction": "line"
+    },
+    {
+      "op": "destroy_node",
+      "node": "junc.line.in.spotify",
+      "junction": "line"
+    },
+    {
+      "op": "destroy_node",
+      "node": "junc.line.listen.out",
+      "junction": "line"
+    },
+    {
+      "op": "destroy_node",
+      "node": "junc.line.sink",
+      "junction": "line"
+    }
+  ],
+  "complete": true,
+  "deferred": [],
+  "junctions": []
+}

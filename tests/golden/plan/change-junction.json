@@ -1,0 +1,93 @@
+{
+  "summary": [
+    "Set “Line In” volume to 80%",
+    "Stop using “Line In” as a default device",
+    "Add what Loopback Analog Stereo plays to “Line In”, turned off",
+    "Remove spotify from “Line In”"
+  ],
+  "actions": [
+    {
+      "op": "destroy_node",
+      "node": "junc.line.in.spotify",
+      "junction": "line"
+    }
+  ],
+  "complete": true,
+  "deferred": [],
+  "junctions": [
+    {
+      "id": "line",
+      "name": "Line In",
+      "kind": "junction",
+      "enabled": true,
+      "volume": 80,
+      "default": "none",
+      "channels": 2,
+      "node": "junc.line",
+      "path": "/io/github/ejsergeev/Junc1/junction/line",
+      "status": "active",
+      "inputs": [
+        {
+          "id": "aloop",
+          "match": {
+            "device": "alsa_input.platform-snd_aloop.0.analog-stereo"
+          },
+          "enabled": true,
+          "volume": 100,
+          "exclusive": false,
+          "status": "active",
+          "matched": [
+            "alsa_input.platform-snd_aloop.0.analog-stereo"
+          ],
+          "links": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "custom_links": false,
+          "suppressed": []
+        },
+        {
+          "id": "mon",
+          "match": {
+            "monitor": "alsa_output.platform-snd_aloop.0.analog-stereo"
+          },
+          "enabled": false,
+          "volume": 100,
+          "exclusive": false,
+          "status": "disabled",
+          "matched": [],
+          "links": [],
+          "custom_links": false,
+          "suppressed": []
+        }
+      ],
+      "listens": [
+        {
+          "id": "out",
+          "target": "alsa_output.platform-snd_aloop.0.analog-stereo",
+          "enabled": true,
+          "volume": 100,
+          "status": "active",
+          "links": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "custom_links": false,
+          "suppressed": []
+        }
+      ]
+    }
+  ]
+}
