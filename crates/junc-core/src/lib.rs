@@ -6,6 +6,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod backend;
 pub mod config;
 pub mod diag;
 pub mod graph;
