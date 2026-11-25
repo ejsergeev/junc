@@ -691,7 +691,9 @@ dependencies = [
 name = "junc-gui"
 version = "0.1.0"
 dependencies = [
+ "inotify",
  "toml",
+ "zbus",
 ]
 
 [[package]]
