@@ -856,3 +856,136 @@ fn import_turns_null_sinks_and_loopbacks_into_junctions_and_cables() {
         e.ok(&["delete", id, "--yes"]);
     }
 }
+
+/// `pw-dump` of the live graph.
+fn pw_dump() -> Vec<Value> {
+    let out = Command::new("pw-dump").output().expect("pw-dump");
+    serde_json::from_slice(&out.stdout).expect("pw-dump json")
+}
+
+fn junc_objects(dump: &[Value]) -> usize {
+    dump.iter()
+        .filter(|o| {
+            o["info"]["props"]["junc.managed"] == true
+                || o["info"]["props"]["junc.managed"] == "true"
+        })
+        .count()
+}
+
+fn default_key(dump: &[Value], key: &str) -> Option<String> {
+    dump.iter()
+        .filter(|o| o["props"]["metadata.name"] == "default")
+        .flat_map(|o| o["metadata"].as_array().cloned().unwrap_or_default())
+        .find(|m| m["key"] == key)
+        .and_then(|m| m["value"]["name"].as_str().map(str::to_owned))
+}
+
+fn default_source(dump: &[Value]) -> Option<String> {
+    default_key(dump, "default.audio.source")
+}
+
+/// F20 (B6): `junc teardown` stops and disables juncd, removes every
+/// `junc.managed` object (they linger after the daemon stops) and gives the
+/// default input back.
+#[test]
+fn teardown_leaves_no_junc_object() {
+    if std::env::var("JUNC_LIVE_PIPEWIRE").as_deref() != Ok("1") {
+        eprintln!("skipped: run scripts/ci/live-pipewire.sh");
+        return;
+    }
+    let Some(e) = start("teardown", false, true) else {
+        return;
+    };
+    let state = e.dir.join("state");
+    std::fs::create_dir_all(state.join("junc")).expect("state dir");
+    let before = default_source(&pw_dump());
+    let cfg = e.dir.join("td.toml");
+    std::fs::write(
+        &cfg,
+        "schema = 1\n[[junction]]\nid = \"td\"\nname = \"Teardown\"\ndefault = \"input\"\n\
+         [[junction.input]]\nid = \"mic\"\nmatch = { device = \"fake.hwin\" }\n\
+         [[junction.listen]]\nid = \"hp\"\ntarget = \"fake.hp\"\n",
+    )
+    .expect("config");
+    let daemon = Kill(
+        Command::new(bin("juncd"))
+            .args(["--no-dbus", "--config"])
+            .arg(&cfg)
+            .arg("--state-dir")
+            .arg(state.join("junc"))
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("juncd"),
+    );
+    wait(|| {
+        let d = pw_dump();
+        junc_objects(&d) >= 6 && default_source(&d).as_deref() == Some("junc.td")
+    });
+    drop(daemon);
+    std::thread::sleep(Duration::from_millis(300));
+    assert!(
+        junc_objects(&pw_dump()) > 0,
+        "JUNC objects linger after juncd stops"
+    );
+
+    // A stand-in systemctl, so the test never touches a real user unit.
+    let fake = e.dir.join("bin");
+    std::fs::create_dir_all(&fake).expect("bin");
+    std::fs::write(
+        fake.join("systemctl"),
+        "#!/bin/sh\necho \"$*\" >> \"$JUNC_TEST_DIR/calls\"\n",
+    )
+    .expect("fake systemctl");
+    Command::new("chmod")
+        .arg("755")
+        .arg(fake.join("systemctl"))
+        .status()
+        .expect("chmod");
+    let out = Command::new(env!("CARGO_BIN_EXE_junc"))
+        .args(["--json", "teardown", "--yes"])
+        .env(
+            "PATH",
+            format!(
+                "{}:{}",
+                fake.display(),
+                std::env::var("PATH").unwrap_or_default()
+            ),
+        )
+        .env("JUNC_TEST_DIR", &e.dir)
+        .env("JUNC_JUNCD", bin("juncd"))
+        .env("XDG_STATE_HOME", &state)
+        .env("HOME", &e.dir)
+        .env("DBUS_SESSION_BUS_ADDRESS", &e.address)
+        .stdin(Stdio::null())
+        .output()
+        .expect("junc teardown");
+    let doc: Value = serde_json::from_slice(&out.stdout).expect("json");
+    assert_eq!(
+        doc["ok"],
+        true,
+        "{doc} {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(doc["data"]["service"], "disabled");
+    let calls = std::fs::read_to_string(e.dir.join("calls")).unwrap_or_default();
+    assert!(calls.contains("disable --now juncd.service"), "{calls}");
+    let after = pw_dump();
+    assert_eq!(junc_objects(&after), 0, "JUNC objects left");
+    assert_ne!(
+        default_key(&after, "default.configured.audio.source").as_deref(),
+        Some("junc.td"),
+        "the configured default input is not the removed Junction"
+    );
+    // WirePlumber moves the default in use a moment later.
+    wait(|| default_source(&pw_dump()) == before);
+    // The config was not touched.
+    assert!(
+        std::fs::read_to_string(&cfg)
+            .expect("cfg")
+            .contains("Teardown")
+    );
+
+    // Without --yes and without a terminal, nothing happens.
+    let refused = e.junc(&["--json", "teardown"]).json();
+    assert_eq!(refused["error"]["code"], "E_NEEDS_CONFIRMATION");
+}

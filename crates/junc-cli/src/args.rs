@@ -197,6 +197,14 @@ pub enum Cmd {
     /// Make the JUNC skill visible to your coding agents, or not.
     #[command(subcommand)]
     Skill(SkillCmd),
+    /// Remove everything JUNC put in the audio system: stop and disable
+    /// juncd, remove its devices and links, give the defaults back, unlink
+    /// the skill. Your config stays for a reinstall.
+    Teardown {
+        /// Do it without asking.
+        #[arg(long)]
+        yes: bool,
+    },
 }
 
 #[derive(Debug, Subcommand)]

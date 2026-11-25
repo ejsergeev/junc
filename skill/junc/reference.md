@@ -91,6 +91,7 @@ Commands:
   doctor     Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd
   service    Start juncd at login, or not (`systemctl --user` on juncd.service)
   skill      Make the JUNC skill visible to your coding agents, or not
+  teardown   Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill. Your config stays for a reinstall
   help       Print this message or the help of the given subcommand(s)
 
 Options:
@@ -905,6 +906,22 @@ Usage: junc skill status [OPTIONS]
 
 Options:
       --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc teardown`
+
+```text
+Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill. Your config stays for a reinstall
+
+Usage: junc teardown [OPTIONS]
+
+Options:
+      --json         Print one JSON document instead of text
+      --yes          Do it without asking
   -q, --quiet        Print nothing on success
       --no-color     Do not color the output
       --lang <CODE>  Language for messages (e.g. de, pt_BR)

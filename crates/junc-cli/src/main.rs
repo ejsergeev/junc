@@ -225,6 +225,9 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
     if let Some(result) = offline(&cmd) {
         return result;
     }
+    if let Cmd::Teardown { yes } = cmd {
+        return teardown(yes, json_mode);
+    }
     if let Cmd::Config(sub) = cmd {
         // Use juncd's path when it runs; otherwise the default one.
         let client = Client::connect().ok();
@@ -279,7 +282,12 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
                 Ok(done(rev, json!({ "applied": true, "plan": plan }), out))
             }
         }
-        Cmd::Schema { .. } | Cmd::Doctor | Cmd::Config(_) | Cmd::Service(_) | Cmd::Skill(_) => {
+        Cmd::Schema { .. }
+        | Cmd::Doctor
+        | Cmd::Config(_)
+        | Cmd::Service(_)
+        | Cmd::Skill(_)
+        | Cmd::Teardown { .. } => {
             unreachable!("handled above")
         }
         Cmd::List => {
@@ -769,4 +777,85 @@ fn import(c: &Client, ids: &[String], kind: Option<junc_cli::args::ImportAs>) ->
         &[("ids", &made.join(", "))],
     );
     Ok(done(rev, json!({ "ids": made }), text))
+}
+
+/// The juncd next to this junc (or `JUNC_JUNCD`, or the one in PATH).
+fn juncd_path() -> PathBuf {
+    if let Some(p) = std::env::var_os("JUNC_JUNCD") {
+        return PathBuf::from(p);
+    }
+    std::env::current_exe()
+        .ok()
+        .and_then(|e| e.parent().map(|d| d.join("juncd")))
+        .filter(|p| p.is_file())
+        .unwrap_or_else(|| PathBuf::from("juncd"))
+}
+
+/// `junc teardown` (F20, uninstall): stop and disable the daemon, remove
+/// every JUNC object through `juncd --teardown`, unlink the skill.
+fn teardown(yes: bool, json_mode: bool) -> Result<Done> {
+    let interactive = std::io::stdin().is_terminal() && !json_mode;
+    if !yes
+        && !(interactive
+            && confirm(&tr(
+                "Remove all JUNC devices and links and stop juncd? Your config stays.",
+            )))
+    {
+        return Err(ErrorBody::new(
+            "E_NEEDS_CONFIRMATION",
+            tr("Nothing removed.").into_owned(),
+            Some("Add --yes to remove without asking."),
+        ));
+    }
+    // 1. The daemon must not run, or it would build everything again.
+    let service = match service::set(false) {
+        Ok(()) => "disabled",
+        Err(e) if e.code == "E_NOT_FOUND" => "not_installed",
+        Err(e) if e.code == "E_NO_SYSTEMD" => "no_systemd",
+        Err(e) => return Err(e),
+    };
+    if Client::connect().is_ok_and(|c| c.running()) {
+        return Err(ErrorBody::new(
+            "E_SERVICE",
+            tr("juncd still runs (it was started outside systemd).").into_owned(),
+            Some("Stop it (pkill -x juncd), then run junc teardown again."),
+        ));
+    }
+    // 2. Its objects linger in PipeWire; juncd itself removes them and puts
+    //    the system defaults back.
+    let juncd = juncd_path();
+    let status = std::process::Command::new(&juncd)
+        .arg("--teardown")
+        .status()
+        .map_err(|e| {
+            ErrorBody::new(
+                "E_SERVICE",
+                trf(
+                    "cannot run {juncd}: {e}",
+                    &[("juncd", &juncd.display()), ("e", &e)],
+                ),
+                Some("Is the junc package installed completely?"),
+            )
+        })?;
+    if !status.success() {
+        return Err(ErrorBody::new(
+            "E_SERVICE",
+            tr("Some JUNC objects could not be removed.").into_owned(),
+            Some("They go away at the next PipeWire restart: systemctl --user restart pipewire"),
+        ));
+    }
+    // 3. Skill links (best effort: a missing skill directory is fine).
+    let home = std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_default();
+    let skill = skill::skill_dir()
+        .and_then(|dir| skill::unlink(&home, &dir))
+        .map(|e| json!(e))
+        .unwrap_or(Value::Null);
+    Ok(Done {
+        revision: None,
+        data: json!({ "service": service, "objects_removed": true, "skill": skill }),
+        text: tr("JUNC is removed from the audio system. Your config is kept in ~/.config/junc.")
+            .into_owned(),
+    })
 }
