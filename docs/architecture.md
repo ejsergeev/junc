@@ -1408,7 +1408,7 @@ and fails on regression beyond noise (thresholds in `bench/thresholds.toml`):
 | Daemon idle wakeups | 0/s (thread context switches over 60 s) | CI; `powertop` on owner laptop |
 | Restore at login | < 1 s for 10 Junctions | CI + owner |
 | Re-link | < 100 ms | CI |
-| Recovery | < 1 s, 100 % links | CI |
+| Recovery | < 1 s, 100 % links, JUNC's share: from PipeWire and the devices being back to all routed (owner, 2026-11-25); the total is tracked | CI |
 | CLI/D-Bus | `time junc enable X` < 50 ms | CI |
 | Daemon binary | < 5 MB stripped | CI |
 | GUI cold start | < 300 ms to first frame with live state | owner (GPU); CI tracked, not gated |

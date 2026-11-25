@@ -59,8 +59,8 @@ Agent checks:
    is the measuring observer's own batching. Beta task B29.
 2. **Recovery after a PipeWire restart takes 1.3–1.5 s in total** on the
    laptop. juncd's own share is ~50 ms; the rest is PipeWire, WirePlumber
-   and the Asahi DSP chains starting. If the PRD's "< 1 s" means the total,
-   it cannot be met by JUNC alone. Needs an owner decision.
+   and the Asahi DSP chains starting. The owner decided the target is
+   JUNC's share (met); the total is tracked.
 3. **Volume is stored but not applied** (Junction, Input, Listen). The
    skill tells agents and users so. Beta task B1.
 4. **Exclusive is stored but not applied.** Beta task B2.
@@ -80,11 +80,13 @@ Agent checks:
    pacman repository and the PKGBUILD, linking the skill on juncd's first
    start.
 
-## Owner decisions needed
+## Owner decisions (2026-11-25)
 
-- **Go / no-go** for tagging `v0.1.0-alpha` on main.
-- **Known issue 2**: does the 1 s recovery target mean JUNC's share (met:
-  ~50 ms) or the whole audio stack coming back (1.3–1.5 s on the laptop)?
+- **Go**: tag `v0.1.0-alpha` on main.
+- **Recovery target**: "< 1 s" is JUNC's share, from PipeWire and the
+  devices being back to every Junction routed (met: ~8 ms in CI, ~50 ms on
+  the laptop). The whole stack coming back is tracked, not gated. Known
+  issue 2 is closed by this decision.
 
 ## After go
 
