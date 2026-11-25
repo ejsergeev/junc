@@ -17,7 +17,10 @@ docker import "$work/rootfs.tar.gz" junc-ci-alarm:base
 docker build -t junc-ci-alarm - <<'DOCKERFILE'
 FROM junc-ci-alarm:base
 # pacman 7's Landlock sandbox cannot be applied inside docker build.
+# Several mirrors plus retries: single mirrors are often a sync behind (404s).
 RUN sed -i -e 's/^CheckSpace/#CheckSpace/' -e '/^\[options\]/a DisableSandbox' /etc/pacman.conf \
+ && printf 'Server = http://%s/$arch/$repo\n' dk.mirror.archlinuxarm.org fl.us.mirror.archlinuxarm.org \
+      de.mirror.archlinuxarm.org ca.us.mirror.archlinuxarm.org mirror.archlinuxarm.org > /etc/pacman.d/mirrorlist \
  && pacman-key --init && pacman-key --populate archlinuxarm \
- && pacman -Syu --noconfirm --needed base-devel
+ && for i in 1 2 3; do pacman -Syyu --noconfirm --needed base-devel && break; sleep 20; [ $i = 3 ] && exit 1; done
 DOCKERFILE
