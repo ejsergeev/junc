@@ -388,3 +388,62 @@ fn live_statuses_and_graph_changed() {
         assert!(desc.defaults.output.is_some());
     });
 }
+
+/// Our interface's element from an introspection document.
+fn interface_xml(doc: &str, name: &str) -> String {
+    let start = doc
+        .find(&format!("<interface name=\"{name}\">"))
+        .expect("interface");
+    let end = start + doc[start..].find("</interface>").expect("end") + "</interface>".len();
+    doc[start..end].to_owned()
+}
+
+/// docs/dbus/io.github.ejsergeev.Junc1.xml is generated from the running
+/// daemon; `JUNC_BLESS=1` rewrites it after an API change.
+#[test]
+fn introspection_xml_is_up_to_date() {
+    let Some(env) = start("xml") else { return };
+    let xml = zbus::block_on(async {
+        let (conn, _d) = connect(&env).await;
+        let mut parts = Vec::new();
+        for (path, iface) in [
+            (junc_ipc::ROOT_PATH, junc_ipc::DAEMON_IFACE),
+            (
+                "/io/github/ejsergeev/Junc1/junction/zoom",
+                junc_ipc::JUNCTION_IFACE,
+            ),
+        ] {
+            let p = zbus::fdo::IntrospectableProxy::builder(&conn)
+                .destination(junc_ipc::BUS_NAME)
+                .path(path)
+                .build()
+                .await
+                .expect("introspection proxy");
+            parts.push(interface_xml(
+                &p.introspect().await.expect("D-Bus call"),
+                iface,
+            ));
+        }
+        parts
+    });
+    let doc = format!(
+        "<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\"\n \
+         \"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n\
+         <!-- Generated from juncd by crates/juncd/tests/dbus.rs; do not edit.\n     \
+         Regenerate: JUNC_BLESS=1 cargo test -p juncd --test dbus introspection -->\n\
+         <node>\n  {}\n</node>\n",
+        xml.join("\n  ")
+    );
+    let file =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/dbus/io.github.ejsergeev.Junc1.xml");
+    if std::env::var_os("JUNC_BLESS").is_some() {
+        std::fs::create_dir_all(file.parent().expect("docs dir")).expect("mkdir");
+        std::fs::write(&file, &doc).expect("write XML");
+    }
+    let current = std::fs::read_to_string(&file).unwrap_or_default();
+    assert!(
+        current == doc,
+        "{} is out of date; run JUNC_BLESS=1 cargo test -p juncd --test dbus introspection",
+        file.display()
+    );
+}
