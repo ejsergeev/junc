@@ -12,3 +12,4 @@ touches the desktop session.
 | `s3-link-tags.sh` | S3: custom `junc.*` props and `object.linger` on links after the creator exits |
 | `s4-bit-exact.sh` (+ `s4_wav.py`, needs numpy) | S4: gain node + Junction bit-exact at 100 % and exact ×0.5 |
 | `s5-exclusive.sh` | S5: Exclusive through the `target.object` metadata key |
+| `s9-global-props.sh` | S9: which properties registry globals carry, and which need a bound proxy |

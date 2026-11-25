@@ -10,6 +10,12 @@ export PW_SESSION=manual
 export PULSE_SERVER=unix:$XDG_RUNTIME_DIR/pulse/native
 unset PIPEWIRE_REMOTE
 mkdir -p "$XDG_RUNTIME_DIR" "$LOGDIR"; chmod 700 "$XDG_RUNTIME_DIR"
+# Never let a spike talk to the desktop session.
+if [ "$XDG_RUNTIME_DIR" = "/run/user/$(id -u)" ]; then
+  echo "lib.sh: refusing to run against the live session ($XDG_RUNTIME_DIR)" >&2; exit 1
+fi
+# Every pw-* call made by a spike goes to the isolated instance only.
+pw_guard() { [ "$XDG_RUNTIME_DIR" != "/run/user/$(id -u)" ] || { echo "live session!" >&2; exit 1; }; }
 spike_up() { "$BENCH/pw-session.sh" start; for _ in $(seq 1 100); do [ -S "$XDG_RUNTIME_DIR/pulse/native" ] && break; sleep 0.05; done; sleep 1; }
 spike_down() { "$BENCH/pw-session.sh" stop; }
 node_id() { pw-dump | jq -r --arg n "$1" '.[]|select(.type=="PipeWire:Interface:Node" and .info.props["node.name"]==$n)|.id' | head -1; }

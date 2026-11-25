@@ -1344,6 +1344,8 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 | S5 | **Pass.** With a JUNC link stream→gain in place, setting `target.object` on the stream to its gain node makes WirePlumber drop its link to the default sink and keep JUNC's; clearing the key restores the default-sink link. | Exclusive targets the Input's gain node (not the Junction). |
 | S8 | **Pass by construction.** In the live session the speaker (node 62) and mic-array (node 56) ALSA nodes are inaccessible (`no global`), only their links are visible. | The planner only ever targets nodes it can see; test kept on the Asahi fixture. |
 
+| S9 | Registry globals carry only part of the properties. Nodes: no `junc.*` tags, no `application.process.binary`, no `audio.channels`. Links: no `junc.*` tags. Ports: everything needed (`port.id`, `audio.channel`, direction, `node.id`). | `junc-pw` binds every audio node and every link to read their full info props (cheap client-side proxies, no objects created); ports are read from globals. |
+
 Other findings: ports must be looked up by direction and `audio.channel`, never
 by name (`Audio/Source/Virtual` names its inputs `input_FL`, sinks use
 `playback_FL`), and links can only be created once a new node's ports exist
