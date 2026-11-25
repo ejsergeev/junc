@@ -275,10 +275,17 @@ Each desired link has a state:
 - **Waiting** shows as "Offline · Waiting for device…" (hardware) or
   "Not running · Waiting for Spotify…" (app), links drawn dashed (design
   states `offline`, `appClosed`).
+- Implemented in `junc-core::reconcile` (state across snapshots) on top of
+  the planner. Objects are tracked by registry id **and** `object.serial`,
+  because PipeWire reuses ids. The backend sends a snapshot only after every
+  newly bound node and link has reported its full props, so JUNC's own new
+  objects never look untagged (which would make the planner duplicate them).
 - **Overridden**: a JUNC link disappeared while both endpoints still exist
-  and JUNC did not destroy it. Detection: on link removal, wait for the next
-  `core.sync`; if both endpoint nodes are still in the registry, it was
-  removed by another tool. JUNC does not fight: it raises a `LinkOverridden`
+  and JUNC did not destroy it. Detection: the link is held at once (not
+  recreated); if both endpoint nodes are still present in the next snapshot
+  it was another tool and a notice is raised, otherwise (an app quitting
+  removes its links before its node) the hold is dropped silently. Links
+  between JUNC's own nodes are always restored. JUNC does not fight: it raises a `LinkOverridden`
   notice ("EasyEffects removed the Link …", culprit from the client that
   owns the replacing link when known) with **Restore** / **Leave as is**
   (design state `linkOverridden`). "Leave as is" adds the link's channel pair to the `suppressed` list of
