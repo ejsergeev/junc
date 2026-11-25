@@ -111,6 +111,16 @@ pub const CODES: &[Code] = &[
         "Template slots are only for presets; use real values in the config.",
     ),
     c(
+        "E_PRESET_SLOT",
+        3,
+        "A preset's slot is undeclared, declared twice, unused, or of a kind that does not fit where it is used.",
+    ),
+    c(
+        "E_PRESET_FILL",
+        2,
+        "A template needs a value for each of its slots (`--slot ID=VALUE`), and only for those. The hint lists them.",
+    ),
+    c(
         "W_CONFIG_MANY_INPUTS",
         0,
         "Warning: many Inputs on one Junction. Accepted.",

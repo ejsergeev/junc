@@ -40,6 +40,8 @@ With `--json`, every command prints one document:
 | `E_CONFIG_CYCLE` | 3 | Nesting would make audio feed back. Remove one Junction Input of the loop. |
 | `E_CONFIG_CABLE` | 3 | A Cable needs exactly one app Input and `[junction.cable] to = { … }`. |
 | `E_CONFIG_SLOT_OUTSIDE_PRESET` | 3 | Template slots are only for presets; use real values in the config. |
+| `E_PRESET_SLOT` | 3 | A preset's slot is undeclared, declared twice, unused, or of a kind that does not fit where it is used. |
+| `E_PRESET_FILL` | 2 | A template needs a value for each of its slots (`--slot ID=VALUE`), and only for those. The hint lists them. |
 | `W_CONFIG_MANY_INPUTS` | 0 | Warning: many Inputs on one Junction. Accepted. |
 | `E_NOT_FOUND` | 4 | No such Junction, Input, Listen output, link or unit. The hint suggests the closest name. |
 | `E_CONFIG_CONFLICT` | 5 | The config changed since the revision you read. Read it again and redo the change. |
