@@ -319,6 +319,55 @@ fn volumes_are_set_where_they_belong_and_only_when_needed() {
     assert!((b.volume(node(&b, "junc.zoom.in.firefox")) - 0.343).abs() < 1e-6);
 }
 
+/// F11 (B2): an Exclusive Input sends the app's streams to its gain node,
+/// holds a move someone else makes, and returns them when turned off.
+#[test]
+fn exclusive_moves_streams_to_the_gain_node_and_back() {
+    let (mut b, cfg, mut r) = setup();
+    let mut on = cfg.clone();
+    on.junction[0].input[0].exclusive = true;
+    for _ in 0..3 {
+        step(&mut b, &on, &mut r);
+    }
+    let firefox: Vec<u32> = junc_core::matcher::resolve(
+        &on.junction[0].input[0].matcher,
+        junc_core::matcher::Use::Input,
+        b.graph(),
+    );
+    assert!(!firefox.is_empty());
+    for s in &firefox {
+        assert_eq!(
+            b.graph().targets.get(s).map(String::as_str),
+            Some("junc.zoom.in.firefox"),
+            "stream {s}"
+        );
+    }
+    assert!(r.on_graph(&on, b.graph()).actions.is_empty(), "converged");
+
+    // The user moves one stream to the speakers: held, reported, not fought.
+    let s0 = firefox[0];
+    b.graph_mut().targets.insert(s0, "fake.hp".into());
+    let s = step(&mut b, &on, &mut r);
+    let reference = junc_core::plan::stream_target_ref("exclusive", b.graph(), s0);
+    assert_eq!(s.notices, [overridden("zoom", &reference)]);
+    assert!(s.actions.is_empty(), "{:?}", s.actions);
+    assert!(step(&mut b, &on, &mut r).actions.is_empty());
+
+    // Exclusive off: JUNC's other streams go back to the default; the one
+    // the user moved stays where they put it. The capture links stay.
+    for _ in 0..3 {
+        step(&mut b, &cfg, &mut r);
+    }
+    for s in &firefox[1..] {
+        assert_eq!(b.graph().targets.get(s), None, "stream {s}");
+    }
+    assert_eq!(
+        b.graph().targets.get(&s0).map(String::as_str),
+        Some("fake.hp")
+    );
+    assert!(link_by_ref(&b, "in/firefox/1->1").is_some());
+}
+
 #[test]
 fn exclusive_is_for_app_inputs_only() {
     let text = ZOOM.replace(
@@ -327,4 +376,31 @@ fn exclusive_is_for_app_inputs_only() {
     );
     let err = config::load(&text, "t.toml").expect_err("device Input with exclusive");
     assert!(format!("{err:?}").contains("exclusive"), "{err:?}");
+}
+
+/// A daemon that restarts does not remember the streams it moved; turning
+/// Exclusive off afterwards must still give them back.
+#[test]
+fn exclusive_off_after_a_restart_returns_the_streams() {
+    let (mut b, cfg, mut r) = setup();
+    let mut on = cfg.clone();
+    on.junction[0].input[0].exclusive = true;
+    for _ in 0..3 {
+        step(&mut b, &on, &mut r);
+    }
+    let moved: Vec<u32> = b
+        .graph()
+        .targets
+        .iter()
+        .filter(|(_, v)| *v == "junc.zoom.in.firefox")
+        .map(|(s, _)| *s)
+        .collect();
+    assert!(!moved.is_empty());
+    let mut fresh = Reconciler::new();
+    for _ in 0..3 {
+        step(&mut b, &cfg, &mut fresh);
+    }
+    for s in &moved {
+        assert_eq!(b.graph().targets.get(s), None, "stream {s}");
+    }
 }

@@ -15,7 +15,7 @@
 //! Links between JUNC's own nodes (`gain/…`, `sink/…`, `listen/…/bus/…`) are
 //! always restored: they are internal wiring, not routing choices.
 
-use crate::backend::{Action, DefaultKind};
+use crate::backend::{Action, DefaultKind, Role};
 use crate::defaults::{DefaultNotice, DefaultsState, plan_defaults};
 use crate::graph::Graph;
 use crate::model::Config;
@@ -195,8 +195,9 @@ impl Reconciler {
         self.destroying.retain(|id| current.contains_key(id));
         self.last = current;
 
-        // Streams JUNC sent to a Cable: a value someone else wrote since is
-        // the user's choice (F17); hold it like an overridden link.
+        // Streams JUNC sent to a Cable or an Exclusive gain node: a value
+        // someone else wrote since is the user's choice (F17); hold it like
+        // an overridden link.
         let holds = &mut self.confirmed;
         self.targeted.retain(|stream, t| {
             if !graph.nodes.contains_key(stream) {
@@ -225,10 +226,11 @@ impl Reconciler {
         let serials: HashSet<String> = graph
             .nodes
             .values()
-            .map(|n| crate::plan::cable_target_ref(graph, n.id))
+            .map(|n| n.props.number("object.serial").unwrap_or(n.id).to_string())
             .collect();
         self.confirmed.retain(|(j, r)| {
-            known.contains(j.as_str()) && (!r.starts_with("cable/target/") || serials.contains(r))
+            known.contains(j.as_str())
+                && crate::plan::stream_target_serial(r).is_none_or(|s| serials.contains(s))
         });
 
         let p = plan(config, graph, &self.held());
@@ -256,10 +258,11 @@ impl Reconciler {
         }
     }
 
-    /// Records the streams this step sends to Cables, and returns the
-    /// streams JUNC sent earlier that no Cable wants now (Cable deleted or
-    /// off, app no longer matched) to their default. Values someone else
-    /// wrote are never touched.
+    /// Records the streams this step sends to Cables and Exclusive gain
+    /// nodes, and returns the streams JUNC sent earlier that nothing wants
+    /// now (Cable deleted, Exclusive turned off, Junction or Input off, app
+    /// no longer matched) to their default. Values someone else wrote are
+    /// never touched.
     fn track_targets(&mut self, config: &Config, graph: &Graph, planned: &[Action]) -> Vec<Action> {
         for a in planned {
             if let Action::SetTarget {
@@ -280,17 +283,43 @@ impl Reconciler {
                 );
             }
         }
-        let wanted: HashSet<(u32, String)> = config
-            .junction
-            .iter()
-            .filter(|j| j.enabled && j.kind == crate::model::Kind::Cable)
-            .filter_map(|j| Some((j, j.cable.as_ref()?)))
-            .flat_map(|(j, c)| {
-                let name = crate::matcher::junction_node_name(&j.id);
-                crate::matcher::resolve(&c.to, crate::matcher::Use::CableTarget, graph)
-                    .into_iter()
-                    .map(move |s| (s, name.clone()))
-            })
+        let wanted_targets = crate::plan::stream_targets(config, graph);
+        // Streams already where JUNC wants them, and streams sent to a JUNC
+        // Input gain node (only JUNC does that: gain nodes are not listed as
+        // devices), are JUNC's to return: a daemon that restarted does not
+        // remember having moved them.
+        for t in &wanted_targets {
+            if graph.targets.get(&t.stream) == Some(&t.target) {
+                self.targeted.entry(t.stream).or_insert_with(|| Targeted {
+                    junction: t.junction.clone(),
+                    reference: t.reference.clone(),
+                    value: t.target.clone(),
+                    confirmed: true,
+                });
+            }
+        }
+        for (&stream, value) in &graph.targets {
+            let Some(gain) = graph.node_by_name(value).filter(|n| {
+                n.is_junc() && n.props.get("junc.role") == Some(Role::InputGain.as_str())
+            }) else {
+                continue;
+            };
+            if graph.nodes.contains_key(&stream) {
+                self.targeted.entry(stream).or_insert_with(|| Targeted {
+                    junction: gain
+                        .props
+                        .get("junc.junction")
+                        .unwrap_or_default()
+                        .to_owned(),
+                    reference: crate::plan::stream_target_ref("exclusive", graph, stream),
+                    value: value.clone(),
+                    confirmed: true,
+                });
+            }
+        }
+        let wanted: HashSet<(u32, String)> = wanted_targets
+            .into_iter()
+            .map(|t| (t.stream, t.target))
             .collect();
         let mut out = Vec::new();
         self.targeted.retain(|stream, t| {
@@ -389,7 +418,7 @@ impl Reconciler {
         if !was_held || how == Resolution::Restore {
             return None;
         }
-        if reference.starts_with("cable/target/") {
+        if crate::plan::stream_target_serial(reference).is_some() {
             // A stream lives as long as the app runs; the config has no
             // place for it. Keep holding it until it goes.
             self.confirmed.insert(key);

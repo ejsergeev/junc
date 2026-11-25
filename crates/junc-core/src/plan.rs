@@ -180,18 +180,21 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
 
     // --- links ------------------------------------------------------------
     let mut want_links: BTreeMap<(u32, u32), LinkSpec> = BTreeMap::new();
-    let mut set_targets = Vec::new();
     for j in &config.junction {
-        junction_links(
-            j,
-            graph,
-            &ready,
-            held,
-            &mut want_links,
-            &mut set_targets,
-            &mut out.status,
-        );
+        junction_links(j, graph, &ready, held, &mut want_links, &mut out.status);
     }
+    let set_targets = stream_targets(config, graph)
+        .into_iter()
+        .filter(|t| {
+            graph.targets.get(&t.stream) != Some(&t.target)
+                && !held.contains(&(t.junction.clone(), t.reference.clone()))
+        })
+        .map(|t| Action::SetTarget {
+            node: t.stream,
+            target: Some(t.target),
+            junction: t.junction,
+            reference: t.reference,
+        });
     let destroyed: HashSet<u32> = destroy_nodes
         .iter()
         .filter_map(|a| {
@@ -232,15 +235,89 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
     out
 }
 
-/// Hold reference for a Cable's target stream: by `object.serial`, so an
-/// override of one stream does not hold back the app's next one.
-pub fn cable_target_ref(graph: &Graph, stream: u32) -> String {
+/// A stream JUNC sends to one of its own nodes with `target.object`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StreamTarget {
+    /// The app stream's node id.
+    pub stream: u32,
+    /// `node.name` it is sent to.
+    pub target: String,
+    /// Junction (or Cable) id that wants it.
+    pub junction: String,
+    /// Hold reference, see [`stream_target_ref`].
+    pub reference: String,
+}
+
+/// The streams JUNC wants moved with `target.object`, which WirePlumber then
+/// links (spikes S5, S11):
+///
+/// - a Cable's target app capture streams, to the Cable;
+/// - the app streams of an Exclusive Input (F11), to the Input's gain node:
+///   WirePlumber drops its link to the speakers and keeps JUNC's.
+///
+/// A stream has one target: if two Junctions want the same stream, the
+/// first one in the config gets it.
+pub fn stream_targets(config: &Config, graph: &Graph) -> Vec<StreamTarget> {
+    let mut out = Vec::new();
+    let mut taken = HashSet::new();
+    let mut want = |stream: u32, target: &str, j: &Junction, kind: &str| {
+        if taken.insert(stream) {
+            out.push(StreamTarget {
+                stream,
+                target: target.to_owned(),
+                junction: j.id.clone(),
+                reference: stream_target_ref(kind, graph, stream),
+            });
+        }
+    };
+    for j in config.junction.iter().filter(|j| j.enabled) {
+        if j.kind == Kind::Cable
+            && let Some(cable) = &j.cable
+        {
+            let name = junction_node_name(&j.id);
+            for s in resolve(&cable.to, Use::CableTarget, graph) {
+                want(s, &name, j, "cable");
+            }
+        }
+        for i in j.input.iter().filter(|i| i.enabled && i.exclusive) {
+            // Only once the gain node exists: a target that names no node
+            // sends the app back to the default output.
+            let gain = gain_node_name(&j.id, &i.id);
+            if !graph.node_by_name(&gain).is_some_and(Node::is_junc) {
+                continue;
+            }
+            for s in resolve(&i.matcher, Use::Input, graph) {
+                if graph.nodes.get(&s).is_some_and(Node::is_app_stream) {
+                    want(s, &gain, j, "exclusive");
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Hold reference for a stream target: by `object.serial`, so an override
+/// of one stream does not hold back the app's next one. `kind` is `cable`
+/// or `exclusive`.
+pub fn stream_target_ref(kind: &str, graph: &Graph, stream: u32) -> String {
     let serial = graph
         .nodes
         .get(&stream)
         .and_then(|n| n.props.number("object.serial"))
         .unwrap_or(stream);
-    format!("cable/target/{serial}")
+    format!("{kind}/target/{serial}")
+}
+
+/// Hold reference for a Cable's target stream.
+pub fn cable_target_ref(graph: &Graph, stream: u32) -> String {
+    stream_target_ref("cable", graph, stream)
+}
+
+/// The stream's `object.serial` if `reference` names a stream target.
+pub fn stream_target_serial(reference: &str) -> Option<&str> {
+    reference
+        .strip_prefix("cable/target/")
+        .or_else(|| reference.strip_prefix("exclusive/target/"))
 }
 
 /// An app (or another tool) uses the node: any link touching it that JUNC
@@ -315,7 +392,6 @@ fn junction_links(
     ready: &BTreeMap<String, u32>,
     held: &Held,
     want: &mut BTreeMap<(u32, u32), LinkSpec>,
-    targets_out: &mut Vec<Action>,
     status: &mut Vec<EntityStatus>,
 ) {
     let st = |entity, status, nodes| EntityStatus {
@@ -479,22 +555,9 @@ fn junction_links(
             Vec::new()
         };
         // WirePlumber links the target app to the Cable once its stream's
-        // `target.object` names the Cable (spike S11); JUNC links of its own
-        // would mix with WirePlumber's default routing instead.
-        let name = junction_node_name(&j.id);
-        for &t in &targets {
-            let reference = cable_target_ref(graph, t);
-            if graph.targets.get(&t) != Some(&name)
-                && !held.contains(&(j.id.clone(), reference.clone()))
-            {
-                targets_out.push(Action::SetTarget {
-                    node: t,
-                    target: Some(name.clone()),
-                    junction: j.id.clone(),
-                    reference,
-                });
-            }
-        }
+        // `target.object` names the Cable (spike S11, `stream_targets`);
+        // JUNC links of its own would mix with WirePlumber's default
+        // routing instead.
         let s = match (j.enabled, targets.is_empty()) {
             (false, _) => Status::Disabled,
             (true, true) => Status::Waiting,
