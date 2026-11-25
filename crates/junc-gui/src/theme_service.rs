@@ -63,9 +63,15 @@ pub fn current(
 }
 
 /// Starts a thread that calls `changed` with the new tokens after every
-/// theme switch or edit in the Omarchy theme directory `dir`. Fails when
-/// its parent (`…/omarchy/current`) does not exist (not Omarchy).
-pub fn watch(dir: PathBuf, changed: impl Fn(Tokens) + Send + 'static) -> std::io::Result<()> {
+/// theme switch or edit in the Omarchy theme directory `dir`. A theme
+/// without readable colours (Omarchy 4.5.0 lists Osaka Jade, which ships
+/// only wallpapers) gives the built-in theme for `prefer_light`. Fails when
+/// `dir`'s parent (`…/omarchy/current`) does not exist (not Omarchy).
+pub fn watch(
+    dir: PathBuf,
+    prefer_light: impl Fn() -> bool + Send + 'static,
+    changed: impl Fn(Tokens) + Send + 'static,
+) -> std::io::Result<()> {
     let parent = dir
         .parent()
         .ok_or_else(|| std::io::Error::from(std::io::ErrorKind::NotFound))?
@@ -110,9 +116,7 @@ pub fn watch(dir: PathBuf, changed: impl Fn(Tokens) + Send + 'static) -> std::io
                     let _ = ino.watches().remove(old);
                 }
                 inner = ino.watches().add(&dir, edits).ok();
-                if let Ok(t) = theme::load(&dir) {
-                    changed(t);
-                }
+                changed(theme::load(&dir).unwrap_or_else(|_| theme::fallback(prefer_light())));
             }
         })?;
     Ok(())

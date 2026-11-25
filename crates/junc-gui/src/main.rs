@@ -17,7 +17,7 @@ fn main() -> Result<(), slint::PlatformError> {
     if let theme_service::Source::Omarchy(dir) = source {
         let weak = window.as_weak();
         // Not on Omarchy or no inotify: the theme stays as it started.
-        let _ = theme_service::watch(dir, move |t| {
+        let _ = theme_service::watch(dir, theme_service::portal_prefers_light, move |t| {
             let weak = weak.clone();
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(w) = weak.upgrade() {

@@ -37,9 +37,13 @@ fn an_omarchy_theme_switch_retints_live() {
     assert_eq!(start.surface_window, Color::rgb(0x1a, 0x1b, 0x26));
 
     let (tx, rx) = channel();
-    theme_service::watch(dir.clone(), move |t| {
-        let _ = tx.send(t);
-    })
+    theme_service::watch(
+        dir.clone(),
+        || false,
+        move |t| {
+            let _ = tx.send(t);
+        },
+    )
     .expect("watch");
     let next = || rx.recv_timeout(Duration::from_secs(3)).expect("no reload");
 
@@ -64,6 +68,13 @@ fn an_omarchy_theme_switch_retints_live() {
     .expect("edit");
     assert_eq!(next().accent.hex(), "#ff0000");
 
+    // A listed theme without colours (Omarchy 4.5.0's Osaka Jade ships only
+    // wallpapers): the built-in theme, not the last one's leftovers.
+    std::fs::create_dir_all(staged.join("backgrounds")).expect("dir");
+    std::fs::remove_dir_all(&dir).expect("rm");
+    std::fs::rename(&staged, &dir).expect("mv");
+    assert_eq!(next(), theme::fallback(false));
+
     // And back.
     write_theme(&staged, TOKYO);
     std::fs::remove_dir_all(&dir).expect("rm");
@@ -86,6 +97,6 @@ fn without_omarchy_the_builtin_theme_follows_the_colour_scheme() {
     write_theme(&dir, TOKYO);
     let (_, s) = theme_service::current(Some(&dir), false, || false);
     assert_eq!(s, Source::Builtin { light: false });
-    assert!(theme_service::watch(missing.to_owned(), |_| {}).is_err());
+    assert!(theme_service::watch(missing.to_owned(), || false, |_| {}).is_err());
     let _ = std::fs::remove_dir_all(&dir);
 }
