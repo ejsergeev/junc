@@ -188,3 +188,14 @@ fn print_invalid_fixture_messages() {
         }
     }
 }
+
+#[test]
+fn published_schema_is_current() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../schema/junc-config-v1.json");
+    let on_disk = fs::read_to_string(&path).unwrap_or_default();
+    assert!(
+        on_disk == junc_core::schema::json_schema(),
+        "{} is stale: run `cargo xtask schema` and commit the result",
+        path.display()
+    );
+}
