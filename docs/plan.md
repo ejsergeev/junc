@@ -304,9 +304,20 @@ Daemon features first (they gate GUI screens):
   on, create and delete; live, an app routed into a Junction appears in
   `capture` and leaves it when the Junction is turned off, with graph
   events in between.
-- [ ] **B8** [auto] Presets/templates: export, import with slots, built-in
+- [x] **B8** [auto] Presets/templates: export, import with slots, built-in
   set. Req: F22, F24. Acceptance: round-trip tests; every built-in template
   validates.
+  Done 2026-11-25 (architecture §6.3, as built): `junc-core::preset` loads
+  presets and templates with the config rules plus slot rules, fills slots
+  and exports; the six built-in templates are in `templates/` and compiled
+  in; CLI `junc template list|show`, `junc create junction --template`,
+  `junc preset export|import`; skill `presets.md` (templates first). Tests:
+  every built-in template validates, fills into a valid Junction and
+  survives a save and load; export → import round trips every fixture
+  Junction unchanged; slot mistakes are reported at their line; the CLI
+  test fills two templates, exports and imports a Junction (same Inputs
+  and Listens, not a second default input). Installing the templates to
+  `/usr/share/junc/templates` comes with the PKGBUILD (B25).
 - [ ] **B9** [auto] Doctor complete (Asahi DSP, rates, jack2) + bug report
   with path scrubbing. Req: F19. Acceptance: golden outputs; scrub test.
 

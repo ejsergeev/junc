@@ -934,6 +934,8 @@ Diagnostic codes (stable; also listed in the skill reference):
 | `E_CONFIG_JUNCTION_UNKNOWN` / `E_CONFIG_CYCLE` | Bad nesting |
 | `E_CONFIG_CABLE` | Cable shaped wrong |
 | `E_CONFIG_SLOT_OUTSIDE_PRESET` | Template slot in a config |
+| `E_PRESET_SLOT` | Preset slot undeclared, declared twice, unused, or of a kind that does not fit |
+| `E_PRESET_FILL` | Template slot values missing or naming slots it lacks |
 | `W_CONFIG_MANY_INPUTS` | Warning: > 32 Inputs |
 
 ### 6.3 Presets and templates (F22, F24)
@@ -982,6 +984,41 @@ match = { slot = "app" }
   offline until the device is present.
 - Built-in set (F24): `cable`, `mic-plus-app`, `combine-inputs`,
   `separate-tracks`, `stream-mix`, `start-empty`. They double as agent recipes.
+
+As built (B8), in `junc-core::preset`:
+
+- Slots are used as `match = { slot = "…" }` on Inputs (hardware-input,
+  app or monitor) and on a Cable's `to` and Input (app only), as
+  `target = "{…}"` on Listen outputs (output slots), and as `{…}` in the
+  Junction's name. Filling turns a slot into `device`, `binary` or
+  `monitor`, or the Listen target;
+  the name gets the value's label (device description or app name, from
+  the graph) or the value itself.
+- Loading reuses the config loader (syntax, schema migration, every config
+  rule, with locations mapped into the preset file) and adds the slot
+  rules: declared once, used, of a kind that fits (`E_PRESET_SLOT`).
+  Shape errors inside `[junction]` point at its header. `id` may be left
+  out: it is made from the name, and an import makes it unique anyway.
+- Without slots, braces in a name are plain text, so any Junction exports.
+- Exports keep the whole Junction (volumes, links, `suppressed`, default
+  role) and write `match`, `bus` and `to` inline as in the examples above;
+  the CLI adds a comment naming the device-specific Inputs and Listen
+  outputs. An import whose default role another Junction holds is added
+  without it, with a note.
+- The built-in templates live in `templates/`, are compiled into
+  `junc-core` (so `junc template list` works without the daemon and always
+  matches the binary) and are installed to `/usr/share/junc/templates` by
+  the package (B25). `builtin = true` is informational.
+- CLI: `junc template list|show`, `junc create junction NAME --template T
+  --slot ID=VALUE`, `junc preset export NAME [-o FILE]`, `junc preset
+  import FILE [--slot ID=VALUE] [--name NAME]`. All edits go through
+  `GetConfig` + `Apply`; the D-Bus API is unchanged (the GUI's
+  `ImportPreset`/`ExportPreset` come with the GUI if it needs them).
+- Tests: `junc-core/tests/preset.rs` (every built-in template loads, fills
+  into a valid Junction and survives a save; export → import round trips
+  every fixture Junction; slot mistakes reported at their line);
+  `junc-cli/tests/cli.rs` `templates_and_presets_make_junctions` (mock
+  daemon). `cargo xtask skill-check` loads `[preset]` examples as presets.
 
 ### 6.4 Schema versioning and migrations
 
@@ -1296,7 +1333,7 @@ an SNI host is present.
 table; CI fails if it is stale (generated-file commit rule applies).
 
 As built (A18): the skill lives in `skill/junc/` (installed to
-`/usr/share/junc/agent/skills/junc/`); `presets.md` waits for presets
+`/usr/share/junc/agent/skills/junc/`); `presets.md` came with presets
 (B8). `junc skill link` links into the folders above that exist and
 never creates one; the automatic link on juncd's first start comes with
 packaging.
