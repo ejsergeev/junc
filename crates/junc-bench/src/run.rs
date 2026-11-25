@@ -25,6 +25,8 @@ pub struct Opts {
     pub recoveries: usize,
     /// `junc enable` calls for the CLI measure.
     pub cli_runs: usize,
+    /// The systemd unit whose environment juncd gets.
+    pub unit: PathBuf,
 }
 
 const JUNCTIONS: usize = 10;
@@ -126,6 +128,17 @@ fn percentile(v: &mut [f64], p: f64) -> f64 {
 
 fn ms(d: Duration) -> f64 {
     d.as_secs_f64() * 1000.0
+}
+
+/// `Environment=K=V` lines of a systemd unit.
+fn unit_environment(unit: &Path) -> Vec<(String, String)> {
+    std::fs::read_to_string(unit)
+        .unwrap_or_default()
+        .lines()
+        .filter_map(|l| l.trim().strip_prefix("Environment="))
+        .filter_map(|kv| kv.split_once('='))
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect()
 }
 
 /// A field of `/proc/<pid>/smaps_rollup`, in kB.
@@ -354,10 +367,17 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
     wait_for(&rx, &mut g, Duration::from_secs(5), |g| !g.nodes.is_empty())
         .ok_or("no PipeWire graph (run under scripts/ci/with-pipewire.sh)")?;
 
-    // Restore: process start to every Junction routed.
+    // Restore: process start to every Junction routed. juncd runs with the
+    // environment its systemd unit gives it, as shipped.
+    let unit_env = unit_environment(&o.unit);
+    log(&format!(
+        "juncd environment from {}: {unit_env:?}",
+        o.unit.display()
+    ));
     let t = Instant::now();
     let daemon = Kill(
         Command::new(&juncd)
+            .envs(unit_env.iter().map(|(k, v)| (k, v)))
             .arg("--config")
             .arg(&cfg)
             .arg("--state-dir")

@@ -66,6 +66,7 @@ fn run_cmd(args: &[String]) -> Result<bool, String> {
         churn: if quick { 10 } else { 30 },
         recoveries: if quick { 1 } else { 3 },
         cli_runs: 20,
+        unit: PathBuf::from("packaging/systemd/juncd.service"),
     };
     let metrics = run::run(&opts)?;
     let results = Results {
