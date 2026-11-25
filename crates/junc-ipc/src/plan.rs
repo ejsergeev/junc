@@ -211,7 +211,17 @@ fn role(r: DefaultRole, name: &str) -> String {
 }
 
 fn add_input(i: &Input, name: &str, graph: Option<&Graph>, out: &mut Vec<String>) {
-    let src = source(&i.matcher, graph);
+    let mut src = source(&i.matcher, graph);
+    // Settings the user asked for belong in the plan they approve.
+    if i.volume != 100 {
+        src = trf("{src} at {p}%", &[("src", &src), ("p", &i.volume)]);
+    }
+    if i.exclusive {
+        src = trf(
+            "{src}, exclusive (no longer heard on the speakers)",
+            &[("src", &src)],
+        );
+    }
     out.push(if !i.enabled {
         trf(
             "Add {src} to “{name}”, turned off",
