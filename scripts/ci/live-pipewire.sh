@@ -20,4 +20,4 @@ trap '"$session" stop >/dev/null 2>&1 || true' EXIT
 "$session" start
 for _ in $(seq 1 100); do [ -S "$XDG_RUNTIME_DIR/pulse/native" ] && break; sleep 0.05; done
 sleep 1
-JUNC_LIVE_PIPEWIRE=1 cargo test -p junc-pw -p juncd --test live --locked "$@" -- --nocapture --test-threads=1
+JUNC_LIVE_PIPEWIRE=1 cargo test -p junc-pw -p juncd --test live --test dbus --locked "$@" -- --nocapture --test-threads=1
