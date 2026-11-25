@@ -192,9 +192,10 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   sd_notify. Req: F9. Acceptance: in a systemd-user container, Junctions exist
   after login with no GUI; restore < 1 s for 10 Junctions.
   Done 2026-11-25: `packaging/systemd/juncd.service` (`Type=notify`, after PipeWire, no restart for unfixable exits) and the D-Bus activation file; juncd sends `READY=1` and a status line without libsystemd; `junc service enable|disable|status`. CI boots the Arch image with systemd as PID 1 on both arches: a lingering login with ten Junctions and no GUI has them routed 230–300 ms after login (juncd's own restore 17–40 ms), the unit verifies, D-Bus activation brings juncd back when stopped, `junc service` works, and a second login restores again. Found and fixed: juncd took its bus name before publishing its state, so the call that activated it saw an empty daemon; `doctor` and `service status` started juncd by asking about it.
-- [ ] **A16** [auto] Layer-2 integration suite in CI using the validation
+- [x] **A16** [auto] Layer-2 integration suite in CI using the validation
   `ci-config` (fake devices, no bluez/logind). Req: F1–F5, F9, F10, F16,
   F17. Acceptance: runs on every PR in < 10 min on both arches.
+  Done 2026-11-25: the suite (`scripts/ci/live-pipewire.sh`, validation `ci-config`) now also proves F3/F4 channel placement (4-ch Bus, Input on ch 3–4 bit-exact, ch 1–2 silent), recovery from a PipeWire restart (rebuilt in 72–79 ms in CI), F10 with 60 app restarts (p95 6–8 ms in CI) and 10 device re-plugs, and visibility to PulseAudio, JACK and native clients; every test cleans up after itself; architecture §11.2 maps each requirement to its test. In CI the suite takes 23–25 s and the whole check job 3–5 min on both arches; CI fails if the suite reaches 10 min.
 - [ ] **A17** [auto] Port `bench/` to drive the real `juncd`; daemon perf
   gates with a stored baseline (PSS, wakeups, re-link, recovery, CLI latency,
   binary size, 0 extra quanta, bit-exact). Req: PRD performance. Acceptance:
