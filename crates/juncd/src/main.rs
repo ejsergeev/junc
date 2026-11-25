@@ -20,6 +20,7 @@
 #![forbid(unsafe_code)]
 
 mod dbus;
+mod notify;
 mod watch;
 
 use dbus::{Edit, Reply, Req, Resp, Responder, Server, Shared};
@@ -211,6 +212,7 @@ struct Daemon {
     /// `starting`, `connected` or `waiting_for_pipewire`.
     phase: &'static str,
     server: Option<Server>,
+    notifier: notify::Notifier,
     started: Instant,
     converged: bool,
 }
@@ -291,6 +293,10 @@ impl Daemon {
                     "graph complete after {} ms",
                     self.started.elapsed().as_millis()
                 ));
+                self.notifier.status(&format!(
+                    "{} Junction(s) routed",
+                    self.store.config().junction.len()
+                ));
             }
             return Some(step.plan);
         }
@@ -341,6 +347,8 @@ impl Daemon {
                     log(&format!("notice config_error {x}"));
                 }
                 log("keeping the last good config");
+                self.notifier
+                    .status("the config file has errors; using the last good config");
                 let body =
                     json!({ "diagnostics": d.iter().map(view::Diag::from).collect::<Vec<_>>() });
                 self.signal(|s| s.notice("config_error", &body));
@@ -647,10 +655,17 @@ fn main() -> ExitCode {
         statuses: Vec::new(),
         phase: "starting",
         server,
+        notifier: notify::Notifier::from_env(),
         started: Instant::now(),
         converged: false,
     };
     d.publish();
+    // Ready once D-Bus is served and the config is loaded: callers can talk
+    // to the daemon; PipeWire may come later.
+    d.notifier.ready(&format!(
+        "{} Junction(s), waiting for PipeWire",
+        d.store.config().junction.len()
+    ));
     for msg in rx {
         match msg {
             Msg::Request(req, reply) => {
@@ -667,6 +682,7 @@ fn main() -> ExitCode {
                 d.statuses.clear();
                 d.phase = "waiting_for_pipewire";
                 d.converged = false;
+                d.notifier.status("waiting for PipeWire");
                 d.publish();
                 d.signal(Server::graph_changed);
             }

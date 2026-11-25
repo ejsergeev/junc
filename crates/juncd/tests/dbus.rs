@@ -457,6 +457,43 @@ fn introspection_xml_is_up_to_date() {
     );
 }
 
+/// F9: under systemd (`Type=notify`) juncd says READY=1 once it serves
+/// D-Bus, before PipeWire is there.
+#[test]
+fn juncd_notifies_systemd_when_ready() {
+    let Some((bus, address)) = private_bus() else {
+        eprintln!("skipped: no dbus-daemon");
+        return;
+    };
+    let dir = tmp("notify");
+    std::fs::write(dir.join("junctions.toml"), CONFIG).expect("config");
+    let sock_path = dir.join("notify.sock");
+    let sock = std::os::unix::net::UnixDatagram::bind(&sock_path).expect("bind");
+    sock.set_read_timeout(Some(Duration::from_secs(10)))
+        .expect("timeout");
+    let daemon = Kill(
+        juncd(&dir, &address, "juncd.log")
+            .env("NOTIFY_SOCKET", &sock_path)
+            .spawn()
+            .expect("juncd"),
+    );
+    let mut buf = [0u8; 512];
+    let n = sock.recv(&mut buf).expect("a notification");
+    let msg = String::from_utf8_lossy(&buf[..n]);
+    assert!(msg.starts_with("READY=1\nSTATUS=1 Junction(s)"), "{msg}");
+    // By then the API answers.
+    let env = Env {
+        dir,
+        address,
+        _bus: bus,
+        _daemon: daemon,
+    };
+    zbus::block_on(async {
+        let (_c, d) = connect(&env).await;
+        assert_eq!(d.revision().await.expect("D-Bus call"), 1);
+    });
+}
+
 /// The shipped activation file starts juncd on the first call (the CLI or
 /// GUI never has to start it).
 #[test]
