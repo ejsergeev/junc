@@ -362,6 +362,43 @@ to = { binary = "Discord" }
 }
 
 #[test]
+fn duplicate_junc_nodes_are_removed() {
+    let mut b = MockBackend::new(graph("apps-browser-two-streams.json"));
+    let c = cfg(ZOOM);
+    converge(&mut b, &c, &Held::new());
+    // A second junc.zoom, as if a create had raced a snapshot. Real nodes all
+    // carry object.serial; the mock's do not, so give the original one.
+    let orig = node_id(&b, "junc.zoom");
+    if let Some(n) = b.graph_mut().nodes.get_mut(&orig) {
+        n.props.set("object.serial", "100");
+    }
+    let props = b
+        .graph()
+        .node_by_name("junc.zoom")
+        .expect("node")
+        .props
+        .clone();
+    let mut later = props.clone();
+    later.set("object.serial", "999999");
+    let dup = b.add_node(later, 2);
+    let p = plan(&c, b.graph(), &Held::new());
+    assert!(
+        p.actions.contains(&Action::DestroyNode { node: dup }),
+        "{:?}",
+        p.actions
+    );
+    converge(&mut b, &c, &Held::new());
+    assert_eq!(
+        b.graph()
+            .nodes
+            .values()
+            .filter(|n| n.name() == "junc.zoom")
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn default_mapping() {
     assert_eq!(default_map(1, 2), [[1, 1], [1, 2]]);
     assert_eq!(default_map(1, 1), [[1, 1]]);

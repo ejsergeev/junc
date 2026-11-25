@@ -115,12 +115,23 @@ pub fn default_map(from_channels: usize, to_channels: usize) -> Vec<[u8; 2]> {
 /// Plans the changes that bring `graph` towards `config`.
 pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
     let mut out = Plan::default();
-    let existing: BTreeMap<&str, &Node> = graph
+    // One node per name; extra copies (a create that raced its own
+    // snapshot) are destroyed, keeping the oldest (lowest object.serial).
+    let mut existing: BTreeMap<&str, &Node> = BTreeMap::new();
+    let mut duplicates = Vec::new();
+    let mut ours: Vec<&Node> = graph
         .nodes
         .values()
         .filter(|n| n.is_junc() && n.props.get("junc.role") != Some("meter"))
-        .map(|n| (n.name(), n))
         .collect();
+    ours.sort_by_key(|n| (n.props.number("object.serial").unwrap_or(u32::MAX), n.id));
+    for n in ours {
+        if existing.contains_key(n.name()) {
+            duplicates.push(Action::DestroyNode { node: n.id });
+        } else {
+            existing.insert(n.name(), n);
+        }
+    }
 
     // --- nodes ------------------------------------------------------------
     let mut wanted: Vec<NodeSpec> = Vec::new();
@@ -165,6 +176,7 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
             destroy_nodes.push(Action::DestroyNode { node: n.id });
         }
     }
+    destroy_nodes.extend(duplicates);
 
     // --- links ------------------------------------------------------------
     let mut want_links: BTreeMap<(u32, u32), LinkSpec> = BTreeMap::new();
