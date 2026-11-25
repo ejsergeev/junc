@@ -667,6 +667,9 @@ fn cable_delivers_one_app_to_another_bit_exact() {
 
     let n = bit_exact_frames(&src, &read_s16(&rec_file));
     eprintln!("cable: {n} frames bit-exact");
+    // Leave the graph as found: later tests time re-links on it.
+    drop(_d);
+    clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -781,5 +784,7 @@ fn nesting_four_deep_is_bit_exact() {
 
     let n = bit_exact_frames(&src, &read_s16(&rec_file));
     eprintln!("nesting: {n} frames bit-exact through 4 levels");
+    drop(_d);
+    clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
