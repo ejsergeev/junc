@@ -35,7 +35,8 @@ devices, and `candidates`: the apps and devices you can use, with the exact
 `node`, `app` and `binary` values to put in a config. Use those values;
 never guess node names. Match the user's words ("my USB mic", "the Blue
 Yeti") against each candidate's `description`; if more than one could fit,
-or none does, ask which one they mean.
+ask which one they mean. If there is only one candidate of the right kind,
+name it in the plan ("your mic, FakeMic") so the user can object.
 
 If it fails with `E_DAEMON_UNAVAILABLE`, run `junc doctor` and follow its
 `fix` lines (see troubleshooting.md).
@@ -55,7 +56,8 @@ junc apply "$edit" --expect-revision 7 --json
 ```
 
 1. Copy the config to a fresh temporary file (no file yet means no
-   Junctions yet: start from `schema = 1`). Edit the copy.
+   Junctions yet: start from `schema = 1`). Edit the copy. Shell variables
+   do not survive between separate tool calls: note the file's path.
 2. Validate it. On errors, read `code`, `location` and `hint`, fix, repeat.
 3. Dry-run it. Show the user the `data.plan.summary` lines in plain words.
    Note the top-level `revision` of that answer (not one inside `data`).
@@ -99,7 +101,8 @@ junctions.md.
 
 - `volume` is saved in the config and shown everywhere, but this alpha
   build does not change loudness yet; a later version applies it. Tell the
-  user when a request depends on volume ("Spotify quieter").
+  user when a request depends on volume ("Spotify quieter"): put it in the
+  plan you show, and suggest the app's own volume control meanwhile.
 - Presets and templates are not available yet: write the config yourself
   from recipes.md.
 
