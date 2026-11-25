@@ -14,3 +14,4 @@ touches the desktop session.
 | `s5-exclusive.sh` | S5: Exclusive through the `target.object` metadata key |
 | `s9-global-props.sh` | S9: which properties registry globals carry, and which need a bound proxy |
 | `s10-rename.sh` | S10: renaming a node, and where recording apps go while a node is recreated |
+| `s11-cable-target.sh` | S11: a Cable's target app hearing only the Cable through `target.object` |
