@@ -121,10 +121,11 @@ Tasks:
 Exit criteria (PRD): F1–F5, F9, F10, F16, F17 work from the CLI; all agent
 checks green in CI (x86_64 + aarch64) and on the owner's laptop.
 
-- [ ] **A1** [auto] Workspace skeleton: crates per `architecture.md` §2,
+- [x] **A1** [auto] Workspace skeleton: crates per `architecture.md` §2,
   `LICENSE` (GPL-3.0 text, own commit), rustfmt/clippy/deny config,
   dependency-rule check, CI on x86_64 and aarch64 Arch containers.
   Req: — . Acceptance: empty binaries build and CI is green on both arches.
+  Done 2026-11-25: PR #1; CI green on x86_64 and aarch64 (run 45591546618). The aarch64 image needed pacman's sandbox off and several mirrors with retries.
 - [ ] **A2** [auto] Spikes S1–S5 and S8 (`architecture.md` §12), each
   ending in a note and, if needed, a design change. Req: F1, F7, F11, F17,
   F20. Acceptance: every spike has a recorded pass or chosen fallback.
