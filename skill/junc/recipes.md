@@ -3,7 +3,11 @@
 Each recipe is a whole config to merge into the copy you are editing (keep
 the user's existing Junctions), then validate, dry-run and apply as in
 SKILL.md. Replace the `device` and `binary` values with the ones
-`junc describe --json` lists under `candidates`.
+`junc describe --json` lists under `candidates`. An app shows up there
+only while it plays; if it is not running, ask the user to start it once,
+or use its usual binary name and check after applying that its Input
+turns `active` when the app plays (Flatpak and Snap builds can use other
+names).
 
 ## A mic for calls: hardware mic plus an app
 
@@ -26,6 +30,8 @@ match = { binary = "spotify" }
 volume = 70
 ```
 
+`volume` is a percentage of full level (100 = unchanged); 70 is a
+moderate cut. Volume is not applied yet in this version (see SKILL.md).
 In the call app, pick "Zoom Mic" as the microphone. To have every app use
 it, ask the user first, then add `default = "input"` to the Junction.
 

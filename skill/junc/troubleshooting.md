@@ -23,9 +23,11 @@ for problems a `fix`: show it to the user and run it only if they agree
 
 - **`E_DAEMON_UNAVAILABLE`**: juncd is not running. `junc service status`
   tells whether it starts at login; `junc service enable` turns that on.
-- **An Input stays `waiting`**: the app is not playing or the device is
-  unplugged. Check `candidates` in `junc describe --json` for the exact
-  name.
+- **An Input stays `waiting`**: the app is not playing, or the device is
+  unplugged, or the `match` names something that does not exist. Check
+  `candidates` in `junc describe --json` for the exact name. Right after
+  an apply, a status can lag for a moment while the new nodes appear;
+  look again before concluding anything.
 - **`link_overridden`**: another tool removed one of JUNC's links. JUNC
   does not put it back on its own; the user can restore it.
 - **The config file has errors**: `junc status` and `junc doctor` show

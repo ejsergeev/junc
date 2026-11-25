@@ -33,7 +33,9 @@ junc describe --json
 It returns the daemon state, every Junction with its status, the default
 devices, and `candidates`: the apps and devices you can use, with the exact
 `node`, `app` and `binary` values to put in a config. Use those values;
-never guess node names.
+never guess node names. Match the user's words ("my USB mic", "the Blue
+Yeti") against each candidate's `description`; if more than one could fit,
+or none does, ask which one they mean.
 
 If it fails with `E_DAEMON_UNAVAILABLE`, run `junc doctor` and follow its
 `fix` lines (see troubleshooting.md).
@@ -44,19 +46,26 @@ Never edit `junctions.toml` in place: the daemon applies every saved edit at
 once. Work on a copy:
 
 ```sh
-cp "$(junc config path)" /tmp/junc-edit.toml 2>/dev/null || printf 'schema = 1\n' > /tmp/junc-edit.toml
-junc config validate /tmp/junc-edit.toml --json
-junc apply /tmp/junc-edit.toml --dry-run --json
-junc apply /tmp/junc-edit.toml --expect-revision 7 --json
+edit=$(mktemp --suffix=.toml)
+cfg=$(junc config path)
+if [ -f "$cfg" ]; then cp "$cfg" "$edit"; else printf 'schema = 1\n' > "$edit"; fi
+junc config validate "$edit" --json
+junc apply "$edit" --dry-run --json
+junc apply "$edit" --expect-revision 7 --json
 ```
 
-1. Copy the config (first line), edit the copy.
+1. Copy the config to a fresh temporary file (no file yet means no
+   Junctions yet: start from `schema = 1`). Edit the copy.
 2. Validate it. On errors, read `code`, `location` and `hint`, fix, repeat.
-3. Dry-run it. Show the user the `data.plan.summary` lines in plain words,
-   and remember `revision` from the same answer.
+3. Dry-run it. Show the user the `data.plan.summary` lines in plain words.
+   Note the top-level `revision` of that answer (not one inside `data`).
 4. Only after the user agrees, apply with `--expect-revision` set to that
-   revision. If it fails with `E_CONFIG_CONFLICT`, someone else changed the
-   config: start again from step 1.
+   number (7 above is only an example). If it fails with
+   `E_CONFIG_CONFLICT`, someone else changed the config: start again.
+
+When you show the plan, also say what does not change if the user cares
+(the summary lists default-device changes only when there are some), and
+for each app you capture, that you capture it (see the safety rules).
 
 Config format and examples: junctions.md and recipes.md. The JSON Schema:
 `junc schema`.
@@ -72,7 +81,8 @@ immediately; there is no dry run for them.
 - Always validate and dry-run before applying; show the planned change in
   plain words.
 - Capturing an app's audio shows up in the capture indicator; say so when
-  you capture an app.
+  you capture an app ("JUNC will capture Spotify's audio for Zoom Mic; you
+  still hear it on your speakers"). `junc status` lists captured apps.
 - Edit only `~/.config/junc/`. Never touch PipeWire or WirePlumber configs.
 - Destructive commands need `--yes` (`junc delete`); pass it only after the
   user confirmed in the conversation.
@@ -82,7 +92,16 @@ immediately; there is no dry run for them.
 Every command with `--json` prints one document:
 `{"junc": 1, "ok": true, "revision": N, "data": {…}}` or
 `{"junc": 1, "ok": false, "error": {"code", "message", "hint", "location"}}`.
-Exit codes and every error code: reference.md.
+Exit codes and every error code: reference.md. What a plan contains:
+junctions.md.
+
+## In this version
+
+- `volume` is saved in the config and shown everywhere, but this alpha
+  build does not change loudness yet; a later version applies it. Tell the
+  user when a request depends on volume ("Spotify quieter").
+- Presets and templates are not available yet: write the config yourself
+  from recipes.md.
 
 ## More
 
