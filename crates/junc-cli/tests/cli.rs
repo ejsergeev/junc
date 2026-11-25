@@ -327,7 +327,10 @@ fn enable_takes_under_50_ms() {
     let Some(e) = start("time", true, false) else {
         return;
     };
-    let mut times: Vec<Duration> = (0..20)
+    // Forty runs: the tests run in parallel, so a debug build here sees an
+    // occasional slow start; p95 must not hinge on one sample. The release
+    // build is gated by junc-bench.
+    let mut times: Vec<Duration> = (0..40)
         .map(|i| {
             let t = Instant::now();
             e.ok(&[if i % 2 == 0 { "disable" } else { "enable" }, "obs"]);
@@ -335,7 +338,7 @@ fn enable_takes_under_50_ms() {
         })
         .collect();
     times.sort();
-    let p95 = times[times.len() * 95 / 100];
+    let p95 = times[(times.len() * 95).div_ceil(100) - 1];
     eprintln!("junc enable: p50 {:?}, p95 {p95:?}", times[times.len() / 2]);
     assert!(p95 < Duration::from_millis(50), "p95 {p95:?}");
 }
