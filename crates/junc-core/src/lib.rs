@@ -8,6 +8,8 @@
 
 pub mod config;
 pub mod diag;
+pub mod graph;
+pub mod matcher;
 pub mod migrate;
 pub mod model;
 pub mod schema;
