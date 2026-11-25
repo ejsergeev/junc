@@ -523,3 +523,172 @@ fn hand_edits_apply_live_and_bad_edits_keep_the_last_good_config() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// --- F5: Cable ---------------------------------------------------------------
+
+const CABLE: &str = r#"schema = 1
+[[junction]]
+id = "cab"
+name = "Player to Recorder"
+kind = "cable"
+[[junction.input]]
+id = "player"
+match = { app = "junc-player" }
+[junction.cable]
+to = { app = "junc-recorder" }
+"#;
+
+const RATE: usize = 48_000;
+
+/// Interleaved stereo s16 noise from a fixed LCG: every sample differs from
+/// silence and from its neighbours, so a match proves the audio is intact.
+fn noise(frames: usize) -> Vec<i16> {
+    let mut x: u32 = 0x1234_5678;
+    (0..frames * 2)
+        .map(|_| {
+            x = x.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            i16::from_le_bytes([(x >> 16) as u8, (x >> 24) as u8]) | 1
+        })
+        .collect()
+}
+
+fn read_s16(path: &std::path::Path) -> Vec<i16> {
+    let bytes = std::fs::read(path).unwrap_or_default();
+    bytes
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|b| i16::from_le_bytes(*b))
+        .collect()
+}
+
+fn pw_cat(mode: &str, app: &str, file: &std::path::Path) -> Kill {
+    Kill(
+        Command::new("pw-cat")
+            .args([
+                mode,
+                "--raw",
+                "--format",
+                "s16",
+                "--rate",
+                "48000",
+                "--channels",
+                "2",
+            ])
+            .args(["--channel-map", "FL,FR", "-P"])
+            .arg(format!("{{ application.name={app} node.name={app} }}"))
+            .arg(file)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("pw-cat"),
+    )
+}
+
+/// Acceptance of A13: one app's audio reaches another app's capture
+/// bit-exact, and the recording app hears only the Cable (not the default
+/// mic WirePlumber would give it).
+#[test]
+fn cable_delivers_one_app_to_another_bit_exact() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-cable-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let (_d, log) = run_juncd(&dir, "cable", CABLE);
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+
+    let src = noise(2 * RATE);
+    let src_file = dir.join("src.raw");
+    let bytes: Vec<u8> = src.iter().flat_map(|s| s.to_le_bytes()).collect();
+    std::fs::write(&src_file, bytes).expect("write source");
+    let rec_file = dir.join("rec.raw");
+
+    let recorder = pw_cat("-r", "junc-recorder", &rec_file);
+    // juncd sends the recorder to the Cable; WirePlumber relinks it.
+    let only_cable = |g: &Graph| {
+        let Some(rec) = g.node_by_name("junc-recorder") else {
+            return false;
+        };
+        let into: Vec<&str> = g
+            .links
+            .values()
+            .filter(|l| l.input_node == rec.id)
+            .filter_map(|l| g.nodes.get(&l.output_node))
+            .map(|n| n.name())
+            .collect();
+        g.targets.get(&rec.id).map(String::as_str) == Some("junc.cab")
+            && !into.is_empty()
+            && into.iter().all(|n| *n == "junc.cab")
+    };
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), only_cable).is_some(),
+        "the recorder is not fed by the Cable alone\n{}",
+        read(&log)
+    );
+
+    let player = pw_cat("-p", "junc-player", &src_file);
+    let player_routed = |g: &Graph| {
+        g.node_by_name("junc-player").is_some_and(|p| {
+            g.links.values().any(|l| {
+                l.output_node == p.id
+                    && g.nodes
+                        .get(&l.input_node)
+                        .is_some_and(|n| n.name() == "junc.cab.in.player")
+            })
+        })
+    };
+    assert!(wait_for(&rx, &mut g, Duration::from_secs(10), player_routed).is_some());
+    // Let the 2 s file play out, then stop the recorder.
+    let mut player = player;
+    let end = Instant::now() + Duration::from_secs(10);
+    while player.0.try_wait().ok().flatten().is_none() && Instant::now() < end {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    std::thread::sleep(Duration::from_millis(300));
+    let _ = Command::new("kill")
+        .arg("-INT")
+        .arg(recorder.0.id().to_string())
+        .status();
+    std::thread::sleep(Duration::from_millis(300));
+    drop(recorder);
+
+    // Find a window from the middle of the source in the recording, then
+    // compare everything from there to the end of the source.
+    let rec = read_s16(&rec_file);
+    let probe = RATE / 2 * 2; // frame 24 000, interleaved
+    let window = &src[probe..probe + 960 * 2];
+    let at = rec
+        .windows(window.len())
+        .step_by(2)
+        .position(|w| w == window)
+        .map(|f| f * 2)
+        .unwrap_or_else(|| panic!("source audio not found in {} recorded samples", rec.len()));
+    let n = (src.len() - probe).min(rec.len() - at);
+    assert!(n >= RATE, "only {} frames overlap", n / 2);
+    // pw-cat exits without playing its last partial buffer, so the very end
+    // of the source may be missing: that tail must be silence in the
+    // recording, shorter than two quanta, and everything before it exact.
+    let same = src[probe..probe + n]
+        .iter()
+        .zip(&rec[at..at + n])
+        .take_while(|(a, b)| a == b)
+        .count();
+    let tail = &rec[at + same..at + n];
+    assert!(
+        tail.iter().all(|s| *s == 0) && tail.len() <= 2 * 2048 * 2,
+        "sample {same} of {n} differs and the rest is not a silent tail \
+         (first values: source {:?}, recording {:?})",
+        &src[probe + same..(probe + same + 4).min(src.len())],
+        &rec[at + same..(at + same + 4).min(rec.len())]
+    );
+    let n = same;
+    assert!(n >= RATE, "only {} frames match", n / 2);
+    eprintln!("cable: {} frames bit-exact", n / 2);
+    let _ = std::fs::remove_dir_all(&dir);
+}
