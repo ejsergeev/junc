@@ -212,9 +212,9 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   suspend/resume. Req: F1–F5, F9, F10, F16, F17. Acceptance: results in
   `docs/hardware-matrix.md`; all pass.
   Done 2026-11-25 (owner plugged, listened, suspended; results in `docs/hardware-matrix.md`): live session with the Komplete Audio 2 as Input and Listen, the Asahi default sink as Listen, snd-aloop `pro-audio` bit-exact through a Junction (layer 3), hand edit, F17 override and Restore, PipeWire restart (all 38 links back 1.47 s after the restart command, mostly the audio stack starting), re-plug (re-linked within 100 ms), suspend/resume (juncd and Junctions fine; the Komplete did not re-enumerate after resume until re-plugged — USB/Asahi, not JUNC); the owner heard both test paths clean. Not all pass: F16 left a Junction as the mic in use when the configured default was unavailable — fixed (restore the device in use) and re-run live; re-link in the live session p95 81/90/101 ms over three runs, at the target's edge — profiling moved to beta (B29). The "graph complete" log now times from the change or reconnection.
-- [ ] **A20** [auto] Alpha exit review: tick criteria, list known issues,
+- [x] **A20** [auto] Alpha exit review: tick criteria, list known issues,
   tag `v0.1.0-alpha` only after the owner says go. [owner] go/no-go.
-  Review written 2026-11-25: `docs/alpha-review.md` (criteria with evidence, PRD numbers, known issues, two owner decisions). Waiting for the owner's go/no-go and the recovery-target question before tagging.
+  Done 2026-11-25: `docs/alpha-review.md` (criteria with evidence, PRD numbers, known issues). Owner: go; recovery target is JUNC's share. Tagged `v0.1.0-alpha`.
 
 ---
 
@@ -402,5 +402,7 @@ decisions log once the owner answers.
 | 2026-11-25 | Spike S1 ended in the two-node fallback; every Junction is always both a source (`Audio/Source/Virtual`) and a sink (`Audio/Sink`), like a Loopback device | owner |
 | 2026-11-25 | Public repository `ejsergeev/junc` on GitHub | owner |
 | 2026-11-25 | The developer merges a PR once its CI is green, by fast-forwarding `main` (no GitHub merge commits, so every commit keeps the owner as author and committer); the owner reviews at will and signs off stages and releases | owner |
+| 2026-11-25 | Alpha go: tag `v0.1.0-alpha` | owner |
+| 2026-11-25 | The PRD recovery target (< 1 s after a PipeWire restart) is JUNC's share, from PipeWire and the devices being back; the whole stack's return is tracked, not gated | owner |
 | 2026-11-25 | Cables deliver through `target.object` and WirePlumber's linking instead of JUNC links into the target app (spike S11) | developer |
 | 2026-11-25 | D-Bus carries structured values (Junction view, `Describe`, diagnostics, plans, notices) as JSON strings with the `--json` shapes instead of `a{sv}`; API v1.0 ships the calls the CLI needs, the rest arrive as minor versions | developer |
