@@ -1449,6 +1449,8 @@ dependencies = [
 name = "xtask"
 version = "0.1.0"
 dependencies = [
+ "clap",
+ "junc-cli",
  "junc-core",
 ]
 

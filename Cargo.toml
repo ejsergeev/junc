@@ -37,6 +37,7 @@ junc-core = { path = "crates/junc-core" }
 junc-ipc = { path = "crates/junc-ipc" }
 junc-pw = { path = "crates/junc-pw" }
 junc-l10n = { path = "crates/junc-l10n" }
+junc-cli = { path = "crates/junc-cli" }
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "deny"
