@@ -140,6 +140,8 @@ pub struct Facts {
     pub jack2: Option<bool>,
     /// `pw-metadata -n settings 0` output.
     pub settings: Option<String>,
+    /// `pw-dump` output.
+    pub dump: Option<String>,
     /// juncd's snapshot, if it runs.
     pub daemon: Option<Describe>,
 }
@@ -155,6 +157,7 @@ impl Facts {
             pipewire_jack: package("pipewire-jack"),
             jack2: package("jack2"),
             settings: run("pw-metadata", &["-n", "settings", "0"]),
+            dump: run("pw-dump", &[]),
             daemon: client.and_then(Client::describe_if_running),
         }
     }
@@ -330,6 +333,173 @@ fn clock(f: &Facts) -> Check {
     check("clock", Status::Ok, detail, None)
 }
 
+/// `44.1 kHz`, `48 kHz`.
+fn khz(rate: u32) -> String {
+    let k = f64::from(rate) / 1000.0;
+    if rate.is_multiple_of(1000) {
+        format!("{k:.0} kHz")
+    } else {
+        format!("{k:.1} kHz")
+    }
+}
+
+/// The rates a device's `EnumFormat` offers.
+#[derive(Debug, Clone, PartialEq)]
+enum Rates {
+    One(u32),
+    Range { default: u32, min: u32, max: u32 },
+    List { default: u32, list: Vec<u32> },
+}
+
+impl Rates {
+    fn parse(v: &serde_json::Value) -> Option<Self> {
+        let n = |v: &serde_json::Value| v.as_u64().and_then(|n| u32::try_from(n).ok());
+        if let Some(r) = n(v) {
+            return Some(Self::One(r));
+        }
+        let default = n(v.get("default")?)?;
+        if let Some(list) = v.get("alternatives").and_then(|a| a.as_array()) {
+            return Some(Self::List {
+                default,
+                list: list.iter().filter_map(n).collect(),
+            });
+        }
+        match (v.get("min").and_then(n), v.get("max").and_then(n)) {
+            (Some(min), Some(max)) => Some(Self::Range { default, min, max }),
+            _ => Some(Self::One(default)),
+        }
+    }
+
+    fn supports(&self, rate: u32) -> bool {
+        match self {
+            Self::One(r) => *r == rate,
+            Self::Range { min, max, .. } => (*min..=*max).contains(&rate),
+            Self::List { list, .. } => list.contains(&rate),
+        }
+    }
+
+    /// The rate the device prefers.
+    fn own(&self) -> u32 {
+        match self {
+            Self::One(r) | Self::Range { default: r, .. } | Self::List { default: r, .. } => *r,
+        }
+    }
+}
+
+/// Hardware (ALSA) inputs and outputs with their name and rates.
+fn device_rates(dump: &str) -> Vec<(String, Rates)> {
+    let Ok(serde_json::Value::Array(objects)) = serde_json::from_str(dump) else {
+        return Vec::new();
+    };
+    objects
+        .iter()
+        .filter(|o| o["type"] == "PipeWire:Interface:Node")
+        .filter_map(|o| {
+            let info = &o["info"];
+            let props = &info["props"];
+            let class = props["media.class"].as_str()?;
+            if props["device.api"] != "alsa" || !matches!(class, "Audio/Sink" | "Audio/Source") {
+                return None;
+            }
+            let rates = info["params"]["EnumFormat"]
+                .as_array()?
+                .iter()
+                .find_map(|f| Rates::parse(&f["rate"]))?;
+            let name = props["node.description"]
+                .as_str()
+                .or(props["node.name"].as_str())?;
+            Some((name.to_owned(), rates))
+        })
+        .collect()
+}
+
+/// `[ 44100 48000 ]` → the rates.
+fn rate_list(text: &str) -> Vec<u32> {
+    text.split(|c: char| !c.is_ascii_digit())
+        .filter_map(|n| n.parse().ok())
+        .collect()
+}
+
+/// Devices that cannot run at the graph's rate are resampled. Listing
+/// their rate in `clock.allowed-rates` lets PipeWire switch to it.
+fn rates(f: &Facts) -> Check {
+    let (Some(settings), Some(dump)) = (&f.settings, &f.dump) else {
+        return check(
+            "rates",
+            Status::Warn,
+            tr("cannot read the devices' sample rates").into_owned(),
+            None,
+        );
+    };
+    let m = metadata(settings);
+    let get = |k: &str| m.iter().find(|(key, _)| key == k).map(|(_, v)| v.as_str());
+    let Some(rate) = get("clock.force-rate")
+        .and_then(|v| v.parse::<u32>().ok())
+        .filter(|r| *r > 0)
+        .or_else(|| get("clock.rate").and_then(|v| v.parse().ok()))
+    else {
+        return check(
+            "rates",
+            Status::Warn,
+            tr("no clock rate found").into_owned(),
+            None,
+        );
+    };
+    let mut allowed = get("clock.allowed-rates")
+        .map(rate_list)
+        .unwrap_or_default();
+    if allowed.is_empty() {
+        allowed.push(rate);
+    }
+    let devices = device_rates(dump);
+    let off: Vec<&(String, Rates)> = devices
+        .iter()
+        .filter(|(_, r)| !r.supports(rate) && !allowed.contains(&r.own()))
+        .collect();
+    if off.is_empty() {
+        let detail = if devices.is_empty() {
+            trf("{rate}; no hardware devices", &[("rate", &khz(rate))])
+        } else {
+            trf(
+                "every hardware device can run at {rate}",
+                &[("rate", &khz(rate))],
+            )
+        };
+        return check("rates", Status::Ok, detail, None);
+    }
+    let mut want = allowed.clone();
+    want.extend(off.iter().map(|(_, r)| r.own()));
+    want.sort_unstable();
+    want.dedup();
+    let detail = off
+        .iter()
+        .map(|(name, r)| {
+            trf(
+                "{device} runs at {own}, the graph at {rate}: audio is resampled",
+                &[
+                    ("device", name),
+                    ("own", &khz(r.own())),
+                    ("rate", &khz(rate)),
+                ],
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("; ");
+    let list = want
+        .iter()
+        .map(u32::to_string)
+        .collect::<Vec<_>>()
+        .join(" ");
+    check(
+        "rates",
+        Status::Warn,
+        detail,
+        Some(&format!(
+            "pw-metadata -n settings 0 clock.allowed-rates \"[ {list} ]\""
+        )),
+    )
+}
+
 /// All checks, in the order a person would fix them.
 pub fn checks(f: &Facts) -> Vec<Check> {
     vec![
@@ -348,6 +518,7 @@ pub fn checks(f: &Facts) -> Vec<Check> {
         ),
         jack(f),
         clock(f),
+        rates(f),
         juncd(f.daemon.as_ref()),
     ]
 }
@@ -371,8 +542,60 @@ mod tests {
             pipewire_jack: Some(true),
             jack2: Some(false),
             settings: Some(SETTINGS.into()),
+            dump: Some(fixture("komplete-audio-2-stereo.json")),
             daemon: None,
         }
+    }
+
+    fn fixture(name: &str) -> String {
+        std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../tests/fixtures/graphs")
+                .join(name),
+        )
+        .expect("fixture")
+    }
+
+    /// An HDMI output that only does 44.1 kHz next to a graph at 48 kHz.
+    const HDMI: &str = r#"[{"id": 50, "type": "PipeWire:Interface:Node", "info": {
+        "props": {"node.name": "alsa_output.hdmi", "node.description": "HDMI Output",
+                  "media.class": "Audio/Sink", "device.api": "alsa"},
+        "params": {"EnumFormat": [{"rate": {"default": 44100, "alternatives": [44100, 32000]}}]}}}]"#;
+
+    #[test]
+    fn a_device_that_cannot_follow_the_graph_rate() {
+        golden(
+            "rate-mismatch",
+            &Facts {
+                dump: Some(HDMI.into()),
+                ..healthy()
+            },
+        );
+        // Once its rate is allowed, PipeWire can switch: no issue.
+        let allowed = SETTINGS.replace("[ 48000 ]", "[ 44100 48000 ]");
+        let f = Facts {
+            dump: Some(HDMI.into()),
+            settings: Some(allowed),
+            ..healthy()
+        };
+        assert_eq!(rates(&f).status, Status::Ok);
+    }
+
+    #[test]
+    fn rates_parse_every_shape() {
+        use serde_json::json;
+        assert_eq!(Rates::parse(&json!(48000)), Some(Rates::One(48000)));
+        let r =
+            Rates::parse(&json!({"default": 48000, "min": 44100, "max": 96000})).expect("range");
+        assert!(r.supports(88200) && !r.supports(32000));
+        let l =
+            Rates::parse(&json!({"default": 44100, "alternatives": [44100, 32000]})).expect("list");
+        assert!(l.supports(32000) && !l.supports(48000) && l.own() == 44100);
+        assert_eq!(rate_list("[ 44100 48000 ]"), [44100, 48000]);
+        assert_eq!(
+            (khz(44100), khz(48000)),
+            ("44.1 kHz".into(), "48 kHz".into())
+        );
     }
 
     /// Compares the checks' JSON with tests/golden/doctor/<name>.json;
@@ -408,6 +631,7 @@ mod tests {
             pipewire_jack: Some(false),
             jack2: Some(true),
             settings: None,
+            dump: None,
             ..healthy()
         };
         golden("broken", &f);

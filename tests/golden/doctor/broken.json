@@ -29,6 +29,11 @@
     "detail": "cannot read the PipeWire settings"
   },
   {
+    "id": "rates",
+    "status": "warn",
+    "detail": "cannot read the devices' sample rates"
+  },
+  {
     "id": "juncd",
     "status": "down",
     "detail": "not running",

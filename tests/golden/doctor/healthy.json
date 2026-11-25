@@ -25,6 +25,11 @@
     "detail": "48000 Hz, quantum 1024 (21.3 ms)"
   },
   {
+    "id": "rates",
+    "status": "ok",
+    "detail": "every hardware device can run at 48 kHz"
+  },
+  {
     "id": "juncd",
     "status": "down",
     "detail": "not running",
