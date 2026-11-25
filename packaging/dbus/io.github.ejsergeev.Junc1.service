@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=io.github.ejsergeev.Junc1
+Exec=/usr/bin/juncd
+SystemdService=juncd.service
