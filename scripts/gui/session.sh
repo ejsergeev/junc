@@ -3,6 +3,7 @@
 # session bus, the AT-SPI bus and registry), never the user's desktop.
 # Sets DISPLAY, DBUS_SESSION_BUS_ADDRESS, XDG_RUNTIME_DIR and `session_tmp`;
 # everything it starts stops on exit.
+mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}"
 session_tmp=$(mktemp -d "${XDG_CACHE_HOME:-$HOME/.cache}/junc-gui-session.XXXXXX")
 session_pids=()
 session_stop() { kill "${session_pids[@]}" 2>/dev/null || true; rm -rf "$session_tmp"; }
