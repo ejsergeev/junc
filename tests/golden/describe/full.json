@@ -126,6 +126,9 @@
       },
       {
         "cable_target": "unknown",
+        "cable_to": {
+          "binary": "obs"
+        },
         "channels": 2,
         "default": "none",
         "enabled": true,

@@ -173,6 +173,9 @@ pub struct JunctionView {
     /// For a Cable: state of the app it delivers to.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cable_target: Option<State>,
+    /// For a Cable: the app it delivers to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cable_to: Option<Match>,
 }
 
 /// A node a user could pick as an Input or Listen target.
@@ -308,6 +311,7 @@ pub fn junction(j: &Junction, statuses: &[EntityStatus], graph: Option<&Graph>) 
             .collect(),
         cable_target: (j.kind == Kind::Cable)
             .then(|| status_of(statuses, &j.id, &Entity::CableTarget).0),
+        cable_to: j.cable.as_ref().map(|c| c.to.clone()),
     }
 }
 
