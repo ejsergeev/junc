@@ -16,6 +16,7 @@ mod edit;
 mod human;
 mod service;
 mod skill;
+mod watch;
 
 use clap::Parser;
 use client::Client;
@@ -228,6 +229,15 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
     if let Cmd::Teardown { yes } = cmd {
         return teardown(yes, json_mode);
     }
+    if let Cmd::Watch = cmd {
+        let c = Client::connect()?;
+        watch::run(&c, json_mode)?;
+        return Ok(Done {
+            revision: None,
+            data: Value::Null,
+            text: String::new(),
+        });
+    }
     if let Cmd::Config(sub) = cmd {
         // Use juncd's path when it runs; otherwise the default one.
         let client = Client::connect().ok();
@@ -287,7 +297,8 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
         | Cmd::Config(_)
         | Cmd::Service(_)
         | Cmd::Skill(_)
-        | Cmd::Teardown { .. } => {
+        | Cmd::Teardown { .. }
+        | Cmd::Watch => {
             unreachable!("handled above")
         }
         Cmd::List => {

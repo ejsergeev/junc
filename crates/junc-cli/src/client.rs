@@ -71,7 +71,19 @@ impl Client {
     }
 
     pub fn describe(&self) -> Result<Describe> {
-        let text = zbus::block_on(self.daemon.describe()).map_err(|e| failed(&e))?;
+        zbus::block_on(self.describe_async())
+    }
+
+    /// A daemon proxy that follows property changes (`junc watch`): the
+    /// one for calls does not cache properties, and zbus reports changes
+    /// only of cached ones.
+    pub async fn watching(&self) -> Result<DaemonProxy<'static>> {
+        DaemonProxy::new(&self.conn).await.map_err(|e| failed(&e))
+    }
+
+    /// [`Self::describe`] inside an async context.
+    pub async fn describe_async(&self) -> Result<Describe> {
+        let text = self.daemon.describe().await.map_err(|e| failed(&e))?;
         serde_json::from_str(&text).map_err(|e| {
             ErrorBody::new(
                 "E_INTERNAL",

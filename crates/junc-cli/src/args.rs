@@ -158,6 +158,9 @@ pub enum Cmd {
     Listen(ListenCmd),
     /// Everything an agent needs in one JSON document.
     Describe,
+    /// Stream events, one per line: apps being captured, Junctions turned
+    /// on or off, graph changes, notices (for bars and scripts; use --json).
+    Watch,
     /// Turn existing null sinks and pw-loopbacks into Junctions or Cables;
     /// `junc import scan` lists them. The old setups stay: remove them
     /// yourself when the new ones work.
