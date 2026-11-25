@@ -15,8 +15,10 @@ for problems a `fix`: show it to the user and run it only if they agree
 | `pipewire` | not running or older than 1.0 | `systemctl --user start pipewire`, or update |
 | `wireplumber` | not running | `systemctl --user start wireplumber` |
 | `pipewire-pulse` | missing | apps using PulseAudio cannot be routed: `sudo pacman -S pipewire-pulse` |
-| `jack` | jack2 installed | JACK apps bypass PipeWire: `sudo pacman -S pipewire-jack` |
+| `jack` | jack2 installed | JACK apps bypass PipeWire: replace jack2 with `sudo pacman -S pipewire-jack` (pacman offers to remove jack2) |
 | `clock` | shows rate and quantum | latency ≈ quantum / rate |
+| `rates` | a hardware device cannot run at the graph's rate | its audio is resampled; the `fix` adds its rate to `clock.allowed-rates` (lasts until PipeWire restarts) |
+| `asahi` | only on Apple Silicon Macs: no DSP in front of the speakers, or speakersafetyd not running | speakers sound thin or stay quiet: `sudo pacman -S --needed asahi-audio`, `sudo systemctl enable --now speakersafetyd` |
 | `juncd` | down | `systemctl --user start juncd`; config errors are shown here too |
 
 ## Common situations
@@ -44,3 +46,15 @@ for problems a `fix`: show it to the user and run it only if they agree
   audio keeps playing.
 
 Logs: `journalctl --user -u juncd`.
+
+## Reporting a bug
+
+```sh
+junc doctor --bug-report
+```
+
+prints one Markdown text to paste into an issue: versions, the Junction
+graph, the checks above, the config and juncd's last 200 log lines. It
+contains no audio; user and host names, home paths and hardware
+addresses are replaced, and nothing is sent anywhere. Show it to the
+user before they post it; with `--json` it is `data.report`.
