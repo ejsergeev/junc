@@ -67,15 +67,17 @@ Read-only pre-findings (2026-11-25, observed while writing this plan):
 
 Tasks:
 
-- [ ] **0.1** [owner] Approve installing the harness dependencies with sudo:
-  `orca python-gobject at-spi2-core jack-example-tools wtype ydotool
-  noto-fonts-cjk ttf-jetbrains-mono gettext powertop xorg-server-xvfb xdotool imagemagick`,
-  and decide jack2 → pipewire-jack (see Q4). Acceptance: `pacman -Q` lists them.
+- [ ] **0.1** [owner runs sudo] Install the harness dependencies and replace
+  jack2 with pipewire-jack (approved 2026-11-25):
+  `sudo pacman -S --needed pipewire-jack orca python-gobject at-spi2-core
+  jack-example-tools wtype ydotool noto-fonts-cjk ttf-jetbrains-mono gettext
+  powertop xorg-server-xvfb xdotool imagemagick` (pacman asks to remove jack2).
+  Acceptance: `pacman -Q` lists them and `jack2` is gone.
 - [ ] **0.2** [auto] Copy `junc-validation/` into `bench/validation/` (its own
   `ci:` commit, as imported reference), read every script, adapt paths. Build
   `proto` and `bench/juncd` natively on aarch64. Acceptance: both build with
   `--release --locked`.
-- [ ] **0.3** [auto, owner OK to interrupt audio for ~1 h] `PW_SESSION=systemd
+- [ ] **0.3** [auto; owner approved interrupting audio for ~1 h on 2026-11-25] `PW_SESSION=systemd
   bench/run-bench.sh juncd-links` and `manual` at quantum 1024 and 256, plus
   `powertop --csv` for real wakeups. Acceptance: results in
   `docs/hardware-matrix.md`; any target missed becomes a risk below.
@@ -89,13 +91,15 @@ Tasks:
   owner's yes/no logged.
 - [ ] **0.6** [owner sudo once, auto drives] Load `snd-dummy` and `snd-aloop`
   (`pcm_substreams`, `channels` up to 32), check they appear in PipeWire with
-  ACP profiles including `pro-audio`; record `pw-dump` as fixtures. Confirm
-  UAC2 gadget is impossible (no UDC) and record why. Acceptance:
-  `docs/hardware-matrix.md` lists each layer as available/unavailable with
-  evidence.
-- [ ] **0.7** [owner] Name the USB interface and the Bluetooth headset, plug
-  each in once. [auto] capture `pw-dump` of each as layer-1 fixtures
-  (personal data stripped). Acceptance: fixtures committed.
+  ACP profiles including `pro-audio`; record `pw-dump` as fixtures. Layer 4
+  (UAC2 gadget) is skipped by owner decision; record why (no UDC, no
+  `dummy_hcd`). Acceptance: `docs/hardware-matrix.md` lists each layer as
+  available/skipped with evidence.
+- [ ] **0.7** [owner plugs in] Native Instruments Komplete Audio 2 (USB),
+  Google Pixel Buds 2a and Apple AirPods (Bluetooth), each once, Bluetooth
+  in both A2DP and headset (HFP) mode. [auto] capture `pw-dump` of each as
+  layer-1 fixtures (personal data such as MAC addresses stripped).
+  Acceptance: fixtures committed.
 - [ ] **0.8** [auto] Capture the Asahi audio topology (`pw-dump` of the DSP
   chain) as a layer-1 fixture. Acceptance: fixture committed.
 - [ ] **0.9** [auto] Update `architecture.md` and the risks below with what
@@ -219,8 +223,9 @@ Daemon features first (they gate GUI screens):
 
 GUI foundation:
 
-- [ ] **B10** [owner] Provide PNG exports of all canvas boards (Q1).
-  [auto] store under `docs/design/` (own commit).
+- [x] **B10** [auto] Reference renders of all canvas boards in `docs/design/`
+  (2026-11-25: 51 PNGs rendered locally from the artifact's files with
+  headless Chromium; regeneration steps in `docs/design/README.md`).
 - [ ] **B11** [auto] `junc-l10n`: language resolution + Omarchy watcher,
   bundled translations, ICU4X numbers, `en_XA`, extraction and catalog
   checks; spike S6. Req: F14. Acceptance: live switch test; CI catalog checks.
@@ -268,8 +273,9 @@ Omarchy and packaging:
   `barModule` board; menu row appears and opens the GUI.
 - [ ] **B24** [owner] Create the repository signing key (offline primary,
   signing subkey), add the subkey as a GitHub Actions secret in a protected
-  environment, publish the fingerprint. Create GitHub org `junc-audio` and
-  repos `junc`, `pkgs` (Q2).
+  environment, publish the fingerprint. Create the repositories
+  `ejsergeev/junc` and `ejsergeev/junc-pkgs` (GitHub Pages) on the owner's
+  personal account; no organisation.
 - [ ] **B25** [auto] PKGBUILD (split `junc`/`junc-gui`), `junc-keyring`,
   CI publish to `junc-testing` for x86_64 + aarch64, install smoke test in a
   fresh container. Acceptance: `pacman -S junc-gui` from the testing repo on
@@ -323,8 +329,10 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | --- | --- | --- |
 | Owner hardware is aarch64 Asahi; x86_64 is only tested in CI | x86_64-only bugs (other ALSA drivers, Intel/AMD HDA quirks) reach users | Keep both arches in CI with layers 1–2; ask early adopters on x86_64 via the testing channel; compatibility table. |
 | Asahi DSP/speaker safety | Routing around the DSP could produce harsh sound or, with raw speaker access, hardware risk | Spike S8; never link to raw speaker nodes; Listen `default` follows the DSP sink; doctor flags it. |
-| Layer 4 (UAC2 gadget) unavailable | USB hot-plug and multichannel USB only tested via snd-aloop + one real device | Accept; cover hot-plug with `modprobe -r/modprobe snd-aloop`; real interface in A19/B27. Building `dummy_hcd` out of tree is possible but costs sudo + kernel headers per kernel update. |
-| Pi 4 targets cannot be measured (no Pi) | "< 2 % CPU on Pi 4" unverifiable | Measure on the M1 and in CI aarch64; mark the Pi target best-effort unless the owner gets a Pi (Q6). |
+| Layer 4 (UAC2 gadget) skipped | USB hot-plug and multichannel USB only tested via snd-aloop + one real device | Accepted by the owner (2026-11-25); hot-plug via `modprobe -r/modprobe snd-aloop`; real interface in A19/B27. |
+| The real USB interface has 2 channels | F15 (Pro Audio, more channels) never runs on real multichannel hardware before release | snd-aloop multichannel cards in layer 3; ask early adopters with 8+ channel interfaces via the testing channel; compatibility table. |
+| Pi 4 targets cannot be measured (no Pi) | "< 2 % CPU on Pi 4" unverifiable | Best-effort (owner, 2026-11-25); measure on the M1 and in CI aarch64. |
+| Bluetooth on Asahi | AirPods / Pixel Buds HFP mic may behave differently from x86 BlueZ setups | F18 logic is tested on recorded fixtures (layer 1); real devices only confirm detection and the warning. |
 | Audio/Duplex visibility differs across pulse/JACK/apps | Junctions missing from some apps' device lists | Spike S1 with real apps (Zoom/Discord/OBS in Chromium, Firefox); two-node fallback. |
 | Gain-stage bit-exactness | "bit-exact" metric fails | Spike S4; direct link at 100 % fallback. |
 | WirePlumber policy changes (0.5.x) | Exclusive/defaults behave differently | CI on current Arch packages (rolling); layer-2 tests pin behaviour; doctor reports WP version. |
@@ -336,28 +344,17 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 
 ## Open questions (with recommendations)
 
-1. **Design PNGs.** The browser here is not signed in to the design host, so the
-   canvas could not be rendered. Recommendation: owner exports PNGs of all
-   boards before B13 (task B10). Until then the GUI follows `Main.dc.html`
-   values and the Spec sheet.
-2. **GitHub org and hosting.** Recommendation: org `junc-audio`, repos
-   `junc` (code) and `pkgs` (GitHub Pages repo). Needed before B24.
-3. **PRD v1 scope table vs. fixed decision.** The PRD's Delivery table puts
+1. **PRD v1 scope table vs. fixed decision.** The PRD's Delivery table puts
    F13 and F18 in v1.1; the fixed decision says full F1–F25 in v1.
    Recommendation: follow the fixed decision (plan does) and update the PRD
    table.
-4. **jack2 on the owner's laptop.** JACK apps don't see Junctions while
-   `jack2` is installed. Recommendation: replace with `pipewire-jack` (Omarchy's
-   default) for testing F1's JACK visibility; onboarding treats pipewire-jack
-   as recommended, not blocking.
-5. **Split packages.** Recommendation: `junc` (daemon + CLI + skill) and
+2. **Split packages.** Recommendation: `junc` (daemon + CLI + skill) and
    `junc-gui`; the Omarchy install entry installs `junc-gui`. Drop the PRD's
    `junc-bin` name (an AUR convention with no meaning in a binary repo).
-6. **Pi 4 targets.** Recommendation: best-effort unless the owner buys a Pi 4.
-7. **Language picker count.** Design says "50 languages"; v1 ships 46 and RTL
+3. **Language picker count.** Design says "50 languages"; v1 ships 46 and RTL
    shows English. Recommendation: list 46 in v1; add the four RTL languages
    when RTL ships.
-8. **Junction node class** (Audio/Duplex vs two nodes) is decided by spike S1;
+4. **Junction node class** (Audio/Duplex vs two nodes) is decided by spike S1;
    it changes what users see in other apps. Recommendation: accept the spike's
    result without a further owner decision unless it is the two-node fallback.
 
@@ -366,3 +363,10 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | Date | Decision | By |
 | --- | --- | --- |
 | 2026-11-24 | Fixed decisions from the planning brief (Rust workspace, server-side nodes + links, PipeWire ≥ 1.0, 46 LTR languages, TOML config, agent skill, own signed repo, hardware layers, no telemetry, stages without dates, F1–F25 in v1) | owner |
+| 2026-11-25 | Design renders: made locally from the artifact's files (no PNG export needed) | owner |
+| 2026-11-25 | No GitHub organisation: personal account `ejsergeev`; D-Bus name `io.github.ejsergeev.Junc1`; package repo on `ejsergeev/junc-pkgs` Pages (replaces the PRD's `junc-audio` org) | owner |
+| 2026-11-25 | Step 0 may install harness dependencies with sudo and replace jack2 with pipewire-jack | owner |
+| 2026-11-25 | Step 0 may interrupt audio (~1 h) for PipeWire restart benchmarks | owner |
+| 2026-11-25 | Real devices: NI Komplete Audio 2 (USB), Google Pixel Buds 2a, Apple AirPods (Bluetooth) | owner |
+| 2026-11-25 | Hardware layer 4 (emulated UAC2 gadget) skipped | owner |
+| 2026-11-25 | Raspberry Pi 4 performance targets are best-effort | owner |
