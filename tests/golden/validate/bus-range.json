@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_RANGE",
+    "hint": "Use 1–64 channels.",
+    "location": {
+      "column": 20,
+      "file": "tests/fixtures/configs/invalid/bus-range.toml",
+      "line": 7
+    },
+    "message": "bus.channels is 65"
+  },
+  "junc": 1,
+  "ok": false
+}

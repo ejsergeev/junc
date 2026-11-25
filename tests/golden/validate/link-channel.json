@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_LINK_CHANNEL",
+    "hint": "Bus channels are numbered 1–2.",
+    "location": {
+      "column": 18,
+      "file": "tests/fixtures/configs/invalid/link-channel.toml",
+      "line": 11
+    },
+    "message": "Link uses Bus channel 3"
+  },
+  "junc": 1,
+  "ok": false
+}

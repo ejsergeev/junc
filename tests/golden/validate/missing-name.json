@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_MISSING_KEY",
+    "hint": "Add `name = …`; see `junc schema` for its type.",
+    "location": {
+      "column": 1,
+      "file": "tests/fixtures/configs/invalid/missing-name.toml",
+      "line": 4
+    },
+    "message": "missing key 'name'"
+  },
+  "junc": 1,
+  "ok": false
+}

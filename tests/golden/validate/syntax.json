@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_SYNTAX",
+    "hint": "Fix the TOML syntax at this position; the last good config stays in use.",
+    "location": {
+      "column": 6,
+      "file": "tests/fixtures/configs/invalid/syntax.toml",
+      "line": 5
+    },
+    "message": "extra `=`, expected nothing"
+  },
+  "junc": 1,
+  "ok": false
+}

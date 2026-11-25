@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_JUNCTION_UNKNOWN",
+    "hint": "There are no other Junctions to nest.",
+    "location": {
+      "column": 9,
+      "file": "tests/fixtures/configs/invalid/junction-unknown.toml",
+      "line": 10
+    },
+    "message": "no Junction with id 'musik'"
+  },
+  "junc": 1,
+  "ok": false
+}

@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_DEFAULT_DUPLICATE",
+    "hint": "Keep `default = \"input\"` on one Junction only.",
+    "location": {
+      "column": 11,
+      "file": "tests/fixtures/configs/invalid/default-duplicate.toml",
+      "line": 12
+    },
+    "message": "'a' and 'b' are both the default input"
+  },
+  "junc": 1,
+  "ok": false
+}

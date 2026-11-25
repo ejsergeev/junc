@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_CYCLE",
+    "hint": "Remove one of these Junction Inputs; audio would feed back.",
+    "location": {
+      "column": 9,
+      "file": "tests/fixtures/configs/invalid/cycle.toml",
+      "line": 16
+    },
+    "message": "nesting loop: a → b → a"
+  },
+  "junc": 1,
+  "ok": false
+}

@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_SCHEMA_NEWER",
+    "hint": "Update JUNC, or restore an older config; the last good config stays in use.",
+    "location": {
+      "column": 10,
+      "file": "tests/fixtures/configs/invalid/schema-newer.toml",
+      "line": 2
+    },
+    "message": "config schema 9 is newer than this JUNC understands (1)"
+  },
+  "junc": 1,
+  "ok": false
+}

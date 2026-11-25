@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_CYCLE",
+    "hint": "A Junction cannot feed itself.",
+    "location": {
+      "column": 9,
+      "file": "tests/fixtures/configs/invalid/self-nest.toml",
+      "line": 10
+    },
+    "message": "'loop' takes itself as an Input"
+  },
+  "junc": 1,
+  "ok": false
+}

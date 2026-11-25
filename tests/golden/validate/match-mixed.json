@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_MATCH_KIND",
+    "hint": "Use app keys (app, binary, role, node), or device, or monitor, or junction — exactly one kind.",
+    "location": {
+      "column": 9,
+      "file": "tests/fixtures/configs/invalid/match-mixed.toml",
+      "line": 10
+    },
+    "message": "match mixes app and device keys"
+  },
+  "junc": 1,
+  "ok": false
+}

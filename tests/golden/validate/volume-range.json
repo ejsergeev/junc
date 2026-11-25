@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_RANGE",
+    "hint": "Volume is a percentage from 0 to 150.",
+    "location": {
+      "column": 10,
+      "file": "tests/fixtures/configs/invalid/volume-range.toml",
+      "line": 7
+    },
+    "message": "volume is 200"
+  },
+  "junc": 1,
+  "ok": false
+}

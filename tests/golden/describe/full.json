@@ -1,0 +1,164 @@
+{
+  "data": {
+    "api_version": [
+      1,
+      0
+    ],
+    "candidates": [],
+    "capture_apps": [],
+    "config_error": [],
+    "config_file": "<config>",
+    "daemon_version": "<version>",
+    "defaults": {
+      "input": null,
+      "output": null
+    },
+    "junctions": [
+      {
+        "channels": 4,
+        "default": "input",
+        "enabled": true,
+        "id": "virtual-mic-for-zoom",
+        "inputs": [
+          {
+            "custom_links": true,
+            "enabled": true,
+            "exclusive": true,
+            "id": "spotify",
+            "links": [
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                2
+              ]
+            ],
+            "match": {
+              "app": "Spotify",
+              "binary": "spotify"
+            },
+            "matched": [],
+            "status": "unknown",
+            "suppressed": [],
+            "volume": 70
+          },
+          {
+            "custom_links": true,
+            "enabled": true,
+            "exclusive": false,
+            "id": "soundux",
+            "links": [
+              [
+                1,
+                3
+              ],
+              [
+                2,
+                4
+              ]
+            ],
+            "match": {
+              "binary": "soundux"
+            },
+            "matched": [],
+            "status": "unknown",
+            "suppressed": [],
+            "volume": 100
+          },
+          {
+            "custom_links": true,
+            "enabled": true,
+            "exclusive": false,
+            "id": "usb-mic",
+            "links": [
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                2
+              ]
+            ],
+            "match": {
+              "device": "alsa_input.usb-Generic_USB_Microphone-00.mono-fallback"
+            },
+            "matched": [],
+            "status": "unknown",
+            "suppressed": [
+              [
+                1,
+                2
+              ]
+            ],
+            "volume": 100
+          }
+        ],
+        "kind": "junction",
+        "listens": [
+          {
+            "custom_links": true,
+            "enabled": true,
+            "id": "builtin",
+            "links": [
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                2
+              ]
+            ],
+            "status": "unknown",
+            "suppressed": [],
+            "target": "default",
+            "volume": 80
+          }
+        ],
+        "name": "Virtual Mic for Zoom",
+        "node": "junc.virtual_mic_for_zoom",
+        "path": "/io/github/ejsergeev/Junc1/junction/virtual_2dmic_2dfor_2dzoom",
+        "status": "unknown",
+        "volume": 100
+      },
+      {
+        "cable_target": "unknown",
+        "channels": 2,
+        "default": "none",
+        "enabled": true,
+        "id": "firefox-to-obs",
+        "inputs": [
+          {
+            "custom_links": false,
+            "enabled": true,
+            "exclusive": false,
+            "id": "firefox",
+            "links": [],
+            "match": {
+              "binary": "firefox"
+            },
+            "matched": [],
+            "status": "unknown",
+            "suppressed": [],
+            "volume": 100
+          }
+        ],
+        "kind": "cable",
+        "listens": [],
+        "name": "Firefox → OBS",
+        "node": "junc.firefox_to_obs",
+        "path": "/io/github/ejsergeev/Junc1/junction/firefox_2dto_2dobs",
+        "status": "unknown",
+        "volume": 100
+      }
+    ],
+    "revision": 2,
+    "state": "starting"
+  },
+  "junc": 1,
+  "ok": true,
+  "revision": 2
+}

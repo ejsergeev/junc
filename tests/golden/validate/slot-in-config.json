@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_SLOT_OUTSIDE_PRESET",
+    "hint": "Slots are filled when a template is applied; use a concrete match here.",
+    "location": {
+      "column": 9,
+      "file": "tests/fixtures/configs/invalid/slot-in-config.toml",
+      "line": 10
+    },
+    "message": "template slot in a config"
+  },
+  "junc": 1,
+  "ok": false
+}

@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_CABLE",
+    "hint": "A Cable carries one app into another; use a Junction to mix more.",
+    "location": {
+      "column": 1,
+      "file": "tests/fixtures/configs/invalid/cable-two-inputs.toml",
+      "line": 10
+    },
+    "message": "Cable 'c' needs exactly one app Input"
+  },
+  "junc": 1,
+  "ok": false
+}

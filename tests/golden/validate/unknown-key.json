@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_UNKNOWN_KEY",
+    "hint": "Did you mean 'volume'? Allowed keys: id, name, kind, enabled, volume, default, rate, bus, input, listen, cable.",
+    "location": {
+      "column": 1,
+      "file": "tests/fixtures/configs/invalid/unknown-key.toml",
+      "line": 7
+    },
+    "message": "unknown key 'volum'"
+  },
+  "junc": 1,
+  "ok": false
+}

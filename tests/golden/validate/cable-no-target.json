@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_CABLE",
+    "hint": "Add `[junction.cable]` with `to = { binary = \"…\" }`: the app that hears the Cable.",
+    "location": {
+      "column": 8,
+      "file": "tests/fixtures/configs/invalid/cable-no-target.toml",
+      "line": 7
+    },
+    "message": "Cable 'c' has no `cable.to`"
+  },
+  "junc": 1,
+  "ok": false
+}

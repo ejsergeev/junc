@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_ID_DUPLICATE",
+    "hint": "Ids must be unique; rename one of them.",
+    "location": {
+      "column": 6,
+      "file": "tests/fixtures/configs/invalid/id-duplicate.toml",
+      "line": 9
+    },
+    "message": "Junction id 'zoom' is used twice"
+  },
+  "junc": 1,
+  "ok": false
+}

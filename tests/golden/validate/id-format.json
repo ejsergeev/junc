@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_ID_FORMAT",
+    "hint": "Use lowercase letters, digits and '-', e.g. 'zoom-mic'.",
+    "location": {
+      "column": 6,
+      "file": "tests/fixtures/configs/invalid/id-format.toml",
+      "line": 6
+    },
+    "message": "id 'Zoom Mic' is not valid"
+  },
+  "junc": 1,
+  "ok": false
+}

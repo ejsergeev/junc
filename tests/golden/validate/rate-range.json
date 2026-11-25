@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_RANGE",
+    "hint": "Use \"follow\" or a rate from 44100 to 192000.",
+    "location": {
+      "column": 8,
+      "file": "tests/fixtures/configs/invalid/rate-range.toml",
+      "line": 7
+    },
+    "message": "rate is 8000 Hz"
+  },
+  "junc": 1,
+  "ok": false
+}

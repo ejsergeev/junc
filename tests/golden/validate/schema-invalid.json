@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "E_CONFIG_SCHEMA_INVALID",
+    "hint": "This build writes `schema = 1`.",
+    "location": {
+      "column": 10,
+      "file": "tests/fixtures/configs/invalid/schema-invalid.toml",
+      "line": 2
+    },
+    "message": "`schema` must be a whole number"
+  },
+  "junc": 1,
+  "ok": false
+}
