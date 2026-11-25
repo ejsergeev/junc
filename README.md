@@ -207,6 +207,9 @@ junc apply my.toml                    # do it
 | Volume | `junc volume NAME [INPUT \| --listen ID] PERCENT` |
 | Config | `junc config path\|validate\|edit` · `junc apply FILE [--dry-run] [--expect-revision N]` · `junc schema` |
 | Service and health | `junc service enable\|disable\|status` · `junc doctor` |
+| Live events | `junc watch --json` (captured apps, Junctions on/off, notices) |
+| Existing setups | `junc import scan` · `junc import ID… [--as junction\|cable]` |
+| Remove JUNC | `junc teardown --yes` |
 
 Junctions can be named by id or by name, in any case, and a typo gets a
 "did you mean". Add `--json` to any command for one machine-readable
