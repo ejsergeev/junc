@@ -4,7 +4,8 @@
 # its AT-SPI tree, and the focus ring after keyboard navigation. Runs in a
 # private headless session (Xvfb + session bus + AT-SPI bus), never on the
 # user's desktop.
-# usage: scripts/gui/gallery-check.sh [OUT_DIR]   (needs a built junc-gui)
+# usage: scripts/gui/gallery-check.sh [OUT_DIR]
+#   (needs junc-gui built with: cargo build -p junc-gui --features scenarios)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 OUT=${1:-target/gallery}; mkdir -p "$OUT"
