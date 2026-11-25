@@ -1188,3 +1188,216 @@ fn a_device_that_comes_and_goes_is_relinked_every_time() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// RMS of the loud middle of a recording, per sample.
+fn rms_middle(samples: &[i16]) -> f64 {
+    let first = samples.iter().position(|s| *s != 0).unwrap_or(0);
+    let last = samples
+        .iter()
+        .rposition(|s| *s != 0)
+        .unwrap_or(samples.len());
+    let n = last.saturating_sub(first);
+    let mid = &samples[first + n / 3..first + 2 * n / 3];
+    #[allow(clippy::cast_precision_loss)]
+    let sum: f64 = mid
+        .iter()
+        .map(|s| f64::from(*s) * f64::from(*s))
+        .sum::<f64>()
+        / mid.len().max(1) as f64;
+    sum.sqrt()
+}
+
+/// RMS ratio of the recording to the source.
+fn level_through(
+    dir: &std::path::Path,
+    src: &[i16],
+    app: &str,
+    target: &str,
+    monitor: bool,
+) -> f64 {
+    rms_middle(&record_through(dir, src, app, target, monitor)) / rms_middle(src)
+}
+
+/// One channel of interleaved stereo.
+fn stereo_channel(samples: &[i16], c: usize) -> Vec<i16> {
+    samples.iter().skip(c).step_by(2).copied().collect()
+}
+
+/// Plays `src` as `app` (not auto-connected, so only JUNC routes it) and
+/// records `target` (a node, or a sink's monitor), stereo interleaved.
+fn record_through(
+    dir: &std::path::Path,
+    src: &[i16],
+    app: &str,
+    target: &str,
+    monitor: bool,
+) -> Vec<i16> {
+    let src_file = dir.join("vol-src.raw");
+    let bytes: Vec<u8> = src.iter().flat_map(|s| s.to_le_bytes()).collect();
+    std::fs::write(&src_file, bytes).expect("write source");
+    let rec_file = dir.join("vol-rec.raw");
+    let _ = std::fs::remove_file(&rec_file);
+    let props = if monitor {
+        "{ node.name=vol-rec stream.capture.sink=true }"
+    } else {
+        "{ node.name=vol-rec }"
+    };
+    let recorder = Kill(
+        Command::new("pw-cat")
+            .args([
+                "-r", "--target", target, "--raw", "--format", "s16", "--rate", "48000",
+            ])
+            .args(["--channels", "2", "--channel-map", "FL,FR", "-P", props])
+            .arg(&rec_file)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("pw-cat"),
+    );
+    std::thread::sleep(Duration::from_millis(500));
+    let mut player = Kill(
+        Command::new("pw-cat")
+            .args([
+                "-p",
+                "--raw",
+                "--format",
+                "s16",
+                "--rate",
+                "48000",
+                "--channels",
+                "2",
+            ])
+            .args(["--channel-map", "FL,FR", "-P"])
+            .arg(format!(
+                "{{ node.name={app} application.name={app} node.autoconnect=false }}"
+            ))
+            .arg(&src_file)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("pw-cat"),
+    );
+    let end = Instant::now() + Duration::from_secs(10);
+    while player.0.try_wait().ok().flatten().is_none() && Instant::now() < end {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    std::thread::sleep(Duration::from_millis(300));
+    let _ = Command::new("kill")
+        .arg("-INT")
+        .arg(recorder.0.id().to_string())
+        .status();
+    std::thread::sleep(Duration::from_millis(300));
+    drop(recorder);
+    read_s16(&rec_file)
+}
+
+/// F7 (B1): Input, Junction (master) and Listen volumes scale the audio by
+/// the cubic gain of their percentage; a hand edit changes them live.
+#[test]
+fn volumes_scale_the_audio() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-vol-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config = |master: u16, listen: u16| {
+        format!(
+            "schema = 1\n[[junction]]\nid = \"vol\"\nname = \"Vol\"\nvolume = {master}\n\
+             [[junction.input]]\nid = \"player\"\nmatch = {{ app = \"vol-player\" }}\nvolume = 50\n\
+             [[junction.listen]]\nid = \"hp\"\ntarget = \"fake.hp\"\nvolume = {listen}\n"
+        )
+    };
+    let (d, log) = run_juncd(&dir, "vol", &config(100, 100));
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| g
+            .node_by_name("junc.vol.in.player")
+            .is_some())
+        .is_some(),
+        "{}",
+        read(&log)
+    );
+    std::thread::sleep(Duration::from_millis(300));
+    let src = noise(RATE);
+    let close = |got: f64, want: f64| (got / want - 1.0).abs() < 0.02;
+
+    let r = level_through(&dir, &src, "vol-player", "junc.vol", false);
+    eprintln!("Input 50 %: level {r:.4} (want 0.125)");
+    assert!(close(r, 0.125), "Input 50 %: {r}");
+
+    std::fs::write(dir.join("vol.toml"), config(50, 70)).expect("hand edit");
+    std::thread::sleep(Duration::from_millis(500));
+    let r = level_through(&dir, &src, "vol-player", "junc.vol", false);
+    eprintln!("Input 50 % × master 50 %: level {r:.5} (want 0.015625)");
+    assert!(close(r, 0.015_625), "master: {r}");
+    let r = level_through(&dir, &src, "vol-player", "fake.hp", true);
+    eprintln!("… × Listen 70 %: level {r:.6} (want 0.005359)");
+    assert!(close(r, 0.015_625 * 0.343), "listen: {r}");
+    drop(d);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// F6, F8 (B1): a Listen with chosen links plays only those Bus channels;
+/// switching an Input off silences it, switching it on brings it back.
+#[test]
+fn on_off_and_listen_channels() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-onoff-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config = |input_on: bool| {
+        format!(
+            "schema = 1\n[[junction]]\nid = \"oo\"\nname = \"On Off\"\n\
+             [[junction.input]]\nid = \"player\"\nmatch = {{ app = \"oo-player\" }}\nenabled = {input_on}\n\
+             [[junction.listen]]\nid = \"hp\"\ntarget = \"fake.hp\"\nlinks = [[1, 1]]\n"
+        )
+    };
+    let (d, log) = run_juncd(&dir, "oo", &config(true));
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| g
+            .node_by_name("junc.oo.listen.hp")
+            .is_some())
+        .is_some(),
+        "{}",
+        read(&log)
+    );
+    std::thread::sleep(Duration::from_millis(300));
+    let src = noise(RATE);
+    let ratio = |rec: &[i16], c: usize| {
+        rms_middle(&stereo_channel(rec, c)) / rms_middle(&stereo_channel(&src, c))
+    };
+
+    let rec = record_through(&dir, &src, "oo-player", "fake.hp", true);
+    let (l, r) = (ratio(&rec, 0), ratio(&rec, 1));
+    eprintln!("Listen links [[1, 1]]: left {l:.4}, right {r:.4}");
+    assert!((l - 1.0).abs() < 0.02, "Bus channel 1 is heard: {l}");
+    assert!(r < 1e-3, "Bus channel 2 is not: {r}");
+
+    std::fs::write(dir.join("oo.toml"), config(false)).expect("hand edit");
+    std::thread::sleep(Duration::from_millis(500));
+    let off = level_through(&dir, &src, "oo-player", "junc.oo", false);
+    eprintln!("Input off: level {off:.5}");
+    assert!(off < 1e-3, "off is silent: {off}");
+
+    std::fs::write(dir.join("oo.toml"), config(true)).expect("hand edit");
+    std::thread::sleep(Duration::from_millis(500));
+    let on = level_through(&dir, &src, "oo-player", "junc.oo", false);
+    eprintln!("Input on again: level {on:.4}");
+    assert!((on - 1.0).abs() < 0.02, "on again: {on}");
+    drop(d);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
