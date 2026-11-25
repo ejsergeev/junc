@@ -361,6 +361,7 @@ impl Daemon {
                 ));
                 self.save_last_good();
                 self.converged = false;
+                self.started = Instant::now();
                 self.reconcile(backend);
                 self.publish();
             }
@@ -389,6 +390,7 @@ impl Daemon {
         })?;
         self.save_last_good();
         self.converged = false;
+        self.started = Instant::now();
         let plan = self.reconcile(backend);
         self.publish();
         Ok(plan)
@@ -673,7 +675,11 @@ fn main() -> ExitCode {
                 reply.send(r);
             }
             Msg::ConfigFile => d.config_file_changed(&backend),
-            Msg::Backend(Event::Connected) => log("connected to PipeWire"),
+            Msg::Backend(Event::Connected) => {
+                log("connected to PipeWire");
+                // Time the rebuild from here, not from the daemon's start.
+                d.started = Instant::now();
+            }
             Msg::Backend(Event::Disconnected) => {
                 log("lost PipeWire; waiting for it to come back");
                 // Objects die with PipeWire; only the saved defaults carry over.
