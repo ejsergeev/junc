@@ -20,7 +20,7 @@ and the measured results. Raw outputs live next to the bench scripts
 | 2 · Virtual PipeWire devices | available | isolated PipeWire instance (own `XDG_RUNTIME_DIR`, WirePlumber 0.5 profile with all hardware monitors disabled) runs beside the desktop session without touching it |
 | 3 · Virtual kernel cards | available | `snd-dummy` and `snd-aloop` load (sudo); WirePlumber exposes them with ACP profiles; Loopback has 65 profiles incl. `pro-audio` with 32-channel sinks/sources; Dummy has `pro-audio` too. Unloading needs WirePlumber stopped (it holds the control devices), so hot-plug tests switch the card profile `off`/on instead of `modprobe -r` |
 | 4 · Emulated USB audio (UAC2 gadget) | **skipped** (owner, 2026-11-25) | `libcomposite`, `usb_f_uac2`, `g_audio` exist, but `dummy_hcd` is not built and `/sys/class/udc` is empty |
-| 5 · Real devices | pending (task 0.7) | NI Komplete Audio 2 (USB, 2 in / 2 out), Google Pixel Buds 2a, Apple AirPods; built-in audio behind the Asahi DSP. No HDMI audio |
+| 5 · Real devices | captured (task 0.7) | NI Komplete Audio 2: stereo profile and `pro-audio`, both 2 channels (F15 negative case). AirPods: A2DP/AAC, HFP/mSBC. Pixel Buds 2a: A2DP/AAC, HFP/LC3-SWB. In A2DP, WirePlumber 0.5 exposes a virtual headset mic (`bluez_input.<addr>`) that switches the headset to HFP when captured. Built-in audio behind the Asahi DSP. No HDMI audio. Fixtures in `tests/fixtures/graphs/` |
 
 Asahi note: the raw speaker and mic-array ALSA nodes are not visible to a
 normal PipeWire client (only links to them are), so JUNC cannot route around
@@ -94,7 +94,26 @@ partial rendering: try the skia renderer and the software renderer's
 dirty-region path), (c) consider a lower rate when the window is unfocused,
 and re-measure against the < 2 % target.
 
-AT-SPI tree under Hyprland/Wayland: identical to the VM's X11 and Weston
-trees, except that current at-spi names the button role `button` instead of
-`push button`. Keyboard injection and Orca are still to run with the owner
-present (tasks 0.4, 0.5).
+## Accessibility of the Slint prototype under Hyprland
+
+Raw results: `bench/validation/results-m1-a11y/`.
+
+- AT-SPI tree on Wayland is identical to the VM's X11 and Weston trees,
+  except that current at-spi names the button role `button`.
+- Keyboard walk with `wtype` (`interaction_test_wayland.sh`): same as the VM.
+  Tab order follows reading order; Space and Return toggle the switch;
+  slider ←/→ ±1, Home/End work, **PageUp does nothing**; the picker takes
+  focus into its search field, traps Tab, Esc closes it and returns focus to
+  the opener; **the search field has no name**; **slider focus is nearly
+  invisible** (`focus-slider.png`).
+- Orca 51.1 (`orca_test_wayland.sh`) spoke: "JUNC", "Junctions List with 3
+  items, Stream Mix", "New junction button", "Add input… button", "Firefox
+  panel, Enable Firefox toggle button pressed", "not pressed", "Volume of
+  Firefox horizontal slider 80 percent", "81". Unlike the VM run, the first
+  list item was spoken.
+- Owner listening (2026-11-25): the voice worked; buttons were clear;
+  **switches were hard to understand** ("toggle button pressed / not
+  pressed"); speech felt too fast because each key press (1.6 s apart)
+  interrupted the previous phrase. Consequences: the `JSwitch` label +
+  on/off description is required, and the beta Orca acceptance run uses
+  ≥ 3 s between key presses.

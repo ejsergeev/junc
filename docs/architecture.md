@@ -302,16 +302,26 @@ Disconnected ──socket appears / poll──▶ Connecting ──ok──▶ S
 - A Listen target `default` follows the system default sink: the daemon
   re-links when `default.audio.sink` changes. On Asahi Macs the default sink
   is a DSP filter-chain (`audio_effect.j293-convolver`) in front of the
-  speakers; JUNC must route to that, never to raw speaker nodes. The output
-  picker lists only nodes WirePlumber exposes as `Audio/Sink`, skipping
-  `node.hidden`/internal filter-chain stream nodes.
+  speakers; JUNC must route to that, never to raw speaker nodes. Step 0
+  showed the raw speaker and mic-array nodes are not even visible to a
+  normal client (only the links to them are), so this holds by construction
+  on current Asahi; S8 keeps a test for it. The output picker lists only
+  nodes WirePlumber exposes as `Audio/Sink`, skipping `node.hidden`/internal
+  filter-chain stream nodes.
 
 ### 3.8 Pro Audio profile switching (F15)
 
-- For each ALSA device the backend reads `EnumProfile`/`Profile` params and
-  the channel counts of the nodes each profile exposes. If a `pro-audio`
-  profile exposes more channels than the active one, the picker shows
-  "2 of 18 channels" and "Use all channels" (design `proAudio`).
+- For each ALSA device the backend reads `EnumProfile`/`Profile` params.
+  PipeWire reports channel counts only for the nodes of the **active**
+  profile; an inactive `pro-audio` entry lists device classes but no channel
+  count (step 0). The full count therefore comes from a read-only look at
+  ALSA's stream description for USB cards (`/proc/asound/card<N>/stream*`,
+  card number from `api.alsa.card`), never by switching profiles to probe.
+  If that count exceeds the active profile's channels, the picker shows
+  "2 of 18 channels" and "Use all channels" (design `proAudio`). If the count
+  is unknown (non-USB cards), the row says "Pro Audio available" and offers
+  the switch without a number. Equal counts (e.g. Komplete Audio 2, 2 = 2)
+  show nothing.
 - "Use all channels" sets the device `Profile` param to `pro-audio`, waits
   for the new nodes, and binds the Input to the pro-audio capture node with
   all channels grouped by 8 (design `multichannel`: In 1–8, 9–16, 17–18).
@@ -328,6 +338,13 @@ headset mic that is in A2DP with the HFP warning and offers "Add anyway" /
 "Choose another mic" (design `btWarning`); the active profile is a badge on the
 device card. JUNC never switches the Bluetooth profile itself; adding the mic
 lets WirePlumber switch.
+
+Step 0 detail: with WirePlumber 0.5 a headset in A2DP already exposes a
+virtual mic `bluez_input.<address>` (plus `bluez_capture_internal`); linking
+it is what triggers the switch to HFP. The warning is attached to exactly
+that node. Call quality differs by codec (AirPods mSBC, Pixel Buds 2a
+LC3-SWB), so the warning names the codec class from `api.bluez5.codec` of the
+HFP profile where known.
 
 ### 3.10 Exclusive (F11)
 
@@ -754,7 +771,10 @@ junc-gui
   column), so external changes (CLI, agent, hand edit) appear live.
 - Slint renderer: femtovg (GPU) on Omarchy; software renderer fallback. The
   validation numbers (24 MB PSS, 3.3 % CPU with meters, software renderer) are
-  the upper bound to beat; GPU numbers are measured in step 0.
+  the upper bound to beat. Step 0 on the M1 (femtovg): 88 ms cold start,
+  62 MB PSS, but 6.4 % CPU with 7 Hz meters because every tick repaints the
+  whole window (see `docs/hardware-matrix.md`); §7.6 must limit repaints to
+  the meter regions.
 - The window has no title bar (tiled by Hyprland); sizes follow the design:
   sidebar 300 px (240 px when the tile is < 1100 px), main pane three columns
   ≥ 780 px, Listen stacked below 780 px (design `Narrow`).
@@ -1157,7 +1177,7 @@ Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 | Unit | config parse/validate/migrate, matcher, planner (never touches untagged objects), preset slots, i18n resolution, number formatting, theme derivation | CI, every PR | must pass |
 | 1 · Mocked graph | `MockBackend` + fixtures for 1–64 ch devices, odd channel maps, appear/disappear, profile changes, Bluetooth props, Asahi DSP topology, foreign links; full daemon (D-Bus + reconcile) against the mock | CI, every PR | must pass |
 | 2 · Virtual PipeWire devices | Headless PipeWire + WirePlumber (validation `ci-config`: null-audio-sink fake devices, no bluez/logind) in a container; real `juncd`; `pw-cat` test signals; record and compare bit-exact; app churn; PipeWire restart; re-exec upgrade continuity; 18-ch null device | CI, every PR (short), nightly (long soak) | must pass |
-| 3 · Virtual kernel cards | `snd-dummy`, `snd-aloop` (up to 32 ch) through the real ALSA path, ACP profiles incl. pro-audio (F15), hot-plug by `modprobe -r`/`modprobe` | Owner laptop (sudo once per session); CI attempt if the runner kernel has the modules | per stage |
+| 3 · Virtual kernel cards | `snd-dummy`, `snd-aloop` (up to 32 ch) through the real ALSA path, ACP profiles incl. pro-audio (F15); hot-plug simulated by switching the card profile `off`/on (unloading the module needs WirePlumber stopped) | Owner laptop (sudo once per session); CI attempt if the runner kernel has the modules | per stage |
 | 4 · Emulated USB audio | UAC2 gadget via configfs on a virtual UDC | **Skipped** (owner agreed 2026-11-25): no `dummy_hcd` and no UDC on the owner's laptop. USB hot-plug is covered by `snd-aloop` reload and the real interface | — |
 | 5 · Real devices | Native Instruments Komplete Audio 2 (USB class-compliant, 2 in / 2 out), MacBook built-in audio behind the Asahi DSP, Google Pixel Buds 2a and Apple AirPods (Bluetooth, F18). No HDMI audio on this laptop. The Komplete Audio 2 has only 2 channels, so F15 (more channels in Pro Audio) is proven on `snd-aloop` only | Owner | per stage |
 
@@ -1197,7 +1217,9 @@ real `juncd`).
   scenario compared to an expected dump; Tab order; switch/slider/picker
   keyboard behaviour. CI on Xvfb + headless Weston.
 - **Orca**: `orca_test.sh` speech log on the owner laptop under Hyprland,
-  keyboard via `wtype`/`ydotool`; owner listens once per stage.
+  keyboard via `wtype` with a focus guard (`interaction_test_wayland.sh`,
+  `orca_test_wayland.sh`); at least 3 s between key presses so phrases are
+  not cut off; owner listens once per stage.
 
 ### 11.4 Performance gates (PRD targets)
 
