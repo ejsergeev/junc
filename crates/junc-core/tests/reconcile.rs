@@ -309,6 +309,36 @@ fn cable_targets_are_set_respected_and_returned() {
     );
 }
 
+#[test]
+fn a_cable_target_restarting_under_a_reused_id_is_sent_again() {
+    let p = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/graphs/apps-browser-two-streams.json");
+    let g = Graph::from_pw_dump(&std::fs::read_to_string(p).expect("fixture")).expect("graph");
+    let cfg = config::load(CABLE, "t.toml").expect("config").config;
+    let mut b = MockBackend::new(g);
+    let mut r = Reconciler::new();
+    for _ in 0..4 {
+        step(&mut b, &cfg, &mut r);
+    }
+    let d = discord(&b)[0];
+    // Discord restarts between two snapshots and gets its old id back; the
+    // new stream has no target yet. Nobody moved it: no notice, and JUNC
+    // sends the new stream to the Cable.
+    b.graph_mut().targets.remove(&d);
+    let n = b.graph_mut().nodes.get_mut(&d).expect("node");
+    let serial = n.props.number("object.serial").expect("serial");
+    n.props.set("object.serial", (serial + 10_000).to_string());
+    for _ in 0..3 {
+        let s = step(&mut b, &cfg, &mut r);
+        assert!(s.notices.is_empty(), "not an override: {s:?}");
+    }
+    assert!(r.held().is_empty());
+    assert_eq!(
+        b.graph().targets.get(&d).map(String::as_str),
+        Some("junc.ff_discord")
+    );
+}
+
 /// F7: volumes go to the Junction source (master), the Input gain nodes and
 /// the Listen gain nodes; each is set once, again only when it changes or
 /// the node is recreated.

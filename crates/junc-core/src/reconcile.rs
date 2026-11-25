@@ -149,7 +149,8 @@ pub struct Reconciler {
     volumes: HashMap<u32, u16>,
     /// Cards JUNC keeps in a profile, by `object.serial`.
     cards: HashMap<u32, CardProfile>,
-    /// Streams whose `target.object` JUNC set, by stream node id.
+    /// Streams whose `target.object` JUNC set, by stream node id (the
+    /// reference carries the stream's serial).
     targeted: HashMap<u32, Targeted>,
     /// JUNC links in the last snapshot, by link id.
     last: HashMap<u32, Seen>,
@@ -250,7 +251,14 @@ impl Reconciler {
         // an overridden link.
         let holds = &mut self.confirmed;
         self.targeted.retain(|stream, t| {
-            if !graph.nodes.contains_key(stream) {
+            // Gone, or its id now belongs to the app's next stream.
+            let serial = graph
+                .nodes
+                .get(stream)
+                .map(|n| n.props.number("object.serial").unwrap_or(n.id).to_string());
+            if serial.is_none()
+                || serial.as_deref() != crate::plan::stream_target_serial(&t.reference)
+            {
                 return false;
             }
             if graph.targets.get(stream) == Some(&t.value) {
