@@ -1401,3 +1401,102 @@ fn on_off_and_listen_channels() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// F11 (B2), with WirePlumber: an Exclusive Input takes the app off the
+/// speakers while JUNC captures it, and turning Exclusive off brings it
+/// back; JUNC's capture link stays throughout.
+#[test]
+fn exclusive_takes_the_app_off_the_speakers_and_back() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-excl-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config = |exclusive: bool| {
+        format!(
+            "schema = 1\n[[junction]]\nid = \"ex\"\nname = \"Exclusive\"\n\
+             [[junction.input]]\nid = \"player\"\nmatch = {{ app = \"ex-player\" }}\n\
+             exclusive = {exclusive}\n"
+        )
+    };
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| g
+            .node_by_name("fake.hp")
+            .is_some())
+        .is_some()
+    );
+    sh_ok(
+        "wpctl",
+        &["set-default", &node_id(&g, "fake.hp").to_string()],
+    );
+    // Where the app's audio goes: names of the nodes it is linked into.
+    let into = |g: &Graph| -> BTreeSet<String> {
+        let Some(p) = g.node_by_name("ex-player") else {
+            return BTreeSet::new();
+        };
+        g.links
+            .values()
+            .filter(|l| l.output_node == p.id)
+            .filter_map(|l| g.nodes.get(&l.input_node))
+            .map(|n| n.name().to_owned())
+            .collect()
+    };
+    let gain = "junc.ex.in.player".to_owned();
+    let speakers_and_junc = BTreeSet::from(["fake.hp".to_owned(), gain.clone()]);
+    let junc_only = BTreeSet::from([gain.clone()]);
+
+    let player = pw_cat("-p", "ex-player", std::path::Path::new("/dev/zero"));
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| into(g)
+            .contains("fake.hp"))
+        .is_some(),
+        "WirePlumber did not route the player to the speakers: {:?}",
+        into(&g)
+    );
+
+    let (d, log) = run_juncd(&dir, "ex", &config(true));
+    let t0 = Instant::now();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| into(g)
+            == junc_only)
+        .is_some(),
+        "Exclusive on: {:?}\n{}",
+        into(&g),
+        read(&log)
+    );
+    eprintln!("exclusive on: off the speakers after {:?}", t0.elapsed());
+
+    std::fs::write(dir.join("ex.toml"), config(false)).expect("hand edit");
+    let t0 = Instant::now();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| into(g)
+            == speakers_and_junc)
+        .is_some(),
+        "Exclusive off: {:?}\n{}",
+        into(&g),
+        read(&log)
+    );
+    eprintln!(
+        "exclusive off: back on the speakers after {:?}",
+        t0.elapsed()
+    );
+
+    std::fs::write(dir.join("ex.toml"), config(true)).expect("hand edit");
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| into(g)
+            == junc_only)
+        .is_some(),
+        "Exclusive on again: {:?}",
+        into(&g)
+    );
+    drop(player);
+    drop(d);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
