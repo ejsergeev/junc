@@ -795,10 +795,38 @@ proposed one; `actions` are the next reconcile step with node names and
 (`complete: false`); its links follow once the nodes exist. Golden plans:
 `tests/golden/plan/`.
 
-`junc doctor --json` → `data.checks[]`: `{ "id": "pipewire|wireplumber|pipewire-pulse|jack|clock|juncd",
+`junc doctor --json` → `data.checks[]`: `{ "id": "pipewire|wireplumber|pipewire-pulse|jack|clock|rates|asahi|juncd",
 "status": "ok|warn|missing|down", "detail": "…", "fix": "sudo pacman -S pipewire-pulse" }`.
 `doctor` and `schema`, `config validate FILE` and `config path` work without
-juncd; `--bug-report` arrives with F19's bundle in beta.
+juncd.
+
+As built (B9): `Facts::gather` reads the system once (processes,
+`pacman -Q`, `pw-metadata -n settings 0`, `pw-dump`, the device tree,
+juncd's `Describe` only if it already runs); every check is a pure
+function of those facts, with golden outputs in `tests/golden/doctor/`.
+`rates` reads each ALSA input and output's `EnumFormat` rates (one value,
+a range or a list) and warns when one cannot run at the graph's rate and
+its own rate is not in `clock.allowed-rates`; the fix is the
+`pw-metadata … clock.allowed-rates "[ … ]"` command (Bluetooth is left
+out: its call profiles always resample). `asahi` appears only on Apple
+Silicon (`apple,` in `/proc/device-tree/compatible`) when the session sees
+the built-in card (ALSA path `hw:Apple…`; an isolated PipeWire does not): the `audio_effect.*`
+DSP sink must exist and `speakersafetyd` (a system service) must run.
+`jack` says to replace jack2, not to install beside it.
+
+`junc doctor --bug-report` prints one Markdown text for an issue
+(`data.report` with `--json`): versions (junc, juncd, PipeWire,
+WirePlumber, kernel, arch), a graph line (Junctions, Cables, JUNC links,
+rate, quantum), the checks, each Junction with its statuses, the sound
+cards, the config file and the last 200 lines of `journalctl --user -u
+juncd`. Never audio. The whole text is scrubbed: `$HOME` → `~`, other
+`/home/NAME` → `/home/<user>`, the user and host names (whole words) →
+`<user>`/`<host>`, hardware addresses (`AA:BB:…`, `AA_BB_…`) → `XX:…`.
+It asks juncd for the config only if juncd runs, so a report never starts
+it, and it sends nothing. Tests: `report::tests` (scrub, golden
+`tests/golden/doctor/bug-report.md`). The GUI's "Copy bug report" (board
+41) uses the same text; the D-Bus `Doctor`/`BugReport` methods come with
+the GUI if it cannot run `junc`.
 
 `junc watch --json` lines: `{"event":"graph","generation":7}`,
 `{"event":"capture","apps":["Spotify"]}`, `{"event":"notice", …}`,

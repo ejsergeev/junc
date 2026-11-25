@@ -318,8 +318,19 @@ Daemon features first (they gate GUI screens):
   test fills two templates, exports and imports a Junction (same Inputs
   and Listens, not a second default input). Installing the templates to
   `/usr/share/junc/templates` comes with the PKGBUILD (B25).
-- [ ] **B9** [auto] Doctor complete (Asahi DSP, rates, jack2) + bug report
+- [x] **B9** [auto] Doctor complete (Asahi DSP, rates, jack2) + bug report
   with path scrubbing. Req: F19. Acceptance: golden outputs; scrub test.
+  Done 2026-11-25 (architecture §5.2, as built): doctor reads facts once
+  and checks them purely; new `rates` (devices that cannot run at the
+  graph's rate, with the `clock.allowed-rates` fix) and `asahi` (DSP sink
+  and speakersafetyd, Apple Silicon only) checks; jack2 worded as replace.
+  `junc doctor --bug-report`: versions, graph line, checks, Junctions,
+  sound cards, config, 200 journal lines, scrubbed of home paths, user and
+  host names and hardware addresses; never starts juncd. Golden outputs
+  for healthy, broken, rate-mismatch and Asahi sessions and the report;
+  a scrub test. On the owner's M1 (read-only): all checks ok, `asahi`
+  found `audio_effect.j293-convolver` and speakersafetyd, the report had
+  no personal data.
 
 GUI foundation:
 
