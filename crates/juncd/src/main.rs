@@ -478,12 +478,15 @@ impl Daemon {
                         ));
                     }
                 };
+                if how == Resolution::LeaveAsIs && !self.reconciler.is_held(&junction, &reference) {
+                    return Err(not_found(format!(
+                        "no overridden link '{reference}' on '{junction}'"
+                    )));
+                }
                 let config = self.store.config().clone();
                 match self.reconciler.resolve(&config, &junction, &reference, how) {
                     Some(new) => self.write(new, backend),
-                    None if how == Resolution::LeaveAsIs => Err(not_found(format!(
-                        "no overridden link '{reference}' on '{junction}'"
-                    ))),
+                    // Restore, or a stream target, which is held in memory.
                     None => {
                         self.reconcile(backend);
                         Ok(Resp::Revision(self.store.revision()))
