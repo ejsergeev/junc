@@ -65,10 +65,12 @@ pub struct EntityStatus {
 /// Result of planning.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Plan {
-    /// Actions in a safe order: unlink, destroy, rename, create nodes, link.
+    /// Actions in a safe order: unlink, destroy, create nodes, link.
     pub actions: Vec<Action>,
     /// Status of every config entry.
     pub status: Vec<EntityStatus>,
+    /// Nodes whose new name waits until no app uses them (spike S10).
+    pub deferred: Vec<String>,
 }
 
 impl Plan {
@@ -127,7 +129,6 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
     }
     let wanted_names: HashSet<&str> = wanted.iter().map(|s| s.name.as_str()).collect();
     let mut destroy_nodes = Vec::new();
-    let mut set_desc = Vec::new();
     let mut create_nodes = Vec::new();
     // Nodes that exist with the right shape this round; links only go to them.
     let mut ready: BTreeMap<String, u32> = BTreeMap::new();
@@ -137,11 +138,18 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
                 if channel_count(n) == Some(spec.channels)
                     && n.media_class() == spec.media_class =>
             {
+                // node.description is fixed at creation (spike S10), so a
+                // rename recreates the node. While apps use it, that would
+                // move them to the default device for a moment (a recording
+                // app would hear the real mic), so the rename waits.
                 if n.description() != spec.description {
-                    set_desc.push(Action::SetDescription {
-                        node: n.id,
-                        description: spec.description.clone(),
-                    });
+                    if is_busy(n.id, graph) {
+                        out.deferred.push(spec.name.clone());
+                    } else {
+                        destroy_nodes.push(Action::DestroyNode { node: n.id });
+                        create_nodes.push(Action::CreateNode(spec.clone()));
+                        continue;
+                    }
                 }
                 ready.insert(spec.name.clone(), n.id);
             }
@@ -196,11 +204,19 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
 
     out.actions.extend(destroy_links);
     out.actions.extend(destroy_nodes);
-    out.actions.extend(set_desc);
     out.actions.extend(create_nodes);
     out.actions
         .extend(want_links.into_values().map(Action::CreateLink));
     out
+}
+
+/// An app (or another tool) uses the node: any link touching it that JUNC
+/// did not make.
+fn is_busy(node: u32, graph: &Graph) -> bool {
+    graph
+        .links
+        .values()
+        .any(|l| !l.is_junc() && (l.output_node == node || l.input_node == node))
 }
 
 fn channel_count(n: &Node) -> Option<u8> {
@@ -244,7 +260,7 @@ fn junction_nodes(j: &Junction) -> Vec<NodeSpec> {
             "Audio/Duplex/Internal",
             Role::InputGain,
             format!("in/{}", i.id),
-            format!("{} · {}", j.name, i.id),
+            format!("JUNC {} · input {}", j.id, i.id),
         ));
     }
     for l in j.listen.iter().filter(|l| l.enabled) {
@@ -253,7 +269,7 @@ fn junction_nodes(j: &Junction) -> Vec<NodeSpec> {
             "Audio/Duplex/Internal",
             Role::ListenGain,
             format!("listen/{}", l.id),
-            format!("{} · listen {}", j.name, l.id),
+            format!("JUNC {} · listen {}", j.id, l.id),
         ));
     }
     v

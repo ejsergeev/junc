@@ -217,26 +217,63 @@ fn removing_from_config_cleans_up_only_junc_objects() {
 }
 
 #[test]
-fn rename_and_bus_resize() {
+fn rename_recreates_when_idle_and_waits_while_in_use() {
     let mut b = MockBackend::new(graph("apps-browser-two-streams.json"));
     converge(&mut b, &cfg(ZOOM), &Held::new());
+    // Discord starts recording from the Junction.
+    let src = node_id(&b, "junc.zoom");
+    let discord = node_id(&b, "Discord");
+    let out = b
+        .graph()
+        .ports_of(src, Direction::Out)
+        .next()
+        .expect("port")
+        .id;
+    let inp = b
+        .graph()
+        .ports_of(discord, Direction::In)
+        .next()
+        .expect("port")
+        .id;
+    let rec = b.add_foreign_link(out, inp).expect("link");
     let renamed = cfg(&ZOOM.replace("Zoom Mic", "Meeting Mic"));
     let p = plan(&renamed, b.graph(), &Held::new());
+    // The source Discord records from waits; the idle sink is recreated now;
+    // gain nodes are not renamed at all.
     assert!(
-        p.actions
-            .iter()
-            .all(|a| matches!(a, Action::SetDescription { .. })),
+        !p.actions.contains(&Action::DestroyNode { node: src }),
         "{:?}",
         p.actions
     );
-    converge(&mut b, &renamed, &Held::new());
+    assert_eq!(p.deferred, ["junc.zoom"]);
+    let sink = node_id(&b, "junc.zoom.sink");
+    assert!(p.actions.contains(&Action::DestroyNode { node: sink }));
     assert_eq!(
-        b.graph()
-            .node_by_name("junc.zoom")
-            .map(|n| n.description().to_owned())
-            .as_deref(),
-        Some("Meeting Mic")
+        p.actions
+            .iter()
+            .filter(|a| matches!(a, Action::DestroyNode { .. }))
+            .count(),
+        1
     );
+    // Discord stops; the rename goes through and routing is rebuilt.
+    b.remove_link(rec);
+    converge(&mut b, &renamed, &Held::new());
+    let desc = b
+        .graph()
+        .node_by_name("junc.zoom")
+        .map(|n| n.description().to_owned());
+    assert_eq!(desc.as_deref(), Some("Meeting Mic"));
+    assert!(plan(&renamed, b.graph(), &Held::new()).deferred.is_empty());
+    assert_eq!(
+        junc_links(&b).iter().filter(|l| l.0 == "Firefox").count(),
+        4
+    );
+}
+
+#[test]
+fn bus_resize_recreates_the_nodes() {
+    let mut b = MockBackend::new(graph("apps-browser-two-streams.json"));
+    converge(&mut b, &cfg(ZOOM), &Held::new());
     let wide = cfg(&ZOOM.replace(
         "name = \"Zoom Mic\"",
         "name = \"Zoom Mic\"\nbus = { channels = 4 }",

@@ -233,7 +233,7 @@ fallback, so a 2-channel app maps to Bus Ch 1–2 by default (F4).
 ### 3.4 Reconcile and link ownership
 
 `planner::plan(desired, observed)` returns an ordered action list:
-`CreateNode`, `SetNodeProps`, `CreateLink`, `DestroyLink` (only `junc.managed`),
+`CreateNode`, `CreateLink`, `DestroyLink` (only `junc.managed`),
 `DestroyNode` (only `junc.managed`), `SetMetadata`, `SetDeviceProfile`. The
 planner never emits an action on an object without the JUNC tag; a unit test
 enforces this over every fixture graph (F17).
@@ -1345,6 +1345,8 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 | S8 | **Pass by construction.** In the live session the speaker (node 62) and mic-array (node 56) ALSA nodes are inaccessible (`no global`), only their links are visible. | The planner only ever targets nodes it can see; test kept on the Asahi fixture. |
 
 | S9 | Registry globals carry only part of the properties. Nodes: no `junc.*` tags, no `application.process.binary`, no `audio.channels`. Links: no `junc.*` tags. Ports: everything needed (`port.id`, `audio.channel`, direction, `node.id`). | `junc-pw` binds every audio node and every link to read their full info props (cheap client-side proxies, no objects created); ports are read from globals. |
+
+| S10 | `node.description` cannot be changed after creation (`set-param Props` ignores it). When a node is destroyed, WirePlumber moves its recording apps (PulseAudio and native) to the default source and back once a node with the same `node.name` reappears. | Renaming recreates the node, but only while no foreign link touches it; otherwise the rename is *deferred* (the GUI shows the new name at once, PipeWire gets it when the Junction is idle), so a recording app never hears the real mic for a moment. Gain nodes carry id-based descriptions and are never renamed. A Bus resize still recreates at once; the GUI warns when the Junction is in use. |
 
 Other findings: ports must be looked up by direction and `audio.channel`, never
 by name (`Audio/Source/Virtual` names its inputs `input_FL`, sinks use

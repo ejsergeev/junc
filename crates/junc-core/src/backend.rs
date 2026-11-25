@@ -131,13 +131,6 @@ impl LinkSpec {
 pub enum Action {
     /// Create a node.
     CreateNode(NodeSpec),
-    /// Change the description of a JUNC node (rename).
-    SetDescription {
-        /// Node id.
-        node: u32,
-        /// New `node.description`.
-        description: String,
-    },
     /// Destroy a JUNC node.
     DestroyNode {
         /// Node id.
@@ -160,9 +153,6 @@ impl fmt::Display for Action {
                 "create {} node {} ({} ch)",
                 n.media_class, n.name, n.channels
             ),
-            Self::SetDescription { node, description } => {
-                write!(f, "rename node {node} to \"{description}\"")
-            }
             Self::DestroyNode { node } => write!(f, "destroy node {node}"),
             Self::CreateLink(l) => write!(
                 f,
@@ -316,19 +306,6 @@ impl Backend for MockBackend {
         match action {
             Action::CreateNode(spec) => {
                 self.add_node(spec.props(), spec.channels);
-            }
-            Action::SetDescription { node, description } => {
-                let n = self
-                    .graph
-                    .nodes
-                    .get_mut(node)
-                    .ok_or_else(|| BackendError(format!("no node {node}")))?;
-                if !n.is_junc() {
-                    return Err(BackendError(format!(
-                        "refusing to rename foreign node {node}"
-                    )));
-                }
-                n.props.set("node.description", description.clone());
             }
             Action::DestroyNode { node } => {
                 let n = self
