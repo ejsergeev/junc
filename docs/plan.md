@@ -163,9 +163,10 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   `default` Listen target following the system default. Req: F16.
   Acceptance: layer-2 tests incl. "restore target missing".
   Done 2026-11-25: `junc-core::defaults` + backend `SetDefault` + saved state in `juncd`. Mock tests (7) and live tests: default input set and restored across daemon restarts, key cleared when the previous device is gone, Listen `default` follows the default output. Live suite stable over 10 runs after fixing create/snapshot and metadata races found along the way.
-- [ ] **A9** [auto] Config watching, last-good, revision counter,
+- [x] **A9** [auto] Config watching, last-good, revision counter,
   comment-preserving writes. Req: F22. Acceptance: hand-edit tests (valid,
   invalid with line numbers, concurrent edit → `E_CONFLICT`).
+  Done 2026-11-25: `junc-core::store` (7 tests: one-value edits keep comments byte for byte, add/remove entries, suppressed lists, hand edits with positions, comment-only edits, own writes, conflicts) and live reload in `juncd` (live test: rename-style edit applied, invalid edit reported at 5:1 with a hint, restart falls back to the last good config).
 - [ ] **A10** [auto] D-Bus API v1 (`Daemon`, `Junction`), errors, generated
   `docs/dbus.md`. Req: F12, F23 (property only). Acceptance: zbus round-trip
   tests; `time junc enable X` < 50 ms in CI.
