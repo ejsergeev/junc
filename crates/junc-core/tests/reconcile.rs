@@ -1,0 +1,176 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+//! Reconcile state machine (§3.5) on the mock backend.
+
+use junc_core::backend::{Backend, MockBackend};
+use junc_core::config;
+use junc_core::graph::Graph;
+use junc_core::model::Config;
+use junc_core::reconcile::{Notice, Reconciler, Resolution, Step};
+use std::path::Path;
+
+const ZOOM: &str = r#"
+schema = 1
+[[junction]]
+id = "zoom"
+name = "Zoom Mic"
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+[[junction.input]]
+id = "mic"
+match = { device = "fake.hwin" }
+[[junction.listen]]
+id = "hp"
+target = "default"
+"#;
+
+fn setup() -> (MockBackend, Config, Reconciler) {
+    let p = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/graphs/apps-browser-two-streams.json");
+    let g = Graph::from_pw_dump(&std::fs::read_to_string(p).expect("fixture")).expect("graph");
+    let cfg = config::load(ZOOM, "t.toml").expect("config").config;
+    let mut b = MockBackend::new(g);
+    let mut r = Reconciler::new();
+    for _ in 0..4 {
+        step(&mut b, &cfg, &mut r);
+    }
+    assert!(r.on_graph(&cfg, b.graph()).actions.is_empty(), "converged");
+    (b, cfg, r)
+}
+
+fn step(b: &mut MockBackend, cfg: &Config, r: &mut Reconciler) -> Step {
+    let s = r.on_graph(cfg, b.graph());
+    for a in &s.actions {
+        b.apply(a).unwrap_or_else(|e| panic!("{a}: {e}"));
+    }
+    s
+}
+
+fn link_by_ref(b: &MockBackend, reference: &str) -> Option<u32> {
+    b.graph()
+        .links
+        .values()
+        .find(|l| l.props.get("junc.ref") == Some(reference))
+        .map(|l| l.id)
+}
+
+fn overridden(junction: &str, reference: &str) -> Notice {
+    Notice::LinkOverridden {
+        junction: junction.into(),
+        reference: reference.into(),
+    }
+}
+
+#[test]
+fn another_tool_removing_a_link_is_not_fought() {
+    let (mut b, cfg, mut r) = setup();
+    b.remove_link(link_by_ref(&b, "in/mic/1->2").expect("link"));
+    let s1 = step(&mut b, &cfg, &mut r);
+    assert!(
+        s1.actions.is_empty() && s1.notices.is_empty(),
+        "held at once, confirmed next round: {s1:?}"
+    );
+    let s2 = step(&mut b, &cfg, &mut r);
+    assert_eq!(s2.notices, [overridden("zoom", "in/mic/1->2")]);
+    assert!(s2.actions.is_empty());
+    for _ in 0..3 {
+        let s = step(&mut b, &cfg, &mut r);
+        assert!(
+            s.actions.is_empty() && s.notices.is_empty(),
+            "one notice, no fighting"
+        );
+    }
+    assert!(
+        r.resolve(&cfg, "zoom", "in/mic/1->2", Resolution::Restore)
+            .is_none()
+    );
+    step(&mut b, &cfg, &mut r);
+    assert!(link_by_ref(&b, "in/mic/1->2").is_some(), "restored");
+}
+
+#[test]
+fn leave_as_is_writes_suppressed_and_survives_restarts() {
+    let (mut b, cfg, mut r) = setup();
+    b.remove_link(link_by_ref(&b, "listen/hp/2->2").expect("link"));
+    step(&mut b, &cfg, &mut r);
+    step(&mut b, &cfg, &mut r);
+    let new_cfg = r
+        .resolve(&cfg, "zoom", "listen/hp/2->2", Resolution::LeaveAsIs)
+        .expect("config change");
+    assert_eq!(new_cfg.junction[0].listen[0].suppressed, [[2, 2]]);
+    // A fresh reconciler (daemon restart) with the saved config leaves it out.
+    let mut fresh = Reconciler::new();
+    let s = fresh.on_graph(&new_cfg, b.graph());
+    assert!(s.actions.is_empty() && s.notices.is_empty(), "{s:?}");
+}
+
+#[test]
+fn an_app_quitting_is_not_an_override() {
+    let (mut b, cfg, mut r) = setup();
+    // PipeWire removes an app's links first, then its node, sometimes in
+    // separate batches.
+    let firefox: Vec<u32> = b
+        .graph()
+        .nodes
+        .values()
+        .filter(|n| n.name() == "Firefox")
+        .map(|n| n.id)
+        .collect();
+    let links: Vec<u32> = b
+        .graph()
+        .links
+        .values()
+        .filter(|l| firefox.contains(&l.output_node))
+        .map(|l| l.id)
+        .collect();
+    for l in links {
+        b.remove_link(l);
+    }
+    let s1 = step(&mut b, &cfg, &mut r);
+    assert!(s1.notices.is_empty());
+    for id in firefox {
+        b.remove_node(id);
+    }
+    let s2 = step(&mut b, &cfg, &mut r);
+    assert!(s2.notices.is_empty(), "nodes gone: not an override");
+    assert!(r.held().is_empty());
+}
+
+#[test]
+fn own_destroys_and_internal_links() {
+    let (mut b, _, mut r) = setup();
+    // Remapping the mic to channel 1 only makes JUNC destroy in/mic/1->2
+    // itself while both nodes stay: no notice, no hold.
+    let off = config::load(
+        &ZOOM.replace(
+            "match = { device = \"fake.hwin\" }",
+            "match = { device = \"fake.hwin\" }\nlinks = [[1, 1]]",
+        ),
+        "t.toml",
+    )
+    .expect("cfg")
+    .config;
+    for _ in 0..3 {
+        let s = step(&mut b, &off, &mut r);
+        assert!(s.notices.is_empty(), "{s:?}");
+    }
+    assert!(link_by_ref(&b, "in/mic/1->2").is_none());
+    assert!(r.held().is_empty());
+    // Internal wiring removed by someone else is restored at once.
+    b.remove_link(link_by_ref(&b, "sink/1").expect("link"));
+    step(&mut b, &off, &mut r);
+    assert!(link_by_ref(&b, "sink/1").is_some());
+}
+
+#[test]
+fn holds_end_with_their_junction() {
+    let (mut b, cfg, mut r) = setup();
+    b.remove_link(link_by_ref(&b, "in/mic/1->1").expect("link"));
+    step(&mut b, &cfg, &mut r);
+    step(&mut b, &cfg, &mut r);
+    assert_eq!(r.overridden().len(), 1);
+    let empty = Config::default();
+    step(&mut b, &empty, &mut r);
+    assert!(r.overridden().is_empty());
+}
