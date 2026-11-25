@@ -171,11 +171,12 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   `docs/dbus.md`. Req: F12, F23 (property only). Acceptance: zbus round-trip
   tests; `time junc enable X` < 50 ms in CI.
   Done 2026-11-25: contract in `junc-ipc` (constants, proxies, error enum with JSON bodies, `view` JSON types shared with `--json`); server in `juncd` (calls run on the main loop, properties from a published snapshot, Junction objects added and removed live, `GraphChanged`/`Notice` signals, single instance via `DO_NOT_QUEUE`, exit 4). Tests on a private bus: every call and error class, comments kept through edits, hand edits reflected in properties, second daemon refused, call latency p95 ≈ 2 ms (budget 50 ms; the CLI half of the check moves to A11), live statuses and `GraphChanged` on the isolated PipeWire. Introspection XML generated from the daemon with a freshness test; reference in `docs/dbus.md`. v1.0 is the surface above; per-entry methods arrive as minor versions (architecture §4).
-- [ ] **A11** [auto] CLI for alpha scope: list, status, create, rename,
+- [x] **A11** [auto] CLI for alpha scope: list, status, create, rename,
   duplicate, delete, enable/disable/toggle/switch, default, volume (master),
   input/bus/link/listen basics, `--json` envelope, exit codes, localized
   human messages scaffold (English only for now). Req: F1–F5, F12, F16.
   Acceptance: CLI tests against the mock daemon + layer-2 smoke.
+  Done 2026-11-25: `junc` with list, status, create junction/cable, rename, duplicate, delete (asks on a terminal, else needs `--yes`), enable/disable/toggle/switch, default, volume (master, Input, Listen), input add/remove/enable/disable, bus add/remove (later links shift down), link/unlink, listen add/remove; `--json` envelope and the §5.3 exit codes; English messages through the `junc-l10n` scaffold (`tr`/`trf`/`trn`, language resolution). The "mock daemon" is juncd on a private bus without PipeWire: the real config handling with no audio graph. Tests: unit tests of every config edit; end-to-end runs of every command with comments kept and defaults not written; every error class with its exit code; `junc enable` p95 ≈ 5 ms (budget 50 ms); a layer-2 smoke test routing `fake.hwin` through the CLI on the isolated PipeWire. Found and fixed on the way: new Junctions with Inputs were placed under the wrong Junction by the store (refused by its read-back check, so never written).
 - [ ] **A12** [auto] Agent-facing CLI: `schema`, `config validate`,
   `apply [--dry-run]`, `describe`, `doctor` (PipeWire, WirePlumber,
   pipewire-pulse, pipewire-jack/jack2, quantum, rate). Req: F19, F25.
