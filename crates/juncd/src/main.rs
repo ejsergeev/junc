@@ -231,18 +231,9 @@ fn diags(d: &[Diagnostic]) -> ErrorBody {
     ErrorBody::from_diagnostics(d)
 }
 
-/// The plan as JSON: actions (as text), deferred renames and the Junction
-/// views the plan's statuses give.
-fn plan_json(p: &Plan, config: &Config, graph: Option<&Graph>) -> String {
-    json(&json!({
-        "actions": p.actions.iter().map(ToString::to_string).collect::<Vec<_>>(),
-        "deferred": p.deferred,
-        "junctions": config
-            .junction
-            .iter()
-            .map(|j| view::junction(j, &p.status, graph))
-            .collect::<Vec<_>>(),
-    }))
+/// The plan from `old` to `new` as JSON (`junc_ipc::plan::PlanView`).
+fn plan_json(old: &Config, new: &Config, p: &Plan, graph: Option<&Graph>) -> String {
+    json(&junc_ipc::plan::view(old, new, p, graph))
 }
 
 impl Daemon {
@@ -429,16 +420,21 @@ impl Daemon {
                     ));
                 };
                 let p = junc_core::plan::plan(&loaded.config, graph, &self.reconciler.held());
-                Ok(Resp::Text(plan_json(&p, &loaded.config, Some(graph))))
+                Ok(Resp::Text(plan_json(
+                    self.store.config(),
+                    &loaded.config,
+                    &p,
+                    Some(graph),
+                )))
             }
             Req::Apply { text, expected } => {
                 let expected = (expected != 0).then_some(expected);
+                let old = self.store.config().clone();
                 self.store.replace(expected, &text).map_err(|d| diags(&d))?;
                 let plan = self.committed(backend)?.unwrap_or_default();
-                let config = self.store.config();
                 Ok(Resp::Applied(
                     self.store.revision(),
-                    plan_json(&plan, config, self.graph.as_ref()),
+                    plan_json(&old, self.store.config(), &plan, self.graph.as_ref()),
                 ))
             }
             Req::Create { name } => {
