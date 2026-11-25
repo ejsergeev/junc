@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: hi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "{0} चालू करें"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "{0} का वॉल्यूम"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "{0} का स्तर"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "इनपुट जोड़ें"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "स्ट्रीम और डिवाइस खोजें…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "बंद करें"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "जंक्शन"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "नया जंक्शन"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "इनपुट जोड़ें…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "इनपुट"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "सुनें"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "बस"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "अनूदित नमूना: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "ध्वनि को जंक्शन से भेजने के लिए स्विच दबाएँ — क्षेत्र, द्वितीय, स्त्री, श्रृंखला।"
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "{n} इनपुट जुड़ा है"
+msgstr[1] "{n} इनपुट जुड़े हैं"

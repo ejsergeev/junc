@@ -1,0 +1,166 @@
+// JUNC throwaway prototype — main screen mock.
+// Sidebar (junction list) | Inputs -> Bus -> Listen card columns | picker popover.
+import { Switch, Slider, Button, LineEdit, StandardListView, ScrollView, Palette } from "std-widgets.slint";
+
+export struct Channel { name: string, enabled: bool, gain: float, level: float }
+
+component Meter inherits Rectangle {
+    in property <float> level; // 0..1
+    in property <string> label;
+    height: 6px;
+    border-radius: 3px;
+    background: Palette.alternate-background;
+    accessible-role: progress-indicator;
+    accessible-label: label;
+    accessible-value: round(level * 100); // numeric string -> AT-SPI Value iface
+    accessible-value-minimum: 0;
+    accessible-value-maximum: 100;
+    Rectangle {
+        // manual mirroring: meters grow from the start edge in RTL too
+        x: root.rtl ? parent.width - self.width : 0;
+        width: parent.width * clamp(root.level, 0, 1);
+        border-radius: 3px;
+        background: root.level > 0.9 ? #e5484d : #46a758;
+    }
+    in property <bool> rtl;
+}
+
+component Card inherits Rectangle {
+    in property <string> title;
+    in-out property <bool> enabled;
+    in-out property <float> gain;
+    in property <float> level;
+    in property <bool> rtl;
+    callback toggled(bool);
+    accessible-role: groupbox;
+    accessible-label: title;
+    background: Palette.control-background;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: Palette.border;
+    min-height: 120px;
+    VerticalLayout {
+        padding: 10px;
+        spacing: 8px;
+        HorizontalLayout {
+            spacing: 8px;
+            // RTL: Slint has no layout-direction; we swap children by hand.
+            if !root.rtl: t1 := Text { text: root.title; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; font-weight: 600; horizontal-alignment: left; }
+            sw := Switch {
+                checked <=> root.enabled;
+                accessible-label: @tr("Enable {0}", root.title);
+                toggled => { root.toggled(self.checked); }
+            }
+            if root.rtl: t2 := Text { text: root.title; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; font-weight: 600; horizontal-alignment: right; }
+        }
+        sl := Slider {
+            minimum: 0; maximum: 100; step: 1;
+            value <=> root.gain;
+            accessible-label: @tr("Volume of {0}", root.title);
+        }
+        Meter { level: root.level; rtl: root.rtl; label: @tr("Level of {0}", root.title); }
+    }
+}
+
+component Column inherits VerticalLayout {
+    in property <string> heading;
+    spacing: 10px;
+    Text { text: heading; font-size: 16px; font-weight: 700; accessible-role: text; horizontal-alignment: root.rtl ? right : left; }
+    in property <bool> rtl;
+    @children
+}
+
+export component MainWindow inherits Window {
+    title: @tr("JUNC");
+    preferred-width: 1100px;
+    preferred-height: 640px;
+    default-font-family: "JetBrains Mono";
+    default-font-size: 13px;
+
+    in property <bool> rtl: false;
+    in property <string> lang: "en";
+    in-out property <[Channel]> inputs: [
+        { name: "Firefox", enabled: true, gain: 80, level: 0.4 },
+        { name: "Spotify", enabled: true, gain: 65, level: 0.6 },
+        { name: "Discord", enabled: false, gain: 70, level: 0.0 },
+        { name: "USB Mic", enabled: true, gain: 90, level: 0.3 },
+    ];
+    in-out property <Channel> bus: { name: "Stream Mix", enabled: true, gain: 100, level: 0.5 };
+    in-out property <[Channel]> outputs: [
+        { name: "Headphones", enabled: true, gain: 75, level: 0.5 },
+        { name: "OBS", enabled: true, gain: 100, level: 0.5 },
+    ];
+    in property <[StandardListViewItem]> junctions: [{ text: "Stream Mix" }, { text: "Voice Chat" }, { text: "Recording" }];
+    in property <[StandardListViewItem]> picker-items;
+    in-out property <string> picker-query;
+    callback picker-query-changed(string);
+    callback picker-chosen(int);
+    in-out property <int> connected-count: 3;
+    out property <string> count-text: @tr("{n} input connected" | "{n} inputs connected" % root.connected-count);
+
+    // ---- popover: searchable stream picker ----
+    picker := PopupWindow {
+        x: root.rtl ? 40px : root.width - 360px;
+        y: 60px;
+        width: 320px;
+        height: 340px;
+        close-policy: close-on-click-outside; // Esc also closes (per Slint docs)
+        Rectangle {
+            background: Palette.background;
+            border-color: Palette.border; border-width: 1px; border-radius: 8px;
+            accessible-role: groupbox; accessible-label: @tr("Add input");
+            VerticalLayout {
+                padding: 10px; spacing: 8px;
+                search := LineEdit {
+                    init => { self.focus(); } // focus moves into popover when it opens
+                    placeholder-text: @tr("Search streams and devices…");
+                    text <=> root.picker-query;
+                    edited(t) => { root.picker-query-changed(t); }
+                    accepted => { root.picker-chosen(0); picker.close(); }
+                }
+                StandardListView {
+                    model: root.picker-items;
+                    item-pointer-event(i, ev, pos) => { if ev.kind == PointerEventKind.up { root.picker-chosen(i); picker.close(); } }
+                }
+                Button { text: @tr("Close"); clicked => { picker.close(); } }
+            }
+        }
+    }
+
+    HorizontalLayout {
+        padding: 12px;
+        spacing: 12px;
+        // --- sidebar (start edge). Manual mirroring: sidebar moves to the right in RTL.
+        if !root.rtl: sidebar-l := VerticalLayout {
+            width: 200px; spacing: 8px;
+            Text { text: @tr("Junctions"); font-size: 16px; font-weight: 700; }
+            StandardListView { model: root.junctions; current-item: 0; accessible-label: @tr("Junctions"); }
+            Button { text: @tr("New junction"); }
+        }
+        VerticalLayout {
+            spacing: 10px;
+            HorizontalLayout {
+                spacing: 8px;
+                alignment: root.rtl ? start : end;
+                Text { text: root.count-text; vertical-alignment: center; }
+                add-btn := Button { text: @tr("Add input…"); clicked => { picker.show(); } }
+            }
+            HorizontalLayout {
+                spacing: 16px;
+                // columns Inputs -> Bus -> Listen; reversed in RTL by duplicating branches
+                if !root.rtl: Column { heading: @tr("Inputs"); rtl: root.rtl; for c[i] in root.inputs: Card { title: c.name; enabled: c.enabled; gain: c.gain; level: c.level; rtl: root.rtl; } }
+                if root.rtl: Column { heading: @tr("Listen"); rtl: root.rtl; for c[i] in root.outputs: Card { title: c.name; enabled: c.enabled; gain: c.gain; level: c.level; rtl: root.rtl; } }
+                Column { heading: @tr("Bus"); rtl: root.rtl; Card { title: root.bus.name; enabled: root.bus.enabled; gain: root.bus.gain; level: root.bus.level; rtl: root.rtl; } }
+                if !root.rtl: Column { heading: @tr("Listen"); rtl: root.rtl; for c[i] in root.outputs: Card { title: c.name; enabled: c.enabled; gain: c.gain; level: c.level; rtl: root.rtl; } }
+                if root.rtl: Column { heading: @tr("Inputs"); rtl: root.rtl; for c[i] in root.inputs: Card { title: c.name; enabled: c.enabled; gain: c.gain; level: c.level; rtl: root.rtl; } }
+            }
+            Text { text: @tr("Translated sample: {0}", @tr("sample-sentence")); wrap: word-wrap; horizontal-alignment: root.rtl ? right : left; }
+        }
+        if root.rtl: sidebar-r := VerticalLayout {
+            width: 200px; spacing: 8px;
+            Text { text: @tr("Junctions"); font-size: 16px; font-weight: 700; horizontal-alignment: right; }
+            StandardListView { model: root.junctions; current-item: 0; accessible-label: @tr("Junctions"); }
+            Button { text: @tr("New junction"); }
+        }
+    }
+}

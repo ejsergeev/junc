@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: si\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "{0} සක්‍රිය කරන්න"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "{0} හි හඬ"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "{0} මට්ටම"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "ආදානය එක් කරන්න"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "ප්‍රවාහ සහ උපාංග සොයන්න…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "වසන්න"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "සන්ධි"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "නව සන්ධිය"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "ආදානය එක් කරන්න…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "ආදාන"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "සවන් දෙන්න"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "බස්"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "පරිවර්තිත නියැදිය: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "සන්ධිය හරහා ශබ්දය යැවීමට ස්විචය ඔබන්න — ශ්‍රී ලංකා, ක්‍ෂ."
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "ආදාන {n} ක් සම්බන්ධයි"
+msgstr[1] "ආදාන {n} ක් සම්බන්ධයි"

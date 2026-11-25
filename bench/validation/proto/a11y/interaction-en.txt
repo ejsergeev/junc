@@ -1,0 +1,33 @@
+== A: Shift+Tab (reverse order) from fresh start
+Shift+Tab #1                       -> slider name='Volume of OBS' states=[focusable,focused,enabled,sensitive,showing,visible] value=100 [0..100] step=1
+Shift+Tab #2                       -> toggle button name='Enable OBS' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+Shift+Tab #3                       -> slider name='Volume of Headphones' states=[focusable,focused,enabled,sensitive,showing,visible] value=75 [0..100] step=1
+== B: Switch toggling with Space / Return
+Tab x4                             -> toggle button name='Enable Firefox' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+space                              -> toggle button name='Enable Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+space again                        -> toggle button name='Enable Firefox' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+Return                             -> toggle button name='Enable Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+== C: Slider keys
+Tab (to slider)                    -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=80 [0..100] step=1
+Right                              -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=81 [0..100] step=1
+Right x5                           -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=86 [0..100] step=1
+Left                               -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=85 [0..100] step=1
+Page_Up                            -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=85 [0..100] step=1
+Home                               -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=0 [0..100] step=1
+End                                -> slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=100 [0..100] step=1
+== D: Popover: open, focus, trap, Esc
+Tab x3                             -> push button name='Add input…' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+Return (open picker)               -> entry name='' states=[focusable,focused,enabled,sensitive,editable,showing,visible]
+    push button name='Add input…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      panel name='Add input' states=[enabled,sensitive,showing,visible]
+type 'mic'                         -> entry name='' states=[focusable,focused,enabled,sensitive,editable,showing,visible]
+Tab inside popover #1              -> list item name='USB Mic (Scarlett 2i2)' states=[focusable,focused,enabled,sensitive,selectable,selected,showing,visible] actions=click
+Tab inside popover #2              -> push button name='Close' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+Tab inside popover #3              -> entry name='' states=[focusable,focused,enabled,sensitive,editable,showing,visible]
+Tab inside popover #4              -> list item name='USB Mic (Scarlett 2i2)' states=[focusable,focused,enabled,sensitive,selectable,selected,showing,visible] actions=click
+Tab inside popover #5              -> push button name='Close' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+Tab inside popover #6              -> entry name='' states=[focusable,focused,enabled,sensitive,editable,showing,visible]
+Escape                             -> push button name='Add input…' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+Tab after Esc                      -> toggle button name='Enable Firefox' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+popup windows still open:
+0

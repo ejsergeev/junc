@@ -1,0 +1,83 @@
+SPEECH: Shutting down
+SPEECH: Initializing
+SPEECH: Using speech server factory: speechdispatcherfactory
+SPEECH: Initialized
+SPEECH: Checking speech setting.
+SPEECH: Initializing
+SPEECH: Already initialized
+SPEECH: Speak 'Screen reader on.' acss: {'established': False}
+SPEECH OUTPUT: 'Screen reader on.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Checking speech setting.
+SPEECH: Initializing
+SPEECH: Already initialized
+SPEECH: Last spoke 7.6059 seconds ago
+SPEECH: Speak [JUNC, {'established': False}, frame, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH OUTPUT: 'JUNC frame.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 0.8917 seconds ago
+SPEECH OUTPUT: 'tab' {'established': False}
+SPEECH: Last spoke 1.2159 seconds ago
+SPEECH OUTPUT: 'tab' {'established': False}
+SPEECH: Last spoke 0.0745 seconds ago
+SPEECH: Speak [New junction, {'established': False}, push button, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH OUTPUT: 'New junction push button.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1445 seconds ago
+SPEECH OUTPUT: 'tab' {'established': False}
+SPEECH: Last spoke 0.0695 seconds ago
+SPEECH: Speak [Add input…, {'established': False}, push button, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH OUTPUT: 'Add input… push button.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1471 seconds ago
+SPEECH OUTPUT: 'tab' {'established': False}
+SPEECH: Last spoke 0.0947 seconds ago
+SPEECH: Speak [[Firefox, {'established': False}, panel, {'established': False}, PAUSE], Enable Firefox, {'established': False}, toggle button, {'established': False}, pressed, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH: Last spoke 0.0001 seconds ago
+SPEECH: Speak [Firefox, {'established': False}, panel, {'established': False}, PAUSE], acss: None
+SPEECH OUTPUT: 'Firefox panel.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH OUTPUT: 'Enable Firefox toggle button pressed.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1272 seconds ago
+SPEECH OUTPUT: 'space' {'established': False}
+SPEECH: Last spoke 0.0363 seconds ago
+SPEECH: Speak [not pressed, {'established': False}], acss: None
+SPEECH OUTPUT: 'not pressed' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1951 seconds ago
+SPEECH OUTPUT: 'tab' {'established': False}
+SPEECH: Last spoke 0.0961 seconds ago
+SPEECH: Speak [Volume of Firefox, {'established': False}, horizontal slider, {'established': False}, 80, {'established': False}, PAUSE, PAUSE, PAUSE], acss: None
+SPEECH OUTPUT: 'Volume of Firefox horizontal slider 80.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1566 seconds ago
+SPEECH: Speak [81, {'established': False}], acss: None
+SPEECH OUTPUT: '81' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1772 seconds ago
+SPEECH OUTPUT: 'left shift' {'established': False}
+SPEECH: Last spoke 0.0885 seconds ago
+SPEECH: Speak [Enable Firefox, {'established': False}, toggle button, {'established': False}, not pressed, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH OUTPUT: 'Enable Firefox toggle button not pressed.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 0.0129 seconds ago
+SPEECH OUTPUT: 'left shift' {'established': False}
+SPEECH: Last spoke 0.0840 seconds ago
+SPEECH: Speak [[, {'established': False}], Add input…, {'established': False}, push button, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH: Last spoke 0.0001 seconds ago
+SPEECH: Speak [, {'established': False}], acss: None
+SPEECH OUTPUT: 'Add input… push button.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.0779 seconds ago
+SPEECH OUTPUT: 'return' {'established': False}
+SPEECH: Last spoke 0.2121 seconds ago
+SPEECH: Speak [[], [Add input, {'established': False}, panel, {'established': False}, PAUSE], entry, {'established': False}, Search streams and devices…, {'established': False}, PAUSE, PAUSE, PAUSE], acss: None
+SPEECH: Last spoke 0.0001 seconds ago
+SPEECH: Speak [], acss: None
+SPEECH: Last spoke 0.0000 seconds ago
+SPEECH: Speak [Add input, {'established': False}, panel, {'established': False}, PAUSE], acss: None
+SPEECH OUTPUT: 'Add input panel.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH OUTPUT: 'entry Search streams and devices…' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.0048 seconds ago
+SPEECH OUTPUT: 'tab' {'established': False}
+SPEECH: Last spoke 0.0903 seconds ago
+SPEECH: Speak [[List with 6 items, {'established': False}], Firefox, {'established': False}, PAUSE, PAUSE, PAUSE, PAUSE, PAUSE, PAUSE], acss: None
+SPEECH: Last spoke 0.0001 seconds ago
+SPEECH: Speak [List with 6 items, {'established': False}], acss: None
+SPEECH OUTPUT: 'List with 6 items' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH OUTPUT: 'Firefox.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}
+SPEECH: Last spoke 1.1374 seconds ago
+SPEECH OUTPUT: 'escape' {'established': False}
+SPEECH: Last spoke 0.0681 seconds ago
+SPEECH: Speak [Add input…, {'established': False}, push button, {'established': False}, PAUSE, PAUSE], acss: None
+SPEECH OUTPUT: 'Add input… push button.' {'established': False, 'family': {'name': None, 'gender': None, 'lang': None, 'dialect': None, 'variant': None}}

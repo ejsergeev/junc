@@ -1,0 +1,13 @@
+EV 2.0 connected
+EV 2.4 bus_created
+EV 3.0 setup_done since_connect_ms=1.0
+EV 1023.2 app_node id=68 name=juncbench-app2
+EV 1024.4 app_node id=70 name=juncbench-app1
+EV 1025.4 app_linked node=68 relink_ms=2.18
+EV 1025.4 app_linked node=68 relink_ms=2.19
+EV 1028.4 app_linked node=70 relink_ms=3.94
+EV 1028.4 app_linked node=70 relink_ms=3.96
+EV 1037.8 app_node id=80 name=juncbench-app3
+EV 1043.9 graph_complete links=12
+EV 1045.9 app_linked node=80 relink_ms=8.13
+EV 1046.0 app_linked node=80 relink_ms=8.20

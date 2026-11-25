@@ -1,0 +1,22 @@
+# JUNC bench mode=juncd-links host=vm kernel=6.18.44-fc-v819 cpus=2 pipewire=1.0.5 date=2026-11-24T13:34:02Z
+build_graph_ms=51 (graph_up + 3 apps -> full graph present)
+daemon_pids=28710 
+latency: quantum=1024
+latency: jack_iodelay baseline_frames=1024.000 junction_frames=1024.000
+latency: impulse      baseline: frames=0 min=0 max=0 n=6 quantum=1024
+latency: impulse      junction: frames=0 min=0 max=0 n=6 quantum=1024
+latency: RESULT extra_frames=0 extra_quanta=0.00
+pss_idle_kb=1785
+wakeups_per_s_idle=0.00 (all threads, voluntary+involuntary ctx switches)
+pwtop: samples=9 quanta_seen=[1024]
+pwtop: node=fake.hp err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=fake.hwin err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=fake.obs err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=junc.bus err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=juncbench-app1 err_delta=0 err_end=1 bq_max=0.0
+pwtop: node=juncbench-app2 err_delta=0 err_end=1 bq_max=0.0
+pwtop: node=juncbench-app3 err_delta=0 err_end=1 bq_max=0.0
+pwtop: ERR_TOTAL_DELTA=0
+relink_ms n=3 min=4.22 p50=5.45 p95=7.92 max=7.92
+recovery_ms(core graph back after restart; manual includes re-running graph-manual.sh) 398 404 387 368 390 405 387 398 408 382 
+daemon_pids_after=28710  pss_end_kb=1870

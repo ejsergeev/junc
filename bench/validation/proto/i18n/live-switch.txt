@@ -1,0 +1,26 @@
+--- en
+push button name='New junction' states=[focusable,enabled,sensitive,showing,visible] actions=click
+push button name='Add input…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+label name='Inputs' states=[enabled,sensitive,showing,visible]
+--- ar (written 607 ms ago)
+push button name='إضافة مدخل…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+label name='المدخلات' states=[enabled,sensitive,showing,visible]
+push button name='وصلة جديدة' states=[focusable,enabled,sensitive,showing,visible] actions=click
+--- ru (written 608 ms ago)
+push button name='Новый узел' states=[focusable,enabled,sensitive,showing,visible] actions=click
+push button name='Добавить вход…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+label name='Входы' states=[enabled,sensitive,showing,visible]
+--- he (written 608 ms ago)
+push button name='הוספת קלט…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+label name='קלטים' states=[enabled,sensitive,showing,visible]
+push button name='צומת חדש' states=[focusable,enabled,sensitive,showing,visible] actions=click
+--- en (written 606 ms ago)
+push button name='New junction' states=[focusable,enabled,sensitive,showing,visible] actions=click
+push button name='Add input…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+label name='Inputs' states=[enabled,sensitive,showing,visible]
+--- process still alive (no restart): yes pid=19770
+[junc-proto] language=en rtl=false
+[junc-proto] language=ar rtl=true
+[junc-proto] language=ru rtl=false
+[junc-proto] language=he rtl=true
+[junc-proto] language=en rtl=false

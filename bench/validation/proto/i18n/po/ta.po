@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ta\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "{0} ஐ இயக்கு"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "{0} ஒலியளவு"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "{0} நிலை"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "உள்ளீட்டைச் சேர்"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "ஸ்ட்ரீம்கள், சாதனங்களைத் தேடு…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "மூடு"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "சந்திப்புகள்"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "புதிய சந்திப்பு"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "உள்ளீட்டைச் சேர்…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "உள்ளீடுகள்"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "கேள்"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "பஸ்"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "மொழிபெயர்க்கப்பட்ட மாதிரி: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "சந்திப்பு வழியாக ஒலியை அனுப்ப சுவிட்சை அழுத்தவும்; க்ஷ, ஸ்ரீ."
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "{n} உள்ளீடு இணைக்கப்பட்டுள்ளது"
+msgstr[1] "{n} உள்ளீடுகள் இணைக்கப்பட்டுள்ளன"

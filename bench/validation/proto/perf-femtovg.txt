@@ -1,0 +1,11 @@
+# slint prototype perf renderer=winit-femtovg cpus=2 2026-11-24T12:03:24Z
+cold start x10 (process start -> first frame presented; software renderer: first event-loop turn):
+awk: line 2: function asort never defined
+pss_kb_meters_on=142420
+cpu_pct_meters_7hz_visible=21.32
+wakeups_per_s_visible=301
+cpu_pct_meters_7hz_hidden(unmapped)=21.73
+wakeups_per_s_hidden=302
+pss_kb_end=143255
+cpu_pct_idle_no_meters=0.02 pss_kb_no_meters=135007
+   median=0 min=0 max=0

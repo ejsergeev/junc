@@ -1,0 +1,3 @@
+[W][08955.310742] mod.jackdbus-detect | [module-jackdbus-:  216 on_is_started_received()] Failed to receive jackdbus reply: org.freedesktop.DBus.Error.ServiceUnknown: The name org.jackaudio.service was not provided by any .service files
+[E][08955.537772] pw.core      | [     impl-core.c:  219 core_error()] 0x557da6ce6ce0: error -5 for resource 3: node_set_param(Spa:Enum:ParamId:PortConfig) failed: Input/output error
+[E][08955.537787] mod.client-node | [   client-node.c: 1237 client_node_resource_error()] 0x557da76d2960: error seq:124 -5 (node_set_param(Spa:Enum:ParamId:PortConfig) failed: Input/output error)

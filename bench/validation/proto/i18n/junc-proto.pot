@@ -1,0 +1,97 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2026-11-24 11:28+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ui/main.slint:51
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr ""
+
+#: ui/main.slint:59
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr ""
+
+#: ui/main.slint:61
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr ""
+
+#: ui/main.slint:74
+msgctxt "MainWindow"
+msgid "JUNC"
+msgstr ""
+
+#: ui/main.slint:99
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ui/main.slint:111
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr ""
+
+#. focus moves into popover when it opens
+#: ui/main.slint:116
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr ""
+
+#: ui/main.slint:125
+msgctxt "MainWindow"
+msgid "Close"
+msgstr ""
+
+#: ui/main.slint:136 ui/main.slint:137 ui/main.slint:161 ui/main.slint:162
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr ""
+
+#: ui/main.slint:138 ui/main.slint:163
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr ""
+
+#: ui/main.slint:146
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr ""
+
+#. columns Inputs -> Bus -> Listen; reversed in RTL by duplicating branches
+#: ui/main.slint:151 ui/main.slint:155
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr ""
+
+#: ui/main.slint:152 ui/main.slint:154
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr ""
+
+#: ui/main.slint:153
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr ""
+
+#: ui/main.slint:157
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr ""
+
+#: ui/main.slint:157
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr ""

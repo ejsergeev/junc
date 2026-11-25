@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "{0} aktivieren"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "Lautstärke von {0}"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "Pegel von {0}"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "Eingang hinzufügen"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "Streams und Geräte durchsuchen…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "Schließen"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "Verbindungen"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "Neue Verbindung"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "Eingang hinzufügen…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "Eingänge"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "Abhören"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "Bus"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "Übersetztes Beispiel: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "Drücken Sie den Schalter, um den Ton über die Verbindung an Kopfhörer und Streaming-Software zu leiten. Lautstärkeregelungsvoreinstellungen."
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "{n} Eingang verbunden"
+msgstr[1] "{n} Eingänge verbunden"

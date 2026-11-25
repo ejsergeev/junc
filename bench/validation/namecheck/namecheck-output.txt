@@ -1,0 +1,60 @@
+# name check 2026-11-24T10:54:56Z
+## junc
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: TAKEN (HTTP 200)
+Flathub app-id contains 'junc': re.sonny.Junction
+## junc-daemon
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: FREE
+Flathub app-id contains 'junc-daemon': none
+## junc-gui
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: FREE
+Flathub app-id contains 'junc-gui': none
+## junc-cli
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: TAKEN (HTTP 200)
+Flathub app-id contains 'junc-cli': none
+## fuzzy: AUR names containing 'junc'
+junction-git	Application/browser chooser
+junction-zhfix	Application/browser chooser (zhfix fork)
+otf-junction	A humanist sans-serif typeface
+perl-syntax-keyword-junction	Perl6 style Junction operators in Perl5
+ttf-junction	expanding a humanist sans-serif typeface, Junction
+## fuzzy: Arch repo pkgnames containing 'junc'
+haskell-adjunctions
+junction
+## fuzzy: crates.io names starting junc
+junction
+juncture-core
+junction-typeinfo-derive
+juncture-derive
+juncture-tracing
+junction-api
+junction-typeinfo
+juncture-store
+junction-verbatim
+juncture
+juncture-checkpoint
+juncture-telemetry
+junction-core
+junction-api-gen
+junctor
+junco
+## fuzzy: npm names containing junc
+junc
+@junc-cli/utils
+@junc-cli/core
+@junc/layaair-cmd
+@junc/wxapp-http
+junc-cli-pro
+## Flathub full-text hits for 'junc'
+re.sonny.Junction	Junction

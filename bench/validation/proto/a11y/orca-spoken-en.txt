@@ -1,0 +1,18 @@
+Screen reader on.
+JUNC frame.
+New junction push button.
+Add input… push button.
+Firefox panel.
+Enable Firefox toggle button pressed.
+not pressed
+Volume of Firefox horizontal slider 80.
+81
+Enable Firefox toggle button not pressed.
+Add input… push button.
+return
+Add input panel.
+entry Search streams and devices…
+List with 6 items
+Firefox.
+escape
+Add input… push button.

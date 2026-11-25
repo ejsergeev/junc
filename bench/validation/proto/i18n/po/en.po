@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "Enable {0}"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "Volume of {0}"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "Level of {0}"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "Add input"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "Search streams and devices…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "Close"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "Junctions"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "New junction"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "Add input…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "Inputs"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "Listen"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "Bus"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "Translated sample: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "Press the switch to route audio through the junction to headphones and streaming software."
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "{n} input connected"
+msgstr[1] "{n} inputs connected"

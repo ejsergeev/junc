@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: en_XA\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "⟦Éñåblé {0} ···⟧"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "⟦Völûmé öf {0} ····⟧"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "⟦Lévél öf {0} ····⟧"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "⟦Ådd îñpût ···⟧"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "⟦Šéårçh štréåmš åñd dévîçéš… ··········⟧"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "⟦Çlöšé ·⟧"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "⟦Jûñçtîöñš ···⟧"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "⟦Ñéw jûñçtîöñ ····⟧"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "⟦Ådd îñpût… ···⟧"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "⟦Îñpûtš ·⟧"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "⟦Lîštéñ ·⟧"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "⟦Bûš ⟧"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "⟦Tråñšlåtéd šåmplé: {0} ········⟧"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "⟦Préšš thé šwîtçh tö röûté åûdîö thröûgh thé jûñçtîöñ tö héådphöñéš åñd štréåmîñg šöftwåré. ···································⟧"
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "⟦{n} îñpût çöññéçtéd ·······⟧"
+msgstr[1] "⟦{n} îñpûtš çöññéçtéd ·······⟧"

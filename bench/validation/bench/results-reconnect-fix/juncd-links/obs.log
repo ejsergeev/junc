@@ -1,0 +1,113 @@
+OBS 1795527245424.2 connected
+OBS 1795527245935.8 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527245948.6 app_node id=69 name=juncbench-app3
+OBS 1795527245952.8 app_linked node=69 relink_ms=4.22
+OBS 1795527245955.9 app_node id=76 name=juncbench-app2
+OBS 1795527245958.9 app_node id=77 name=juncbench-app1
+OBS 1795527245961.4 app_linked node=76 relink_ms=5.45
+OBS 1795527245966.8 app_linked node=77 relink_ms=7.92
+OBS 1795527245966.8 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527278805.0 disconnected
+OBS 1795527278812.3 connected
+OBS 1795527278817.6 disconnected
+OBS 1795527279129.5 connected
+OBS 1795527279183.3 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527279258.3 app_node id=69 name=juncbench-app1
+OBS 1795527279258.3 app_linked node=69 relink_ms=0.02
+OBS 1795527279263.7 app_node id=75 name=juncbench-app2
+OBS 1795527279264.8 app_node id=77 name=juncbench-app3
+OBS 1795527279269.0 app_linked node=75 relink_ms=5.25
+OBS 1795527279272.2 app_linked node=77 relink_ms=7.46
+OBS 1795527279272.2 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527282259.7 disconnected
+OBS 1795527282595.6 connected
+OBS 1795527282650.1 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527282725.0 app_node id=69 name=juncbench-app2
+OBS 1795527282731.4 app_node id=72 name=juncbench-app3
+OBS 1795527282731.5 app_node id=73 name=juncbench-app1
+OBS 1795527282732.5 app_linked node=69 relink_ms=7.50
+OBS 1795527282746.4 app_linked node=72 relink_ms=14.91
+OBS 1795527282747.4 app_linked node=73 relink_ms=15.89
+OBS 1795527282747.4 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527285736.3 disconnected
+OBS 1795527286052.7 connected
+OBS 1795527286104.9 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527286168.6 app_node id=69 name=juncbench-app1
+OBS 1795527286174.3 app_linked node=69 relink_ms=5.66
+OBS 1795527286176.7 app_node id=75 name=juncbench-app2
+OBS 1795527286178.7 app_node id=77 name=juncbench-app3
+OBS 1795527286185.6 app_linked node=75 relink_ms=8.87
+OBS 1795527286185.9 app_linked node=77 relink_ms=7.14
+OBS 1795527286185.9 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527289182.0 disconnected
+OBS 1795527289501.0 connected
+OBS 1795527289534.1 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527289591.9 app_node id=69 name=juncbench-app1
+OBS 1795527289594.5 app_linked node=69 relink_ms=2.58
+OBS 1795527289601.3 app_node id=76 name=juncbench-app3
+OBS 1795527289601.4 app_node id=77 name=juncbench-app2
+OBS 1795527289620.7 app_linked node=76 relink_ms=19.42
+OBS 1795527289623.9 app_linked node=77 relink_ms=22.57
+OBS 1795527289623.9 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527292619.9 disconnected
+OBS 1795527292937.6 connected
+OBS 1795527292988.4 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527293049.9 app_node id=69 name=juncbench-app2
+OBS 1795527293050.3 app_linked node=69 relink_ms=0.41
+OBS 1795527293054.2 app_node id=76 name=juncbench-app3
+OBS 1795527293054.2 app_node id=77 name=juncbench-app1
+OBS 1795527293057.4 app_linked node=76 relink_ms=3.24
+OBS 1795527293058.2 app_linked node=77 relink_ms=4.05
+OBS 1795527293058.2 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527296082.4 disconnected
+OBS 1795527296399.2 connected
+OBS 1795527296459.7 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527296537.6 app_node id=69 name=juncbench-app2
+OBS 1795527296542.5 app_linked node=69 relink_ms=4.91
+OBS 1795527296543.8 app_node id=76 name=juncbench-app3
+OBS 1795527296543.8 app_node id=77 name=juncbench-app1
+OBS 1795527296549.2 app_linked node=76 relink_ms=5.36
+OBS 1795527296551.6 app_linked node=77 relink_ms=7.71
+OBS 1795527296551.6 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527299553.7 disconnected
+OBS 1795527299860.6 connected
+OBS 1795527299916.8 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527299980.6 app_node id=69 name=juncbench-app3
+OBS 1795527299984.4 app_node id=73 name=juncbench-app2
+OBS 1795527299986.7 app_linked node=69 relink_ms=6.05
+OBS 1795527299988.8 app_node id=77 name=juncbench-app1
+OBS 1795527299991.4 app_linked node=73 relink_ms=6.99
+OBS 1795527299995.1 app_linked node=77 relink_ms=6.29
+OBS 1795527299995.1 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527302987.7 disconnected
+OBS 1795527303310.7 connected
+OBS 1795527303371.5 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527303427.0 app_node id=69 name=juncbench-app1
+OBS 1795527303434.3 app_node id=74 name=juncbench-app3
+OBS 1795527303434.3 app_node id=75 name=juncbench-app2
+OBS 1795527303434.3 app_linked node=69 relink_ms=7.35
+OBS 1795527303444.2 app_linked node=74 relink_ms=9.90
+OBS 1795527303444.2 app_linked node=75 relink_ms=9.93
+OBS 1795527303444.2 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527306439.0 disconnected
+OBS 1795527306778.4 connected
+OBS 1795527306829.9 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527306911.5 app_node id=69 name=juncbench-app3
+OBS 1795527306914.8 app_node id=74 name=juncbench-app2
+OBS 1795527306915.3 app_linked node=69 relink_ms=3.70
+OBS 1795527306915.8 app_node id=77 name=juncbench-app1
+OBS 1795527306921.2 app_linked node=74 relink_ms=6.35
+OBS 1795527306924.4 app_linked node=77 relink_ms=8.62
+OBS 1795527306924.4 complete in_bus=8 out_bus=4 to_outputs=4
+OBS 1795527309922.6 disconnected
+OBS 1795527309939.4 connected
+OBS 1795527309940.0 disconnected
+OBS 1795527310243.3 connected
+OBS 1795527310288.9 core_complete hw_in=2 out_bus=4 to_outputs=4
+OBS 1795527310340.4 app_node id=69 name=juncbench-app2
+OBS 1795527310344.3 app_linked node=69 relink_ms=3.85
+OBS 1795527310351.5 app_node id=76 name=juncbench-app1
+OBS 1795527310351.5 app_node id=77 name=juncbench-app3
+OBS 1795527310355.0 app_linked node=76 relink_ms=3.48
+OBS 1795527310357.0 app_linked node=77 relink_ms=5.42
+OBS 1795527310357.0 complete in_bus=8 out_bus=4 to_outputs=4

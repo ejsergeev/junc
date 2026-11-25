@@ -1,0 +1,73 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: bn\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "{0} চালু করুন"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "{0}-এর ভলিউম"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "{0}-এর লেভেল"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "ইনপুট যোগ করুন"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "স্ট্রিম ও ডিভাইস খুঁজুন…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "বন্ধ করুন"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "জংশন"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "নতুন জংশন"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "ইনপুট যোগ করুন…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "ইনপুট"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "শুনুন"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "বাস"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "অনূদিত নমুনা: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "জংশনের মাধ্যমে শব্দ পাঠাতে সুইচ চাপুন — ক্ষমা, স্ত্রী, যুক্তাক্ষর।"
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "{n}টি ইনপুট সংযুক্ত"
+msgstr[1] "{n}টি ইনপুট সংযুক্ত"

@@ -1,0 +1,72 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: th\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "เปิดใช้ {0}"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "ระดับเสียงของ {0}"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "ระดับสัญญาณของ {0}"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "เพิ่มอินพุต"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "ค้นหาสตรีมและอุปกรณ์…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "ปิด"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "จุดเชื่อมต่อ"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "จุดเชื่อมต่อใหม่"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "เพิ่มอินพุต…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "อินพุต"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "ฟัง"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "บัส"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "ตัวอย่างคำแปล: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "กดสวิตช์เพื่อส่งเสียงผ่านจุดเชื่อมต่อนี้ไปยังหูฟังและโปรแกรมถ่ายทอดสดทั้งหมดที่เลือกไว้ในหน้าต่างนี้โดยอัตโนมัติ"
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "เชื่อมต่ออินพุต {n} รายการ"

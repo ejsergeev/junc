@@ -1,0 +1,49 @@
+application name='junc-proto' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    list box name='Junctions' states=[enabled,sensitive,showing,visible]
+      list item name='Stream Mix' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      list item name='Voice Chat' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Recording' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+    push button name='New junction' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='3 inputs connected' states=[enabled,sensitive,showing,visible]
+    push button name='Add input…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Inputs' states=[enabled,sensitive,showing,visible]
+    panel name='Firefox' states=[enabled,sensitive,showing,visible]
+      label name='Firefox' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable Firefox' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of Firefox' states=[focusable,enabled,sensitive,showing,visible] value=80 [0..100] step=1
+      progress bar name='Level of Firefox' states=[enabled,sensitive,showing,visible] value=40 [0..100] step=0
+    panel name='Spotify' states=[enabled,sensitive,showing,visible]
+      label name='Spotify' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable Spotify' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of Spotify' states=[focusable,enabled,sensitive,showing,visible] value=65 [0..100] step=1
+      progress bar name='Level of Spotify' states=[enabled,sensitive,showing,visible] value=60 [0..100] step=0
+    panel name='Discord' states=[enabled,sensitive,showing,visible]
+      label name='Discord' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable Discord' states=[enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of Discord' states=[focusable,enabled,sensitive,showing,visible] value=70 [0..100] step=1
+      progress bar name='Level of Discord' states=[enabled,sensitive,showing,visible] value=0 [0..100] step=0
+    panel name='USB Mic' states=[enabled,sensitive,showing,visible]
+      label name='USB Mic' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable USB Mic' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of USB Mic' states=[focusable,enabled,sensitive,showing,visible] value=90 [0..100] step=1
+      progress bar name='Level of USB Mic' states=[enabled,sensitive,showing,visible] value=30 [0..100] step=0
+    label name='Bus' states=[enabled,sensitive,showing,visible]
+    panel name='Stream Mix' states=[enabled,sensitive,showing,visible]
+      label name='Stream Mix' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable Stream Mix' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of Stream Mix' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..100] step=1
+      progress bar name='Level of Stream Mix' states=[enabled,sensitive,showing,visible] value=50 [0..100] step=0
+    label name='Listen' states=[enabled,sensitive,showing,visible]
+    panel name='Headphones' states=[enabled,sensitive,showing,visible]
+      label name='Headphones' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable Headphones' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of Headphones' states=[focusable,enabled,sensitive,showing,visible] value=75 [0..100] step=1
+      progress bar name='Level of Headphones' states=[enabled,sensitive,showing,visible] value=50 [0..100] step=0
+    panel name='OBS' states=[enabled,sensitive,showing,visible]
+      label name='OBS' states=[enabled,sensitive,showing,visible]
+      toggle button name='Enable OBS' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      slider name='Volume of OBS' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..100] step=1
+      progress bar name='Level of OBS' states=[enabled,sensitive,showing,visible] value=50 [0..100] step=0
+    label name='Translated sample: sample-sentence' states=[enabled,sensitive,showing,visible]

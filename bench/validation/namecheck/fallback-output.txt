@@ -1,0 +1,30 @@
+# name check 2026-11-24T10:57:22Z
+## junc-audio
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: FREE
+Flathub app-id contains 'junc-audio': none
+## juncbox
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: FREE
+Flathub app-id contains 'juncbox': none
+## pw-junc
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: FREE
+Flathub app-id contains 'pw-junc': none
+## junctiond
+AUR exact: FREE
+Arch repos exact: FREE
+crates.io exact: FREE
+npm exact: FREE
+Flathub app-id contains 'junctiond': none
+## fuzzy: AUR names containing 'junc'
+junction-git	Application/browser chooser
+junction-zhfix	Application/browser chooser (zhfix fork)
+otf-junction	A humanist sans-serif typeface
+perl-syntax-keyword-junction	Perl6 style Junction operators in Perl5

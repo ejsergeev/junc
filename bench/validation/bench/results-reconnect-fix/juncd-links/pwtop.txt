@@ -1,0 +1,100 @@
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+C   29      0      0    ---     ---   ---   ---     0                  Dummy-Driver
+C   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+C   31      0      0    ---     ---   ---   ---     0                  fake.hwin
+C   32      0      0    ---     ---   ---   ---     0                  fake.hp
+C   33      0      0    ---     ---   ---   ---     0                  fake.obs
+C   53      0      0    ---     ---   ---   ---     0                  junc.bus
+C   69      0      0    ---     ---   ---   ---     0                  juncbench-app3
+C   76      0      0    ---     ---   ---   ---     0                  juncbench-app2
+C   77      0      0    ---     ---   ---   ---     0                  juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 217.5us   8.3us  0.01  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   3.9us   4.7us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0   9.5us   3.4us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  21.8us  16.0us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000  91.8us  43.7us  0.00  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000  93.9us  50.7us  0.00  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 149.7us  14.9us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 432.4us   7.4us  0.02  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   4.8us   4.9us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  10.6us   4.2us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  39.3us  20.2us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 300.2us  22.8us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 333.5us  22.3us  0.02  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 340.2us  14.3us  0.02  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 317.1us   8.8us  0.01  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   4.4us   6.5us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  12.0us   4.0us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  35.8us  20.4us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 184.4us  26.2us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 204.8us  25.3us  0.01  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 227.7us  15.0us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 328.3us   7.8us  0.02  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   5.5us   4.9us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  11.0us   5.1us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  56.7us  20.8us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 163.4us  24.2us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 212.2us  20.2us  0.01  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 205.3us  17.6us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 278.5us   7.2us  0.01  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   3.7us   5.7us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  10.1us   4.9us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  33.0us  18.2us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 160.0us  21.3us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 187.2us  20.5us  0.01  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 195.0us  15.4us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 363.1us   7.7us  0.02  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   5.3us   5.8us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  12.1us   4.4us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  25.9us  17.6us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 165.4us  25.9us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 265.7us  35.1us  0.01  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 205.9us  14.7us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 360.3us   8.0us  0.02  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   3.6us   5.7us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0   9.9us   4.6us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  38.1us  19.3us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 234.8us  19.9us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 253.9us  20.3us  0.01  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 268.7us  18.0us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 603.0us  10.5us  0.03  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   7.5us   7.0us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  15.8us   5.5us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  26.8us  22.3us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 258.6us  31.8us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 382.3us  40.6us  0.02  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 313.0us  15.1us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1
+S   ID  QUANT   RATE    WAIT    BUSY   W/Q   B/Q  ERR FORMAT           NAME 
+I   29      0      0   0.0us   0.0us  ???   ???     0                  Dummy-Driver
+S   30      0      0    ---     ---   ---   ---     0                  Freewheel-Driver
+R   31   1024  48000 287.4us  35.9us  0.01  0.00    0     F32P 1 48000 fake.hwin
+R   32      0      0   5.1us   5.2us  0.00  0.00    0     F32P 2 48000  + fake.hp
+R   33      0      0  11.2us   4.2us  0.00  0.00    0     F32P 2 48000  + fake.obs
+R   53      0      0  35.5us  17.3us  0.00  0.00    0     F32P 4 48000  + junc.bus
+R   69   1024  48000 161.5us  22.2us  0.01  0.00    1    S16LE 2 48000  + juncbench-app3
+R   76   1024  48000 181.5us  24.3us  0.01  0.00    1    S16LE 2 48000  + juncbench-app2
+R   77   1024  48000 200.0us  17.0us  0.01  0.00    1    S16LE 2 48000  + juncbench-app1

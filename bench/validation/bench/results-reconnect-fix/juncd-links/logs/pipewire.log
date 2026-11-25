@@ -1,0 +1,1 @@
+[W][09713.018739] mod.jackdbus-detect | [module-jackdbus-:  216 on_is_started_received()] Failed to receive jackdbus reply: org.freedesktop.DBus.Error.ServiceUnknown: The name org.jackaudio.service was not provided by any .service files

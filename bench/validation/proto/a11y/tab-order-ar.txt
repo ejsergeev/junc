@@ -1,0 +1,12 @@
+ 1 Tab        push button name='إضافة مدخل…' states=[focusable,focused,enabled,sensitive,showing,vi
+ 2 Tab        toggle button name='تفعيل Headphones' states=[focusable,focused,pressed,enabled,sensitive,s
+ 3 Tab        slider name='مستوى صوت Headphones' states=[focusable,focused,enabled,sensitive,showing,v
+ 4 Tab        toggle button name='تفعيل OBS' states=[focusable,focused,pressed,enabled,sensitive,showing,
+ 5 Tab        slider name='مستوى صوت OBS' states=[focusable,focused,enabled,sensitive,showing,visible]
+ 6 Tab        toggle button name='تفعيل Stream Mix' states=[focusable,focused,pressed,enabled,sensitive,s
+ 1 Right      toggle button name='تفعيل Stream Mix' states=[focusable,focused,pressed,enabled,sensitive,showing,vis
+ 2 Right      toggle button name='تفعيل Stream Mix' states=[focusable,focused,pressed,enabled,sensitive,showing,vis
+ 1 Left       toggle button name='تفعيل Stream Mix' states=[focusable,focused,pressed,enabled,sensitive,showing,vis
+ 1 Right      slider   value=76 [0..100] step=1
+ 1 Left       slider   value=75 [0..100] step=1
+ 1 Left       slider   value=74 [0..100] step=1

@@ -1,0 +1,77 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "تفعيل {0}"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "مستوى صوت {0}"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "مستوى إشارة {0}"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "إضافة مدخل"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "ابحث في التدفقات والأجهزة…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "إغلاق"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "الوصلات"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "وصلة جديدة"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "إضافة مدخل…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "المدخلات"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "الاستماع"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "الناقل"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "نص تجريبي: {0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "اضغط على المفتاح لتوجيه الصوت عبر الوصلة إلى سماعات الرأس وبرنامج البث."
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "لا توجد مدخلات متصلة"
+msgstr[1] "مدخل واحد متصل"
+msgstr[2] "مدخلان متصلان"
+msgstr[3] "{n} مدخلات متصلة"
+msgstr[4] "{n} مدخلًا متصلًا"
+msgstr[5] "{n} مدخل متصل"

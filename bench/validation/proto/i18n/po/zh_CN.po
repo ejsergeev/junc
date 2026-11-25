@@ -1,0 +1,72 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-proto\n"
+"PO-Revision-Date: 2026-11-24\n"
+"Last-Translator: test strings (unreviewed)\n"
+"Language-Team: none\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_CN\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgctxt "Card"
+msgid "Enable {0}"
+msgstr "启用 {0}"
+
+msgctxt "Card"
+msgid "Volume of {0}"
+msgstr "{0} 的音量"
+
+msgctxt "Card"
+msgid "Level of {0}"
+msgstr "{0} 的电平"
+
+msgctxt "MainWindow"
+msgid "Add input"
+msgstr "添加输入"
+
+msgctxt "MainWindow"
+msgid "Search streams and devices…"
+msgstr "搜索音频流和设备…"
+
+msgctxt "MainWindow"
+msgid "Close"
+msgstr "关闭"
+
+msgctxt "MainWindow"
+msgid "Junctions"
+msgstr "节点"
+
+msgctxt "MainWindow"
+msgid "New junction"
+msgstr "新建节点"
+
+msgctxt "MainWindow"
+msgid "Add input…"
+msgstr "添加输入…"
+
+msgctxt "MainWindow"
+msgid "Inputs"
+msgstr "输入"
+
+msgctxt "MainWindow"
+msgid "Listen"
+msgstr "监听"
+
+msgctxt "MainWindow"
+msgid "Bus"
+msgstr "总线"
+
+msgctxt "MainWindow"
+msgid "Translated sample: {0}"
+msgstr "翻译示例：{0}"
+
+msgctxt "MainWindow"
+msgid "sample-sentence"
+msgstr "按下开关，即可通过节点将音频路由到耳机和直播软件。"
+
+msgctxt "MainWindow"
+msgid "{n} input connected"
+msgid_plural "{n} inputs connected"
+msgstr[0] "已连接 {n} 个输入"

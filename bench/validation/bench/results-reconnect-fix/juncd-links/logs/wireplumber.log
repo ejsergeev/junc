@@ -1,0 +1,2 @@
+M 14:35:10.272830          wp-device ../lib/wp/device.c:619:wp_spa_device_new_from_spa_factory: SPA handle 'api.libcamera.enum.manager' could not be loaded; is it installed?
+M 14:35:10.272872   script/libcamera libcamera.lua:173:chunk: PipeWire's libcamera SPA missing or broken. libcamera not supported.

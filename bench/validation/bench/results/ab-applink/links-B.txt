@@ -1,0 +1,59 @@
+fake.hwin:capture_MONO
+  |-> junc.bus:playback_FL
+  |-> junc.bus:playback_FR
+fake.hp:playback_FL
+  |<- junc.bus:monitor_FL
+fake.hp:playback_FR
+  |<- junc.bus:monitor_FR
+fake.obs:playback_FL
+  |<- junc.bus:monitor_FL
+fake.obs:playback_FR
+  |<- junc.bus:monitor_FR
+junc.bus:monitor_FL
+  |-> fake.hp:playback_FL
+  |-> fake.obs:playback_FL
+junc.bus:monitor_FR
+  |-> fake.hp:playback_FR
+  |-> fake.obs:playback_FR
+junc.bus:playback_FL
+  |<- fake.hwin:capture_MONO
+  |<- juncbench-app1:output_FL
+  |<- juncbench-app3:output_FL
+  |<- juncbench-app2:output_FL
+junc.bus:playback_FR
+  |<- fake.hwin:capture_MONO
+  |<- juncbench-app1:output_FR
+  |<- juncbench-app3:output_FR
+  |<- juncbench-app2:output_FR
+junc.bus:playback_RL
+  |<- juncbench-app1:output_RL
+  |<- juncbench-app3:output_RL
+  |<- juncbench-app2:output_RL
+junc.bus:playback_RR
+  |<- juncbench-app1:output_RR
+  |<- juncbench-app3:output_RR
+  |<- juncbench-app2:output_RR
+juncbench-app1:output_FL
+  |-> junc.bus:playback_FL
+juncbench-app1:output_FR
+  |-> junc.bus:playback_FR
+juncbench-app1:output_RL
+  |-> junc.bus:playback_RL
+juncbench-app1:output_RR
+  |-> junc.bus:playback_RR
+juncbench-app3:output_FL
+  |-> junc.bus:playback_FL
+juncbench-app3:output_FR
+  |-> junc.bus:playback_FR
+juncbench-app3:output_RL
+  |-> junc.bus:playback_RL
+juncbench-app3:output_RR
+  |-> junc.bus:playback_RR
+juncbench-app2:output_FL
+  |-> junc.bus:playback_FL
+juncbench-app2:output_FR
+  |-> junc.bus:playback_FR
+juncbench-app2:output_RL
+  |-> junc.bus:playback_RL
+juncbench-app2:output_RR
+  |-> junc.bus:playback_RR

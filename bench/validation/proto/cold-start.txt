@@ -1,0 +1,2 @@
+winit-femtovg first_frame_ms median=219 min=181 max=247 n=10
+winit-software first_loop_turn_ms median=56 min=47 max=64 n=10

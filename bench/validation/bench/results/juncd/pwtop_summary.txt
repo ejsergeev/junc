@@ -1,0 +1,13 @@
+samples=599 quanta_seen=[1024]
+node=fake.hp err_delta=0 err_end=0 bq_max=0.03
+node=fake.hwin err_delta=0 err_end=0 bq_max=0.0
+node=fake.obs err_delta=0 err_end=0 bq_max=0.0
+node=input.junc.listen.hp err_delta=0 err_end=0 bq_max=0.07
+node=input.junc.listen.obs err_delta=0 err_end=0 bq_max=0.0
+node=junc.bus err_delta=0 err_end=0 bq_max=0.02
+node=juncbench-app1 err_delta=6 err_end=8 bq_max=0.05
+node=juncbench-app2 err_delta=5 err_end=7 bq_max=0.05
+node=juncbench-app3 err_delta=6 err_end=7 bq_max=0.14
+node=output.junc.listen.hp err_delta=0 err_end=0 bq_max=0.04
+node=output.junc.listen.obs err_delta=0 err_end=0 bq_max=0.04
+ERR_TOTAL_DELTA=17

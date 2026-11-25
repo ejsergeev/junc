@@ -1,0 +1,10 @@
+# slint prototype perf renderer=winit-software cpus=2 2026-11-24T12:07:02Z
+cold start x10 (process start -> first frame presented; software renderer: first event-loop turn):
+  first_loop_turn_ms median=51 min=47 max=53
+pss_kb_meters_on=24000
+cpu_pct_meters_7hz_visible=3.35
+wakeups_per_s_visible=71
+cpu_pct_meters_7hz_hidden(unmapped)=3.22
+wakeups_per_s_hidden=70
+pss_kb_end=24016
+cpu_pct_idle_no_meters=0.00 pss_kb_no_meters=24134

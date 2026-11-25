@@ -1,0 +1,30 @@
+ 1 Tab        list item name='Stream Mix' states=[focusable,focused,enabled,sensitive,selectable,selected,showing,visible] actions=click
+ 2 Tab        push button name='New junction' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+ 3 Tab        push button name='Add input…' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+ 4 Tab        toggle button name='Enable Firefox' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+ 5 Tab        slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=80 [0..100] step=1
+ 6 Tab        toggle button name='Enable Spotify' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+ 7 Tab        slider name='Volume of Spotify' states=[focusable,focused,enabled,sensitive,showing,visible] value=65 [0..100] step=1
+ 8 Tab        toggle button name='Enable Discord' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+ 9 Tab        slider name='Volume of Discord' states=[focusable,focused,enabled,sensitive,showing,visible] value=70 [0..100] step=1
+10 Tab        toggle button name='Enable USB Mic' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+11 Tab        slider name='Volume of USB Mic' states=[focusable,focused,enabled,sensitive,showing,visible] value=90 [0..100] step=1
+12 Tab        toggle button name='Enable Stream Mix' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+13 Tab        slider name='Volume of Stream Mix' states=[focusable,focused,enabled,sensitive,showing,visible] value=100 [0..100] step=1
+14 Tab        toggle button name='Enable Headphones' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+15 Tab        slider name='Volume of Headphones' states=[focusable,focused,enabled,sensitive,showing,visible] value=75 [0..100] step=1
+16 Tab        toggle button name='Enable OBS' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+17 Tab        slider name='Volume of OBS' states=[focusable,focused,enabled,sensitive,showing,visible] value=100 [0..100] step=1
+18 Tab        list item name='Stream Mix' states=[focusable,focused,enabled,sensitive,selectable,selected,showing,visible] actions=click
+19 Tab        push button name='New junction' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+20 Tab        push button name='Add input…' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+21 Tab        toggle button name='Enable Firefox' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+22 Tab        slider name='Volume of Firefox' states=[focusable,focused,enabled,sensitive,showing,visible] value=80 [0..100] step=1
+23 Tab        toggle button name='Enable Spotify' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+24 Tab        slider name='Volume of Spotify' states=[focusable,focused,enabled,sensitive,showing,visible] value=65 [0..100] step=1
+25 Tab        toggle button name='Enable Discord' states=[focusable,focused,enabled,sensitive,showing,visible] actions=click
+26 Tab        slider name='Volume of Discord' states=[focusable,focused,enabled,sensitive,showing,visible] value=70 [0..100] step=1
+27 Tab        toggle button name='Enable USB Mic' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+28 Tab        slider name='Volume of USB Mic' states=[focusable,focused,enabled,sensitive,showing,visible] value=90 [0..100] step=1
+29 Tab        toggle button name='Enable Stream Mix' states=[focusable,focused,pressed,enabled,sensitive,showing,visible] actions=click
+30 Tab        slider name='Volume of Stream Mix' states=[focusable,focused,enabled,sensitive,showing,visible] value=100 [0..100] step=1
