@@ -1,0 +1,80 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!-- Generated from juncd by crates/juncd/tests/dbus.rs; do not edit.
+     Regenerate: JUNC_BLESS=1 cargo test -p juncd --test dbus introspection -->
+<node>
+  <interface name="io.github.ejsergeev.Junc1.Daemon">
+    <method name="Describe">
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="GetConfig">
+      <arg type="s" direction="out"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="Validate">
+      <arg name="toml" type="s" direction="in"/>
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="Plan">
+      <arg name="toml" type="s" direction="in"/>
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="Apply">
+      <arg name="toml" type="s" direction="in"/>
+      <arg name="expected_revision" type="t" direction="in"/>
+      <arg type="t" direction="out"/>
+      <arg type="s" direction="out"/>
+    </method>
+    <method name="CreateJunction">
+      <arg name="name" type="s" direction="in"/>
+      <arg type="o" direction="out"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="ResolveLink">
+      <arg name="junction" type="s" direction="in"/>
+      <arg name="reference" type="s" direction="in"/>
+      <arg name="action" type="s" direction="in"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <signal name="GraphChanged">
+      <arg name="generation" type="t"/>
+    </signal>
+    <signal name="Notice">
+      <arg name="kind" type="s"/>
+      <arg name="body" type="s"/>
+    </signal>
+    <property name="ApiVersion" type="(uu)" access="read"/>
+    <property name="CaptureApps" type="as" access="read"/>
+    <property name="ConfigError" type="s" access="read"/>
+    <property name="DaemonVersion" type="s" access="read"/>
+    <property name="Junctions" type="ao" access="read"/>
+    <property name="Revision" type="t" access="read"/>
+    <property name="State" type="s" access="read"/>
+  </interface>
+  <interface name="io.github.ejsergeev.Junc1.Junction">
+    <method name="Rename">
+      <arg name="name" type="s" direction="in"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="SetEnabled">
+      <arg name="enabled" type="b" direction="in"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="SetVolume">
+      <arg name="percent" type="u" direction="in"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="SetDefault">
+      <arg name="role" type="s" direction="in"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <method name="Delete">
+      <arg name="confirm" type="b" direction="in"/>
+      <arg type="t" direction="out"/>
+    </method>
+    <property name="Enabled" type="b" access="read"/>
+    <property name="Id" type="s" access="read"/>
+    <property name="Name" type="s" access="read"/>
+    <property name="View" type="s" access="read"/>
+  </interface>
+</node>
