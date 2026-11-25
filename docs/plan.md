@@ -137,10 +137,11 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   F25. Acceptance: unit tests over valid/invalid fixtures; schema freshness
   check in CI.
   Done 2026-11-25: model, loader with file/line/column diagnostics and hints, migrations (v0→v1 keeps comments), JSON Schema with ranges and id pattern, 20 invalid + 3 valid fixtures; every code tested.
-- [ ] **A4** [auto] Graph model + identity matcher (apps by binary/name/role,
+- [x] **A4** [auto] Graph model + identity matcher (apps by binary/name/role,
   devices by `node.name` with fallbacks, monitors, Junctions). Req: F2, F10.
   Acceptance: matcher tests over recorded `pw-dump` fixtures incl. browsers
   with several streams and the Asahi topology.
+  Done 2026-11-25: graph from pw-dump (nodes, ports, links, devices, profiles, defaults); matcher for apps (multi-stream), devices, monitors, Junctions, Listen `default`; plumbing streams excluded. Tested on the Asahi, snd-aloop, Komplete, Bluetooth and browser fixtures.
 - [ ] **A5** [auto] Planner + `MockBackend` + layer-1 fixtures (1–64 ch,
   odd maps, appear/disappear, foreign links). Invariant test: no action ever
   targets an untagged object. Req: F3, F4, F17. Acceptance: property-based
