@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 
 pub mod backend;
+pub mod bluetooth;
 pub mod config;
 pub mod defaults;
 pub mod diag;
