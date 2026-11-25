@@ -1187,3 +1187,122 @@ fn watch_reports_captured_apps() {
     );
     e.ok(&["delete", "cap", "--yes"]);
 }
+
+/// F22, F24: templates fill into Junctions; an exported preset imports
+/// back as the same Junction.
+#[test]
+fn templates_and_presets_make_junctions() {
+    // Offline: the built-in set.
+    let list = offline(&["--json", "template", "list"]).json();
+    let ids: Vec<&str> = list["data"]["templates"]
+        .as_array()
+        .expect("templates")
+        .iter()
+        .filter_map(|t| t["id"].as_str())
+        .collect();
+    assert_eq!(
+        ids,
+        [
+            "mic-plus-app",
+            "cable",
+            "combine-inputs",
+            "separate-tracks",
+            "stream-mix",
+            "start-empty"
+        ]
+    );
+    let show = offline(&["template", "show", "mic-plus-app"]);
+    assert!(show.stdout.contains("[[preset.slot]]"), "{}", show.stdout);
+    let typo = offline(&["--json", "template", "show", "cabel"]);
+    assert_eq!(typo.code, 4);
+    assert_eq!(typo.json()["error"]["hint"], "Did you mean 'cable'?");
+
+    let Some(e) = start("presets", true, false) else {
+        return;
+    };
+    let made = e.ok(&[
+        "create",
+        "junction",
+        "Call Mix",
+        "--template",
+        "mic-plus-app",
+        "--slot",
+        "mic=alsa_input.usb-mic",
+        "--slot",
+        "app=spotify",
+    ]);
+    assert!(made.contains("(call-mix)"), "{made}");
+    let j = e.status("call-mix");
+    assert_eq!(j["inputs"][0]["match"]["device"], "alsa_input.usb-mic");
+    assert_eq!(j["inputs"][1]["match"]["binary"], "spotify");
+
+    let missing = e.junc(&[
+        "--json",
+        "create",
+        "junction",
+        "X",
+        "--template",
+        "cable",
+        "--slot",
+        "from=firefox",
+    ]);
+    assert_eq!(missing.code, 2);
+    assert_eq!(missing.json()["error"]["code"], "E_PRESET_FILL");
+
+    // A template file imports like a preset; its name comes from the slots.
+    let cable = repo().join("templates/cable.toml");
+    let out = e.ok(&[
+        "preset",
+        "import",
+        &cable.to_string_lossy(),
+        "--slot",
+        "from=firefox",
+        "--slot",
+        "to=obs",
+    ]);
+    assert!(out.contains("firefox to obs"), "{out}");
+    assert_eq!(e.status("firefox-to-obs")["kind"], "cable");
+
+    // Export, then import: the same Junction under a new id. It is not
+    // made a second default input.
+    e.ok(&["input", "add", "call-mix", "--monitor", "alsa_output.hp"]);
+    e.ok(&["volume", "call-mix", "app", "70"]);
+    e.ok(&["switch", "call-mix"]);
+    let file = e.dir.join("call.toml");
+    let exported = e.ok(&[
+        "preset",
+        "export",
+        "Call Mix",
+        "-o",
+        &file.to_string_lossy(),
+    ]);
+    assert!(
+        exported.contains("input/mic"),
+        "device-specific: {exported}"
+    );
+    let json = e.junc(&["--json", "preset", "export", "call-mix"]).json();
+    assert_eq!(
+        json["data"]["device_specific"],
+        serde_json::json!(["input/mic", "input/alsa-output-hp"])
+    );
+    let imported = e.ok(&["preset", "import", &file.to_string_lossy()]);
+    assert!(imported.contains("(call-mix-2)"), "{imported}");
+    assert!(imported.contains("junc switch call-mix-2"), "{imported}");
+    let (a, b) = (e.status("call-mix"), e.status("call-mix-2"));
+    assert_eq!(a["inputs"], b["inputs"]);
+    assert_eq!(a["listens"], b["listens"]);
+    assert_eq!(b["default"], "none");
+
+    // A broken preset says where.
+    let bad = e.dir.join("bad.toml");
+    std::fs::write(
+        &bad,
+        "schema = 1\n[preset]\nname = \"B\"\n[junction]\nname = \"B\"\n[[junction.input]]\nid = \"m\"\nmatch = { slot = \"mic\" }\n",
+    )
+    .expect("write");
+    let out = e.junc(&["--json", "preset", "import", &bad.to_string_lossy()]);
+    assert_eq!(out.code, 3);
+    let err = &out.json()["error"];
+    assert_eq!(err["code"], "E_PRESET_SLOT");
+    assert_eq!(err["location"]["line"], 8);
+}

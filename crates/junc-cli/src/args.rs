@@ -172,6 +172,12 @@ pub enum Cmd {
         #[arg(long = "as", value_name = "KIND")]
         kind: Option<ImportAs>,
     },
+    /// Export a Junction as a preset file, or add one from a preset.
+    #[command(subcommand)]
+    Preset(PresetCmd),
+    /// List the built-in templates, or show one.
+    #[command(subcommand)]
+    Template(TemplateCmd),
     /// Print the JSON Schema of junctions.toml.
     Schema {
         /// Config schema version.
@@ -241,11 +247,54 @@ pub enum ConfigCmd {
 }
 
 #[derive(Debug, Subcommand)]
-pub enum Create {
-    /// An empty Junction.
-    Junction {
+pub enum PresetCmd {
+    /// Write a Junction as a preset (to stdout without -o).
+    Export {
         /// Junction id or name (any case).
         name: String,
+        /// Write the preset to this file.
+        #[arg(long, short)]
+        output: Option<PathBuf>,
+    },
+    /// Add the Junction a preset or template file describes (`-` reads
+    /// stdin).
+    Import {
+        /// A preset file, or `-` for stdin.
+        file: PathBuf,
+        /// Fill a template slot: the app's binary, a device or output
+        /// node name, or `default` for an output (repeat for each slot).
+        #[arg(long = "slot", value_name = "ID=VALUE")]
+        slots: Vec<String>,
+        /// Name of the new Junction (default: the preset's).
+        #[arg(long)]
+        name: Option<String>,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum TemplateCmd {
+    /// The built-in templates and the slots each asks for.
+    List,
+    /// One template's file.
+    Show {
+        /// Template id (see `junc template list`).
+        template: String,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum Create {
+    /// A Junction: empty, or from a template with its slots filled.
+    Junction {
+        /// Name of the new Junction.
+        name: String,
+        /// Start from this built-in template (see `junc template list`).
+        #[arg(long, value_name = "T")]
+        template: Option<String>,
+        /// Fill a template slot: the app's binary, a device or output
+        /// node name, or `default` for an output (repeat for each slot).
+        #[arg(long = "slot", value_name = "ID=VALUE", requires = "template")]
+        slots: Vec<String>,
     },
     /// One app straight into another.
     Cable {

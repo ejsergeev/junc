@@ -14,6 +14,7 @@ mod client;
 mod doctor;
 mod edit;
 mod human;
+mod preset;
 mod service;
 mod skill;
 mod watch;
@@ -22,8 +23,8 @@ use clap::Parser;
 use client::Client;
 use edit::{End, Result, Source, usage};
 use junc_cli::args::{
-    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, Role, ServiceCmd, SkillCmd,
-    SourceArgs,
+    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, PresetCmd, Role, ServiceCmd,
+    SkillCmd, SourceArgs, TemplateCmd,
 };
 use junc_ipc::ErrorBody;
 use junc_l10n::{tr, trf};
@@ -165,6 +166,8 @@ fn offline(cmd: &Cmd) -> Option<Result<Done>> {
             "This build knows schema version 1.",
         )),
         Cmd::Config(ConfigCmd::Validate { file: Some(f) }) => validate(f),
+        Cmd::Template(TemplateCmd::List) => Ok(preset::list()),
+        Cmd::Template(TemplateCmd::Show { template }) => preset::show(template),
         Cmd::Service(sub) => {
             if let ServiceCmd::Enable | ServiceCmd::Disable = sub
                 && let Err(e) = service::set(matches!(sub, ServiceCmd::Enable))
@@ -298,6 +301,7 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
         | Cmd::Service(_)
         | Cmd::Skill(_)
         | Cmd::Teardown { .. }
+        | Cmd::Template(_)
         | Cmd::Watch => {
             unreachable!("handled above")
         }
@@ -334,7 +338,18 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
                 human::junction(j),
             ))
         }
-        Cmd::Create(Create::Junction { name }) => {
+        Cmd::Create(Create::Junction {
+            name,
+            template: Some(t),
+            slots,
+        }) => preset::create(&c, &name, &t, &slots),
+        Cmd::Preset(PresetCmd::Export { name, output }) => {
+            preset::export(&c, &name, output.as_deref())
+        }
+        Cmd::Preset(PresetCmd::Import { file, slots, name }) => {
+            preset::import(&c, &file, &slots, name.as_deref())
+        }
+        Cmd::Create(Create::Junction { name, .. }) => {
             let (path, rev) = c.create_junction(&name)?;
             let id = junc_ipc::junction_id(&path).unwrap_or_default();
             let text = trf("Created {name} ({id}).", &[("name", &name), ("id", &id)]);

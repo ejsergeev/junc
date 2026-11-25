@@ -5,7 +5,7 @@
 //! with the revision it read, so concurrent changes are detected.
 
 use junc_core::config::slugify;
-use junc_core::model::{Cable, Config, Input, Junction, Kind, Listen, Match};
+use junc_core::model::{Cable, Config, DefaultRole, Input, Junction, Kind, Listen, Match};
 use junc_ipc::ErrorBody;
 use junc_ipc::view::JunctionView;
 use junc_l10n::trf;
@@ -58,7 +58,7 @@ fn suggest<'a>(wanted: &str, candidates: impl IntoIterator<Item = &'a str>) -> O
         .map(|(_, c)| c)
 }
 
-fn did_you_mean<'a>(
+pub fn did_you_mean<'a>(
     wanted: &str,
     candidates: impl IntoIterator<Item = &'a str>,
     list: &str,
@@ -185,7 +185,7 @@ pub fn duplicate(config: &mut Config, index: usize, name: Option<&str>) -> Strin
         str::to_owned,
     );
     copy.id = unique_id(&copy.name, config.junction.iter().map(|j| j.id.as_str()));
-    copy.default = junc_core::model::DefaultRole::None;
+    copy.default = DefaultRole::None;
     let id = copy.id.clone();
     config.junction.insert(index + 1, copy);
     id
@@ -540,6 +540,38 @@ pub fn unlink(
         ));
     }
     Ok(())
+}
+
+/// Adds a Junction made from a preset or template (F22, F24), named `name`
+/// or as the preset says, with an id made unique from the name. Returns
+/// its id and notes for the user: a default role another Junction already
+/// has is dropped.
+pub fn add_junction(
+    config: &mut Config,
+    mut j: Junction,
+    name: Option<&str>,
+) -> (String, Vec<String>) {
+    if let Some(n) = name {
+        n.clone_into(&mut j.name);
+    }
+    j.id = unique_id(&j.name, config.junction.iter().map(|j| j.id.as_str()));
+    let mut notes = Vec::new();
+    if j.default != DefaultRole::None
+        && let Some(other) = config.junction.iter().find(|o| o.default == j.default)
+    {
+        let role = match j.default {
+            DefaultRole::Output => "output",
+            _ => "input",
+        };
+        notes.push(trf(
+            "{other} stays the default {role}; make this one the default with: junc switch {id}",
+            &[("other", &other.name), ("role", &role), ("id", &j.id)],
+        ));
+        j.default = DefaultRole::None;
+    }
+    let id = j.id.clone();
+    config.junction.push(j);
+    (id, notes)
 }
 
 /// Adds a Junction or Cable made from an existing setup (F13); returns its

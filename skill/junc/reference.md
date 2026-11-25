@@ -88,6 +88,8 @@ Commands:
   describe   Everything an agent needs in one JSON document
   watch      Stream events, one per line: apps being captured, Junctions turned on or off, graph changes, notices (for bars and scripts; use --json)
   import     Turn existing null sinks and pw-loopbacks into Junctions or Cables; `junc import scan` lists them. The old setups stay: remove them yourself when the new ones work
+  preset     Export a Junction as a preset file, or add one from a preset
+  template   List the built-in templates, or show one
   schema     Print the JSON Schema of junctions.toml
   config     Find, check or edit the config file
   apply      Apply a whole config file (`-` reads stdin)
@@ -147,7 +149,7 @@ Create a Junction or a Cable
 Usage: junc create [OPTIONS] <COMMAND>
 
 Commands:
-  junction  An empty Junction
+  junction  A Junction: empty, or from a template with its slots filled
   cable     One app straight into another
   help      Print this message or the help of the given subcommand(s)
 
@@ -162,19 +164,21 @@ Options:
 ### `junc create junction`
 
 ```text
-An empty Junction
+A Junction: empty, or from a template with its slots filled
 
 Usage: junc create junction [OPTIONS] <NAME>
 
 Arguments:
-  <NAME>  Junction id or name (any case)
+  <NAME>  Name of the new Junction
 
 Options:
-      --json         Print one JSON document instead of text
-  -q, --quiet        Print nothing on success
-      --no-color     Do not color the output
-      --lang <CODE>  Language for messages (e.g. de, pt_BR)
-  -h, --help         Print help
+      --json             Print one JSON document instead of text
+      --template <T>     Start from this built-in template (see `junc template list`)
+  -q, --quiet            Print nothing on success
+      --slot <ID=VALUE>  Fill a template slot: the app's binary, a device or output node name, or `default` for an output (repeat for each slot)
+      --no-color         Do not color the output
+      --lang <CODE>      Language for messages (e.g. de, pt_BR)
+  -h, --help             Print help
 ```
 
 ### `junc create cable`
@@ -671,6 +675,118 @@ Arguments:
 
 Options:
       --as <KIND>    Import as a Junction or a Cable (default: what scan suggests) [possible values: junction, cable]
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc preset`
+
+```text
+Export a Junction as a preset file, or add one from a preset
+
+Usage: junc preset [OPTIONS] <COMMAND>
+
+Commands:
+  export  Write a Junction as a preset (to stdout without -o)
+  import  Add the Junction a preset or template file describes (`-` reads stdin)
+  help    Print this message or the help of the given subcommand(s)
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc preset export`
+
+```text
+Write a Junction as a preset (to stdout without -o)
+
+Usage: junc preset export [OPTIONS] <NAME>
+
+Arguments:
+  <NAME>  Junction id or name (any case)
+
+Options:
+      --json             Print one JSON document instead of text
+  -o, --output <OUTPUT>  Write the preset to this file
+  -q, --quiet            Print nothing on success
+      --no-color         Do not color the output
+      --lang <CODE>      Language for messages (e.g. de, pt_BR)
+  -h, --help             Print help
+```
+
+### `junc preset import`
+
+```text
+Add the Junction a preset or template file describes (`-` reads stdin)
+
+Usage: junc preset import [OPTIONS] <FILE>
+
+Arguments:
+  <FILE>  A preset file, or `-` for stdin
+
+Options:
+      --json             Print one JSON document instead of text
+      --slot <ID=VALUE>  Fill a template slot: the app's binary, a device or output node name, or `default` for an output (repeat for each slot)
+      --name <NAME>      Name of the new Junction (default: the preset's)
+  -q, --quiet            Print nothing on success
+      --no-color         Do not color the output
+      --lang <CODE>      Language for messages (e.g. de, pt_BR)
+  -h, --help             Print help
+```
+
+### `junc template`
+
+```text
+List the built-in templates, or show one
+
+Usage: junc template [OPTIONS] <COMMAND>
+
+Commands:
+  list  The built-in templates and the slots each asks for
+  show  One template's file
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc template list`
+
+```text
+The built-in templates and the slots each asks for
+
+Usage: junc template list [OPTIONS]
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc template show`
+
+```text
+One template's file
+
+Usage: junc template show [OPTIONS] <TEMPLATE>
+
+Arguments:
+  <TEMPLATE>  Template id (see `junc template list`)
+
+Options:
       --json         Print one JSON document instead of text
   -q, --quiet        Print nothing on success
       --no-color     Do not color the output
