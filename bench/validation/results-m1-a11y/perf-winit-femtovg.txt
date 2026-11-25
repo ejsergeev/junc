@@ -1,0 +1,9 @@
+# renderer=winit-femtovg cpus=8 2026-11-25T08:13:37Z
+cold_start first_frame_ms median=88 min=77 max=498 n=10
+pss_kb_meters_on=62573
+cpu_pct_meters_visible=6.37
+wakeups_per_s_visible=147
+cpu_pct_meters_hidden_special_ws=7.03
+wakeups_per_s_hidden=133
+pss_kb_end=62528
+cpu_pct_idle_no_meters=0.00 pss_kb_no_meters=62852

@@ -1,0 +1,9 @@
+# renderer=winit-software cpus=8 2026-11-25T08:15:18Z
+cold_start first_loop_turn_ms median=24 min=22 max=167 n=10
+pss_kb_meters_on=26070
+cpu_pct_meters_visible=14.07
+wakeups_per_s_visible=171
+cpu_pct_meters_hidden_special_ws=14.17
+wakeups_per_s_hidden=157
+pss_kb_end=26070
+cpu_pct_idle_no_meters=0.03 pss_kb_no_meters=23262

@@ -1,0 +1,16 @@
+SPEECH OUTPUT: 'Screen reader on.'{'established': 'False'}
+SPEECH OUTPUT: 'JUNC'{'established': 'False', 'voice-type': 'default'}
+SPEECH OUTPUT: 'Junctions List with 3 items'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Stream Mix'{'established': 'False', 'voice-type': 'default'}
+SPEECH OUTPUT: 'New junction button'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Add input… button'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Firefox panel'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Enable Firefox toggle button pressed'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'not pressed'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Volume of Firefox horizontal slider 80 80 percent.'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: '81'{'established': 'False', 'voice-type': 'default'}
+SPEECH OUTPUT: 'Spotify panel'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Enable Spotify toggle button pressed'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Volume of Spotify horizontal slider 65 65 percent.'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Discord panel'{'established': 'False', 'voice-type': 'system'}
+SPEECH OUTPUT: 'Enable Discord toggle button not pressed'{'established': 'False', 'voice-type': 'system'}
