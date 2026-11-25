@@ -223,3 +223,224 @@ fn relinks_on_churn_and_does_not_fight_overrides() {
     drop(app);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// --- F16: defaults ----------------------------------------------------------
+
+fn run_juncd(dir: &std::path::Path, tag: &str, config: &str) -> (Kill, std::path::PathBuf) {
+    let cfg = dir.join(format!("{tag}.toml"));
+    std::fs::write(&cfg, config).expect("config");
+    let log = dir.join(format!("{tag}.log"));
+    let child = Command::new(env!("CARGO_BIN_EXE_juncd"))
+        .arg("--config")
+        .arg(&cfg)
+        .arg("--state")
+        .arg(dir.join("state.toml"))
+        .stderr(std::fs::File::create(&log).expect("log"))
+        .spawn()
+        .expect("juncd");
+    (Kill(child), log)
+}
+
+fn read(path: &std::path::Path) -> String {
+    std::fs::read_to_string(path).unwrap_or_default()
+}
+
+fn sh_ok(cmd: &str, args: &[&str]) -> String {
+    let out = Command::new(cmd)
+        .args(args)
+        .output()
+        .unwrap_or_else(|e| panic!("{cmd}: {e}"));
+    assert!(
+        out.status.success(),
+        "{cmd} {args:?}: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    String::from_utf8_lossy(&out.stdout).into_owned()
+}
+
+fn node_id(g: &Graph, name: &str) -> u32 {
+    g.node_by_name(name)
+        .unwrap_or_else(|| panic!("no node {name}"))
+        .id
+}
+
+/// Removes every JUNC object so tests do not see each other's leftovers.
+fn clean(dir: &std::path::Path, rx: &Receiver<Event>, g: &mut Graph) {
+    let (_d, _) = run_juncd(dir, "clean", "schema = 1\n");
+    assert!(
+        wait_for(rx, g, Duration::from_secs(5), |g| !g
+            .nodes
+            .values()
+            .any(|n| n.is_junc()))
+        .is_some(),
+        "cleanup"
+    );
+}
+
+const DEFAULT_IN: &str =
+    "schema = 1\n[[junction]]\nid = \"zoom\"\nname = \"Zoom Mic\"\ndefault = \"input\"\n";
+const OFF: &str = "schema = 1\n[[junction]]\nid = \"zoom\"\nname = \"Zoom Mic\"\nenabled = false\ndefault = \"input\"\n";
+
+#[test]
+fn default_input_set_restored_and_cleared() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-defaults-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let src = |g: &Graph| g.defaults.configured_source.clone();
+
+    // The user's own mic is the configured default.
+    sh_ok(
+        "pw-cli",
+        &[
+            "create-node",
+            "adapter",
+            "{ factory.name=support.null-audio-sink node.name=tmp.mic media.class=Audio/Source/Virtual object.linger=true }",
+        ],
+    );
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| g
+            .node_by_name("tmp.mic")
+            .is_some())
+        .is_some()
+    );
+    sh_ok(
+        "wpctl",
+        &["set-default", &node_id(&g, "tmp.mic").to_string()],
+    );
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| src(g).as_deref()
+            == Some("tmp.mic"))
+        .is_some()
+    );
+
+    // Default = input: the Junction takes over.
+    let (d, _) = run_juncd(&dir, "on", DEFAULT_IN);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| src(g).as_deref()
+            == Some("junc.zoom"))
+        .is_some(),
+        "junction not made default: {:?}",
+        src(&g)
+    );
+    drop(d);
+    // Turned off (daemon restarted, the saved previous default survives).
+    let (d, log) = run_juncd(&dir, "off", OFF);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| src(g).as_deref()
+            == Some("tmp.mic"))
+        .is_some(),
+        "previous default not restored: {:?}\nstate: {}\non log: {}\noff log: {}",
+        src(&g),
+        read(&dir.join("state.toml")),
+        read(&dir.join("on.log")),
+        read(&dir.join("off.log"))
+    );
+    std::thread::sleep(Duration::from_millis(200));
+    assert!(
+        read(&log)
+            .contains("notice default_restored key=default.configured.audio.source to=tmp.mic"),
+        "{}",
+        read(&log)
+    );
+    drop(d);
+
+    // Restore target missing: the key is cleared.
+    let (d, _) = run_juncd(&dir, "on2", DEFAULT_IN);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| src(g).as_deref()
+            == Some("junc.zoom"))
+        .is_some()
+    );
+    drop(d);
+    sh_ok("pw-cli", &["destroy", &node_id(&g, "tmp.mic").to_string()]);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| g
+            .node_by_name("tmp.mic")
+            .is_none())
+        .is_some()
+    );
+    let (d, log) = run_juncd(&dir, "off2", OFF);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| src(g).is_none()).is_some(),
+        "key not cleared: {:?}",
+        src(&g)
+    );
+    std::thread::sleep(Duration::from_millis(200));
+    assert!(
+        read(&log).contains("to=(WirePlumber's choice)"),
+        "{}",
+        read(&log)
+    );
+    drop(d);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn listen_default_follows_the_system_output() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-follow-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| g
+            .node_by_name("fake.obs")
+            .is_some())
+        .is_some()
+    );
+    sh_ok(
+        "wpctl",
+        &["set-default", &node_id(&g, "fake.hp").to_string()],
+    );
+    let listen_to = |g: &Graph, out: &str| {
+        let Some(o) = g.node_by_name(out) else {
+            return 0;
+        };
+        g.links
+            .values()
+            .filter(|l| l.is_junc() && l.input_node == o.id)
+            .count()
+    };
+    let (_d, _) = run_juncd(
+        &dir,
+        "listen",
+        "schema = 1\n[[junction]]\nid = \"mix\"\nname = \"Mix\"\n[[junction.listen]]\nid = \"out\"\ntarget = \"default\"\n",
+    );
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| listen_to(
+            g, "fake.hp"
+        ) == 2)
+        .is_some(),
+        "listen to fake.hp"
+    );
+    sh_ok(
+        "wpctl",
+        &["set-default", &node_id(&g, "fake.obs").to_string()],
+    );
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| listen_to(
+            g, "fake.obs"
+        ) == 2
+            && listen_to(g, "fake.hp") == 0)
+        .is_some(),
+        "listen did not follow the default output"
+    );
+    drop(_d);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
