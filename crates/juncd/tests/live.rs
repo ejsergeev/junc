@@ -563,25 +563,32 @@ fn read_s16(path: &std::path::Path) -> Vec<i16> {
 }
 
 fn pw_cat(mode: &str, app: &str, file: &std::path::Path) -> Kill {
+    pw_cat_to(mode, app, file, None)
+}
+
+fn pw_cat_to(mode: &str, app: &str, file: &std::path::Path, target: Option<&str>) -> Kill {
+    let mut c = Command::new("pw-cat");
+    if let Some(t) = target {
+        c.args(["--target", t]);
+    }
     Kill(
-        Command::new("pw-cat")
-            .args([
-                mode,
-                "--raw",
-                "--format",
-                "s16",
-                "--rate",
-                "48000",
-                "--channels",
-                "2",
-            ])
-            .args(["--channel-map", "FL,FR", "-P"])
-            .arg(format!("{{ application.name={app} node.name={app} }}"))
-            .arg(file)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-            .expect("pw-cat"),
+        c.args([
+            mode,
+            "--raw",
+            "--format",
+            "s16",
+            "--rate",
+            "48000",
+            "--channels",
+            "2",
+        ])
+        .args(["--channel-map", "FL,FR", "-P"])
+        .arg(format!("{{ application.name={app} node.name={app} }}"))
+        .arg(file)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("pw-cat"),
     )
 }
 
@@ -658,9 +665,17 @@ fn cable_delivers_one_app_to_another_bit_exact() {
     std::thread::sleep(Duration::from_millis(300));
     drop(recorder);
 
-    // Find a window from the middle of the source in the recording, then
-    // compare everything from there to the end of the source.
-    let rec = read_s16(&rec_file);
+    let n = bit_exact_frames(&src, &read_s16(&rec_file));
+    eprintln!("cable: {n} frames bit-exact");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Frames of `src` found unchanged in `rec`, starting from the middle of
+/// the source. pw-cat exits without playing its last partial buffer, so
+/// the very end of the source may be missing: that tail must be silence
+/// in the recording, shorter than two quanta, and everything before it
+/// exact. At least one second must match.
+fn bit_exact_frames(src: &[i16], rec: &[i16]) -> usize {
     let probe = RATE / 2 * 2; // frame 24 000, interleaved
     let window = &src[probe..probe + 960 * 2];
     let at = rec
@@ -670,10 +685,6 @@ fn cable_delivers_one_app_to_another_bit_exact() {
         .map(|f| f * 2)
         .unwrap_or_else(|| panic!("source audio not found in {} recorded samples", rec.len()));
     let n = (src.len() - probe).min(rec.len() - at);
-    assert!(n >= RATE, "only {} frames overlap", n / 2);
-    // pw-cat exits without playing its last partial buffer, so the very end
-    // of the source may be missing: that tail must be silence in the
-    // recording, shorter than two quanta, and everything before it exact.
     let same = src[probe..probe + n]
         .iter()
         .zip(&rec[at..at + n])
@@ -687,8 +698,88 @@ fn cable_delivers_one_app_to_another_bit_exact() {
         &src[probe + same..(probe + same + 4).min(src.len())],
         &rec[at + same..(at + same + 4).min(rec.len())]
     );
-    let n = same;
-    assert!(n >= RATE, "only {} frames match", n / 2);
-    eprintln!("cable: {} frames bit-exact", n / 2);
+    assert!(same >= RATE * 2, "only {} frames match", same / 2);
+    same / 2
+}
+
+/// Acceptance of A14: audio passes four levels of nesting (five Junctions,
+/// each the only Input of the next) bit-exact.
+#[test]
+fn nesting_four_deep_is_bit_exact() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-nest-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let mut config = String::from(
+        "schema = 1\n[[junction]]\nid = \"n0\"\nname = \"N0\"\n\
+         [[junction.input]]\nid = \"player\"\nmatch = { app = \"junc-player\" }\n",
+    );
+    for k in 1..=4 {
+        config.push_str(&format!(
+            "[[junction]]\nid = \"n{k}\"\nname = \"N{k}\"\n\
+             [[junction.input]]\nid = \"below\"\nmatch = {{ junction = \"n{}\" }}\n",
+            k - 1
+        ));
+    }
+    let (_d, log) = run_juncd(&dir, "nest", &config);
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let named = |g: &Graph, id: u32, name: &str| g.nodes.get(&id).is_some_and(|n| n.name() == name);
+    let chained = |g: &Graph| {
+        (1..=4).all(|k| {
+            g.links.values().any(|l| {
+                named(g, l.output_node, &format!("junc.n{}", k - 1))
+                    && named(g, l.input_node, &format!("junc.n{k}.in.below"))
+            })
+        })
+    };
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), chained).is_some(),
+        "the chain was not built\n{}",
+        read(&log)
+    );
+
+    let src = noise(2 * RATE);
+    let src_file = dir.join("src.raw");
+    let bytes: Vec<u8> = src.iter().flat_map(|s| s.to_le_bytes()).collect();
+    std::fs::write(&src_file, bytes).expect("write source");
+    let rec_file = dir.join("rec.raw");
+    let recorder = pw_cat_to("-r", "junc-top", &rec_file, Some("junc.n4"));
+    let fed = |g: &Graph| {
+        g.node_by_name("junc-top").is_some_and(|r| {
+            g.links
+                .values()
+                .any(|l| l.input_node == r.id && named(g, l.output_node, "junc.n4"))
+        })
+    };
+    assert!(wait_for(&rx, &mut g, Duration::from_secs(10), fed).is_some());
+    let mut player = pw_cat("-p", "junc-player", &src_file);
+    let routed = |g: &Graph| {
+        g.node_by_name("junc-player").is_some_and(|p| {
+            g.links
+                .values()
+                .any(|l| l.output_node == p.id && named(g, l.input_node, "junc.n0.in.player"))
+        })
+    };
+    assert!(wait_for(&rx, &mut g, Duration::from_secs(10), routed).is_some());
+    let end = Instant::now() + Duration::from_secs(10);
+    while player.0.try_wait().ok().flatten().is_none() && Instant::now() < end {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    std::thread::sleep(Duration::from_millis(300));
+    let _ = Command::new("kill")
+        .arg("-INT")
+        .arg(recorder.0.id().to_string())
+        .status();
+    std::thread::sleep(Duration::from_millis(300));
+    drop(recorder);
+
+    let n = bit_exact_frames(&src, &read_s16(&rec_file));
+    eprintln!("nesting: {n} frames bit-exact through 4 levels");
     let _ = std::fs::remove_dir_all(&dir);
 }
