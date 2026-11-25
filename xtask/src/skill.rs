@@ -168,7 +168,14 @@ pub fn check(root: &Path) -> Vec<String> {
                     }
                 }
                 "toml" => {
-                    if let Err(d) = junc_core::config::load(&body, &format!("{name}:{line}")) {
+                    let file = format!("{name}:{line}");
+                    // A `[preset]` table makes it a preset or template.
+                    let result = if body.lines().any(|l| l.trim() == "[preset]") {
+                        junc_core::preset::load(&body, &file).map(|_| ())
+                    } else {
+                        junc_core::config::load(&body, &file).map(|_| ())
+                    };
+                    if let Err(d) = result {
                         for x in d {
                             problems.push(format!("{name}:{line}: config example: {x}"));
                         }
@@ -221,7 +228,7 @@ mod tests {
         std::fs::create_dir_all(&dir).expect("dir");
         std::fs::write(
             dir.join("SKILL.md"),
-            "---\nname: junc\ndescription: short\n---\nSee nope.md.\n```sh\njunc frobnicate\njunc volume zoom 80\n```\n```toml\nschema = 1\nvolme = 3\n```\n",
+            "---\nname: junc\ndescription: short\n---\nSee nope.md.\n```sh\njunc frobnicate\njunc volume zoom 80\n```\n```toml\nschema = 1\nvolme = 3\n```\n```toml\nschema = 1\n[preset]\nname = \"P\"\n[junction]\nname = \"P\"\n[[junction.input]]\nid = \"m\"\nmatch = { slot = \"mic\" }\n```\n",
         )
         .expect("write");
         let p = check(&root);
@@ -231,6 +238,7 @@ mod tests {
             "missing nope.md",
             "junc frobnicate",
             "unknown key",
+            "no slot 'mic'",
             "reference.md is stale",
         ] {
             assert!(joined.contains(want), "missing {want:?} in:\n{joined}");
