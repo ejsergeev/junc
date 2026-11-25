@@ -1061,3 +1061,129 @@ fn pre_remove_tears_down_every_logged_in_session() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// `junc --json watch` as a child, its lines on a channel.
+struct Watch {
+    _child: Kill,
+    lines: std::sync::mpsc::Receiver<Value>,
+    /// Every event read so far, in order.
+    seen: std::cell::RefCell<Vec<Value>>,
+}
+
+impl Env {
+    fn watch(&self) -> Watch {
+        let mut child = Command::new(env!("CARGO_BIN_EXE_junc"))
+            .args(["--json", "watch"])
+            .env("DBUS_SESSION_BUS_ADDRESS", &self.address)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("junc watch");
+        let out = child.stdout.take().expect("stdout");
+        let (tx, lines) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            for line in BufReader::new(out).lines().map_while(Result::ok) {
+                let v: Value =
+                    serde_json::from_str(&line).unwrap_or_else(|e| panic!("{e}: {line}"));
+                if tx.send(v).is_err() {
+                    return;
+                }
+            }
+        });
+        Watch {
+            _child: Kill(child),
+            lines,
+            seen: std::cell::RefCell::new(Vec::new()),
+        }
+    }
+}
+
+impl Watch {
+    /// The next event matching `want`, skipping others; panics after 10 s.
+    fn expect(&self, what: &str, want: impl Fn(&Value) -> bool) -> Value {
+        let until = Instant::now() + Duration::from_secs(10);
+        loop {
+            let left = until.saturating_duration_since(Instant::now());
+            match self.lines.recv_timeout(left) {
+                Ok(v) => {
+                    self.seen.borrow_mut().push(v.clone());
+                    if want(&v) {
+                        return v;
+                    }
+                }
+                Err(_) => panic!("no {what} event in {:?}", self.seen.borrow()),
+            }
+        }
+    }
+}
+
+/// F23 (B7): the stream starts with the current state and reports
+/// Junctions turned off and on, created and removed.
+#[test]
+fn watch_streams_junction_changes() {
+    let Some(e) = start("watch", true, false) else {
+        return;
+    };
+    let w = e.watch();
+    w.expect("initial capture", |v| {
+        v["event"] == "capture" && v["apps"] == serde_json::json!([])
+    });
+    w.expect("initial junction", |v| {
+        v["event"] == "junction" && v["id"] == "obs" && v["enabled"] == true
+    });
+    e.ok(&["disable", "obs"]);
+    w.expect("obs off", |v| {
+        v["event"] == "junction" && v["id"] == "obs" && v["enabled"] == false
+    });
+    e.ok(&["enable", "obs"]);
+    w.expect("obs on", |v| {
+        v["event"] == "junction" && v["id"] == "obs" && v["enabled"] == true
+    });
+    e.ok(&["create", "junction", "Second One"]);
+    w.expect("new junction", |v| {
+        v["event"] == "junction" && v["id"] == "second-one"
+    });
+    e.ok(&["delete", "second-one", "--yes"]);
+    w.expect("removed", |v| {
+        v["event"] == "junction" && v["id"] == "second-one" && v["removed"] == true
+    });
+}
+
+/// F23 (B7), live: an app routed into an enabled Junction shows up in the
+/// capture event, and leaves it when the Junction is turned off.
+#[test]
+fn watch_reports_captured_apps() {
+    if std::env::var("JUNC_LIVE_PIPEWIRE").as_deref() != Ok("1") {
+        eprintln!("skipped: run scripts/ci/live-pipewire.sh");
+        return;
+    }
+    let Some(e) = start("watchlive", true, true) else {
+        return;
+    };
+    e.ok(&["create", "junction", "Cap"]);
+    e.ok(&["input", "add", "cap", "--app", "capplayer"]);
+    let w = e.watch();
+    w.expect("nothing captured", |v| {
+        v["event"] == "capture" && v["apps"] == serde_json::json!([])
+    });
+    let _app = pw_cat_app(
+        "-p",
+        "{ node.name=capplayer application.name=CapPlayer application.process.binary=capplayer }",
+    );
+    w.expect("app captured", |v| {
+        v["event"] == "capture" && v["apps"] == serde_json::json!(["CapPlayer"])
+    });
+    e.ok(&["disable", "cap"]);
+    w.expect("capture ends", |v| {
+        v["event"] == "capture" && v["apps"] == serde_json::json!([])
+    });
+    assert!(
+        w.seen
+            .borrow()
+            .iter()
+            .any(|v| v["event"] == "graph" && v["generation"].as_u64().is_some_and(|g| g > 0)),
+        "graph events: {:?}",
+        w.seen.borrow()
+    );
+    e.ok(&["delete", "cap", "--yes"]);
+}
