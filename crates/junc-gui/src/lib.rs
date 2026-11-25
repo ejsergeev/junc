@@ -4,7 +4,10 @@
 //! lives here, as a library, so it is tested without a display; `main.rs`
 //! only starts it.
 
-#![forbid(unsafe_code)]
+// deny, not forbid: the code Slint generates (ui.rs) needs `unsafe`;
+// JUNC's own code has none.
+#![deny(unsafe_code)]
 
 pub mod theme;
 pub mod theme_service;
+pub mod ui;

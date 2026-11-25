@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Semantic tokens (docs/architecture.md §7.2, Spec board §1). Colours are
+// assigned from Rust (theme.rs) at start and on every theme change;
+// components use only these names, never hex values.
+
+export global Tokens {
+    in-out property <bool> dark: true;
+
+    in-out property <color> surface-desktop: #0e0e14;
+    in-out property <color> surface-window: #1a1b26;
+    in-out property <color> surface-sidebar: #13141c;
+    in-out property <color> surface-card: #24283b;
+    in-out property <color> surface-card-header: #292d41;
+    in-out property <color> text-default: #a9b1d6;
+    in-out property <color> text-strong: #c0caf5;
+    in-out property <color> text-subtle: #8c93b3;
+    in-out property <color> mark-dim: #565f89;
+    in-out property <color> line-divider: #414868;
+    in-out property <color> accent: #7aa2f7;
+    in-out property <color> selection: #292e42;
+    in-out property <color> meter-safe: #9ece6a;
+    in-out property <color> meter-hot: #e0af68;
+    in-out property <color> meter-clip: #f7768e;
+    in-out property <color> status-urgent: #f7768e;
+    in-out property <color> status-ok: #9ece6a;
+    in-out property <color> status-warn: #e0af68;
+    in-out property <color> control-normal-fill;
+    in-out property <color> control-normal-border;
+    in-out property <color> control-hover-fill;
+    in-out property <color> control-hover-border;
+    in-out property <color> control-focus-fill;
+    in-out property <color> control-focus-border;
+    in-out property <color> control-selected-fill;
+    in-out property <color> control-pressed-fill;
+    in-out property <color> text-selection-fill;
+    in-out property <color> track;
+    in-out property <color> halo;
+
+    // [spacing] scale and [font] base-size.
+    in-out property <float> scale: 1.0;
+    in-out property <length> font-base: 12px;
+
+    // Spacing (Spec, × scale).
+    out property <length> space-label-gap: 4px * scale;
+    out property <length> space-row-gap: 8px * scale;
+    out property <length> space-control-pad-x: 10px * scale;
+    out property <length> space-control-pad-y: 6px * scale;
+    out property <length> size-control: 28px * scale;
+    out property <length> space-row-pad-x: 12px * scale;
+    out property <length> space-panel-gap: 14px * scale;
+    out property <length> space-panel-pad: 18px * scale;
+    out property <length> space-popup-pad: 14px * scale;
+
+    // Type (base 12; every size follows the base).
+    out property <length> type-caption: font-base * 10 / 12;
+    out property <length> type-body-small: font-base * 11 / 12;
+    out property <length> type-body: font-base;
+    out property <length> type-title: font-base * 14 / 12;
+    out property <length> type-heading: font-base * 16 / 12;
+    out property <length> type-display: font-base * 24 / 12;
+    out property <string> font-family: "monospace";
+
+    // Shape.
+    out property <length> border: 1px;
+    out property <length> border-popover: 2px;
+}

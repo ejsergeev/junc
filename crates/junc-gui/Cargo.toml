@@ -13,6 +13,15 @@ publish = false
 workspace = true
 
 [dependencies]
+# No Qt backend: winit with femtovg (GPU) and the software renderer
+# fallback (architecture §7.1).
+slint = { version = "1.19.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg", "renderer-software", "accessibility"] }
 inotify = "0.11"
 zbus = "6.5"
 toml = "1.2.3"
+
+[build-dependencies]
+slint-build = "1.19.1"
+
+[dev-dependencies]
+i-slint-backend-testing = "1.19.1"

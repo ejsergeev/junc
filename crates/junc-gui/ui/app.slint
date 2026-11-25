@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The window skeleton (B12): sidebar with the Junction list and the main
+// pane with its three columns. Sizes follow docs/architecture.md §7.1:
+// sidebar 300 px (240 px when the tile is narrower than 1100 px); Inputs,
+// Bus and Listen side by side from 780 px of main pane, Listen stacked
+// below them under that.
+
+import { Tokens } from "tokens.slint";
+export { Tokens }
+
+export struct JunctionItem {
+    id: string,
+    name: string,
+    enabled: bool,
+    // "active", "waiting", "off", "unknown"
+    status: string,
+}
+
+component ColumnTitle inherits Text {
+    color: Tokens.text-strong;
+    font-size: Tokens.type-heading;
+    font-family: Tokens.font-family;
+}
+
+component Column inherits Rectangle {
+    in property <string> title;
+    background: Tokens.surface-window;
+    VerticalLayout {
+        spacing: Tokens.space-panel-gap;
+        ColumnTitle { text: root.title; }
+        Rectangle {
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            background: Tokens.surface-card;
+        }
+    }
+}
+
+export component AppWindow inherits Window {
+    title: "JUNC";
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    min-width: 640px;
+    min-height: 420px;
+    background: Tokens.surface-desktop;
+    default-font-family: Tokens.font-family;
+    default-font-size: Tokens.type-body;
+
+    in property <[JunctionItem]> junctions;
+    // "connected", "starting", "waiting_for_pipewire", or "down" when juncd
+    // is not reachable.
+    in property <string> daemon-state: "down";
+
+    out property <length> sidebar-width: root.width < 1100px ? 240px : 300px;
+    out property <length> main-width: root.width - root.sidebar-width;
+    out property <bool> stacked: root.main-width - 2 * Tokens.space-panel-pad < 780px;
+
+    // Placed explicitly so the window's size never comes from its content
+    // (the size-dependent properties above would loop otherwise).
+    HorizontalLayout {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        sidebar := Rectangle {
+            width: root.sidebar-width;
+            background: Tokens.surface-sidebar;
+            VerticalLayout {
+                padding: Tokens.space-panel-pad;
+                spacing: Tokens.space-row-gap;
+                Text {
+                    text: @tr("Junctions");
+                    color: Tokens.text-strong;
+                    font-size: Tokens.type-heading;
+                }
+                for j in root.junctions: Rectangle {
+                    height: Tokens.size-control;
+                    HorizontalLayout {
+                        padding-left: Tokens.space-row-pad-x;
+                        spacing: Tokens.space-row-gap;
+                        Text {
+                            text: j.name;
+                            vertical-alignment: center;
+                            color: j.enabled ? Tokens.text-default : Tokens.text-subtle;
+                            accessible-label: j.name;
+                        }
+                    }
+                }
+                if root.junctions.length == 0: Text {
+                    text: root.daemon-state == "down" ? @tr("juncd is not running") : @tr("No Junctions yet");
+                    color: Tokens.text-subtle;
+                    wrap: word-wrap;
+                }
+                Rectangle { }
+            }
+        }
+        Rectangle {
+            background: Tokens.surface-window;
+            VerticalLayout {
+                padding: Tokens.space-panel-pad;
+                spacing: Tokens.space-panel-gap;
+                if !root.stacked: HorizontalLayout {
+                    spacing: Tokens.space-panel-gap;
+                    Column { title: @tr("Inputs"); }
+                    Column { title: @tr("Bus"); }
+                    Column { title: @tr("Listen"); }
+                }
+                if root.stacked: VerticalLayout {
+                    spacing: Tokens.space-panel-gap;
+                    HorizontalLayout {
+                        spacing: Tokens.space-panel-gap;
+                        Column { title: @tr("Inputs"); }
+                        Column { title: @tr("Bus"); }
+                    }
+                    Column { title: @tr("Listen"); }
+                }
+            }
+        }
+    }
+}
