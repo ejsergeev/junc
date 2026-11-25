@@ -327,6 +327,15 @@ Disconnected ──socket appears / poll──▶ Connecting ──ok──▶ S
   still points at it, restore the saved value (if that node exists; else
   clear the key and let WirePlumber choose). Emit `DefaultRestored` (toast
   with Undo, design `defaultRestored`).
+- Implemented in `junc-core::defaults` (driven by the reconciler) and
+  persisted by `juncd` in `$XDG_STATE_HOME/junc/state.toml`. The `default`
+  metadata belongs to WirePlumber, so snapshots lag behind a change: setting
+  and restoring each wait until the snapshot shows the change before deciding
+  again (otherwise a stale snapshot looks like a user choice).
+- JUNC never fights the user: if the configured default is changed elsewhere
+  while a Junction holds it, JUNC reports `default_taken_over`, does not take
+  it back while the config still asks for that Junction, and treats the new
+  choice as the baseline (no restore later).
 - A Listen target `default` follows the system default sink: the daemon
   re-links when `default.audio.sink` changes. On Asahi Macs the default sink
   is a DSP filter-chain (`audio_effect.j293-convolver`) in front of the
