@@ -49,14 +49,23 @@ pub enum Cmd {
     /// List Junctions and Cables with their status.
     List,
     /// Show the daemon, or one Junction in detail.
-    Status { name: Option<String> },
+    Status {
+        /// Junction id or name; without it, the daemon.
+        name: Option<String>,
+    },
     /// Create a Junction or a Cable.
     #[command(subcommand)]
     Create(Create),
     /// Rename a Junction (its id stays).
-    Rename { name: String, new_name: String },
+    Rename {
+        /// Junction id or name (any case).
+        name: String,
+        /// The new name.
+        new_name: String,
+    },
     /// Copy a Junction.
     Duplicate {
+        /// Junction id or name (any case).
         name: String,
         /// Name of the copy.
         #[arg(long = "name")]
@@ -64,25 +73,37 @@ pub enum Cmd {
     },
     /// Delete a Junction and its routing.
     Delete {
+        /// Junction id or name (any case).
         name: String,
         /// Do not ask.
         #[arg(long)]
         yes: bool,
     },
     /// Turn a Junction on.
-    Enable { name: String },
+    Enable {
+        /// Junction id or name (any case).
+        name: String,
+    },
     /// Turn a Junction off.
-    Disable { name: String },
+    Disable {
+        /// Junction id or name (any case).
+        name: String,
+    },
     /// Turn a Junction on if it is off, and off if it is on.
-    Toggle { name: String },
+    Toggle {
+        /// Junction id or name (any case).
+        name: String,
+    },
     /// Turn a Junction on and make it the default input or output.
     Switch {
+        /// Junction id or name (any case).
         name: String,
         #[arg(long = "as")]
         role: Option<Role>,
     },
     /// Make a Junction the default input or output, or stop that.
     Default {
+        /// Junction id or name (any case).
         name: String,
         #[arg(long = "as", required_unless_present = "clear")]
         role: Option<Role>,
@@ -91,6 +112,7 @@ pub enum Cmd {
     },
     /// Set the volume of a Junction, one of its Inputs, or a Listen output.
     Volume {
+        /// Junction id or name (any case).
         name: String,
         /// `PERCENT`, or `INPUT PERCENT`.
         #[arg(num_args = 1..=2, required = true)]
@@ -108,14 +130,20 @@ pub enum Cmd {
     /// Link an Input channel to a Bus channel (`mic:1 2`), or a Bus channel
     /// to a Listen output channel (`1 speakers:2`).
     Link {
+        /// Junction id or name (any case).
         name: String,
+        /// `INPUT:CH` (an Input channel) or a Bus channel number.
         from: String,
+        /// A Bus channel number, or `LISTEN:CH` (a Listen output channel).
         to: String,
     },
     /// Remove a link (same arguments as `link`).
     Unlink {
+        /// Junction id or name (any case).
         name: String,
+        /// `INPUT:CH` (an Input channel) or a Bus channel number.
         from: String,
+        /// A Bus channel number, or `LISTEN:CH` (a Listen output channel).
         to: String,
     },
     /// Add or remove Listen outputs.
@@ -134,6 +162,7 @@ pub enum Cmd {
     Config(ConfigCmd),
     /// Apply a whole config file (`-` reads stdin).
     Apply {
+        /// A whole config file, or `-` for stdin.
         file: PathBuf,
         /// Show what would change; change nothing.
         #[arg(long)]
@@ -185,7 +214,10 @@ pub enum ConfigCmd {
 #[derive(Debug, Subcommand)]
 pub enum Create {
     /// An empty Junction.
-    Junction { name: String },
+    Junction {
+        /// Junction id or name (any case).
+        name: String,
+    },
     /// One app straight into another.
     Cable {
         /// Binary of the app that plays.
@@ -218,6 +250,7 @@ pub struct SourceArgs {
 pub enum InputCmd {
     /// Add an Input.
     Add {
+        /// Junction id or name (any case).
         name: String,
         #[command(flatten)]
         source: SourceArgs,
@@ -229,17 +262,33 @@ pub enum InputCmd {
         id: Option<String>,
     },
     /// Remove an Input.
-    Remove { name: String, input: String },
+    Remove {
+        /// Junction id or name (any case).
+        name: String,
+        /// Input id (see `junc status NAME`).
+        input: String,
+    },
     /// Turn an Input on.
-    Enable { name: String, input: String },
+    Enable {
+        /// Junction id or name (any case).
+        name: String,
+        /// Input id (see `junc status NAME`).
+        input: String,
+    },
     /// Turn an Input off.
-    Disable { name: String, input: String },
+    Disable {
+        /// Junction id or name (any case).
+        name: String,
+        /// Input id (see `junc status NAME`).
+        input: String,
+    },
 }
 
 #[derive(Debug, Subcommand)]
 pub enum BusCmd {
     /// Add channels: a stereo pair, or one with --mono.
     Add {
+        /// Junction id or name (any case).
         name: String,
         #[arg(long)]
         mono: bool,
@@ -248,18 +297,30 @@ pub enum BusCmd {
         count: u8,
     },
     /// Remove one channel; links to later channels move down.
-    Remove { name: String, channel: u8 },
+    Remove {
+        /// Junction id or name (any case).
+        name: String,
+        /// The Bus channel to remove (1-based).
+        channel: u8,
+    },
 }
 
 #[derive(Debug, Subcommand)]
 pub enum ListenCmd {
     /// Hear the Bus on an output (`default` follows the system output).
     Add {
+        /// Junction id or name (any case).
         name: String,
+        /// `default`, or an output node name.
         output: String,
         #[arg(long)]
         id: Option<String>,
     },
     /// Stop hearing the Bus on an output.
-    Remove { name: String, id: String },
+    Remove {
+        /// Junction id or name (any case).
+        name: String,
+        /// Listen output id.
+        id: String,
+    },
 }
