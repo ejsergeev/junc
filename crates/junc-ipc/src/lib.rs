@@ -10,6 +10,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod plan;
 pub mod view;
 
 use junc_core::diag::Diagnostic;

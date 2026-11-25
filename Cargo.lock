@@ -534,6 +534,7 @@ name = "junc-ipc"
 version = "0.1.0"
 dependencies = [
  "junc-core",
+ "junc-l10n",
  "serde",
  "serde_json",
  "zbus",
