@@ -17,6 +17,7 @@ pub mod matcher;
 pub mod migrate;
 pub mod model;
 pub mod plan;
+pub mod preset;
 pub mod proaudio;
 pub mod reconcile;
 pub mod schema;

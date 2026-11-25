@@ -113,11 +113,11 @@ pub fn to_toml(config: &Config) -> String {
     )
 }
 
-fn first_line(s: &str) -> String {
+pub(crate) fn first_line(s: &str) -> String {
     s.lines().next().unwrap_or(s).trim().to_owned()
 }
 
-fn shape_diagnostic(e: &toml::de::Error) -> Diagnostic {
+pub(crate) fn shape_diagnostic(e: &toml::de::Error) -> Diagnostic {
     let msg = first_line(e.message());
     if let Some((field, expected)) = parse_unknown_field(&msg) {
         let hint = match closest(&field, &expected) {
@@ -187,7 +187,7 @@ pub struct Finding {
 
 /// Location of the value (or, failing that, the key or enclosing table) at
 /// `path` in a parsed document.
-fn locate(doc: &Document<&str>, map: &SourceMap<'_>, path: &[Seg]) -> Option<Location> {
+pub(crate) fn locate(doc: &Document<&str>, map: &SourceMap<'_>, path: &[Seg]) -> Option<Location> {
     let mut best = None;
     walk_item(doc.as_item(), path, &mut best);
     best.map(|s: std::ops::Range<usize>| map.locate(s.start))
@@ -420,7 +420,12 @@ pub fn validate(config: &Config, flavor: Flavor) -> Vec<Finding> {
                 .with_hint("Add `[junction.cable]` with `to = { binary = \"…\" }`: the app that hears the Cable.")),
             (Kind::Cable, Some(c)) => {
                 check_match(&c.to, [jp(j), vec![Seg::Key("cable"), Seg::Key("to")]].concat(), flavor, &mut push);
-                if junc.input.len() != 1 || junc.input[0].matcher.kinds() != [MatchKind::App] {
+                // In a template the app may be a slot (its kind is checked
+                // with the slots).
+                let app_like = |k: &[MatchKind]| {
+                    k == [MatchKind::App] || (flavor == Flavor::Preset && k == [MatchKind::Slot])
+                };
+                if junc.input.len() != 1 || !app_like(&junc.input[0].matcher.kinds()) {
                     push(at("input"), Diagnostic::error(codes::CABLE,
                         format!("Cable '{}' needs exactly one app Input", junc.id))
                         .with_hint("A Cable carries one app into another; use a Junction to mix more."));

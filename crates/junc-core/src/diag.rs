@@ -164,6 +164,11 @@ pub mod codes {
     pub const CABLE: &str = "E_CONFIG_CABLE";
     /// A template slot in a config that is not a preset.
     pub const SLOT_OUTSIDE_PRESET: &str = "E_CONFIG_SLOT_OUTSIDE_PRESET";
+    /// A preset's slot is undeclared, declared twice, unused, or used where
+    /// its kind does not fit.
+    pub const PRESET_SLOT: &str = "E_PRESET_SLOT";
+    /// Slot values for a template are missing or name slots it lacks.
+    pub const PRESET_FILL: &str = "E_PRESET_FILL";
     /// Many Inputs on one Junction (warning).
     pub const MANY_INPUTS: &str = "W_CONFIG_MANY_INPUTS";
 }
