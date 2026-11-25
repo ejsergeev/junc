@@ -1,6 +1,6 @@
 ---
 name: junc
-description: Route audio on Linux with JUNC (PipeWire). Use for virtual microphones ("make a mic for Zoom with my USB mic and Spotify"), routing one app's audio into another app, combining or mixing inputs, sending a mix to headphones, separate tracks for streaming, the default input or output, and anything about junc, juncd, Junctions or Cables.
+description: Route audio on Linux with JUNC (PipeWire). Use for virtual microphones ("make a mic for Zoom with my USB mic and Spotify"), routing one app's audio into another app, combining or mixing inputs, sending a mix to headphones, separate tracks for streaming, the default input or output, saving or sharing a setup as a preset, templates, and anything about junc, juncd, Junctions or Cables.
 ---
 
 # JUNC
@@ -72,6 +72,16 @@ for each app you capture, that you capture it (see the safety rules).
 Config format and examples: junctions.md and recipes.md. The JSON Schema:
 `junc schema`.
 
+## Templates first
+
+For a new Junction or Cable that a built-in template covers (a mic plus an
+app, app to app, combining inputs, separate tracks, a stream mix), use the
+template: `junc template list --json`, then `junc create junction NAME
+--template T --slot ID=VALUE`. See presets.md, which also covers exporting
+and importing presets.
+
+## Direct commands
+
 Small, obvious changes may use direct commands instead (`junc enable`,
 `junc volume`, `junc input add`, …); say what will happen first. They apply
 immediately; there is no dry run for them.
@@ -106,11 +116,13 @@ junctions.md.
 - `exclusive` takes the app off the speakers while the Junction captures
   it, and gives it back when turned off. If the user then moves the app to
   another output themselves, JUNC reports it and does not move it back.
-- Presets and templates are not available yet: write the config yourself
-  from recipes.md.
+- Templates and presets: presets.md. A template makes the Junction at once
+  (no dry run); for anything it does not cover, write the config from
+  recipes.md.
 
 ## More
 
+- presets.md: templates, and exporting and importing presets.
 - recipes.md: Zoom mic, stream mix, app to app, combine inputs.
 - junctions.md: the config format in detail.
 - devices.md: finding apps and devices; Bluetooth and Apple Silicon notes.

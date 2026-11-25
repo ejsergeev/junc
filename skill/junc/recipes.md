@@ -1,5 +1,9 @@
 # Recipes
 
+The common setups also exist as templates (presets.md), which are quicker
+when they fit. The recipes show the config to write by hand, to adjust a
+setup, or to combine several.
+
 Each recipe is a whole config to merge into the copy you are editing (keep
 the user's existing Junctions), then validate, dry-run and apply as in
 SKILL.md. Replace the `device` and `binary` values with the ones
