@@ -9,9 +9,17 @@ set -euo pipefail
 step() { printf '\n== %s\n' "$*"; }
 fail() { echo "FAIL: $*"; exit 1; }
 
+trap 'echo "FAIL at line $LINENO: $BASH_COMMAND"' ERR
+
 step "boot"
-systemctl is-system-running --wait >/dev/null 2>&1 || true
-systemctl is-system-running || true
+# PID 1 starts with the container; wait until it has finished booting.
+for _ in $(seq 1 600); do
+  state=$(systemctl is-system-running 2>/dev/null || true)
+  [[ $state == running || $state == degraded ]] && break
+  sleep 0.1
+done
+echo "system: ${state:-unknown}"
+[[ $state == running || $state == degraded ]] || fail "systemd did not finish booting"
 
 step "install"
 install -m 755 /src/.ci-cache/target/release/juncd /src/.ci-cache/target/release/junc /usr/bin/
