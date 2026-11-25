@@ -522,6 +522,20 @@ D-Bus property with change signals, consumed by the bar plugin and the tray
   effort. Config in `~/.config/junc` is left for reinstall. Anything missed
   disappears at the next PipeWire restart because nothing re-creates it.
 
+As built in B6: the upgrade watcher is an inotify thread on the
+executable's directory (no timers; it polls the pacman lock only while a
+transaction runs, `JUNC_PACMAN_LOCK` overrides the path for tests). The
+daemon saves its state and `exec`s the same path with the same arguments;
+the new process logs that it was re-executed and adopts the graph like any
+restart (same PID, so systemd sees no restart). `junc teardown` disables the
+unit, refuses while a juncd started outside systemd still runs, then runs
+`juncd --teardown`: the daemon with an empty config and no D-Bus, which
+removes every JUNC object, returns streams it moved and restores the saved
+defaults, then exits (10 s limit). The config file is not touched. The
+`pre_remove` hook is `packaging/arch/junc.install`; it runs `junc teardown
+--yes` through `runuser` for each user `loginctl` lists with a session bus,
+with that user's `HOME` and runtime directory.
+
 ### 3.14 Service and activation
 
 - `juncd.service` (user unit, `packaging/systemd/`): `Type=notify`,
@@ -1439,8 +1453,10 @@ As built (A16), requirement → test (`crates/<crate>/tests/<file>`):
 | F25 | A dry run changes no node, link or file; doctor sees a healthy session | `junc-cli/cli.rs` `live_dry_run_changes_nothing_and_doctor_is_happy` |
 | §3.6 | PipeWire restarts: Junctions rebuilt (≈ 0.3 s after PipeWire is back) | `juncd/live.rs` `junctions_come_back_after_pipewire_restarts` |
 
-Still to come: F20 signal continuity across re-exec (B6) and the long
-nightly soak.
+| F20 | pacman replaces juncd mid-playback: it waits for the lock, re-execs in place, adopts every object; a counter signal arrives unbroken | `juncd/live.rs` `an_upgrade_reexecs_without_an_audio_gap` |
+| F20 | `junc teardown` leaves no `junc.managed` object and gives the default input back; `pre_remove` runs it per logged-in user | `junc-cli/cli.rs` `teardown_leaves_no_junc_object`, `pre_remove_tears_down_every_logged_in_session` |
+
+Still to come: the long nightly soak.
 
 ### 11.3 GUI tests
 

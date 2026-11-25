@@ -113,6 +113,16 @@ junc service enable   # start juncd now and at every login
 junc doctor           # check PipeWire, WirePlumber, pipewire-pulse, JACK and juncd
 ```
 
+Updating: install the new binaries the same way. A running `juncd` notices
+its executable was replaced (it waits for pacman to finish) and restarts
+itself in place; audio keeps playing because its devices and links live on
+in PipeWire.
+
+Removing: `junc teardown --yes` stops and disables `juncd`, removes every
+JUNC device and link, gives the default input and output back and unlinks
+the agent skill. Your config stays in `~/.config/junc`. The package does
+this for every logged-in user before it is removed.
+
 ### Your first virtual microphone
 
 ```sh

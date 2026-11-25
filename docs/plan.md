@@ -282,9 +282,18 @@ Daemon features first (they gate GUI screens):
   Listen; a null sink with one app playing and one recording became a
   Cable; the old modules kept running. Layer 1 on the real dumps: the
   Asahi DSP chains, Omarchy's mic and Bluetooth loopbacks are not offered.
-- [ ] **B6** [auto] Upgrade re-exec, `junc teardown`, pre_remove hook. Req:
+- [x] **B6** [auto] Upgrade re-exec, `junc teardown`, pre_remove hook. Req:
   F20. Acceptance: counter-signal continuity test across re-exec; teardown
   leaves no `junc.managed` object.
+  Done 2026-11-25 (architecture §3.13, as built): juncd re-execs itself
+  when its executable is replaced and pacman's lock is gone; `junc
+  teardown` with `juncd --teardown`; `packaging/arch/junc.install`
+  `pre_remove`. Layer 2: a 6 s counter played through a Junction while the
+  executable is replaced (lock held, then released) arrives with no gap
+  (286 720 consecutive frames; the rest is pw-cat's last partial buffer),
+  same PID, no JUNC object recreated; teardown leaves no `junc.managed`
+  object and the default input comes back. The hook is tested with
+  stand-in `loginctl`/`runuser`.
 - [ ] **B7** [auto] Capture indicator + `junc watch --json`. Req: F23.
   Acceptance: event stream tests.
 - [ ] **B8** [auto] Presets/templates: export, import with slots, built-in
