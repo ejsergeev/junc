@@ -1,0 +1,405 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JUNC configuration",
+  "description": "A `junctions.toml` file.",
+  "type": "object",
+  "properties": {
+    "junction": {
+      "description": "Junctions and Cables, in the order the sidebar shows them.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Junction"
+      }
+    },
+    "schema": {
+      "description": "Config schema version. This build reads 0 (migrated) and 1.",
+      "type": "integer",
+      "format": "uint32",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schema"
+  ],
+  "$defs": {
+    "Bus": {
+      "description": "The Bus of a Junction.",
+      "type": "object",
+      "properties": {
+        "channels": {
+          "description": "Number of channels, 1–64. Two channels are FL FR; more are AUX0….",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 64,
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "channels"
+      ]
+    },
+    "Cable": {
+      "description": "Target of a Cable.",
+      "type": "object",
+      "properties": {
+        "to": {
+          "description": "The app that hears the Cable as its input.",
+          "$ref": "#/$defs/Match"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "to"
+      ]
+    },
+    "DefaultRole": {
+      "description": "Default-device role of a Junction.",
+      "oneOf": [
+        {
+          "description": "Not a system default.",
+          "type": "string",
+          "const": "none"
+        },
+        {
+          "description": "System default input (apps that record from \"default\" get the Bus).",
+          "type": "string",
+          "const": "input"
+        },
+        {
+          "description": "System default output (apps that play to \"default\" feed the Junction).",
+          "type": "string",
+          "const": "output"
+        }
+      ]
+    },
+    "Follow": {
+      "description": "The literal `\"follow\"`.",
+      "oneOf": [
+        {
+          "description": "Follow the graph's rate.",
+          "type": "string",
+          "const": "follow"
+        }
+      ]
+    },
+    "Input": {
+      "description": "A source feeding a Junction's Bus.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Off keeps the Input and its Links in the config but routes nothing.",
+          "type": "boolean",
+          "default": true
+        },
+        "exclusive": {
+          "description": "Remove the app from the default output while it is captured (F11).",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "Stable id within the Junction.",
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+        },
+        "links": {
+          "description": "`[input channel, bus channel]` pairs, 1-based. Omitted = default mapping (F4).",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maxItems": 2,
+            "minItems": 2
+          }
+        },
+        "match": {
+          "description": "Which app stream, device, monitor or Junction this is (by identity,\nnever by PipeWire node id).",
+          "$ref": "#/$defs/Match"
+        },
+        "suppressed": {
+          "description": "Links another tool removed that the user chose to leave as is (F17).",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maxItems": 2,
+            "minItems": 2
+          }
+        },
+        "volume": {
+          "description": "Input volume in percent (F7).",
+          "type": "integer",
+          "format": "uint16",
+          "default": 100,
+          "maximum": 150,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "match"
+      ]
+    },
+    "Junction": {
+      "description": "A named virtual device (or a Cable, a Junction that carries one app into\nanother).",
+      "type": "object",
+      "properties": {
+        "bus": {
+          "description": "The Bus: the channels apps record from (F3).",
+          "$ref": "#/$defs/Bus",
+          "default": {
+            "channels": 2
+          }
+        },
+        "cable": {
+          "description": "Required for `kind = \"cable\"`: the app that hears the Cable.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Cable"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "default": {
+          "description": "Use this Junction as the system default input or output (F16).",
+          "$ref": "#/$defs/DefaultRole",
+          "default": "none"
+        },
+        "enabled": {
+          "description": "Off keeps the config but routes nothing; apps see silence (F8).",
+          "type": "boolean",
+          "default": true
+        },
+        "id": {
+          "description": "Stable id: lowercase letters, digits and `-`. The PipeWire node is\nnamed `junc.<id with - replaced by _>`.",
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+        },
+        "input": {
+          "description": "What feeds the Bus (F2).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Input"
+          }
+        },
+        "kind": {
+          "description": "`junction` or `cable`.",
+          "$ref": "#/$defs/Kind",
+          "default": "junction"
+        },
+        "listen": {
+          "description": "Outputs used to hear the Bus (F6).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Listen"
+          }
+        },
+        "name": {
+          "description": "Name shown to people and to other apps (any script).",
+          "type": "string"
+        },
+        "rate": {
+          "description": "Sample rate: `\"follow\"` the graph, or a fixed rate in Hz.",
+          "$ref": "#/$defs/Rate",
+          "default": "follow"
+        },
+        "volume": {
+          "description": "Master volume in percent (F7).",
+          "type": "integer",
+          "format": "uint16",
+          "default": 100,
+          "maximum": 150,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "Kind": {
+      "description": "Kind of a Junction.",
+      "oneOf": [
+        {
+          "description": "Mixes any Inputs into a Bus.",
+          "type": "string",
+          "const": "junction"
+        },
+        {
+          "description": "One app straight into another app (F5).",
+          "type": "string",
+          "const": "cable"
+        }
+      ]
+    },
+    "Listen": {
+      "description": "An output used to hear the Bus.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Off keeps the Listen output in the config but routes nothing.",
+          "type": "boolean",
+          "default": true
+        },
+        "id": {
+          "description": "Stable id within the Junction.",
+          "type": "string",
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+        },
+        "links": {
+          "description": "`[bus channel, output channel]` pairs, 1-based. Omitted = default mapping.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maxItems": 2,
+            "minItems": 2
+          }
+        },
+        "suppressed": {
+          "description": "Links another tool removed that the user chose to leave as is (F17).",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maxItems": 2,
+            "minItems": 2
+          }
+        },
+        "target": {
+          "description": "`\"default\"` follows the system output; otherwise an output `node.name`.",
+          "type": "string"
+        },
+        "volume": {
+          "description": "Listen volume in percent (F7).",
+          "type": "integer",
+          "format": "uint16",
+          "default": 100,
+          "maximum": 150,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target"
+      ]
+    },
+    "Match": {
+      "description": "How an Input or Cable target is identified. Exactly one kind of key must be\ngiven: app keys (`app`, `binary`, `role`, `node`), `device`, `monitor`,\n`junction`, or `slot` (presets and templates only).",
+      "type": "object",
+      "properties": {
+        "app": {
+          "description": "App name (`application.name`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "binary": {
+          "description": "App executable (`application.process.binary`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "device": {
+          "description": "Hardware input or output by stable `node.name`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "junction": {
+          "description": "Another Junction, by id (nesting).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "monitor": {
+          "description": "System audio: the monitor of the sink with this `node.name`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "node": {
+          "description": "Stream node name (`node.name`), narrows an app match.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "profile": {
+          "description": "Device profile to apply when the device appears, e.g. `\"pro-audio\"` (F15).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "description": "Media role (`media.role`), narrows an app match.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "slot": {
+          "description": "Template slot to fill in (presets and templates only).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Rate": {
+      "description": "Sample rate setting: `\"follow\"` or a rate in Hz.",
+      "anyOf": [
+        {
+          "description": "`\"follow\"`: use the graph's rate.",
+          "$ref": "#/$defs/Follow"
+        },
+        {
+          "description": "Fixed rate in Hz, 44100–192000.",
+          "type": "integer",
+          "format": "uint32",
+          "maximum": 192000,
+          "minimum": 44100
+        }
+      ]
+    }
+  }
+}
