@@ -15,6 +15,7 @@ mod doctor;
 mod edit;
 mod human;
 mod preset;
+mod report;
 mod service;
 mod skill;
 mod watch;
@@ -211,9 +212,18 @@ fn offline(cmd: &Cmd) -> Option<Result<Done>> {
                 Err(e) => Err(e),
             }
         }
-        Cmd::Doctor => {
+        Cmd::Doctor { bug_report } => {
             let client = Client::connect().ok();
-            let checks = doctor::checks(&doctor::Facts::gather(client.as_ref()));
+            let facts = doctor::Facts::gather(client.as_ref());
+            let checks = doctor::checks(&facts);
+            if *bug_report {
+                let text = report::gather(client.as_ref(), facts, checks.clone());
+                return Some(Ok(Done {
+                    revision: None,
+                    data: json!({ "report": text, "checks": checks }),
+                    text: text.trim_end().to_owned(),
+                }));
+            }
             let text = human::doctor(&checks);
             Ok(Done {
                 revision: None,
@@ -296,7 +306,7 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
             }
         }
         Cmd::Schema { .. }
-        | Cmd::Doctor
+        | Cmd::Doctor { .. }
         | Cmd::Config(_)
         | Cmd::Service(_)
         | Cmd::Skill(_)

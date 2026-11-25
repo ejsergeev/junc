@@ -93,7 +93,7 @@ Commands:
   schema     Print the JSON Schema of junctions.toml
   config     Find, check or edit the config file
   apply      Apply a whole config file (`-` reads stdin)
-  doctor     Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd
+  doctor     Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock, sample rates, the Asahi speakers and juncd
   service    Start juncd at login, or not (`systemctl --user` on juncd.service)
   skill      Make the JUNC skill visible to your coding agents, or not
   teardown   Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill. Your config stays for a reinstall
@@ -902,11 +902,12 @@ Options:
 ### `junc doctor`
 
 ```text
-Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd
+Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock, sample rates, the Asahi speakers and juncd
 
 Usage: junc doctor [OPTIONS]
 
 Options:
+      --bug-report   Print a report to paste into an issue: versions, the Junction graph, these checks, the config and juncd's recent log. No audio; user and host names, home paths and hardware addresses are replaced. Nothing is sent anywhere
       --json         Print one JSON document instead of text
   -q, --quiet        Print nothing on success
       --no-color     Do not color the output

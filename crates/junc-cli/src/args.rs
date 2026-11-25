@@ -198,8 +198,16 @@ pub enum Cmd {
         #[arg(long, value_name = "N")]
         expect_revision: Option<u64>,
     },
-    /// Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd.
-    Doctor,
+    /// Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock, sample
+    /// rates, the Asahi speakers and juncd.
+    Doctor {
+        /// Print a report to paste into an issue: versions, the Junction
+        /// graph, these checks, the config and juncd's recent log. No
+        /// audio; user and host names, home paths and hardware addresses
+        /// are replaced. Nothing is sent anywhere.
+        #[arg(long)]
+        bug_report: bool,
+    },
     /// Start juncd at login, or not (`systemctl --user` on juncd.service).
     #[command(subcommand)]
     Service(ServiceCmd),
