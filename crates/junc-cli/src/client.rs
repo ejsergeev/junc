@@ -54,6 +54,22 @@ impl Client {
         })
     }
 
+    /// Whether juncd runs now. Unlike a method call, asking does not
+    /// start it through D-Bus activation.
+    pub fn running(&self) -> bool {
+        zbus::block_on(async {
+            let dbus = zbus::fdo::DBusProxy::new(&self.conn).await?;
+            let name = zbus::names::BusName::try_from(junc_ipc::BUS_NAME)?;
+            dbus.name_has_owner(name).await.map_err(zbus::Error::from)
+        })
+        .unwrap_or(false)
+    }
+
+    /// Describe, but only from a daemon that already runs.
+    pub fn describe_if_running(&self) -> Option<Describe> {
+        self.running().then(|| self.describe().ok()).flatten()
+    }
+
     pub fn describe(&self) -> Result<Describe> {
         let text = zbus::block_on(self.daemon.describe()).map_err(|e| failed(&e))?;
         serde_json::from_str(&text).map_err(|e| {

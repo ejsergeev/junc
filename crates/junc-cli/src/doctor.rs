@@ -103,7 +103,7 @@ pub fn metadata(text: &str) -> Vec<(String, String)> {
 
 fn juncd(client: Option<&Client>) -> Check {
     let fix = "systemctl --user start juncd";
-    let Some(d) = client.and_then(|c| c.describe().ok()) else {
+    let Some(d) = client.and_then(Client::describe_if_running) else {
         return check(
             "juncd",
             Status::Down,
