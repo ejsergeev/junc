@@ -240,6 +240,7 @@ pub fn input_add(
     index: usize,
     source: &Source,
     exclusive: bool,
+    pro_audio: bool,
     id: Option<&str>,
 ) -> Result<String> {
     let source = match source {
@@ -260,7 +261,11 @@ pub fn input_add(
         Some(id) => id.to_owned(),
         None => unique_id(source.label(), j.input.iter().map(|i| i.id.as_str())),
     };
-    j.input.push(input(id.clone(), source.matcher(), exclusive));
+    let mut matcher = source.matcher();
+    if pro_audio {
+        matcher.profile = Some(junc_core::proaudio::PRO_AUDIO.to_owned());
+    }
+    j.input.push(input(id.clone(), matcher, exclusive));
     Ok(id)
 }
 
@@ -613,22 +618,39 @@ name = "OBS Mix"
     fn inputs_and_listens_are_added_and_removed() {
         let mut c = cfg();
         assert_eq!(
-            input_add(&mut c, 1, &Source::App("firefox".into()), true, None)
+            input_add(&mut c, 1, &Source::App("firefox".into()), true, false, None)
                 .ok()
                 .as_deref(),
             Some("firefox")
         );
         assert_eq!(
-            input_add(&mut c, 1, &Source::Junction("Zoom Mic".into()), false, None)
-                .ok()
-                .as_deref(),
+            input_add(
+                &mut c,
+                1,
+                &Source::Junction("Zoom Mic".into()),
+                false,
+                false,
+                None
+            )
+            .ok()
+            .as_deref(),
             Some("zoom")
         );
         assert_eq!(
             c.junction[1].input[1].matcher.junction.as_deref(),
             Some("zoom")
         );
-        assert!(input_add(&mut c, 1, &Source::App("x".into()), false, Some("firefox")).is_err());
+        assert!(
+            input_add(
+                &mut c,
+                1,
+                &Source::App("x".into()),
+                false,
+                false,
+                Some("firefox")
+            )
+            .is_err()
+        );
         assert_eq!(
             listen_add(&mut c, 1, "default", None).ok().as_deref(),
             Some("default")

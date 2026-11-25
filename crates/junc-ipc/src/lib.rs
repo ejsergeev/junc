@@ -26,7 +26,7 @@ pub const DAEMON_IFACE: &str = "io.github.ejsergeev.Junc1.Daemon";
 /// Junction interface.
 pub const JUNCTION_IFACE: &str = "io.github.ejsergeev.Junc1.Junction";
 /// API version (major, minor). Minor grows with additive changes.
-pub const API_VERSION: (u32, u32) = (1, 0);
+pub const API_VERSION: (u32, u32) = (1, 1);
 
 /// Object path of a Junction: ids are `[a-z0-9-]`, and `-` is not allowed in
 /// object paths, so it becomes `_2d` (its hex code, D-Bus style).

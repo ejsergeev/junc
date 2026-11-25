@@ -154,7 +154,7 @@ fn every_call_round_trips() {
     let Some(env) = start("calls") else { return };
     zbus::block_on(async {
         let (conn, d) = connect(&env).await;
-        assert_eq!(d.api_version().await.expect("D-Bus call"), (1, 0));
+        assert_eq!(d.api_version().await.expect("D-Bus call"), (1, 1));
         assert_eq!(d.state().await.expect("D-Bus call"), "starting");
         assert_eq!(d.revision().await.expect("D-Bus call"), 1);
         assert_eq!(d.config_error().await.expect("D-Bus call"), "");

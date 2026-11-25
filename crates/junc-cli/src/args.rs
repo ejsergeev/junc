@@ -257,6 +257,10 @@ pub enum InputCmd {
         /// Take the app away from the default output while captured.
         #[arg(long)]
         exclusive: bool,
+        /// Switch the device's card to Pro Audio for all its channels, now
+        /// and whenever it is plugged in (see `devices` in `junc describe`).
+        #[arg(long, requires = "device")]
+        pro_audio: bool,
         /// Id of the new Input.
         #[arg(long)]
         id: Option<String>,

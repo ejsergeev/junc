@@ -228,6 +228,73 @@ pub struct Describe {
     pub defaults: DefaultsView,
     /// Nodes available to route.
     pub candidates: Vec<Candidate>,
+    /// Sound cards and their profiles (API 1.1).
+    #[serde(default)]
+    pub devices: Vec<DeviceView>,
+}
+
+/// A sound card (PipeWire device) and what it offers.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DeviceView {
+    /// `device.name` (also accepted as `match.device` with a `profile`).
+    pub name: String,
+    /// Human name.
+    pub description: String,
+    /// `alsa`, `bluez5`, …
+    pub api: String,
+    /// Active profile.
+    pub profile: Option<String>,
+    /// Profiles that can be used now.
+    pub profiles: Vec<String>,
+    /// Input channels in the active profile (widest capture node).
+    pub input_channels: u32,
+    /// Input channels in groups of eight, as the GUI shows them.
+    pub channel_groups: Vec<[u32; 2]>,
+    /// Present when Pro Audio would give more inputs (F15): add the device
+    /// Input with `profile = "pro-audio"` (`junc input add … --pro-audio`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pro_audio: Option<ProAudioView>,
+}
+
+/// What switching a card to Pro Audio would give.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProAudioView {
+    /// Input channels now.
+    pub now: u32,
+    /// Input channels in Pro Audio; `None` when only "available" is known.
+    pub all: Option<u32>,
+}
+
+/// Sound cards in the graph, by name.
+pub fn devices(graph: &Graph) -> Vec<DeviceView> {
+    let mut out: Vec<DeviceView> = graph
+        .devices
+        .values()
+        .filter(|d| !d.name().is_empty())
+        .map(|d| {
+            let input_channels = junc_core::proaudio::capture_channels(graph, d);
+            DeviceView {
+                name: d.name().to_owned(),
+                description: d.props.get("device.description").unwrap_or("").to_owned(),
+                api: d.props.get("device.api").unwrap_or("").to_owned(),
+                profile: d.active_profile.clone(),
+                profiles: d
+                    .profiles
+                    .iter()
+                    .filter(|p| p.available)
+                    .map(|p| p.name.clone())
+                    .collect(),
+                input_channels,
+                channel_groups: junc_core::proaudio::channel_groups(input_channels),
+                pro_audio: junc_core::proaudio::offer(graph, d).map(|o| ProAudioView {
+                    now: o.now,
+                    all: o.all,
+                }),
+            }
+        })
+        .collect();
+    out.sort_by(|a, b| a.name.cmp(&b.name));
+    out
 }
 
 fn status_of(statuses: &[EntityStatus], junction: &str, entity: &Entity) -> (State, Vec<u32>) {
@@ -407,5 +474,6 @@ pub fn describe(
             output: g.defaults.sink.clone(),
         }),
         candidates: graph.map(candidates).unwrap_or_default(),
+        devices: graph.map(devices).unwrap_or_default(),
     }
 }

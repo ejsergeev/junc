@@ -536,13 +536,14 @@ fn input(c: &Client, cmd: InputCmd) -> Result<Done> {
             name,
             source,
             exclusive,
+            pro_audio,
             id,
         } => {
             let source = to_source(source);
             let mut shown = String::new();
             let (id, rev) = c.edit(|cfg| {
                 let i = named(cfg, &name, &mut shown)?;
-                edit::input_add(cfg, i, &source, exclusive, id.as_deref())
+                edit::input_add(cfg, i, &source, exclusive, pro_audio, id.as_deref())
             })?;
             let text = trf(
                 "Added Input {id} to {name}.",

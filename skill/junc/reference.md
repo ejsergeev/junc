@@ -404,6 +404,7 @@ Options:
       --junction <NAME>  Another Junction
       --lang <CODE>      Language for messages (e.g. de, pt_BR)
       --exclusive        Take the app away from the default output while captured
+      --pro-audio        Switch the device's card to Pro Audio for all its channels, now and whenever it is plugged in (see `devices` in `junc describe`)
       --id <ID>          Id of the new Input
   -h, --help             Print help
 ```
