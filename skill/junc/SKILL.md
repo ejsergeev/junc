@@ -22,7 +22,7 @@ daemon `juncd` keeps the routing alive while apps and devices come and go.
   system output).
 - **Cable**: one app straight into another app.
 - **Exclusive**: the app's audio goes only into the Junction, not to the
-  speakers too.
+  speakers too (app Inputs only).
 
 ## First, always
 
@@ -103,6 +103,9 @@ junctions.md.
   touching the app's own volume. JUNC owns these volumes: a change made in
   another mixer to a JUNC device is not saved and is replaced by the
   config's value the next time JUNC sets it.
+- `exclusive` takes the app off the speakers while the Junction captures
+  it, and gives it back when turned off. If the user then moves the app to
+  another output themselves, JUNC reports it and does not move it back.
 - Presets and templates are not available yet: write the config yourself
   from recipes.md.
 
