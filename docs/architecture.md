@@ -970,7 +970,9 @@ an SNI host is present.
 ## 8. Localization
 
 - **Languages**: 46 left-to-right languages of Omarchy's registry in v1;
-  `ar`, `he`, `fa`, `ur` show English until RTL lands (PRD). Registry =
+  `ar`, `he`, `fa`, `ur` show English until RTL lands (PRD). The Settings
+  language picker lists only the 46 (its note reads "46 languages", not the
+  design's "50"); the RTL four are added with RTL. Registry =
   Omarchy's `default/i18n/locales.json` (vendored copy, updated by a CI job
   that diffs upstream).
 - **Resolution order**: Settings override → `$OMARCHY_LANGUAGE_FILE` or

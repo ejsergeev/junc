@@ -342,21 +342,10 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | Signing key handling | A leaked subkey compromises users | Offline primary, CI-only subkey, protected environment, documented revocation. |
 | Machine-drafted translations | Wrong or awkward UI text | Marked machine-drafted; short strings; Weblate after v1. |
 
-## Open questions (with recommendations)
+## Open questions
 
-1. **PRD v1 scope table vs. fixed decision.** The PRD's Delivery table puts
-   F13 and F18 in v1.1; the fixed decision says full F1–F25 in v1.
-   Recommendation: follow the fixed decision (plan does) and update the PRD
-   table.
-2. **Split packages.** Recommendation: `junc` (daemon + CLI + skill) and
-   `junc-gui`; the Omarchy install entry installs `junc-gui`. Drop the PRD's
-   `junc-bin` name (an AUR convention with no meaning in a binary repo).
-3. **Language picker count.** Design says "50 languages"; v1 ships 46 and RTL
-   shows English. Recommendation: list 46 in v1; add the four RTL languages
-   when RTL ships.
-4. **Junction node class** (Audio/Duplex vs two nodes) is decided by spike S1;
-   it changes what users see in other apps. Recommendation: accept the spike's
-   result without a further owner decision unless it is the two-node fallback.
+None open. New questions go here with a recommendation, and move to the
+decisions log once the owner answers.
 
 ## Decisions log
 
@@ -370,3 +359,7 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | 2026-11-25 | Real devices: NI Komplete Audio 2 (USB), Google Pixel Buds 2a, Apple AirPods (Bluetooth) | owner |
 | 2026-11-25 | Hardware layer 4 (emulated UAC2 gadget) skipped | owner |
 | 2026-11-25 | Raspberry Pi 4 performance targets are best-effort | owner |
+| 2026-11-25 | Full F1–F25 in v1; the PRD's Delivery table is updated to match (F13 and F18 move from v1.1 to v1) | owner |
+| 2026-11-25 | Split packages `junc` (daemon, CLI, skill) and `junc-gui`; Omarchy's install entry installs `junc-gui`; no `junc-bin` | owner |
+| 2026-11-25 | The language picker lists the 46 v1 languages; the four RTL languages are added when RTL ships | owner |
+| 2026-11-25 | The Junction node class follows spike S1 without another owner decision, unless S1 ends in the two-node fallback | owner |
