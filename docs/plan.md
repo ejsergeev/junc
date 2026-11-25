@@ -355,10 +355,21 @@ GUI foundation:
   S6 passes on Slint 1.19.1 (`bench/spikes/s6/`): live switch with
   accessible labels, plurals with ICU4X-formatted counts; GUI catalogs need
   `msgctxt` = component name.
-- [ ] **B12** [auto] `junc-gui` skeleton: IPC client, AppState, ThemeService
+- [x] **B12** [auto] `junc-gui` skeleton: IPC client, AppState, ThemeService
   with live Omarchy reload and fallback themes, window sizing. Req: F21.
   Acceptance: theme switch test on the owner laptop (`omarchy-theme-set`)
   retints without restart.
+  Done 2026-11-25 (architecture §7.7, as built): Spec tokens derived from
+  `colors.toml`/`shell.toml`; theme service following `omarchy-theme-set`'s
+  swap and edits in place, built-in Tokyo Night / Flexoki Light by the
+  portal colour scheme otherwise; Slint window skeleton with the §7.1 sizes;
+  IPC client and AppState following juncd live. Owner laptop (owner asked
+  for every theme, not two): all 24 Omarchy themes applied in turn under one
+  running window, sidebar colour pixel-exact for each, same PID; Osaka Jade
+  ships no colours in Omarchy 4.5.0, so JUNC shows its built-in theme there.
+  The font comes from fontconfig's monospace alias (the live run showed a
+  proportional font before that fix). cargo-deny now flags "unmaintained"
+  for direct dependencies only (owner decision below).
 - [ ] **B13** [auto] Component library per Spec with the a11y fixes and a
   component-gallery scenario. Acceptance: gallery screenshots match the Spec
   board; AT-SPI dump shows labels, switch description, focus rings.
@@ -502,4 +513,5 @@ decisions log once the owner answers.
 | 2026-11-25 | Alpha go: tag `v0.1.0-alpha` | owner |
 | 2026-11-25 | The PRD recovery target (< 1 s after a PipeWire restart) is JUNC's share, from PipeWire and the devices being back; the whole stack's return is tracked, not gated | owner |
 | 2026-11-25 | Cables deliver through `target.object` and WirePlumber's linking instead of JUNC links into the target app (spike S11) | developer |
+| 2026-11-25 | cargo-deny raises "unmaintained" for JUNC's direct dependencies only; vulnerabilities and yanked crates fail anywhere. Slint 1.19.1 brings unmaintained chrono, pin-utils, ttf-parser, zvariant and zbus_names | owner |
 | 2026-11-25 | D-Bus carries structured values (Junction view, `Describe`, diagnostics, plans, notices) as JSON strings with the `--json` shapes instead of `a{sv}`; API v1.0 ships the calls the CLI needs, the rest arrive as minor versions | developer |

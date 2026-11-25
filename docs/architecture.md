@@ -1275,6 +1275,40 @@ Settings › "Follow Omarchy theme" off, or not on Omarchy: built-in Tokyo Night
 (dark) and Flexoki Light (light), chosen by the portal color scheme
 (`org.freedesktop.appearance color-scheme`).
 
+As built (B12), in `junc-gui` (a library plus a thin `main.rs`, so the logic
+is tested without a display):
+
+- `theme.rs` reads `colors.toml` roles and `shell.toml` (`[controls]`
+  alphas, `[spacing] scale`, `[font] base-size`) and derives every Spec
+  token with the Spec board's formulas (`mix` per channel, foreground
+  alphas, status inks moved toward the foreground in 10 % steps until
+  4.5:1 on a card). Missing roles take the nearest one. The font family is
+  what `fc-match monospace` names (Slint does not resolve fontconfig
+  aliases; JetBrains Mono on Omarchy).
+- `theme_service.rs` watches `…/omarchy/current` for the rename
+  `omarchy-theme-set` makes (`rm -rf theme; mv next-theme theme`) and the
+  theme directory for edits in place (re-watched after each swap), waits
+  150 ms of quiet, then loads once. A theme without readable colours falls
+  back to the built-in theme: Omarchy 4.5.0 lists Osaka Jade but ships
+  only its wallpapers. `$OMARCHY_THEME_DIR` overrides the location.
+- `ui/tokens.slint` (`Tokens` global, assigned in one pass by
+  `ui::apply`) and `ui/app.slint` (sidebar 300/240 px, Inputs · Bus ·
+  Listen, Listen stacked under 780 px; the window's size never comes from
+  its content). Slint 1.19.1 without Qt: winit, femtovg, software renderer,
+  accessibility. Its generated code needs `unsafe`, so the library denies
+  `unsafe_code` and allows it only in the generated module.
+- `daemon.rs` + `state.rs`: the IPC client re-reads `Describe` on
+  `GraphChanged`, `Notice`, `Revision`/`Junctions`/`CaptureApps` changes
+  and juncd's name owner coming or going; AppState turns it into the
+  sidebar rows and juncd's state (`down` while away).
+- Tests: Spec values for both built-in themes; a live swap done as
+  `omarchy-theme-set` does it; one window retinted, resized and labelled
+  on Slint's testing backend; juncd followed on a private bus. On the
+  owner's M1 every one of Omarchy's 24 themes was applied in turn under
+  one running window: the sidebar matched each theme's `dark_background`
+  to the pixel (Osaka Jade: the built-in Tokyo Night), with no restart.
+- CI installs `fontconfig` (Slint's text stack links it).
+
 ### 7.8 Tray
 
 `ksni` StatusNotifierItem with DBusMenu: one check item per Junction/Cable,
