@@ -444,3 +444,79 @@ fn listen_default_follows_the_system_output() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+// --- F22: hand edits ----------------------------------------------------------
+
+#[test]
+fn hand_edits_apply_live_and_bad_edits_keep_the_last_good_config() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-edits-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let has = |g: &Graph, name: &str| g.node_by_name(name).is_some_and(|n| n.is_junc());
+
+    let (_d, log) = run_juncd(
+        &dir,
+        "edits",
+        "schema = 1\n# my notes\n[[junction]]\nid = \"a\"\nname = \"A\"\n",
+    );
+    assert!(wait_for(&rx, &mut g, Duration::from_secs(5), |g| has(g, "junc.a")).is_some());
+    let cfg = dir.join("edits.toml");
+
+    // A valid edit, written the way editors do (temp file + rename).
+    let tmp = dir.join(".edits.toml.swp");
+    std::fs::write(&tmp, "schema = 1\n# my notes\n[[junction]]\nid = \"a\"\nname = \"A\"\n[[junction]]\nid = \"b\"\nname = \"B\"\n")
+        .expect("write");
+    std::fs::rename(&tmp, &cfg).expect("rename");
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| has(g, "junc.b")).is_some(),
+        "edit not applied"
+    );
+
+    // An invalid edit: reported with a position, nothing changes.
+    std::fs::write(
+        &cfg,
+        "schema = 1\n[[junction]]\nid = \"a\"\nname = \"A\"\nvolum = 3\n",
+    )
+    .expect("write");
+    std::thread::sleep(Duration::from_millis(500));
+    while let Ok(Event::Graph(n)) = rx.try_recv() {
+        g = *n;
+    }
+    assert!(
+        has(&g, "junc.a") && has(&g, "junc.b"),
+        "last good config must stay in use"
+    );
+    let text = read(&log);
+    assert!(
+        text.contains("notice config_error")
+            && text.contains("edits.toml:5:1")
+            && text.contains("Did you mean 'volume'"),
+        "{text}"
+    );
+
+    // Restarting with the broken file uses the last good config.
+    drop(_d);
+    let child = Command::new(env!("CARGO_BIN_EXE_juncd"))
+        .arg("--config")
+        .arg(&cfg)
+        .arg("--state-dir")
+        .arg(&dir)
+        .stderr(std::fs::File::create(dir.join("restart.log")).expect("log"))
+        .spawn()
+        .expect("juncd");
+    let restarted = Kill(child);
+    std::thread::sleep(Duration::from_millis(800));
+    let text = read(&dir.join("restart.log"));
+    assert!(text.contains("using the last good config"), "{text}");
+    drop(restarted);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
