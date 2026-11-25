@@ -1,3 +1,5 @@
 /target/
 *.pkg.tar.zst
 /.ci-cache/
+# pipewire-pulse writes its cookie into the isolated config dir
+/bench/validation/bench/ci-config/pulse/
