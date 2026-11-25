@@ -31,7 +31,7 @@ volume = 70
 ```
 
 `volume` is a percentage of full level (100 = unchanged); 70 is a
-moderate cut. Volume is not applied yet in this version (see SKILL.md).
+moderate cut (the scale is cubic, like PulseAudio's: 70 % is about −9 dB).
 In the call app, pick "Zoom Mic" as the microphone. To have every app use
 it, ask the user first, then add `default = "input"` to the Junction.
 

@@ -99,10 +99,10 @@ junctions.md.
 
 ## In this version
 
-- `volume` is saved in the config and shown everywhere, but this alpha
-  build does not change loudness yet; a later version applies it. Tell the
-  user when a request depends on volume ("Spotify quieter"): put it in the
-  plan you show, and suggest the app's own volume control meanwhile.
+- `volume` (Junction, Input, Listen) changes loudness at once, without
+  touching the app's own volume. JUNC owns these volumes: a change made in
+  another mixer to a JUNC device is not saved and is replaced by the
+  config's value the next time JUNC sets it.
 - Presets and templates are not available yet: write the config yourself
   from recipes.md.
 
