@@ -128,12 +128,37 @@ fn ms(d: Duration) -> f64 {
     d.as_secs_f64() * 1000.0
 }
 
-/// Proportional set size of a process, in kB.
-fn pss_kb(pid: u32) -> Option<f64> {
+/// A field of `/proc/<pid>/smaps_rollup`, in kB.
+fn rollup_kb(pid: u32, field: &str) -> Option<f64> {
     let text = std::fs::read_to_string(format!("/proc/{pid}/smaps_rollup")).ok()?;
     text.lines()
-        .find_map(|l| l.strip_prefix("Pss:"))
+        .find_map(|l| l.strip_prefix(field)?.strip_prefix(':'))
         .and_then(|v| v.trim().trim_end_matches(" kB").trim().parse().ok())
+}
+
+/// The mappings that weigh most, for the log: where memory goes.
+fn top_mappings(pid: u32) -> String {
+    let text = std::fs::read_to_string(format!("/proc/{pid}/smaps")).unwrap_or_default();
+    let mut maps: Vec<(u64, String)> = Vec::new();
+    let mut name = String::new();
+    for l in text.lines() {
+        let first = l.split_whitespace().next().unwrap_or("");
+        if first.contains('-') && first.chars().all(|c| c.is_ascii_hexdigit() || c == '-') {
+            name = l.split_whitespace().nth(5).unwrap_or("[anon]").to_owned();
+        } else if let Some(v) = l.strip_prefix("Pss:") {
+            let kb: u64 = v.trim().trim_end_matches(" kB").trim().parse().unwrap_or(0);
+            match maps.iter_mut().find(|(_, n)| *n == name) {
+                Some((k, _)) => *k += kb,
+                None => maps.push((kb, name.clone())),
+            }
+        }
+    }
+    maps.sort_by_key(|m| std::cmp::Reverse(m.0));
+    maps.iter()
+        .take(8)
+        .map(|(k, n)| format!("{k} kB {n}"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// Context switches of all threads of a process: each one is a wakeup.
@@ -324,7 +349,22 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
 
     // Memory and idle cost with ten Junctions.
     std::thread::sleep(Duration::from_secs(1));
-    m.insert("pss_kb".into(), pss_kb(pid).ok_or("cannot read PSS")?);
+    m.insert(
+        "pss_kb".into(),
+        rollup_kb(pid, "Pss").ok_or("cannot read PSS")?,
+    );
+    // Tracked, not gated: what the PSS is made of.
+    for (metric, field) in [
+        ("rss_kb", "Rss"),
+        ("pss_anon_kb", "Pss_Anon"),
+        ("pss_file_kb", "Pss_File"),
+        ("pss_shmem_kb", "Pss_Shmem"),
+    ] {
+        if let Some(v) = rollup_kb(pid, field) {
+            m.insert(metric.into(), v);
+        }
+    }
+    log(&format!("largest mappings: {}", top_mappings(pid)));
     let before = switches(pid);
     std::thread::sleep(Duration::from_secs(o.idle_secs));
     #[allow(clippy::cast_precision_loss)]
