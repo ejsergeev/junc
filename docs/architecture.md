@@ -1646,6 +1646,26 @@ Still to come: the long nightly soak.
   `keyboard_walk.sh`, `interaction_test.sh`): role/name/state tree per
   scenario compared to an expected dump; Tab order; switch/slider/picker
   keyboard behaviour. CI on Xvfb + headless Weston.
+As built (B14): `junc-gui --scenario X [--theme light|dark] [--size WxH]
+[--snapshot OUT.png]` (feature `scenarios`). A fixture
+(`tests/fixtures/scenarios/<name>.toml`) gives a config, a graph from
+`tests/fixtures/graphs/`, juncd's state, the board's theme and size; the
+mock IPC runs `Reconciler` on `MockBackend` until it settles and builds the
+`Describe` juncd would send (`scenario.rs`). `--snapshot` renders offscreen
+(an own Slint platform, software renderer, scale 1) with a font collection
+holding only `crates/junc-gui/fonts/` (an 80 KB subset of JetBrains Mono
+Nerd Font, OFL; `scripts/gui/subset-font.sh`), so pixels do not depend on
+the machine: goldens made on the owner's M1 pass in CI's x86_64 and
+aarch64 containers. `tests/snapshots.rs`: goldens in `tests/golden/gui/`
+(≤ 0.2 % of pixels may differ by ≤ 24 per channel), a real change must
+fail, renders are deterministic. `scripts/gui/atspi-check.sh` runs a
+scenario in `scripts/gui/session.sh`'s private session (Xvfb, own bus,
+AT-SPI bus and registry; X11 window via winit) and diffs the tree with
+`tests/golden/atspi/`. `scripts/ci/check.sh` runs both on every PR (CI
+installs Xvfb, at-spi2-core, python-gobject, a font and the X11 libraries
+winit loads). Scenarios so far: `default` (board 1) and `gallery`; the
+other boards, languages and Weston come with the screens that show them.
+
 - **Orca**: `orca_test.sh` speech log on the owner laptop under Hyprland,
   keyboard via `wtype` with a focus guard (`interaction_test_wayland.sh`,
   `orca_test_wayland.sh`); at least 3 s between key presses so phrases are

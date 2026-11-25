@@ -384,9 +384,19 @@ GUI foundation:
   with a "50%" value (fixed: plain number). Keyboard and accessible
   behaviour tested on Slint's testing backend (4 tests). Orca on the owner
   laptop waits for real screens.
-- [ ] **B14** [auto] Scenario harness (`--scenario`, mock IPC), screenshot
+- [x] **B14** [auto] Scenario harness (`--scenario`, mock IPC), screenshot
   pipeline with goldens, AT-SPI CI job. Acceptance: one scenario end to end
   in CI on both arches.
+  Done 2026-11-25 (architecture §11.3, as built): fixtures with a mock IPC
+  that settles config + graph like juncd; offscreen snapshots with a bundled
+  font subset; screenshot goldens with a tolerance and a negative test;
+  AT-SPI tree goldens from a private Xvfb + AT-SPI session; both in
+  `check.sh`. CI on x86_64 and aarch64: the `default` and `gallery`
+  scenarios match the goldens made on the owner's M1, and their AT-SPI
+  trees match. CI needed fontconfig before and now Xvfb, at-spi2-core,
+  python-gobject, a font and winit's X11 libraries. One CI run saw
+  `enable_stays_fast` at p95 271 ms on aarch64 (gate 250 ms); it passed on
+  the next runs.
 - [ ] **B15** [auto] Meter pipeline + VisibilityService; spike S7. Req: F7,
   performance. Acceptance: CPU hidden 0 % gate in CI; on the owner laptop
   meters stop within 1 s when minimized or on another workspace.
