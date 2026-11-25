@@ -22,7 +22,7 @@ id = "spotify"
 match = { binary = "spotify" }
 enabled = true
 volume = 70
-exclusive = false            # true: the app is no longer heard on the speakers
+exclusive = false            # true: the app is no longer heard on the speakers (apps only)
 links = [[1, 1], [2, 2]]     # [input channel, Bus channel]; omit for the default
 
 [[junction.listen]]
