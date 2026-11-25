@@ -173,6 +173,18 @@ pub enum Action {
         /// `node.name` to make default; `None` lets WirePlumber choose.
         name: Option<String>,
     },
+    /// Set a JUNC node's volume (`Props` `channelVolumes`, every channel).
+    /// On the gain nodes this scales what they pass on (they are created
+    /// with `monitor.channel-volumes`); on a Junction's source, what apps
+    /// record and every Listen output hear.
+    SetVolume {
+        /// Node id.
+        node: u32,
+        /// Its channel count.
+        channels: u8,
+        /// Volume in percent; the backend sets [`crate::model::gain`] of it.
+        percent: u16,
+    },
     /// Set (or clear) a stream's `target.object` in the `default` metadata,
     /// as moving it in pavucontrol does; WirePlumber then links it to the
     /// target and drops its default routing (spikes S5, S11).
@@ -207,6 +219,9 @@ impl fmt::Display for Action {
                 Some(n) => write!(f, "set {} to {n}", kind.metadata_key()),
                 None => write!(f, "clear {}", kind.metadata_key()),
             },
+            Self::SetVolume { node, percent, .. } => {
+                write!(f, "set the volume of node {node} to {percent}%")
+            }
             Self::SetTarget { node, target, .. } => match target {
                 Some(t) => write!(f, "send stream {node} to {t}"),
                 None => write!(f, "return stream {node} to the default"),
@@ -242,6 +257,7 @@ pub trait Backend {
 pub struct MockBackend {
     graph: Graph,
     next_id: u32,
+    volumes: std::collections::BTreeMap<u32, f32>,
 }
 
 impl MockBackend {
@@ -261,7 +277,13 @@ impl MockBackend {
         Self {
             graph,
             next_id: max + 1000,
+            volumes: std::collections::BTreeMap::new(),
         }
+    }
+
+    /// The volume last set on a node (1.0 if never set).
+    pub fn volume(&self, node: u32) -> f32 {
+        self.volumes.get(&node).copied().unwrap_or(1.0)
     }
 
     /// Mutable access, to simulate apps and devices coming and going.
@@ -428,6 +450,14 @@ impl Backend for MockBackend {
                         }
                     }
                 }
+            }
+            Action::SetVolume { node, percent, .. } => {
+                if !self.graph.nodes.get(node).is_some_and(Node::is_junc) {
+                    return Err(BackendError(format!(
+                        "refusing to set the volume of foreign node {node}"
+                    )));
+                }
+                self.volumes.insert(*node, crate::model::gain(*percent));
             }
             Action::SetTarget { node, target, .. } => match target {
                 Some(t) => {

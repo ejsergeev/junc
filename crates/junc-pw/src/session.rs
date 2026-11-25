@@ -26,6 +26,8 @@ enum Outcome {
 /// A bound proxy and its listeners; dropping it unbinds.
 struct Bound {
     _proxy: Option<Box<dyn ProxyT>>,
+    /// Nodes keep their proxy typed, to set their volume.
+    node: Option<pw::node::Node>,
     _listeners: Vec<Box<dyn Listener>>,
 }
 
@@ -372,7 +374,8 @@ fn on_global(
                 st.borrow_mut().bound.insert(
                     id,
                     Bound {
-                        _proxy: Some(Box::new(node)),
+                        _proxy: None,
+                        node: Some(node),
                         _listeners: vec![Box::new(l)],
                     },
                 );
@@ -441,6 +444,7 @@ fn on_global(
                 st.borrow_mut().bound.insert(
                     id,
                     Bound {
+                        node: None,
                         _proxy: Some(Box::new(link)),
                         _listeners: vec![Box::new(l)],
                     },
@@ -483,6 +487,7 @@ fn on_global(
                 s.bound.insert(
                     id,
                     Bound {
+                        node: None,
                         _proxy: None,
                         _listeners: vec![Box::new(l)],
                     },
@@ -602,6 +607,22 @@ fn apply(
                 value.as_deref(),
             );
         }
+        Action::SetVolume {
+            node,
+            channels,
+            percent,
+        } => {
+            let s = st.borrow();
+            let Some(proxy) = s.bound.get(node).and_then(|b| b.node.as_ref()) else {
+                return Err(format!("node {node} is not bound"));
+            };
+            if !s.graph.nodes.get(node).is_some_and(Node::is_junc) {
+                return Err(format!("refusing to set the volume of foreign node {node}"));
+            }
+            let gain = junc_core::model::gain(*percent);
+            let pod = volume_pod(*channels, gain)?;
+            proxy.set_param(pw::spa::param::ParamType::Props, 0, pod_ref(&pod)?);
+        }
         Action::SetTarget { node, target, .. } => {
             let s = st.borrow();
             let Some((_, md)) = &s.default_md else {
@@ -631,4 +652,25 @@ fn apply(
         }
     }
     Ok(())
+}
+
+/// `Props` with `channelVolumes` = `gain` on every channel, serialized.
+fn volume_pod(channels: u8, gain: f32) -> Result<Vec<u8>, String> {
+    use pw::spa::pod::serialize::PodSerializer;
+    use pw::spa::pod::{Object, Property, Value, ValueArray};
+    let obj = Value::Object(Object {
+        type_: pw::spa::sys::SPA_TYPE_OBJECT_Props,
+        id: pw::spa::sys::SPA_PARAM_Props,
+        properties: vec![Property::new(
+            pw::spa::sys::SPA_PROP_channelVolumes,
+            Value::ValueArray(ValueArray::Float(vec![gain; usize::from(channels.max(1))])),
+        )],
+    });
+    PodSerializer::serialize(std::io::Cursor::new(Vec::new()), &obj)
+        .map(|(c, _)| c.into_inner())
+        .map_err(|e| format!("cannot build the volume pod: {e:?}"))
+}
+
+fn pod_ref(bytes: &[u8]) -> Result<&pw::spa::pod::Pod, String> {
+    pw::spa::pod::Pod::from_bytes(bytes).ok_or_else(|| "invalid volume pod".to_owned())
 }

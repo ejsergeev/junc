@@ -302,7 +302,11 @@ impl Daemon {
         }
         log(&format!("applying {} action(s)", step.actions.len()));
         for a in &step.actions {
-            if matches!(a, junc_core::backend::Action::SetDefault { .. }) {
+            if matches!(
+                a,
+                junc_core::backend::Action::SetDefault { .. }
+                    | junc_core::backend::Action::SetVolume { .. }
+            ) {
                 log(&a.to_string());
             }
         }

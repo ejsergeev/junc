@@ -18,6 +18,14 @@ pub const MAX_BUS_CHANNELS: u8 = 64;
 /// Volumes are percentages, 0–150, mapped cubically to gain like PulseAudio.
 pub const MAX_VOLUME: u16 = 150;
 
+/// Linear gain for a volume percentage: cubic, as desktop mixers (and
+/// PulseAudio) map their sliders, so 50 % sounds about half as loud.
+/// 100 % is exactly 1.0, which keeps the path bit-exact.
+pub fn gain(percent: u16) -> f32 {
+    let x = f32::from(percent) / 100.0;
+    x * x * x
+}
+
 /// A `junctions.toml` file.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

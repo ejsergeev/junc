@@ -52,6 +52,8 @@ pub enum ActionView {
     },
     /// The system default input or output changes (`None`: WirePlumber picks).
     SetDefault { kind: String, node: Option<String> },
+    /// A JUNC node's volume changes (percent).
+    SetVolume { node: String, percent: u16 },
     /// A stream is sent to a node (`None`: back to its default), e.g. the
     /// app a Cable delivers to.
     SetTarget {
@@ -140,6 +142,10 @@ fn action(a: &Action, graph: Option<&Graph>) -> ActionView {
         Action::SetDefault { kind, name } => ActionView::SetDefault {
             kind: kind_name(*kind).to_owned(),
             node: name.clone(),
+        },
+        Action::SetVolume { node, percent, .. } => ActionView::SetVolume {
+            node: node_name(graph, *node),
+            percent: *percent,
         },
         Action::SetTarget {
             node,

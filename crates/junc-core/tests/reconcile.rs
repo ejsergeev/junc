@@ -2,7 +2,7 @@
 
 //! Reconcile state machine (§3.5) on the mock backend.
 
-use junc_core::backend::{Backend, MockBackend};
+use junc_core::backend::{Action, Backend, MockBackend};
 use junc_core::config;
 use junc_core::graph::Graph;
 use junc_core::model::Config;
@@ -102,7 +102,14 @@ fn leave_as_is_writes_suppressed_and_survives_restarts() {
     // A fresh reconciler (daemon restart) with the saved config leaves it out.
     let mut fresh = Reconciler::new();
     let s = fresh.on_graph(&new_cfg, b.graph());
-    assert!(s.actions.is_empty() && s.notices.is_empty(), "{s:?}");
+    // Only the volumes a new daemon sets on first sight; no link comes back.
+    assert!(
+        s.actions
+            .iter()
+            .all(|a| matches!(a, Action::SetVolume { .. }))
+            && s.notices.is_empty(),
+        "{s:?}"
+    );
 }
 
 #[test]
@@ -267,4 +274,47 @@ fn cable_targets_are_set_respected_and_returned() {
         b.graph().targets.get(&other).map(String::as_str),
         Some("junc.ff_discord")
     );
+}
+
+/// F7: volumes go to the Junction source (master), the Input gain nodes and
+/// the Listen gain nodes; each is set once, again only when it changes or
+/// the node is recreated.
+#[test]
+fn volumes_are_set_where_they_belong_and_only_when_needed() {
+    let (mut b, cfg, mut r) = setup();
+    let node = |b: &MockBackend, name: &str| b.graph().node_by_name(name).expect(name).id;
+    // First sight sets every JUNC node, at 100 % here.
+    for name in [
+        "junc.zoom",
+        "junc.zoom.in.firefox",
+        "junc.zoom.in.mic",
+        "junc.zoom.listen.hp",
+    ] {
+        assert_eq!(b.volume(node(&b, name)), 1.0, "{name}");
+    }
+    assert!(
+        r.on_graph(&cfg, b.graph()).actions.is_empty(),
+        "nothing more to set"
+    );
+
+    let mut c = cfg.clone();
+    c.junction[0].volume = 50;
+    c.junction[0].input[0].volume = 70;
+    c.junction[0].listen[0].volume = 150;
+    let s = step(&mut b, &c, &mut r);
+    let set: Vec<String> = s.actions.iter().map(ToString::to_string).collect();
+    assert_eq!(set.len(), 3, "{set:?}");
+    assert_eq!(b.volume(node(&b, "junc.zoom")), 0.125);
+    assert!((b.volume(node(&b, "junc.zoom.in.firefox")) - 0.343).abs() < 1e-6);
+    assert_eq!(b.volume(node(&b, "junc.zoom.in.mic")), 1.0, "untouched");
+    assert!((b.volume(node(&b, "junc.zoom.listen.hp")) - 3.375).abs() < 1e-6);
+    assert!(step(&mut b, &c, &mut r).actions.is_empty());
+
+    // A recreated node (new serial) gets its volume again.
+    let id = node(&b, "junc.zoom.in.firefox");
+    b.remove_node(id);
+    for _ in 0..3 {
+        step(&mut b, &c, &mut r);
+    }
+    assert!((b.volume(node(&b, "junc.zoom.in.firefox")) - 0.343).abs() < 1e-6);
 }

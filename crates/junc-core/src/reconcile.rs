@@ -96,6 +96,8 @@ struct Targeted {
 /// Reconcile state for one daemon.
 #[derive(Debug, Default)]
 pub struct Reconciler {
+    /// Gain JUNC set on its nodes, by `object.serial` (ids are reused).
+    volumes: HashMap<u32, u16>,
     /// Streams whose `target.object` JUNC set, by stream node id.
     targeted: HashMap<u32, Targeted>,
     /// JUNC links in the last snapshot, by link id.
@@ -237,6 +239,7 @@ impl Reconciler {
         }
         let mut actions = p.actions.clone();
         actions.extend(self.track_targets(config, graph, &p.actions));
+        actions.extend(self.track_volumes(config, graph));
         let (default_actions, default_notices) = plan_defaults(config, graph, &mut self.defaults);
         actions.extend(default_actions);
         notices.extend(default_notices.into_iter().map(|n| match n {
@@ -305,6 +308,65 @@ impl Reconciler {
             false
         });
         out
+    }
+
+    /// Volumes (F7): the Junction's master on its source node, each Input's
+    /// and Listen output's on its gain node. A node gets its volume when JUNC
+    /// first sees it (also 100 %: a node left by an earlier daemon may hold
+    /// another value) and whenever the config changes it. JUNC does not watch
+    /// for changes made elsewhere (a mixer moving the Junction's source), so
+    /// it never fights them.
+    fn track_volumes(&mut self, config: &Config, graph: &Graph) -> Vec<Action> {
+        let mut want: Vec<(String, u16)> = Vec::new();
+        for j in &config.junction {
+            want.push((crate::matcher::junction_node_name(&j.id), j.volume));
+            for i in &j.input {
+                want.push((crate::plan::gain_node_name(&j.id, &i.id), i.volume));
+            }
+            for l in &j.listen {
+                want.push((crate::plan::listen_node_name(&j.id, &l.id), l.volume));
+            }
+        }
+        let key = |n: &crate::graph::Node| n.props.number("object.serial").unwrap_or(n.id);
+        let mut actions = Vec::new();
+        for (name, percent) in want {
+            let Some(node) = graph
+                .nodes
+                .values()
+                .find(|n| n.name() == name && n.is_junc())
+            else {
+                continue;
+            };
+            if self.volumes.get(&key(node)) == Some(&percent) {
+                continue;
+            }
+            let channels = node
+                .props
+                .number("audio.channels")
+                .and_then(|c| u8::try_from(c).ok())
+                .unwrap_or_else(|| {
+                    u8::try_from(
+                        graph
+                            .ports_of(node.id, crate::graph::Direction::Out)
+                            .count(),
+                    )
+                    .unwrap_or(2)
+                });
+            self.volumes.insert(key(node), percent);
+            actions.push(Action::SetVolume {
+                node: node.id,
+                channels,
+                percent,
+            });
+        }
+        let present: HashSet<u32> = graph
+            .nodes
+            .values()
+            .filter(|n| n.is_junc())
+            .map(key)
+            .collect();
+        self.volumes.retain(|k, _| present.contains(k));
+        actions
     }
 
     /// Whether a link or stream target is held, waiting for the user.
