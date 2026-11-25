@@ -1,0 +1,10 @@
+# expect: E_CONFIG_CYCLE 10:9
+schema = 1
+
+[[junction]]
+id = "loop"
+name = "Loop"
+
+[[junction.input]]
+id = "me"
+match = { junction = "loop" }

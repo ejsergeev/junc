@@ -1,0 +1,12 @@
+# expect: E_CONFIG_DEFAULT_DUPLICATE 12:11
+schema = 1
+
+[[junction]]
+id = "a"
+name = "A"
+default = "input"
+
+[[junction]]
+id = "b"
+name = "B"
+default = "input"

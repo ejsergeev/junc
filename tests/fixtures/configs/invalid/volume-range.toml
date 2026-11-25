@@ -1,0 +1,7 @@
+# expect: E_CONFIG_RANGE 7:10
+schema = 1
+
+[[junction]]
+id = "loud"
+name = "Loud"
+volume = 200

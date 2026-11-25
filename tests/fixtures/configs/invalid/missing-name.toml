@@ -1,0 +1,5 @@
+# expect: E_CONFIG_MISSING_KEY 4:1
+schema = 1
+
+[[junction]]
+id = "zoom"

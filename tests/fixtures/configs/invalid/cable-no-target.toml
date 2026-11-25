@@ -1,0 +1,11 @@
+# expect: E_CONFIG_CABLE 7:8
+schema = 1
+
+[[junction]]
+id = "c"
+name = "C"
+kind = "cable"
+
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }

@@ -1,0 +1,5 @@
+# expect: E_CONFIG_SYNTAX 5:6
+schema = 1
+
+[[junction]]
+id = = "x"

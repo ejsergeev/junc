@@ -1,0 +1,10 @@
+# expect: E_CONFIG_ID_DUPLICATE 9:6
+schema = 1
+
+[[junction]]
+id = "zoom"
+name = "Zoom"
+
+[[junction]]
+id = "zoom"
+name = "Zoom 2"

@@ -1,0 +1,48 @@
+# JUNC configuration. Edit by hand or with `junc`; the daemon picks up changes.
+schema = 1
+
+[[junction]]
+id = "virtual-mic-for-zoom"        # stable; node.name = "junc.virtual_mic_for_zoom"
+name = "Virtual Mic for Zoom"
+kind = "junction"
+enabled = true
+volume = 100
+default = "input"
+rate = "follow"
+bus = { channels = 4 }
+
+[[junction.input]]
+id = "spotify"
+match = { app = "Spotify", binary = "spotify" }
+volume = 70
+exclusive = true
+links = [[1, 1], [2, 2]]
+
+[[junction.input]]
+id = "soundux"
+match = { binary = "soundux" }
+links = [[1, 3], [2, 4]]
+
+[[junction.input]]
+id = "usb-mic"
+match = { device = "alsa_input.usb-Generic_USB_Microphone-00.mono-fallback" }
+links = [[1, 1], [1, 2]]
+suppressed = [[1, 2]]
+
+[[junction.listen]]
+id = "builtin"
+target = "default"
+volume = 80
+links = [[1, 1], [2, 2]]
+
+[[junction]]
+id = "firefox-to-obs"
+name = "Firefox → OBS"
+kind = "cable"
+
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+
+[junction.cable]
+to = { binary = "obs" }

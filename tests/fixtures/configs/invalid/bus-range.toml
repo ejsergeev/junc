@@ -1,0 +1,7 @@
+# expect: E_CONFIG_RANGE 7:20
+schema = 1
+
+[[junction]]
+id = "big"
+name = "Big"
+bus = { channels = 65 }

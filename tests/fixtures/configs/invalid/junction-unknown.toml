@@ -1,0 +1,10 @@
+# expect: E_CONFIG_JUNCTION_UNKNOWN 10:9
+schema = 1
+
+[[junction]]
+id = "stream"
+name = "Stream"
+
+[[junction.input]]
+id = "music"
+match = { junction = "musik" }

@@ -1,0 +1,10 @@
+# expect: E_CONFIG_SLOT_OUTSIDE_PRESET 10:9
+schema = 1
+
+[[junction]]
+id = "t"
+name = "T"
+
+[[junction.input]]
+id = "mic"
+match = { slot = "mic" }

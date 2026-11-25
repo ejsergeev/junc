@@ -1,0 +1,16 @@
+# expect: E_CONFIG_CYCLE
+schema = 1
+
+[[junction]]
+id = "a"
+name = "A"
+[[junction.input]]
+id = "b"
+match = { junction = "b" }
+
+[[junction]]
+id = "b"
+name = "B"
+[[junction.input]]
+id = "a"
+match = { junction = "a" }

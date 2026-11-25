@@ -1,0 +1,4 @@
+# A pre-release config without a schema key.
+[[junction]]
+id = "zoom"   # keep this comment
+name = "Zoom"

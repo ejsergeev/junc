@@ -1,0 +1,10 @@
+# expect: E_CONFIG_MATCH_KIND 10:9
+schema = 1
+
+[[junction]]
+id = "zoom"
+name = "Zoom"
+
+[[junction.input]]
+id = "x"
+match = {}

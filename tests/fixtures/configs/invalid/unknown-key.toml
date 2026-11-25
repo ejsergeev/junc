@@ -1,0 +1,7 @@
+# expect: E_CONFIG_UNKNOWN_KEY 7:1
+schema = 1
+
+[[junction]]
+id = "zoom"
+name = "Zoom"
+volum = 80

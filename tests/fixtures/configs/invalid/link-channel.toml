@@ -1,0 +1,11 @@
+# expect: E_CONFIG_LINK_CHANNEL 11:18
+schema = 1
+
+[[junction]]
+id = "zoom"
+name = "Zoom"
+
+[[junction.input]]
+id = "mic"
+match = { device = "alsa_input.usb-mic" }
+links = [[1, 1], [1, 3]]

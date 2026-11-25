@@ -5,3 +5,9 @@
 //! dependency is allowed here (see docs/architecture.md §2).
 
 #![forbid(unsafe_code)]
+
+pub mod config;
+pub mod diag;
+pub mod migrate;
+pub mod model;
+pub mod schema;

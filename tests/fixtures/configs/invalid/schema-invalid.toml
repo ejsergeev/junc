@@ -1,0 +1,2 @@
+# expect: E_CONFIG_SCHEMA_INVALID 2:10
+schema = "one"

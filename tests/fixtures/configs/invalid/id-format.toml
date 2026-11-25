@@ -1,0 +1,6 @@
+# expect: E_CONFIG_ID_FORMAT 6:6
+schema = 1
+
+[[junction]]
+name = "Zoom"
+id = "Zoom Mic"
