@@ -1134,6 +1134,19 @@ Spec sheet:
 | Keyboard chip | `JKbd` | Footer hint bar. |
 | Layout | `JRow`, `JColumnLane` | **Direction-aware from day one**: take `rtl` from a global and order children/keys accordingly; v1 always passes `false`. |
 
+As built (B13): `ui/components/` holds one file per component above
+(`JCard` includes its header and footer; `JIconButton` is a square
+`JButton`; tray menu and bar module come with the tray and the bar plugin),
+plus `state.slint` (the five control states), `direction.slint`
+(`Direction.rtl`, `JRow`, `JColumnLane`; arrow keys follow it), `dashed.slint`
+(dashed borders, drawn piece by piece: Slint has no dash pattern; dashed
+links likewise use short pieces of the curve). Components with an inner
+`FocusScope` forward focus. `JButton.needs-ctrl` makes destructive
+confirmations run only on Ctrl+Enter or a click. `Tokens` gained the
+motion durations (0 with `reduced-motion`) and the tooltip delay.
+`junc-gui --scenario gallery [--theme light|dark]` shows every component in
+its states.
+
 Layer 3 — platform shell (Spec §3): no window chrome, Nerd Font glyphs through
 the fontconfig `monospace` alias, `[popups]` styling, StatusNotifierItem tray,
 the Omarchy bar plugin (separate QML, §10.4).
@@ -1328,6 +1341,22 @@ an SNI host is present.
 - Tab order = reading order, explicit where layouts are computed.
 - Re-run Orca and the interaction tests on Hyprland (owner laptop) per stage.
 - Upstream Slint issues: dialog role for `PopupWindow`, layout direction.
+
+As built (B13), checked on the gallery (`scripts/gui/gallery-check.sh`,
+headless; `docs/design/gallery/`) and in `junc-gui/tests/components.rs`:
+
+- Done: switch label + "on"/"off" (AT-SPI `toggle button name='Zoom Mic'
+  desc='on'`); own focus rings on switches, sliders, cards, ports,
+  channel groups (accent, outside the control); picker root a labelled
+  group (Slint 1.19 has no dialog role) with a labelled search field and
+  Tab kept inside; every text field labelled; meters `none`; PageUp/
+  PageDown ±10; Tab order follows the layout and skips disabled controls.
+- Found by the AT-SPI dump: sliders need a plain numeric
+  `accessible-value` for AT-SPI's Value interface (`value=50 [0..100]
+  step=1`), as the validation had it.
+- Banners and toasts are polite live regions (`accessible-live-region`).
+- Still open: Orca on Hyprland on the owner laptop (with the first screens,
+  B16+), the upstream issues.
 
 ---
 

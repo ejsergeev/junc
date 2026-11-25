@@ -370,9 +370,20 @@ GUI foundation:
   The font comes from fontconfig's monospace alias (the live run showed a
   proportional font before that fix). cargo-deny now flags "unmaintained"
   for direct dependencies only (owner decision below).
-- [ ] **B13** [auto] Component library per Spec with the a11y fixes and a
+- [x] **B13** [auto] Component library per Spec with the a11y fixes and a
   component-gallery scenario. Acceptance: gallery screenshots match the Spec
   board; AT-SPI dump shows labels, switch description, focus rings.
+  Done 2026-11-25 (architecture §7.2, §7.9, as built): 22 components in
+  `ui/components/` from tokens only; `junc-gui --scenario gallery`;
+  `scripts/gui/gallery-check.sh` (private Xvfb + AT-SPI session). Renders in
+  Tokyo Night and Flexoki Light match the Spec board's section 2 by eye
+  (`docs/design/gallery/`); the AT-SPI tree has every label, the switch's
+  "on"/"off" description, slider values and ranges, list and radio items;
+  five Tabs focus the first switch with a visible accent ring. The dump found
+  a real defect the unit tests could not: sliders exposed no Value interface
+  with a "50%" value (fixed: plain number). Keyboard and accessible
+  behaviour tested on Slint's testing backend (4 tests). Orca on the owner
+  laptop waits for real screens.
 - [ ] **B14** [auto] Scenario harness (`--scenario`, mock IPC), screenshot
   pipeline with goldens, AT-SPI CI job. Acceptance: one scenario end to end
   in CI on both arches.
