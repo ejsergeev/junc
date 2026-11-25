@@ -259,6 +259,7 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
             let text = serde_json::to_string_pretty(&d).unwrap_or_default();
             Ok(done(d.revision, json!(d), text))
         }
+        Cmd::Import { ids, kind } => import(&c, &ids, kind),
         Cmd::Apply {
             file,
             dry_run,
@@ -718,4 +719,54 @@ fn main() -> ExitCode {
             ExitCode::from(junc_cli::errors::exit_code(&e.code))
         }
     }
+}
+
+/// `junc import scan` and `junc import ID…` (F13).
+fn import(c: &Client, ids: &[String], kind: Option<junc_cli::args::ImportAs>) -> Result<Done> {
+    let found = c.scan_importable()?;
+    if ids == ["scan"] {
+        let text = if found.is_empty() {
+            tr("No null sinks or loopbacks to import.").into_owned()
+        } else {
+            found
+                .iter()
+                .map(human::importable)
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        return Ok(Done {
+            revision: None,
+            data: json!(found),
+            text,
+        });
+    }
+    let items = ids
+        .iter()
+        .map(|id| {
+            found.iter().find(|i| &i.id == id).ok_or_else(|| {
+                ErrorBody::new(
+                    "E_NOT_FOUND",
+                    trf("No setup '{id}' to import.", &[("id", id)]),
+                    Some("List them with: junc import scan"),
+                )
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+    let (made, rev) = c.edit(|cfg| {
+        items
+            .iter()
+            .map(|item| {
+                let as_cable = match kind {
+                    Some(k) => k == junc_cli::args::ImportAs::Cable,
+                    None => item.suggested == "cable",
+                };
+                edit::import(cfg, item, as_cable)
+            })
+            .collect::<Result<Vec<String>>>()
+    })?;
+    let text = trf(
+        "Imported as {ids}. The old setups still run; remove them when the new ones work.",
+        &[("ids", &made.join(", "))],
+    );
+    Ok(done(rev, json!({ "ids": made }), text))
 }

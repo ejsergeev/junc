@@ -29,6 +29,13 @@ pub struct Cli {
     pub cmd: Cmd,
 }
 
+/// What an imported setup becomes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum ImportAs {
+    Junction,
+    Cable,
+}
+
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum Role {
     Input,
@@ -151,6 +158,17 @@ pub enum Cmd {
     Listen(ListenCmd),
     /// Everything an agent needs in one JSON document.
     Describe,
+    /// Turn existing null sinks and pw-loopbacks into Junctions or Cables;
+    /// `junc import scan` lists them. The old setups stay: remove them
+    /// yourself when the new ones work.
+    Import {
+        /// `scan`, or the ids to import (from `junc import scan`).
+        #[arg(required = true)]
+        ids: Vec<String>,
+        /// Import as a Junction or a Cable (default: what scan suggests).
+        #[arg(long = "as", value_name = "KIND")]
+        kind: Option<ImportAs>,
+    },
     /// Print the JSON Schema of junctions.toml.
     Schema {
         /// Config schema version.

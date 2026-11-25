@@ -81,6 +81,18 @@ impl Client {
         })
     }
 
+    /// Setups that can be imported (F13).
+    pub fn scan_importable(&self) -> Result<Vec<junc_core::import::Importable>> {
+        let text = zbus::block_on(self.daemon.scan_importable()).map_err(|e| failed(&e))?;
+        serde_json::from_str(&text).map_err(|e| {
+            ErrorBody::new(
+                "E_INTERNAL",
+                format!("unexpected answer from juncd: {e}"),
+                Some("Are junc and juncd the same version?"),
+            )
+        })
+    }
+
     pub fn get_config(&self) -> Result<(String, u64)> {
         zbus::block_on(self.daemon.get_config()).map_err(|e| failed(&e))
     }

@@ -717,3 +717,142 @@ esac
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A process that plays or records with app properties, for import scans.
+fn pw_cat_app(mode: &str, props: &str) -> Kill {
+    Kill(
+        Command::new("pw-cat")
+            .args([mode, "--raw", "--format", "s16", "-P", props])
+            .arg("/dev/zero")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("pw-cat"),
+    )
+}
+
+/// F13 (B5): null sinks from `pactl load-module` and a `pw-loopback`
+/// become Junctions or Cables with what they connect; the old setups stay.
+#[test]
+fn import_turns_null_sinks_and_loopbacks_into_junctions_and_cables() {
+    if std::env::var("JUNC_LIVE_PIPEWIRE").as_deref() != Ok("1") {
+        eprintln!("skipped: run scripts/ci/live-pipewire.sh");
+        return;
+    }
+    let Some(e) = start("import", true, true) else {
+        return;
+    };
+    let pactl = |args: &[&str]| {
+        let out = Command::new("pactl").args(args).output().expect("pactl");
+        assert!(out.status.success(), "pactl {args:?}");
+        String::from_utf8_lossy(&out.stdout).trim().to_owned()
+    };
+    let mix = pactl(&[
+        "load-module",
+        "module-null-sink",
+        "sink_name=discord_mix",
+        "sink_properties=device.description=Discord_Mix",
+    ]);
+    let cab = pactl(&["load-module", "module-null-sink", "sink_name=cab_sink"]);
+    let loopback = Kill(
+        Command::new("pw-loopback")
+            .args(["-n", "mylb", "--capture-props=target.object=fake.hwin"])
+            .arg("--playback-props=target.object=fake.hp")
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("pw-loopback"),
+    );
+    let apps = [
+        pw_cat_app(
+            "-p",
+            "{ node.name=imp-ff application.name=Firefox application.process.binary=firefox target.object=discord_mix }",
+        ),
+        pw_cat_app(
+            "-p",
+            "{ node.name=imp-sp application.name=Spotify application.process.binary=spotify target.object=cab_sink }",
+        ),
+        pw_cat_app(
+            "-r",
+            "{ node.name=imp-obs application.name=OBS application.process.binary=obs target.object=cab_sink stream.capture.sink=true }",
+        ),
+    ];
+    let item = |doc: &Value, id: &str| {
+        doc["data"]
+            .as_array()
+            .and_then(|a| a.iter().find(|i| i["id"] == id).cloned())
+    };
+    let mut scan = Value::Null;
+    wait(|| {
+        scan = e.junc(&["--json", "import", "scan"]).json();
+        item(&scan, "discord_mix")
+            .is_some_and(|i| i["inputs"].as_array().is_some_and(|a| !a.is_empty()))
+            && item(&scan, "mylb")
+                .is_some_and(|i| !i["listens"].as_array().is_some_and(Vec::is_empty))
+            && item(&scan, "cab_sink").is_some_and(|i| i["suggested"] == "cable")
+    });
+    let mix_item = item(&scan, "discord_mix").expect("discord_mix");
+    assert_eq!(mix_item["kind"], "null_sink");
+    assert_eq!(mix_item["origin"], "pactl load-module");
+    assert_eq!(mix_item["name"], "Discord_Mix");
+    assert_eq!(
+        mix_item["inputs"],
+        serde_json::json!([{ "binary": "firefox" }])
+    );
+    assert_eq!(mix_item["suggested"], "junction");
+    let lb = item(&scan, "mylb").expect("mylb");
+    assert_eq!(lb["origin"], "pw-loopback");
+    assert_eq!(lb["inputs"], serde_json::json!([{ "device": "fake.hwin" }]));
+    assert_eq!(lb["listens"], serde_json::json!(["fake.hp"]));
+    let c = item(&scan, "cab_sink").expect("cab_sink");
+    assert_eq!(
+        c["cable"],
+        serde_json::json!({ "from": { "binary": "spotify" }, "to": { "binary": "obs" } })
+    );
+    let human = e.ok(&["import", "scan"]);
+    assert!(
+        human.contains("discord_mix") && human.contains("suggested: cable"),
+        "{human}"
+    );
+
+    // Not one app into another: no Cable.
+    let refused = e
+        .junc(&["--json", "import", "discord_mix", "--as", "cable"])
+        .json();
+    assert_eq!(refused["error"]["code"], "E_USAGE", "{refused}");
+    let missing = e.junc(&["--json", "import", "nope"]).json();
+    assert_eq!(missing["error"]["code"], "E_NOT_FOUND", "{missing}");
+
+    let done = e
+        .junc(&["--json", "import", "discord_mix", "mylb", "cab_sink"])
+        .json();
+    assert_eq!(done["ok"], true, "{done}");
+    let ids: Vec<String> = done["data"]["ids"]
+        .as_array()
+        .expect("ids")
+        .iter()
+        .map(|v| v.as_str().expect("id").to_owned())
+        .collect();
+    assert_eq!(ids.len(), 3, "{ids:?}");
+    eprintln!("imported as {ids:?}");
+    wait(|| {
+        let j = e.status(&ids[0]);
+        j["inputs"][0]["status"] == "active" && j["channels"] == 2
+    });
+    wait(|| {
+        let j = e.status(&ids[1]);
+        j["inputs"][0]["status"] == "active" && j["listens"][0]["status"] == "active"
+    });
+    let cable = e.status(&ids[2]);
+    assert_eq!(cable["kind"], "cable", "{cable}");
+    // The old setups still run.
+    assert!(pactl(&["list", "short", "modules"]).contains(&mix));
+
+    drop(apps);
+    drop(loopback);
+    pactl(&["unload-module", &mix]);
+    pactl(&["unload-module", &cab]);
+    for id in &ids {
+        e.ok(&["delete", id, "--yes"]);
+    }
+}

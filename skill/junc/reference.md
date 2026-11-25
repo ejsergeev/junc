@@ -84,6 +84,7 @@ Commands:
   unlink     Remove a link (same arguments as `link`)
   listen     Add or remove Listen outputs
   describe   Everything an agent needs in one JSON document
+  import     Turn existing null sinks and pw-loopbacks into Junctions or Cables; `junc import scan` lists them. The old setups stay: remove them yourself when the new ones work
   schema     Print the JSON Schema of junctions.toml
   config     Find, check or edit the config file
   apply      Apply a whole config file (`-` reads stdin)
@@ -632,6 +633,25 @@ Everything an agent needs in one JSON document
 Usage: junc describe [OPTIONS]
 
 Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc import`
+
+```text
+Turn existing null sinks and pw-loopbacks into Junctions or Cables; `junc import scan` lists them. The old setups stay: remove them yourself when the new ones work
+
+Usage: junc import [OPTIONS] <IDS>...
+
+Arguments:
+  <IDS>...  `scan`, or the ids to import (from `junc import scan`)
+
+Options:
+      --as <KIND>    Import as a Junction or a Cable (default: what scan suggests) [possible values: junction, cable]
       --json         Print one JSON document instead of text
   -q, --quiet        Print nothing on success
       --no-color     Do not color the output

@@ -356,3 +356,49 @@ pub fn skill(entries: &[crate::skill::Entry]) -> String {
         .collect();
     table(&rows)
 }
+
+/// One line per importable setup (`junc import scan`).
+pub fn importable(i: &junc_core::import::Importable) -> String {
+    let show = |m: &junc_core::model::Match| {
+        m.binary
+            .clone()
+            .or_else(|| m.app.clone())
+            .or_else(|| m.device.clone())
+            .or_else(|| m.monitor.as_ref().map(|s| format!("{s} (monitor)")))
+            .unwrap_or_default()
+    };
+    let mut parts = vec![format!(
+        "{}  {} · {} · {} ch",
+        i.id,
+        i.kind.replace('_', "-"),
+        i.origin,
+        i.channels
+    )];
+    if !i.inputs.is_empty() {
+        parts.push(trf(
+            "from {list}",
+            &[(
+                "list",
+                &i.inputs.iter().map(show).collect::<Vec<_>>().join(", "),
+            )],
+        ));
+    }
+    if !i.listens.is_empty() {
+        parts.push(trf("to {list}", &[("list", &i.listens.join(", "))]));
+    }
+    if !i.recorded_by.is_empty() {
+        parts.push(trf(
+            "recorded by {list}",
+            &[(
+                "list",
+                &i.recorded_by
+                    .iter()
+                    .map(show)
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            )],
+        ));
+    }
+    parts.push(trf("suggested: {kind}", &[("kind", &i.suggested)]));
+    parts.join(" · ")
+}

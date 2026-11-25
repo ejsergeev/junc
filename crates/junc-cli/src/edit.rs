@@ -542,6 +542,61 @@ pub fn unlink(
     Ok(())
 }
 
+/// Adds a Junction or Cable made from an existing setup (F13); returns its
+/// id. The setup's apps, devices and monitors become Inputs and the
+/// outputs it plays to become Listen outputs; a Cable needs one app into
+/// another.
+pub fn import(
+    config: &mut Config,
+    item: &junc_core::import::Importable,
+    as_cable: bool,
+) -> Result<String> {
+    let id = unique_id(&item.name, config.junction.iter().map(|j| j.id.as_str()));
+    let mut j = junction(id.clone(), item.name.clone());
+    if as_cable {
+        let Some(c) = &item.cable else {
+            return Err(usage(
+                trf(
+                    "'{id}' is not one app into another, so it cannot be a Cable.",
+                    &[("id", &item.id)],
+                ),
+                "Import it as a Junction: --as junction",
+            ));
+        };
+        j.kind = Kind::Cable;
+        let label = c
+            .from
+            .binary
+            .as_deref()
+            .or(c.from.app.as_deref())
+            .unwrap_or("app");
+        j.input
+            .push(input(unique_id(label, []), c.from.clone(), false));
+        j.cable = Some(Cable { to: c.to.clone() });
+    } else {
+        j.bus.channels = item.channels.clamp(1, junc_core::model::MAX_BUS_CHANNELS);
+        for m in &item.inputs {
+            let label = m
+                .binary
+                .as_deref()
+                .or(m.app.as_deref())
+                .or(m.device.as_deref())
+                .or(m.monitor.as_deref())
+                .unwrap_or("input");
+            let iid = unique_id(label, j.input.iter().map(|i| i.id.as_str()));
+            j.input.push(input(iid, m.clone(), false));
+        }
+        config.junction.push(j);
+        let index = config.junction.len() - 1;
+        for target in &item.listens {
+            listen_add(config, index, target, None)?;
+        }
+        return Ok(id);
+    }
+    config.junction.push(j);
+    Ok(id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
