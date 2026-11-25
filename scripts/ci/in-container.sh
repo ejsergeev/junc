@@ -12,5 +12,8 @@ done
 id builder >/dev/null 2>&1 || useradd -m builder
 chown -R builder: /src
 exec su builder -c 'export CARGO_HOME=/src/.ci-cache/cargo CARGO_TARGET_DIR=/src/.ci-cache/target; \
-  mkdir -p "$CARGO_HOME"; ln -sfn "$CARGO_TARGET_DIR" /src/target; cd /src && scripts/ci/check.sh \
-  && scripts/ci/live-pipewire.sh'
+  mkdir -p "$CARGO_HOME"; ln -sfn "$CARGO_TARGET_DIR" /src/target; cd /src \
+  && s=$SECONDS && scripts/ci/check.sh && echo "== checks took $((SECONDS - s)) s" \
+  && s=$SECONDS && scripts/ci/live-pipewire.sh \
+  && t=$((SECONDS - s)) && echo "== layer-2 suite took $t s" \
+  && { (( t < 600 )) || { echo "layer-2 suite over its 10 min budget"; exit 1; }; }'
