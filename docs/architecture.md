@@ -186,6 +186,14 @@ node.autoconnect   = false          (nodes)
 node.dont-reconnect = true          (nodes)
 ```
 
+Gain nodes are as wide as the Bus: an Input's channels link straight into
+the gain-node channels of the Bus channels they feed (a mono mic links its one
+channel into channels 1 and 2), and the gain node feeds the Bus one to one.
+So an Input's volume is one node's volume whatever its channel count, and the
+link layout does not depend on the source. A disabled Junction keeps both its
+nodes (apps keep their device and hear silence) and drops Input and Listen
+links.
+
 Cost is constant per configured item (no per-buffer work by JUNC). A plain
 route at unity gain must stay bit-exact (null test) and add 0 quanta; this is
 a CI gate (§11). If spike S4 shows the gain stage is not bit-exact at unity,
@@ -229,6 +237,17 @@ fallback, so a 2-channel app maps to Bus Ch 1–2 by default (F4).
 `DestroyNode` (only `junc.managed`), `SetMetadata`, `SetDeviceProfile`. The
 planner never emits an action on an object without the JUNC tag; a unit test
 enforces this over every fixture graph (F17).
+
+Implemented in `junc-core::plan` with `MockBackend` for tests. Desired and
+existing JUNC links are compared by their port pair; `junc.ref` names each
+link (`in/<input>/<from>-><to>`, `gain/<input>/<ch>`, `sink/<ch>`,
+`listen/<id>/…`, `cable/…`). Links are planned only once both nodes' ports
+exist, so a new Junction converges in two rounds. Links in the *held* set
+(removed by another tool, awaiting Restore / Leave as is) are not recreated,
+and no JUNC link is added where a foreign link already joins the same ports.
+A property test over random configs on six recorded graphs checks that only
+`junc.managed` objects are ever destroyed, that planning converges, and that
+an empty config restores the original graph.
 
 Reconcile runs on: registry change (debounced to the end of the current
 PipeWire batch with a `core.sync` round trip, not a timer), desired-state
