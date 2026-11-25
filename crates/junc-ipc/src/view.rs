@@ -193,6 +193,38 @@ pub struct Candidate {
     /// `application.process.binary` for apps (use as `match.binary`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub binary: Option<String>,
+    /// A Bluetooth headset's microphone (F18, API 1.1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bluetooth: Option<BluetoothView>,
+}
+
+/// A Bluetooth headset's state (F18).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BluetoothView {
+    /// Active profile, e.g. `a2dp-sink`, `headset-head-unit`.
+    pub profile: Option<String>,
+    /// `playback` (A2DP), `call` (HFP/HSP) or `other`.
+    pub mode: String,
+    /// Codec of the call profile (`cvsd`, `msbc`, `lc3-swb`), when known.
+    pub call_codec: Option<String>,
+    /// `narrowband`, `wideband` or `super-wideband`, when known.
+    pub call_quality: Option<String>,
+    /// Recording from this microphone switches the headset to its call
+    /// profile: playback drops to call quality while it is used. Tell the
+    /// user before adding it.
+    pub switches_to_call: bool,
+}
+
+impl BluetoothView {
+    fn new(h: &junc_core::bluetooth::Headset, mic: bool) -> Self {
+        Self {
+            profile: h.profile.clone(),
+            mode: h.mode.as_str().to_owned(),
+            call_codec: h.call_codec.clone(),
+            call_quality: h.call_quality.map(|q| q.as_str().to_owned()),
+            switches_to_call: mic && h.mode == junc_core::bluetooth::Mode::Playback,
+        }
+    }
 }
 
 /// Current default devices.
@@ -254,6 +286,9 @@ pub struct DeviceView {
     /// Input with `profile = "pro-audio"` (`junc input add … --pro-audio`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pro_audio: Option<ProAudioView>,
+    /// A Bluetooth headset (F18).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bluetooth: Option<BluetoothView>,
 }
 
 /// What switching a card to Pro Audio would give.
@@ -290,6 +325,8 @@ pub fn devices(graph: &Graph) -> Vec<DeviceView> {
                     now: o.now,
                     all: o.all,
                 }),
+                bluetooth: junc_core::bluetooth::headset(graph, d)
+                    .map(|h| BluetoothView::new(&h, false)),
             }
         })
         .collect();
@@ -431,6 +468,8 @@ pub fn candidates(graph: &Graph) -> Vec<Candidate> {
                 kind: kind.to_owned(),
                 app: prop("application.name"),
                 binary: prop("application.process.binary"),
+                bluetooth: junc_core::bluetooth::mic(graph, n)
+                    .map(|h| BluetoothView::new(&h, true)),
             })
         })
         .collect()

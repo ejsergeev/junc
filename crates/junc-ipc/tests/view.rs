@@ -88,6 +88,48 @@ fn views_report_statuses_and_links_in_use() {
     assert_eq!(json["inputs"][0]["match"]["device"], line.matched[0]);
 }
 
+/// F18 (B4): describe marks a headset mic in A2DP so agents and the picker
+/// can warn before adding it; the card shows its profile and call quality.
+#[test]
+fn bluetooth_mics_carry_the_call_profile_warning() {
+    let load = |f: &str| {
+        let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/graphs")
+            .join(f);
+        Graph::from_pw_dump(&std::fs::read_to_string(p).expect("fixture")).expect("graph")
+    };
+    let g = load("bt-pixel-buds-2a-a2dp.json");
+    let c = view::candidates(&g);
+    let mic = c
+        .iter()
+        .find(|k| k.node == "bluez_input.00:00:5E:00:53:02")
+        .expect("mic candidate");
+    let bt = mic.bluetooth.as_ref().expect("bluetooth");
+    assert!(bt.switches_to_call);
+    assert_eq!(bt.mode, "playback");
+    assert_eq!(bt.call_quality.as_deref(), Some("super-wideband"));
+    assert!(
+        c.iter()
+            .filter(|k| k.node != mic.node)
+            .all(|k| k.bluetooth.is_none()),
+        "only the mic carries it"
+    );
+    let d = view::devices(&g);
+    let card = d.iter().find(|d| d.api == "bluez5").expect("card");
+    let bt = card.bluetooth.as_ref().expect("bluetooth");
+    assert_eq!(bt.profile.as_deref(), Some("a2dp-sink"));
+    assert!(!bt.switches_to_call, "the card itself is not a mic");
+
+    let g = load("bt-airpods-hfp.json");
+    let mic = view::candidates(&g)
+        .into_iter()
+        .find(|k| k.node == "bluez_input.00:00:5E:00:53:01")
+        .expect("mic candidate");
+    let bt = mic.bluetooth.expect("bluetooth");
+    assert!(!bt.switches_to_call, "already in a call");
+    assert_eq!(bt.call_codec.as_deref(), Some("msbc"));
+}
+
 /// The device side of a loopback or filter chain is what users pick: the
 /// Asahi speakers and mic behind their DSP, Omarchy's mic. Their stream
 /// sides are plumbing and stay hidden.
