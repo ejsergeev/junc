@@ -614,17 +614,34 @@ one per line):
              "hint": "Did you mean 'volume'? Allowed keys: id, name, enabled, volume, …" } }
 ```
 
-`junc list --json` → `data.junctions[]`:
+`junc list --json` → `data.junctions[]`, the Junction view of
+`junc_ipc::view` (the same JSON as the D-Bus `View` property):
 
 ```json
-{ "id": "virtual-mic-for-zoom", "name": "Virtual Mic for Zoom", "kind": "junction",
-  "enabled": true, "status": "ok", "default": "input", "node_name": "junc.virtual_mic_for_zoom",
-  "channels": 4, "rate": 48000,
-  "inputs": [ { "id": "spotify", "label": "Spotify", "kind": "app", "status": "active",
-                "enabled": true, "volume": 70, "exclusive": true } ],
-  "listens": [ { "id": "builtin", "target": "alsa_output.platform-…", "status": "active", "volume": 80 } ],
-  "capturing": ["Spotify"] }
+{ "id": "zoom-mic", "name": "Zoom Mic", "kind": "junction", "enabled": true,
+  "volume": 100, "default": "input", "channels": 2, "node": "junc.zoom_mic",
+  "path": "/io/github/ejsergeev/Junc1/junction/zoom_2dmic", "status": "active",
+  "inputs": [ { "id": "spotify", "match": { "binary": "spotify" }, "enabled": true,
+                "volume": 70, "exclusive": true, "status": "active",
+                "matched": ["spotify"], "links": [[1, 1], [2, 2]],
+                "custom_links": false, "suppressed": [] } ],
+  "listens": [ { "id": "hp", "target": "default", "enabled": true, "volume": 80,
+                 "status": "active", "links": [[1, 1], [2, 2]],
+                 "custom_links": false, "suppressed": [] } ] }
 ```
+
+`status` is `active`, `waiting` (app or device not there), `disabled` or
+`unknown` (the daemon has no graph yet). `links` are the pairs in use: the
+config's own list, or the default mapping for what is connected now. Other
+commands return small objects (`{"id": …, "enabled": false}`); `revision` is
+the config revision after the change.
+
+As built in A11: a Junction is named by id or by name (any case), with "did
+you mean" on a miss; link ends are `INPUT:CH` / `LISTEN:CH` or a bare Bus
+channel. Single-field changes call the Junction methods; everything else
+reads the config, edits it with `junc_core::store` (comments kept) and sends
+it with `Apply` and the revision it read, redoing the edit if another change
+raced it.
 
 `junc describe --json` → `data`: `{ pipewire, defaults, junctions[], candidates:
 { apps[], hardware_inputs[], outputs[], monitors[] }, devices[] (with profiles,
