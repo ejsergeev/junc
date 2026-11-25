@@ -209,6 +209,9 @@ impl From<ErrorBody> for Error {
 pub trait Daemon {
     /// JSON snapshot for agents (`junc describe --json`).
     fn describe(&self) -> zbus::Result<String>;
+    /// Existing null sinks and loopbacks that can be imported (F13), as
+    /// JSON (`junc_core::import::Importable` list).
+    fn scan_importable(&self) -> zbus::Result<String>;
     /// The config file text and its revision.
     fn get_config(&self) -> zbus::Result<(String, u64)>;
     /// Validates config text; returns diagnostics as JSON (empty list = valid).

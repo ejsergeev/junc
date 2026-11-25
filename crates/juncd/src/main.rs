@@ -457,6 +457,16 @@ impl Daemon {
                 self.store.revision(),
             )),
             Req::Validate(text) => Ok(Resp::Text(json(&view::validate_text(&text, &file)))),
+            Req::ScanImportable => {
+                let Some(graph) = &self.graph else {
+                    return Err(ErrorBody::new(
+                        "E_PIPEWIRE_UNAVAILABLE",
+                        "PipeWire is not running, so there is nothing to scan",
+                        Some("Start PipeWire: systemctl --user start pipewire wireplumber"),
+                    ));
+                };
+                Ok(Resp::Text(json(&junc_core::import::scan(graph))))
+            }
             Req::Plan(text) => {
                 let loaded = config::load(&text, &file).map_err(|d| diags(&d))?;
                 let Some(graph) = &self.graph else {

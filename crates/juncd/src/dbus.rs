@@ -24,6 +24,7 @@ use zbus::{Connection, interface};
 #[derive(Debug)]
 pub enum Req {
     Describe,
+    ScanImportable,
     GetConfig,
     Validate(String),
     Plan(String),
@@ -184,6 +185,12 @@ struct DaemonIface {
 impl DaemonIface {
     async fn describe(&self) -> Result<String, Error> {
         text(call(&self.dispatch, Req::Describe).await?)
+    }
+
+    /// Existing null sinks and loopbacks that can become Junctions or
+    /// Cables (F13), as JSON.
+    async fn scan_importable(&self) -> Result<String, Error> {
+        text(call(&self.dispatch, Req::ScanImportable).await?)
     }
 
     async fn get_config(&self) -> Result<(String, u64), Error> {

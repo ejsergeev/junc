@@ -7,6 +7,13 @@
     <method name="Describe">
       <arg type="s" direction="out"/>
     </method>
+    <!--
+     Existing null sinks and loopbacks that can become Junctions or
+     Cables (F13), as JSON.
+     -->
+    <method name="ScanImportable">
+      <arg type="s" direction="out"/>
+    </method>
     <method name="GetConfig">
       <arg type="s" direction="out"/>
       <arg type="t" direction="out"/>
