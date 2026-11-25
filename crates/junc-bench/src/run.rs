@@ -136,6 +136,31 @@ fn rollup_kb(pid: u32, field: &str) -> Option<f64> {
         .and_then(|v| v.trim().trim_end_matches(" kB").trim().parse().ok())
 }
 
+/// Mappings backed by transparent huge pages: range, size, flags.
+fn huge_mappings(pid: u32) -> String {
+    let text = std::fs::read_to_string(format!("/proc/{pid}/smaps")).unwrap_or_default();
+    let mut out = Vec::new();
+    let (mut head, mut huge, mut size) = (String::new(), 0u64, String::new());
+    for l in text.lines() {
+        let first = l.split_whitespace().next().unwrap_or("");
+        if first.contains('-') && first.chars().all(|c| c.is_ascii_hexdigit() || c == '-') {
+            head = l.to_owned();
+            huge = 0;
+        } else if let Some(v) = l.strip_prefix("Size:") {
+            size = v.trim().to_owned();
+        } else if let Some(v) = l.strip_prefix("AnonHugePages:") {
+            huge = v.trim().trim_end_matches(" kB").trim().parse().unwrap_or(0);
+        } else if let Some(flags) = l.strip_prefix("VmFlags:")
+            && huge > 0
+        {
+            out.push(format!(
+                "[{head}] size {size}, huge {huge} kB, flags{flags}"
+            ));
+        }
+    }
+    out.join("; ")
+}
+
 /// The mappings that weigh most, for the log: where memory goes.
 fn top_mappings(pid: u32) -> String {
     let text = std::fs::read_to_string(format!("/proc/{pid}/smaps")).unwrap_or_default();
@@ -366,6 +391,7 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
         }
     }
     log(&format!("largest mappings: {}", top_mappings(pid)));
+    log(&format!("huge-page mappings: {}", huge_mappings(pid)));
     let read = |p: &str| {
         std::fs::read_to_string(p)
             .unwrap_or_default()
