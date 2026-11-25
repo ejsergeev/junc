@@ -413,7 +413,13 @@ D-Bus property with change signals, consumed by the bar plugin and the tray
   order and formatting of untouched tables, using write-to-temp + `rename`.
   Its own writes are recognised by content hash and do not re-trigger.
 - A monotonically increasing `revision` lets GUI, CLI and agents detect
-  concurrent edits (`E_CONFLICT`).
+  concurrent edits (`E_CONFIG_CONFLICT`).
+- Implemented in `junc-core::store` and `juncd`: writes apply only the
+  old→new difference to the `toml_edit` document (arrays of tables matched
+  by `id`), defaults the user never wrote stay unwritten, and every write is
+  read back and must equal the requested config or nothing is written.
+  Comment-only edits do not bump the revision. Removing the file does not
+  remove Junctions; starting with an invalid file uses `last-good.toml`.
 
 ### 3.13 Upgrade without audio drop (F20)
 
