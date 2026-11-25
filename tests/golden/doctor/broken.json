@@ -20,7 +20,7 @@
   {
     "id": "jack",
     "status": "warn",
-    "detail": "jack2 is installed: JACK apps bypass PipeWire and cannot be routed",
+    "detail": "jack2 is installed: JACK apps bypass PipeWire and cannot be routed; replace it with pipewire-jack (pacman offers to remove jack2)",
     "fix": "sudo pacman -S pipewire-jack"
   },
   {

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "asahi",
+    "status": "warn",
+    "detail": "no Asahi DSP in front of the speakers: they sound thin and quiet",
+    "fix": "sudo pacman -S --needed asahi-audio"
+  },
+  {
+    "id": "asahi",
+    "status": "down",
+    "detail": "speakersafetyd is not running: the speakers stay quiet to protect them",
+    "fix": "sudo systemctl enable --now speakersafetyd"
+  }
+]

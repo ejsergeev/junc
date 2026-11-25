@@ -58,8 +58,9 @@ fn installed(binary: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Whether a process of this user with this name runs.
-fn running(comm: &str) -> bool {
+/// Whether a process with this name runs, of this user only or of anyone
+/// (system services).
+fn running_as(comm: &str, mine: bool) -> bool {
     let uid = |p: &Path| std::fs::metadata(p).map(|m| m.uid()).ok();
     let me = uid(Path::new("/proc/self"));
     let Ok(entries) = std::fs::read_dir("/proc") else {
@@ -67,7 +68,8 @@ fn running(comm: &str) -> bool {
     };
     entries.flatten().any(|e| {
         let p = e.path();
-        std::fs::read_to_string(p.join("comm")).is_ok_and(|c| c.trim() == comm) && uid(&p) == me
+        std::fs::read_to_string(p.join("comm")).is_ok_and(|c| c.trim() == comm)
+            && (!mine || uid(&p) == me)
     })
 }
 
@@ -116,7 +118,11 @@ pub enum Proc {
 
 impl Proc {
     fn of(binary: &str) -> Self {
-        if running(binary) {
+        Self::of_as(binary, true)
+    }
+
+    fn of_as(binary: &str, mine: bool) -> Self {
+        if running_as(binary, mine) {
             Self::Running
         } else if installed(binary) {
             Self::Installed
@@ -144,6 +150,10 @@ pub struct Facts {
     pub dump: Option<String>,
     /// juncd's snapshot, if it runs.
     pub daemon: Option<Describe>,
+    /// An Apple Silicon Mac (Asahi Linux).
+    pub apple: bool,
+    /// The speaker protection daemon of Asahi (a system service).
+    pub speakersafetyd: Proc,
 }
 
 impl Facts {
@@ -159,6 +169,9 @@ impl Facts {
             settings: run("pw-metadata", &["-n", "settings", "0"]),
             dump: run("pw-dump", &[]),
             daemon: client.and_then(Client::describe_if_running),
+            apple: std::fs::read("/proc/device-tree/compatible")
+                .is_ok_and(|c| c.windows(6).any(|w| w == b"apple,")),
+            speakersafetyd: Proc::of_as("speakersafetyd", false),
         }
     }
 }
@@ -273,7 +286,7 @@ fn jack(f: &Facts) -> Check {
         (_, Some(true)) => check(
             "jack",
             Status::Warn,
-            tr("jack2 is installed: JACK apps bypass PipeWire and cannot be routed").into_owned(),
+            tr("jack2 is installed: JACK apps bypass PipeWire and cannot be routed; replace it with pipewire-jack (pacman offers to remove jack2)").into_owned(),
             Some("sudo pacman -S pipewire-jack"),
         ),
         (Some(false), Some(false)) => check(
@@ -500,9 +513,77 @@ fn rates(f: &Facts) -> Check {
     )
 }
 
+/// The Asahi DSP sink (`audio_effect.*`) in front of the speakers.
+fn dsp_sink(dump: &str) -> Option<String> {
+    let serde_json::Value::Array(objects) = serde_json::from_str(dump).ok()? else {
+        return None;
+    };
+    objects.iter().find_map(|o| {
+        let props = &o["info"]["props"];
+        let name = props["node.name"].as_str()?;
+        (name.starts_with("audio_effect.") && props["media.class"] == "Audio/Sink")
+            .then(|| name.to_owned())
+    })
+}
+
+/// The Mac's built-in sound card (ALSA path `hw:Apple…`) is in the graph.
+fn builtin_card(dump: &str) -> bool {
+    let Ok(serde_json::Value::Array(objects)) = serde_json::from_str(dump) else {
+        return false;
+    };
+    objects.iter().any(|o| {
+        o["info"]["props"]["api.alsa.path"]
+            .as_str()
+            .is_some_and(|p| p.starts_with("hw:Apple"))
+    })
+}
+
+/// On Apple Silicon the speakers need the Asahi DSP (or they sound thin)
+/// and speakersafetyd (or the kernel keeps them quiet). JUNC routes to the
+/// DSP, never to the raw speakers. `None` on other machines, and when the
+/// session does not see the built-in card.
+fn asahi(f: &Facts) -> Option<Check> {
+    let dump = f.dump.as_deref()?;
+    if !f.apple || !builtin_card(dump) {
+        return None;
+    }
+    let dsp = dsp_sink(dump);
+    Some(match (dsp, f.speakersafetyd) {
+        (None, _) => check(
+            "asahi",
+            Status::Warn,
+            tr("no Asahi DSP in front of the speakers: they sound thin and quiet").into_owned(),
+            Some("sudo pacman -S --needed asahi-audio"),
+        ),
+        (Some(_), Proc::Installed) => check(
+            "asahi",
+            Status::Down,
+            tr("speakersafetyd is not running: the speakers stay quiet to protect them")
+                .into_owned(),
+            Some("sudo systemctl enable --now speakersafetyd"),
+        ),
+        (Some(_), Proc::Missing) => check(
+            "asahi",
+            Status::Missing,
+            tr("speakersafetyd is not installed: the speakers stay quiet to protect them")
+                .into_owned(),
+            Some("sudo pacman -S speakersafetyd"),
+        ),
+        (Some(d), Proc::Running) => check(
+            "asahi",
+            Status::Ok,
+            trf(
+                "the speakers play through the Asahi DSP ({dsp}); speakersafetyd running",
+                &[("dsp", &d)],
+            ),
+            None,
+        ),
+    })
+}
+
 /// All checks, in the order a person would fix them.
 pub fn checks(f: &Facts) -> Vec<Check> {
-    vec![
+    let mut out = vec![
         pipewire(f),
         service(
             "wireplumber",
@@ -519,8 +600,10 @@ pub fn checks(f: &Facts) -> Vec<Check> {
         jack(f),
         clock(f),
         rates(f),
-        juncd(f.daemon.as_ref()),
-    ]
+    ];
+    out.extend(asahi(f));
+    out.push(juncd(f.daemon.as_ref()));
+    out
 }
 
 #[cfg(test)]
@@ -544,7 +627,37 @@ mod tests {
             settings: Some(SETTINGS.into()),
             dump: Some(fixture("komplete-audio-2-stereo.json")),
             daemon: None,
+            apple: false,
+            speakersafetyd: Proc::Missing,
         }
+    }
+
+    #[test]
+    fn an_asahi_mac() {
+        let mac = Facts {
+            dump: Some(fixture("asahi-m1-j293.json")),
+            apple: true,
+            speakersafetyd: Proc::Running,
+            ..healthy()
+        };
+        golden("asahi", &mac);
+        let no_dsp = Facts {
+            dump: Some(fixture("asahi-m1-j293.json").replace("audio_effect.", "effect.")),
+            ..mac.clone()
+        };
+        // A session that does not see the built-in card (an isolated
+        // PipeWire): nothing to say.
+        let blind = Facts {
+            dump: Some(fixture("komplete-audio-2-stereo.json")),
+            ..mac.clone()
+        };
+        assert!(asahi(&blind).is_none());
+        let quiet = Facts {
+            speakersafetyd: Proc::Installed,
+            ..mac
+        };
+        let got: Vec<Check> = [no_dsp, quiet].iter().filter_map(asahi).collect();
+        golden_value("asahi-problems", &got);
     }
 
     fn fixture(name: &str) -> String {
@@ -601,7 +714,11 @@ mod tests {
     /// Compares the checks' JSON with tests/golden/doctor/<name>.json;
     /// `JUNC_BLESS=1` rewrites it.
     fn golden(name: &str, f: &Facts) {
-        let json = serde_json::to_string_pretty(&checks(f)).expect("json") + "\n";
+        golden_value(name, &checks(f));
+    }
+
+    fn golden_value(name: &str, checks: &[Check]) {
+        let json = serde_json::to_string_pretty(checks).expect("json") + "\n";
         let file = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../tests/golden/doctor")
             .join(format!("{name}.json"));
