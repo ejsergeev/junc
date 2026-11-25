@@ -989,3 +989,75 @@ fn teardown_leaves_no_junc_object() {
     let refused = e.junc(&["--json", "teardown"]).json();
     assert_eq!(refused["error"]["code"], "E_NEEDS_CONFIRMATION");
 }
+
+/// F20 (B6): the package's `pre_remove` runs `junc teardown --yes` as
+/// every logged-in user with a session bus, with that user's environment,
+/// and never fails the removal.
+#[test]
+fn pre_remove_tears_down_every_logged_in_session() {
+    let dir = std::env::temp_dir().join(format!("junc-cli-preremove-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let bin = dir.join("bin");
+    std::fs::create_dir_all(&bin).expect("dir");
+    // Two users logged in; only alice has a session bus.
+    for (uid, bus) in [("1000", true), ("1001", false)] {
+        let run = dir.join("run").join(uid);
+        std::fs::create_dir_all(&run).expect("run dir");
+        if bus {
+            std::os::unix::net::UnixListener::bind(run.join("bus")).expect("bus socket");
+        }
+    }
+    let script = |name: &str, body: &str| {
+        let p = bin.join(name);
+        std::fs::write(&p, format!("#!/bin/sh\n{body}\n")).expect("fake");
+        Command::new("chmod")
+            .arg("755")
+            .arg(&p)
+            .status()
+            .expect("chmod");
+    };
+    script(
+        "loginctl",
+        "printf '1000 alice no active\\n1001 bob no active\\n'",
+    );
+    script("getent", "echo \"$2:x:1000:1000::/home/$2:/bin/sh\"");
+    // runuser -u USER -- CMD…: record who and what, then run the rest.
+    script(
+        "runuser",
+        "user=$2; shift 3; echo \"$user $*\" >> \"$JUNC_TEST_DIR/calls\"; exit 1",
+    );
+    let out = Command::new("bash")
+        .arg("-c")
+        .arg(format!(
+            "source {}; pre_remove",
+            repo().join("packaging/arch/junc.install").display()
+        ))
+        .env(
+            "PATH",
+            format!(
+                "{}:{}",
+                bin.display(),
+                std::env::var("PATH").unwrap_or_default()
+            ),
+        )
+        .env("JUNC_RUN_USER_DIR", dir.join("run"))
+        .env("JUNC_TEST_DIR", &dir)
+        .output()
+        .expect("bash");
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let calls = std::fs::read_to_string(dir.join("calls")).unwrap_or_default();
+    let run = dir.join("run").join("1000");
+    assert_eq!(
+        calls.trim(),
+        format!(
+            "alice env HOME=/home/alice XDG_RUNTIME_DIR={r} DBUS_SESSION_BUS_ADDRESS=unix:path={r}/bus junc teardown --yes",
+            r = run.display()
+        ),
+        "only alice, with her environment"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# pacman install script for the junc package (docs/architecture.md §3.13).
+
+# Before the package goes: remove JUNC's devices and links from the audio
+# session of every logged-in user and stop their juncd (F20). Best effort:
+# anything missed is gone at the next PipeWire restart, because nothing
+# creates it again. Each user's ~/.config/junc stays for a reinstall.
+pre_remove() {
+    local run=${JUNC_RUN_USER_DIR:-/run/user}
+    command -v loginctl >/dev/null 2>&1 || return 0
+    loginctl list-users --no-legend 2>/dev/null | while read -r uid user _; do
+        [ -n "$user" ] && [ -S "$run/$uid/bus" ] || continue
+        home=$(getent passwd "$user" | cut -d: -f6)
+        runuser -u "$user" -- env HOME="$home" XDG_RUNTIME_DIR="$run/$uid" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=$run/$uid/bus" \
+            junc teardown --yes >/dev/null 2>&1 || true
+    done
+    return 0
+}
