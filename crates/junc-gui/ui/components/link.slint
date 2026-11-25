@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Link (Spec): a cubic Bézier from port to port with both control points
+// at half the horizontal span, 2px accent. Hover: 4px plus a 10px accent
+// halo at 25 %. Offline input: dashed 4/4 in mark.dim (Slint paths have no
+// dash pattern, so the dashes are short pieces of the same curve). The
+// owner places it in a container spanning both ports, coordinates in that
+// container.
+
+import { Tokens } from "../tokens.slint";
+
+export component JLink inherits Rectangle {
+    in property <length> x1;
+    in property <length> y1;
+    in property <length> x2;
+    in property <length> y2;
+    in property <bool> hovered;
+    in property <bool> offline;
+    accessible-role: none;
+
+    property <length> mid: (root.x1 + root.x2) / 2;
+    // A point of the curve at t (0–1).
+    pure function bx(t: float) -> length {
+        let u = 1 - t;
+        return u * u * u * root.x1 + 3 * u * u * t * root.mid + 3 * u * t * t * root.mid + t * t * t * root.x2;
+    }
+    pure function by(t: float) -> length {
+        let u = 1 - t;
+        return u * u * u * root.y1 + 3 * u * u * t * root.y1 + 3 * u * t * t * root.y2 + t * t * t * root.y2;
+    }
+
+    if !root.offline && root.hovered: Path {
+        width: root.width;
+        height: root.height;
+        viewbox-width: self.width / 1px;
+        viewbox-height: self.height / 1px;
+        stroke: Tokens.halo;
+        stroke-width: 10px;
+        MoveTo { x: root.x1 / 1px; y: root.y1 / 1px; }
+        CubicTo {
+            control-1-x: root.mid / 1px; control-1-y: root.y1 / 1px;
+            control-2-x: root.mid / 1px; control-2-y: root.y2 / 1px;
+            x: root.x2 / 1px; y: root.y2 / 1px;
+        }
+    }
+    if !root.offline: Path {
+        width: root.width;
+        height: root.height;
+        viewbox-width: self.width / 1px;
+        viewbox-height: self.height / 1px;
+        stroke: Tokens.accent;
+        stroke-width: root.hovered ? 4px : 2px;
+        MoveTo { x: root.x1 / 1px; y: root.y1 / 1px; }
+        CubicTo {
+            control-1-x: root.mid / 1px; control-1-y: root.y1 / 1px;
+            control-2-x: root.mid / 1px; control-2-y: root.y2 / 1px;
+            x: root.x2 / 1px; y: root.y2 / 1px;
+        }
+    }
+    // Dashed: 24 pieces, each the first half of its 1/24 of the curve.
+    if root.offline: Rectangle {
+        for i in 24: Path {
+            width: root.width;
+            height: root.height;
+            viewbox-width: self.width / 1px;
+            viewbox-height: self.height / 1px;
+            stroke: Tokens.mark-dim;
+            stroke-width: 2px;
+            MoveTo { x: root.bx(i / 24) / 1px; y: root.by(i / 24) / 1px; }
+            LineTo { x: root.bx((i + 0.5) / 24) / 1px; y: root.by((i + 0.5) / 24) / 1px; }
+        }
+    }
+}

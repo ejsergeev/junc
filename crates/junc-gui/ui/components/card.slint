@@ -1,0 +1,152 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Card (Spec): surface.card, 1px line.divider. Header 33px on
+// surface.card-header: glyph, title (type.title, text.strong) and switch.
+// Body padding 10 × 10 (the owner's rows, @children). Footer 28px: Options
+// disclosure and a volume slider (Inputs and Listen).
+// States: focus (hover fill and border, title in accent, an own focus
+// ring: validation fix), off (body at 45 %, title text.subtle), offline
+// (urgent marker + "Offline", "Waiting for device…"), not running ("Not
+// running", "Waiting for <app>…"), Exclusive (accent label).
+
+import { Tokens } from "../tokens.slint";
+import { ControlState } from "state.slint";
+import { JSwitch } from "switch.slint";
+import { JSlider } from "slider.slint";
+import { JButton } from "button.slint";
+
+export component JCard inherits Rectangle {
+    in property <string> title;
+    in property <string> glyph;
+    in-out property <bool> on: true;
+    // "ok", "offline", "not-running"
+    in property <string> state: "ok";
+    // The app a not-running card waits for.
+    in property <string> app;
+    in property <bool> exclusive;
+    in property <bool> footer: true;
+    in-out property <int> volume: 100;
+    in property <int> volume-max: 150;
+    in-out property <bool> options-open;
+    out property <bool> has-focus: focus.has-focus;
+    callback toggled(bool);
+    callback volume-changed(int);
+
+    property <bool> hover: touch.has-hover;
+    background: Tokens.surface-card;
+    border-width: Tokens.border;
+    border-color: focus.has-focus ? Tokens.accent : root.hover ? Tokens.control-hover-border : Tokens.line-divider;
+    accessible-role: groupbox;
+    accessible-label: root.title;
+    accessible-description: !root.on ? @tr("off")
+        : root.state == "offline" ? @tr("Offline")
+        : root.state == "not-running" ? @tr("Not running") : "";
+
+    touch := TouchArea { }
+    focus := FocusScope {
+        key-pressed(e) => {
+            if e.text == " " {
+                root.on = !root.on;
+                root.toggled(root.on);
+                return accept;
+            }
+            reject
+        }
+    }
+    VerticalLayout {
+        header := Rectangle {
+            height: 33px * Tokens.scale;
+            background: root.hover || focus.has-focus ? ControlState.fill(true, false, false, false) : Tokens.surface-card-header;
+            HorizontalLayout {
+                padding-left: 10px * Tokens.scale;
+                padding-right: 10px * Tokens.scale;
+                spacing: Tokens.space-row-gap;
+                if root.glyph != "": Text {
+                    text: root.glyph;
+                    vertical-alignment: center;
+                    color: root.state == "offline" ? Tokens.status-urgent : Tokens.text-default;
+                    accessible-role: none;
+                }
+                Text {
+                    text: root.title;
+                    font-size: Tokens.type-title;
+                    vertical-alignment: center;
+                    overflow: elide;
+                    horizontal-stretch: 1;
+                    color: focus.has-focus ? Tokens.accent : root.on ? Tokens.text-strong : Tokens.text-subtle;
+                    accessible-role: none;
+                }
+                if root.exclusive: Text {
+                    text: @tr("Exclusive");
+                    color: Tokens.accent;
+                    font-size: Tokens.type-body-small;
+                    vertical-alignment: center;
+                }
+                if root.state == "offline": HorizontalLayout {
+                    spacing: 4px;
+                    alignment: end;
+                    Rectangle {
+                        width: 6px;
+                        height: 6px;
+                        y: (parent.height - self.height) / 2;
+                        background: Tokens.status-urgent;
+                    }
+                    Text {
+                        text: @tr("Offline");
+                        color: Tokens.status-urgent;
+                        font-size: Tokens.type-body-small;
+                        vertical-alignment: center;
+                    }
+                }
+                if root.state == "not-running": Text {
+                    text: @tr("Not running");
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-body-small;
+                    vertical-alignment: center;
+                }
+                JSwitch {
+                    y: (parent.height - self.height) / 2;
+                    label: root.title;
+                    checked <=> root.on;
+                    toggled(v) => { root.toggled(v); }
+                }
+            }
+        }
+        body := VerticalLayout {
+            padding: 10px * Tokens.scale;
+            spacing: Tokens.space-label-gap;
+            opacity: root.on ? 1 : 0.45;
+            @children
+        }
+        if root.footer: Rectangle {
+            height: Tokens.size-control;
+            border-width: 0;
+            HorizontalLayout {
+                padding-left: 10px * Tokens.scale;
+                padding-right: 10px * Tokens.scale;
+                spacing: Tokens.space-row-gap;
+                if root.state == "ok": JButton {
+                    text: (root.options-open ? "\u{f0140} " : "\u{f0142} ") + @tr("Options");
+                    checkable: true;
+                    checked <=> root.options-open;
+                }
+                if root.state == "ok": JSlider {
+                    horizontal-stretch: 1;
+                    label: @tr("{0} volume", root.title);
+                    maximum: root.volume-max;
+                    value <=> root.volume;
+                    changed(v) => { root.volume-changed(v); }
+                }
+                if root.state == "offline": Text {
+                    text: @tr("Waiting for device…");
+                    color: Tokens.text-subtle;
+                    vertical-alignment: center;
+                }
+                if root.state == "not-running": Text {
+                    text: @tr("Waiting for {0}…", root.app);
+                    color: Tokens.text-subtle;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}

@@ -10,6 +10,11 @@ import { JSlider } from "components/slider.slint";
 import { JKbd } from "components/kbd.slint";
 import { JBadge } from "components/badge.slint";
 import { JTooltip } from "components/tooltip.slint";
+import { JCard } from "components/card.slint";
+import { JPort } from "components/port.slint";
+import { JLink } from "components/link.slint";
+import { JMeter } from "components/meter.slint";
+import { JChannelGroup } from "components/channel-group.slint";
 
 component Row inherits HorizontalLayout {
     in property <string> name;
@@ -66,6 +71,91 @@ export component GalleryWindow inherits Window {
             name: "Keyboard chip";
             JKbd { text: "Ctrl+N"; }
             JKbd { text: "Esc"; }
+        }
+        Row {
+            name: "Card";
+            JCard {
+                width: 230px;
+                title: "Spotify";
+                glyph: "\u{f075a}";
+                exclusive: true;
+                volume: 70;
+                Text { text: "Ch 1   L"; color: Tokens.text-default; }
+                Text { text: "Ch 2   R"; color: Tokens.text-default; }
+            }
+            JCard {
+                width: 230px;
+                title: "USB Microphone";
+                glyph: "\u{f036c}";
+                state: "offline";
+                Text { text: "Ch 1"; color: Tokens.text-default; }
+            }
+            JCard {
+                width: 230px;
+                title: "Firefox";
+                glyph: "\u{f075a}";
+                state: "not-running";
+                app: "Firefox";
+                Text { text: "Ch 1   L"; color: Tokens.text-default; }
+            }
+            JCard {
+                width: 230px;
+                title: "Soundux";
+                on: false;
+                Text { text: "Ch 1   L"; color: Tokens.text-default; }
+            }
+        }
+        Row {
+            name: "Port";
+            JPort { label: "Ch 1 free"; state: "free"; }
+            JPort { label: "Ch 2 linked"; state: "linked"; }
+            JPort { label: "Ch 3 offline"; state: "offline"; }
+            JPort { label: "Ch 4 valid"; state: "valid"; }
+            JPort { label: "Ch 5 snap"; state: "snap"; }
+        }
+        Row {
+            name: "Link";
+            Rectangle {
+                width: 160px;
+                height: 48px;
+                JLink { width: parent.width; height: parent.height; x1: 4px; y1: 8px; x2: 156px; y2: 40px; }
+            }
+            Rectangle {
+                width: 160px;
+                height: 48px;
+                JLink { width: parent.width; height: parent.height; x1: 4px; y1: 8px; x2: 156px; y2: 40px; hovered: true; }
+            }
+            Rectangle {
+                width: 160px;
+                height: 48px;
+                JLink { width: parent.width; height: parent.height; x1: 4px; y1: 8px; x2: 156px; y2: 40px; offline: true; }
+            }
+        }
+        Row {
+            name: "Meter";
+            JMeter { width: 200px; level: -20; peak: -14; }
+            JMeter { width: 200px; level: -8; peak: -5; }
+            JMeter { width: 200px; level: -1; peak: -0.5; }
+        }
+        Row {
+            name: "Channel group";
+            JChannelGroup {
+                width: 300px;
+                label: "In 9–16";
+                channels: [
+                    { label: "In 9", level: -18, linked: false }, { label: "In 10", level: -24, linked: false },
+                    { label: "In 11", level: -60, linked: false }, { label: "In 12", level: -30, linked: false },
+                    { label: "In 13", level: -12, linked: false }, { label: "In 14", level: -40, linked: false },
+                    { label: "In 15", level: -60, linked: false }, { label: "In 16", level: -50, linked: false },
+                ];
+            }
+            JChannelGroup {
+                width: 300px;
+                label: "In 1–2";
+                linked: 2;
+                expanded: true;
+                channels: [{ label: "In 1", level: -18, linked: true }, { label: "In 2", level: -22, linked: true }];
+            }
         }
         Row {
             name: "Tooltip";

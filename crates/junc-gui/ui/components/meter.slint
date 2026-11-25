@@ -1,0 +1,43 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Meter (Spec): track fg 10 %, segments meter.safe → meter.hot from
+// −12 dBFS → meter.clip from −3 dBFS, 2px peak tick in text.default. Width
+// only changes (never layout); hidden from assistive technology: the level
+// is announced on the channel label instead.
+
+import { Tokens } from "../tokens.slint";
+
+export component JMeter inherits Rectangle {
+    // Level and peak in dBFS; −60 and below is silence.
+    in property <float> level: -60;
+    in property <float> peak: -60;
+    // 6px; 4px in the sidebar.
+    height: 6px;
+    background: Tokens.track;
+    accessible-role: none;
+
+    pure function at(db: float) -> float {
+        return clamp((db + 60) / 60, 0, 1);
+    }
+    property <float> lit: root.at(root.level);
+    clip: true;
+    Rectangle {
+        x: 0;
+        width: root.width * min(root.lit, root.at(-12));
+        background: Tokens.meter-safe;
+    }
+    if root.lit > root.at(-12): Rectangle {
+        x: root.width * root.at(-12);
+        width: root.width * (min(root.lit, root.at(-3)) - root.at(-12));
+        background: Tokens.meter-hot;
+    }
+    if root.lit > root.at(-3): Rectangle {
+        x: root.width * root.at(-3);
+        width: root.width * (root.lit - root.at(-3));
+        background: Tokens.meter-clip;
+    }
+    if root.peak > -60: Rectangle {
+        x: min(root.width - 2px, root.width * root.at(root.peak));
+        width: 2px;
+        background: Tokens.text-default;
+    }
+}

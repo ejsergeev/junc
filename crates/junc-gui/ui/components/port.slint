@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Port (Spec): a 10px square on the card edge, centred on its channel row,
+// 12px on hover. Free: surface.window fill, control-normal border. Linked:
+// accent fill. Offline: mark.dim. During a link: valid targets get an
+// accent border, the target under the cursor ("snap") an accent fill and
+// halo. One button per channel: Enter starts a link (or connects to the
+// focused target), Del removes its link.
+
+import { Tokens } from "../tokens.slint";
+
+export component JPort inherits Rectangle {
+    // What a screen reader says, e.g. "Spotify Ch 1, linked to Bus Ch 1".
+    in property <string> label;
+    // "free", "linked", "offline", "valid", "snap"
+    in property <string> state: "free";
+    out property <bool> has-focus: focus.has-focus;
+    callback activated();
+    callback remove();
+
+    property <bool> big: touch.has-hover || focus.has-focus || root.state == "snap";
+    width: 16px;
+    height: 16px;
+    accessible-role: button;
+    accessible-label: root.label;
+    accessible-description: root.state == "linked" ? @tr("linked") : root.state == "offline" ? @tr("offline") : "";
+    accessible-action-default => { root.activated(); }
+
+    if root.state == "snap" || focus.has-focus: Rectangle {
+        width: 22px;
+        height: 22px;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        background: root.state == "snap" ? Tokens.halo : transparent;
+        border-width: focus.has-focus ? Tokens.border : 0;
+        border-color: Tokens.accent;
+    }
+    square := Rectangle {
+        width: root.big ? Tokens.port-hover : Tokens.port;
+        height: self.width;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        background: root.state == "linked" || root.state == "snap" ? Tokens.accent
+            : root.state == "offline" ? Tokens.mark-dim : Tokens.surface-window;
+        border-width: Tokens.border;
+        border-color: root.state == "valid" || root.state == "snap" || root.state == "linked" ? Tokens.accent
+            : root.state == "offline" ? Tokens.mark-dim : Tokens.control-normal-border;
+        animate width, height { duration: Tokens.dur-hover; }
+    }
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            focus.focus();
+            root.activated();
+        }
+    }
+    focus := FocusScope {
+        key-pressed(e) => {
+            if e.text == "\n" || e.text == " " { root.activated(); return accept; }
+            if e.text == Key.Delete || e.text == Key.Backspace { root.remove(); return accept; }
+            reject
+        }
+    }
+}

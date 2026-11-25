@@ -1,0 +1,109 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Channel group (Spec): a 24px tree row with a chevron, a label such as
+// "In 9–16", one 6 × 12 mini meter per channel filling bottom-up in
+// meter.safe, and "8 ch" or "2 of 8 linked". Expanded, each channel is a
+// 20px row with a 4px meter. → and ← expand and collapse.
+
+import { Tokens } from "../tokens.slint";
+import { JMeter } from "meter.slint";
+
+export struct Channel {
+    label: string,
+    // dBFS
+    level: float,
+    linked: bool,
+}
+
+export component JChannelGroup inherits Rectangle {
+    in property <string> label;
+    in property <[Channel]> channels;
+    in-out property <bool> expanded;
+    out property <bool> has-focus: focus.has-focus;
+
+    // How many channels are linked (the canvas counts them).
+    in property <int> linked: 0;
+    property <string> status: root.linked == 0
+        ? @tr("{0} ch", root.channels.length)
+        : @tr("{0} of {1} linked", root.linked, root.channels.length);
+
+    accessible-role: list-item;
+    accessible-label: root.label;
+    accessible-description: root.status;
+    accessible-expandable: true;
+    accessible-expanded: root.expanded;
+    accessible-action-expand => { root.expanded = !root.expanded; }
+
+    focus := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.RightArrow { root.expanded = true; return accept; }
+            if e.text == Key.LeftArrow { root.expanded = false; return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        Rectangle {
+            height: 24px * Tokens.scale;
+            border-width: focus.has-focus ? Tokens.border : 0;
+            border-color: Tokens.accent;
+            TouchArea { clicked => { focus.focus(); root.expanded = !root.expanded; } }
+            HorizontalLayout {
+                spacing: Tokens.space-row-gap;
+                padding-left: 4px;
+                padding-right: 4px;
+                Text {
+                    text: root.expanded ? "\u{f0140}" : "\u{f0142}";
+                    vertical-alignment: center;
+                    color: Tokens.text-subtle;
+                }
+                Text {
+                    text: root.label;
+                    vertical-alignment: center;
+                    color: focus.has-focus ? Tokens.accent : Tokens.text-default;
+                }
+                if !root.expanded: HorizontalLayout {
+                    spacing: 2px;
+                    alignment: start;
+                    for c in root.channels: Rectangle {
+                        width: 6px;
+                        height: 12px;
+                        y: (parent.height - self.height) / 2;
+                        background: Tokens.track;
+                        Rectangle {
+                            y: parent.height - self.height;
+                            height: parent.height * clamp((c.level + 60) / 60, 0, 1);
+                            background: Tokens.meter-safe;
+                        }
+                    }
+                }
+                Rectangle { horizontal-stretch: 1; }
+                Text {
+                    text: root.status;
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-body-small;
+                    vertical-alignment: center;
+                }
+            }
+        }
+        if root.expanded: VerticalLayout {
+            for c in root.channels: Rectangle {
+                height: 20px * Tokens.scale;
+                HorizontalLayout {
+                    padding-left: 24px;
+                    spacing: Tokens.space-row-gap;
+                    Text {
+                        text: c.label;
+                        width: 48px;
+                        vertical-alignment: center;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                    }
+                    JMeter {
+                        y: (parent.height - self.height) / 2;
+                        height: 4px;
+                        level: c.level;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -91,3 +91,48 @@ fn controls_work_from_the_keyboard_and_describe_themselves() {
     show.invoke_accessible_default_action();
     assert_eq!(show.accessible_checked(), Some(false));
 }
+
+#[test]
+fn cards_ports_and_channel_groups_describe_their_state() {
+    i_slint_backend_testing::init_no_event_loop();
+    let w = GalleryWindow::new().expect("gallery");
+    w.show().expect("show");
+
+    // Cards are labelled groups; a state other than "on and present" is
+    // their description, and their switch is labelled by the card title.
+    let mic = ElementHandle::find_by_accessible_label(&w, "USB Microphone")
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::Groupbox))
+        .expect("card");
+    assert_eq!(mic.accessible_description().as_deref(), Some("Offline"));
+    let off = ElementHandle::find_by_accessible_label(&w, "Soundux")
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::Groupbox))
+        .expect("card");
+    assert_eq!(off.accessible_description().as_deref(), Some("off"));
+    let switch = ElementHandle::find_by_accessible_label(&w, "Soundux")
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::Switch))
+        .expect("switch");
+    switch.invoke_accessible_default_action();
+    assert_eq!(off.accessible_description().as_deref(), Some(""));
+    // The card's volume slider is labelled after the card.
+    assert_eq!(
+        one(&w, "Spotify volume").accessible_value().as_deref(),
+        Some("70%")
+    );
+
+    // Ports say whether they are linked.
+    assert_eq!(
+        one(&w, "Ch 2 linked").accessible_description().as_deref(),
+        Some("linked")
+    );
+
+    // Channel groups: status as description, expandable.
+    let group = one(&w, "In 9–16");
+    assert_eq!(group.accessible_description().as_deref(), Some("8 ch"));
+    assert_eq!(group.accessible_expanded(), Some(false));
+    group.invoke_accessible_expand_action();
+    assert_eq!(group.accessible_expanded(), Some(true));
+    assert_eq!(
+        one(&w, "In 1–2").accessible_description().as_deref(),
+        Some("2 of 2 linked")
+    );
+}
