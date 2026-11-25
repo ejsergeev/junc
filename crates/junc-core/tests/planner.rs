@@ -506,3 +506,54 @@ proptest! {
         prop_assert_eq!(b.graph().nodes.keys().copied().collect::<Vec<_>>(), foreign_nodes);
     }
 }
+
+/// F2: a chain of Junctions, each an Input of the next, `depth` levels of
+/// nesting above `j0`, which captures Firefox.
+fn chain(depth: usize) -> Config {
+    let mut text = String::from(
+        "schema = 1\n[[junction]]\nid = \"j0\"\nname = \"J0\"\n\
+         [[junction.input]]\nid = \"firefox\"\nmatch = { binary = \"firefox\" }\n",
+    );
+    for k in 1..=depth {
+        text.push_str(&format!(
+            "[[junction]]\nid = \"j{k}\"\nname = \"J{k}\"\n\
+             [[junction.input]]\nid = \"below\"\nmatch = {{ junction = \"j{}\" }}\n",
+            k - 1
+        ));
+    }
+    cfg(&text)
+}
+
+#[test]
+fn nesting_one_to_four_deep_converges_and_routes_every_level() {
+    for depth in 1..=4 {
+        let mut b = MockBackend::new(graph("apps-browser-two-streams.json"));
+        let c = chain(depth);
+        let rounds = converge(&mut b, &c, &Held::new());
+        assert!(rounds <= 3, "depth {depth}: {rounds} rounds");
+        let links = junc_links(&b);
+        for k in 1..=depth {
+            // Both Bus channels of the level below feed this level's gain node.
+            for ch in 1..=2 {
+                let want = (
+                    format!("junc.j{}", k - 1),
+                    ch,
+                    format!("junc.j{k}.in.below"),
+                    ch,
+                );
+                assert!(links.contains(&want), "depth {depth}: missing {want:?}");
+            }
+        }
+        let p = plan(&c, b.graph(), &Held::new());
+        for k in 1..=depth {
+            let s = p
+                .status
+                .iter()
+                .find(|s| {
+                    s.junction == format!("j{k}") && s.entity == Entity::Input("below".into())
+                })
+                .expect("status");
+            assert_eq!(s.status, Status::Active, "depth {depth}, level {k}");
+        }
+    }
+}
