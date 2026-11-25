@@ -9,9 +9,15 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 image=$1
 name=junc-systemd-$$
-docker run -d --name "$name" --privileged --cgroupns=host \
+prepared=junc-systemd-image-$$
+# Packages first, in a plain container: once systemd boots, the image's own
+# network setup can replace Docker's DNS (seen on Arch Linux ARM).
+docker run --name "$name-prep" -v "$PWD:/src:ro" "$image" /src/scripts/ci/systemd-prepare.sh
+docker commit "$name-prep" "$prepared" >/dev/null
+docker rm "$name-prep" >/dev/null
+docker run -d --name "$name" --privileged --cgroupns=host --network none \
   -v /sys/fs/cgroup:/sys/fs/cgroup:rw --tmpfs /run --tmpfs /run/lock --tmpfs /tmp \
-  -e container=docker -v "$PWD:/src:ro" "$image" /usr/lib/systemd/systemd >/dev/null
+  -e container=docker -v "$PWD:/src:ro" "$prepared" /usr/lib/systemd/systemd >/dev/null
 cleanup() {
   status=$?
   if (( status != 0 )); then
@@ -19,6 +25,7 @@ cleanup() {
     docker exec "$name" journalctl --no-pager -n 80 2>/dev/null || true
   fi
   docker rm -f "$name" >/dev/null 2>&1 || true
+  docker rmi "$prepared" >/dev/null 2>&1 || true
   exit "$status"
 }
 trap cleanup EXIT
