@@ -142,10 +142,11 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   Acceptance: matcher tests over recorded `pw-dump` fixtures incl. browsers
   with several streams and the Asahi topology.
   Done 2026-11-25: graph from pw-dump (nodes, ports, links, devices, profiles, defaults); matcher for apps (multi-stream), devices, monitors, Junctions, Listen `default`; plumbing streams excluded. Tested on the Asahi, snd-aloop, Komplete, Bluetooth and browser fixtures.
-- [ ] **A5** [auto] Planner + `MockBackend` + layer-1 fixtures (1–64 ch,
+- [x] **A5** [auto] Planner + `MockBackend` + layer-1 fixtures (1–64 ch,
   odd maps, appear/disappear, foreign links). Invariant test: no action ever
   targets an untagged object. Req: F3, F4, F17. Acceptance: property-based
   tests pass; invariant holds over all fixtures.
+  Done 2026-11-25: planner + MockBackend; 9 scenario tests and a property test (64 random configs × 6 recorded graphs) for the untagged-object invariant, convergence and cleanup; a mutation that removes foreign links is caught.
 - [ ] **A6** [auto] `junc-pw` backend: registry → graph, create tagged
   lingering nodes and links, metadata, inotify socket watch with the
   validated fallback poll and backoff reset. Req: F1, F9, F10.
