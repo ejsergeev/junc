@@ -1306,3 +1306,74 @@ fn templates_and_presets_make_junctions() {
     assert_eq!(err["code"], "E_PRESET_SLOT");
     assert_eq!(err["location"]["line"], 8);
 }
+
+/// F14: text for people is in the chosen language (--lang, Omarchy's
+/// language file, the locale); --json stays English.
+#[test]
+fn messages_follow_the_language_and_json_stays_english() {
+    let dir = std::env::temp_dir().join(format!("junc-cli-lang-{}", std::process::id()));
+    let mo = dir.join("locale/de/LC_MESSAGES");
+    std::fs::create_dir_all(&mo).expect("dir");
+    let built = Command::new("msgfmt")
+        .arg("-o")
+        .arg(mo.join("junc.mo"))
+        .arg(repo().join("po/cli/de.po"))
+        .status()
+        .is_ok_and(|s| s.success());
+    if !built {
+        assert!(std::env::var_os("CI").is_none(), "msgfmt is missing in CI");
+        eprintln!("skipped: no msgfmt");
+        return;
+    }
+    let config = dir.join("ok.toml");
+    std::fs::write(&config, "schema = 1\n").expect("config");
+    let lang_file = dir.join("language");
+    let junc = |args: &[&str], omarchy: Option<&str>| {
+        if let Some(code) = omarchy {
+            std::fs::write(&lang_file, format!("{code}\n")).expect("language");
+        } else {
+            let _ = std::fs::remove_file(&lang_file);
+        }
+        let out = Command::new(env!("CARGO_BIN_EXE_junc"))
+            .args(args)
+            .env("JUNC_LOCALEDIR", dir.join("locale"))
+            .env("OMARCHY_LANGUAGE_FILE", &lang_file)
+            .env("LANG", "C.UTF-8")
+            .env_remove("LC_ALL")
+            .env_remove("LC_MESSAGES")
+            .env("DBUS_SESSION_BUS_ADDRESS", "unix:path=/nonexistent")
+            .output()
+            .expect("junc");
+        (
+            String::from_utf8_lossy(&out.stdout).into_owned(),
+            String::from_utf8_lossy(&out.stderr).into_owned(),
+        )
+    };
+    let path = config.to_string_lossy().into_owned();
+    let validate = ["config", "validate", path.as_str()];
+
+    let (out, _) = junc(&validate, None);
+    assert!(out.ends_with(": valid\n"), "{out}");
+    let (out, _) = junc(&validate, Some("de"));
+    assert!(out.ends_with(": gültig\n"), "Omarchy's language: {out}");
+    let (out, _) = junc(&[&["--lang", "en"][..], &validate].concat(), Some("de"));
+    assert!(out.ends_with(": valid\n"), "--lang wins: {out}");
+    let (out, _) = junc(&[&["--lang", "en_XA"][..], &validate].concat(), None);
+    assert!(out.contains("⟦"), "pseudo-locale: {out}");
+    // A language without a catalog is English.
+    let (out, _) = junc(&validate, Some("fi"));
+    assert!(out.ends_with(": valid\n"), "{out}");
+
+    let (_, err) = junc(&["schema", "--version", "9"], Some("de"));
+    assert!(
+        err.contains("Es gibt keine Konfigurationsschema-Version 9."),
+        "{err}"
+    );
+    let (out, _) = junc(&["--json", "schema", "--version", "9"], Some("de"));
+    let doc: Value = serde_json::from_str(&out).expect("json");
+    assert_eq!(
+        doc["error"]["message"], "There is no config schema version 9.",
+        "--json is English"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

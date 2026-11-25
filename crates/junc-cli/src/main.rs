@@ -737,7 +737,13 @@ fn main() -> ExitCode {
         }
         Err(e) => e.exit(),
     };
-    let _lang = junc_l10n::resolve(&junc_l10n::Sources::from_env(cli.lang.as_deref()));
+    // Text for people follows --lang, Omarchy's language or the locale;
+    // --json output is always English (architecture §5).
+    if !cli.json {
+        junc_l10n::set_language(&junc_l10n::resolve(&junc_l10n::Sources::from_env(
+            cli.lang.as_deref(),
+        )));
+    }
     let _ = cli.no_color; // Output has no colors yet.
     match run(cli.cmd, cli.json) {
         Ok(d) if cli.json => {

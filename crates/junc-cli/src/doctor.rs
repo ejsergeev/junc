@@ -337,7 +337,7 @@ fn clock(f: &Facts) -> Check {
         &[
             ("rate", &rate),
             ("q", &quantum),
-            ("ms", &format!("{ms:.1}")),
+            ("ms", &junc_l10n::numbers::format(ms, 1)),
         ],
     );
     if get("clock.force-rate").is_some() || get("clock.force-quantum").is_some() {
@@ -346,14 +346,11 @@ fn clock(f: &Facts) -> Check {
     check("clock", Status::Ok, detail, None)
 }
 
-/// `44.1 kHz`, `48 kHz`.
+/// `44.1 kHz`, `48 kHz`, in the language's number format.
 fn khz(rate: u32) -> String {
     let k = f64::from(rate) / 1000.0;
-    if rate.is_multiple_of(1000) {
-        format!("{k:.0} kHz")
-    } else {
-        format!("{k:.1} kHz")
-    }
+    let decimals = if rate.is_multiple_of(1000) { 0 } else { 1 };
+    format!("{} kHz", junc_l10n::numbers::format(k, decimals))
 }
 
 /// The rates a device's `EnumFormat` offers.
