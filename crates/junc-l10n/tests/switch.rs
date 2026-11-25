@@ -43,6 +43,8 @@ fn the_language_switches_in_place() {
     );
 
     assert_eq!(language(), "en");
+    assert_eq!(trn("{n} input", "{n} inputs", 1, &[]), "1 input");
+    assert_eq!(trn("{n} input", "{n} inputs", 3, &[]), "3 inputs");
     assert_eq!(set_language_in(&dir, "de_DE.UTF-8"), "de");
     assert_eq!(
         trf("Turned {name} off.", &[("name", &"Zoom Mic")]),

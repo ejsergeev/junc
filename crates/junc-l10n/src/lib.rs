@@ -268,16 +268,17 @@ pub fn resolve(sources: &Sources) -> String {
 mod tests {
     use super::*;
 
+    // Messages in tests would land in the template (xgettext reads every
+    // tr call under src/); tr, trf and trn are tested in tests/switch.rs.
     #[test]
     fn placeholders_are_filled_by_name() {
+        let f = |t: &str, a: &[(&str, &dyn Display)]| fill(t, a);
         assert_eq!(
-            trf("Turned {name} off.", &[("name", &"Zoom Mic")]),
+            f("Turned {name} off.", &[("name", &"Zoom Mic")]),
             "Turned Zoom Mic off."
         );
-        assert_eq!(trf("{a} and {b}", &[("b", &2), ("a", &1)]), "1 and 2");
-        assert_eq!(trf("keep {unknown} and {", &[]), "keep {unknown} and {");
-        assert_eq!(trn("{n} input", "{n} inputs", 1, &[]), "1 input");
-        assert_eq!(trn("{n} input", "{n} inputs", 3, &[]), "3 inputs");
+        assert_eq!(f("{a} and {b}", &[("b", &2), ("a", &1)]), "1 and 2");
+        assert_eq!(f("keep {unknown} and {", &[]), "keep {unknown} and {");
     }
 
     #[test]
