@@ -229,9 +229,21 @@ Daemon features first (they gate GUI screens):
   (within 2 %); Listen `links = [[1, 1]]` plays Bus channel 1 only; an
   Input switched off is silent and back at unity when on. Bit-exact at
   unity is unchanged (the existing null tests run through the gain nodes).
-- [ ] **B2** [auto] Exclusive via `target.object` metadata. Req: F11.
+- [x] **B2** [auto] Exclusive via `target.object` metadata. Req: F11.
   Acceptance: layer-2 test with WirePlumber: app leaves speakers while
   captured, returns when turned off.
+  Done 2026-11-25: an Exclusive Input sets its app streams' `target.object`
+  to the Input's gain node; WirePlumber drops its link to the speakers and
+  keeps JUNC's. Cables and Exclusive now share `plan::stream_targets`, so
+  Exclusive gets the Cable's F17 behaviour: a move by the user is held and
+  reported, turning Exclusive off (or the Input, or the Junction) returns
+  only the streams still at JUNC's value. Config validation rejects
+  `exclusive` on non-app Inputs. Layer-2 test with WirePlumber: the app
+  leaves the speakers 47 ms after juncd starts, comes back 10 ms after a
+  hand edit turns Exclusive off, and leaves again when it is turned on.
+  A restarted daemon adopts streams already at a wanted target or at a
+  JUNC Input gain node, so turning Exclusive off after a restart still
+  returns them (unit test).
 - [ ] **B3** [auto] Pro Audio detection/switching, channel groups, profile
   memory on re-plug. Req: F15. Acceptance: layer-1 fixtures (18-ch) + layer-3
   `snd-aloop` on the owner laptop.
