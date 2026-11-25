@@ -1,0 +1,20 @@
+{
+  "arch": "x86_64",
+  "metrics": {
+    "added_latency_frames": 0.0,
+    "anon_huge_kb": 0.0,
+    "binary_size_bytes": 3127024.0,
+    "bit_exact": 1.0,
+    "cli_enable_p95_ms": 3.4484820000000003,
+    "idle_wakeups_per_s": 0.0,
+    "pss_anon_kb": 2760.0,
+    "pss_file_kb": 3094.0,
+    "pss_kb": 5854.0,
+    "pss_shmem_kb": 0.0,
+    "recovery_max_ms": 7.941287999999999,
+    "recovery_total_max_ms": 192.458533,
+    "relink_p95_ms": 6.181639,
+    "restore_ms": 113.528091,
+    "rss_kb": 9704.0
+  }
+}
