@@ -37,5 +37,10 @@ for problems a `fix`: show it to the user and run it only if they agree
   again, redo the edit, dry-run, apply.
 - **The skill is missing for an agent**: `junc skill status`, then
   `junc skill link`.
+- **The user wants JUNC gone**: `junc teardown --yes` stops and disables
+  juncd, removes every JUNC device and link, restores the defaults and
+  unlinks this skill; the config stays. Ask first: every Junction stops.
+- **After an update**: nothing to do. juncd restarts itself in place and
+  audio keeps playing.
 
 Logs: `journalctl --user -u juncd`.
