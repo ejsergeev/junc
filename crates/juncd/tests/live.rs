@@ -788,3 +788,104 @@ fn nesting_four_deep_is_bit_exact() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// Milliseconds from start to a converged graph, from juncd's log.
+fn graph_complete_ms(log: &std::path::Path) -> f64 {
+    let end = Instant::now() + Duration::from_secs(5);
+    loop {
+        if let Some(ms) = read(log)
+            .lines()
+            .find_map(|l| l.strip_prefix("juncd: graph complete after "))
+            .and_then(|r| r.trim_end_matches(" ms").parse::<f64>().ok())
+        {
+            return ms;
+        }
+        assert!(Instant::now() < end, "never converged:\n{}", read(log));
+        std::thread::sleep(Duration::from_millis(20));
+    }
+}
+
+/// Acceptance of A15 (F9): ten Junctions are restored in under a second,
+/// on a fresh graph (login) and when the daemon restarts over the
+/// Junctions it left lingering (crash, upgrade).
+#[test]
+fn ten_junctions_restore_in_under_a_second() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-restore-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config: String = std::iter::once("schema = 1\n".to_owned())
+        .chain((0..10).map(|k| {
+            format!(
+                "[[junction]]\nid = \"r{k}\"\nname = \"R{k}\"\n\
+                 [[junction.input]]\nid = \"mic\"\nmatch = {{ device = \"fake.hwin\" }}\n\
+                 [[junction.listen]]\nid = \"hp\"\ntarget = \"default\"\n"
+            )
+        }))
+        .collect();
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let all_routed = |g: &Graph| {
+        (0..10).all(|k| {
+            let refs: Vec<&str> = g
+                .links
+                .values()
+                .filter(|l| l.props.get("junc.junction") == Some(&format!("r{k}")))
+                .filter_map(|l| l.props.get("junc.ref"))
+                .collect();
+            [
+                "sink/2",
+                "gain/mic/2",
+                "in/mic/1->2",
+                "listen/hp/bus/2",
+                "listen/hp/2->2",
+            ]
+            .iter()
+            .all(|r| refs.contains(r))
+        })
+    };
+
+    // From process start to every Junction routed, seen from outside.
+    let restore = |tag: &str, g: &mut Graph| {
+        let t = Instant::now();
+        let (d, log) = run_juncd(&dir, tag, &config);
+        let done = wait_for(&rx, g, Duration::from_secs(5), all_routed)
+            .unwrap_or_else(|| panic!("{tag}: not restored\n{}", read(&log)));
+        (
+            d,
+            done.duration_since(t).as_secs_f64() * 1000.0,
+            graph_complete_ms(&log),
+        )
+    };
+    let (first, cold, cold_inner) = restore("restore", &mut g);
+    // A restart finds the Junctions still there (they linger): it must
+    // adopt them as they are, recreating nothing (no audio drop).
+    let serials = |g: &Graph| {
+        let mut v: Vec<(String, Option<u32>)> = g
+            .nodes
+            .values()
+            .filter(|n| n.is_junc())
+            .map(|n| (n.name().to_owned(), n.props.number("object.serial")))
+            .collect();
+        v.sort();
+        v
+    };
+    let before = serials(&g);
+    drop(first);
+    let (second, _, warm) = restore("restore2", &mut g);
+    assert_eq!(serials(&g), before, "a restart recreated Junction nodes");
+    eprintln!(
+        "restore 10 Junctions: fresh {cold:.0} ms from process start \
+         ({cold_inner:.0} ms after connecting); restart adopted them in {warm:.0} ms"
+    );
+    assert!(cold < 1000.0, "fresh restore took {cold:.0} ms");
+    assert!(warm < 1000.0, "restart took {warm:.0} ms to converge");
+    drop(second);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
