@@ -24,6 +24,30 @@ waits for it.
 (turned off), `unknown` (the daemon has no PipeWire graph yet), and in
 `matched` the nodes it found.
 
+## More channels: Pro Audio
+
+Many audio interfaces show only a stereo pair until their card runs the
+Pro Audio profile. `data.devices` in `junc describe --json` lists each
+card with its `profile`, `input_channels` and `channel_groups` (groups of
+eight, as the app shows them). A card with `pro_audio` has more inputs in
+Pro Audio: `{"now": 2, "all": 18}`, or `"all": null` when only
+"available" is known. Ask the user before switching: it renames the
+card's devices and other apps using them lose them.
+
+```sh
+junc input add studio --device alsa_input.usb-Focusrite_Scarlett_18i8-00.analog-stereo --pro-audio
+```
+
+This saves `profile = "pro-audio"` with the device match. JUNC switches
+the card now and every time it is plugged in, and the Input takes the
+card's widest Pro Audio input (status `waiting` until the switch shows
+up). If the user picks another profile elsewhere while the card stays
+plugged in, JUNC keeps their choice and saves it as the Input's
+`profile`; a card turned off is left off. Default links take the first
+Bus channels; use `junc link` for the others. Built-in audio set up by
+UCM (Apple Silicon included) never gets Pro Audio: it would bypass the
+speaker protection.
+
 ## Bluetooth headsets
 
 A headset's microphone only exists in its call profile (HFP/HSP), which
