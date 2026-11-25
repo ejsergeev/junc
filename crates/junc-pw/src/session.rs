@@ -35,6 +35,9 @@ struct State {
     /// Proxies of objects we created, kept until the next sync completes.
     created: Vec<Box<dyn ProxyT>>,
     sync: Option<pw::spa::utils::result::AsyncSeq>,
+    /// Bound proxies whose first info (with the full props) has not arrived:
+    /// a snapshot without it would show JUNC's own objects as untagged.
+    awaiting_info: std::collections::HashSet<u32>,
     outcome: Outcome,
 }
 
@@ -94,6 +97,7 @@ fn serve(
         bound: HashMap::new(),
         created: Vec::new(),
         sync: None,
+        awaiting_info: std::collections::HashSet::new(),
         outcome: Outcome::Running,
     }));
 
@@ -117,6 +121,11 @@ fn serve(
                         return;
                     }
                     s.sync = None;
+                    if !s.awaiting_info.is_empty() {
+                        // Not complete yet; the info listener requests the
+                        // next sync once the props are in.
+                        return;
+                    }
                     s.created.clear();
                     if debug() {
                         let n = s
@@ -178,6 +187,7 @@ fn serve(
                 g.links.remove(&id);
                 g.devices.remove(&id);
                 s.bound.remove(&id);
+                s.awaiting_info.remove(&id);
                 drop(s);
                 if let Some(core) = core_rm.upgrade() {
                     request_sync(&st_rm, &core);
@@ -277,12 +287,14 @@ fn on_global(
                             if let Some(n) = st2.borrow_mut().graph.nodes.get_mut(&id) {
                                 merge(&mut n.props, p);
                             }
+                            st2.borrow_mut().awaiting_info.remove(&id);
                             if let Some(core) = core2.upgrade() {
                                 request_sync(&st2, &core);
                             }
                         }
                     })
                     .register();
+                st.borrow_mut().awaiting_info.insert(id);
                 st.borrow_mut().bound.insert(
                     id,
                     Bound {
@@ -344,12 +356,14 @@ fn on_global(
                             if let Some(l) = st2.borrow_mut().graph.links.get_mut(&id) {
                                 merge(&mut l.props, p);
                             }
+                            st2.borrow_mut().awaiting_info.remove(&id);
                             if let Some(core) = core2.upgrade() {
                                 request_sync(&st2, &core);
                             }
                         }
                     })
                     .register();
+                st.borrow_mut().awaiting_info.insert(id);
                 st.borrow_mut().bound.insert(
                     id,
                     Bound {
