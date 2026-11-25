@@ -12,6 +12,10 @@ Wants=pipewire.service
 [Service]
 Type=notify
 ExecStart=/usr/bin/juncd
+# One malloc arena: juncd's helper threads allocate little, and each extra
+# glibc arena can be backed by a whole 2 MB transparent huge page (seen on
+# Arch Linux ARM), doubling the daemon's memory for nothing.
+Environment=GLIBC_TUNABLES=glibc.malloc.arena_max=1
 Restart=on-failure
 RestartSec=1
 # 2: bad arguments, 3: no usable config, 4: another juncd owns the bus name.
