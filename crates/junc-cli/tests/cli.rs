@@ -570,3 +570,58 @@ fn live_dry_run_changes_nothing_and_doctor_is_happy() {
         }
     }
 }
+
+/// F2: a nesting loop is refused with E_CONFIG_CYCLE before anything
+/// changes, whichever way it arrives.
+#[test]
+fn nesting_loops_are_refused_before_any_change() {
+    let Some(e) = start("cycle", true, false) else {
+        return;
+    };
+    e.ok(&["create", "junction", "A"]);
+    e.ok(&["create", "junction", "B"]);
+    e.ok(&["input", "add", "b", "--junction", "a"]);
+    let before = (
+        e.file(),
+        e.junc(&["--json", "status"]).json()["revision"].clone(),
+    );
+
+    // Through an edit command.
+    let out = e.junc(&["--json", "input", "add", "a", "--junction", "b"]);
+    assert_eq!(out.code, 3, "{}", out.stdout);
+    let v = out.json();
+    assert_eq!(v["error"]["code"], "E_CONFIG_CYCLE");
+    assert_eq!(v["error"]["message"], "nesting loop: a → b → a");
+
+    // Through apply, as an agent would.
+    let fixed = "schema = 1\n\
+                 [[junction]]\nid = \"a\"\nname = \"A\"\n\
+                 [[junction.input]]\nid = \"b\"\nmatch = { junction = \"b\" }\n\
+                 [[junction]]\nid = \"b\"\nname = \"B\"\n\
+                 [[junction.input]]\nid = \"a\"\nmatch = { junction = \"a\" }\n";
+    let looped = e.dir.join("loop.toml");
+    std::fs::write(&looped, fixed).expect("write");
+    let out = e.junc(&["--json", "apply", &looped.to_string_lossy()]);
+    assert_eq!(out.code, 3, "{}", out.stdout);
+    assert_eq!(out.json()["error"]["code"], "E_CONFIG_CYCLE");
+    let out = e.junc(&["--json", "apply", &looped.to_string_lossy(), "--dry-run"]);
+    assert_eq!(out.code, 3, "a dry run validates first: {}", out.stdout);
+
+    assert_eq!(
+        (
+            e.file(),
+            e.junc(&["--json", "status"]).json()["revision"].clone()
+        ),
+        before,
+        "nothing changed"
+    );
+
+    // Through a hand edit: reported, and the last good config stays in use.
+    std::fs::write(e.dir.join("junctions.toml"), fixed).expect("hand edit");
+    wait(|| {
+        let d = e.junc(&["--json", "status"]).json();
+        d["data"]["config_error"][0]["code"] == "E_CONFIG_CYCLE"
+    });
+    let a = e.status("a");
+    assert!(a["inputs"].as_array().is_none_or(Vec::is_empty), "{a}");
+}
