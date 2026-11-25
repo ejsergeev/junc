@@ -59,6 +59,7 @@ pub fn apply(window: &AppWindow, t: &theme::Tokens) {
     g.set_text_selection_fill(color(t.text_selection_fill));
     g.set_track(color(t.track));
     g.set_halo(color(t.halo));
+    g.set_font_family(t.font_family.as_str().into());
     // Slint lengths are f32; theme values are small (1.0, 12.0).
     #[allow(clippy::cast_possible_truncation)]
     {

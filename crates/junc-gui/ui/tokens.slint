@@ -58,7 +58,8 @@ export global Tokens {
     out property <length> type-title: font-base * 14 / 12;
     out property <length> type-heading: font-base * 16 / 12;
     out property <length> type-display: font-base * 24 / 12;
-    out property <string> font-family: "monospace";
+    // fontconfig's monospace alias, resolved in Rust (Slint does not).
+    in-out property <string> font-family: "monospace";
 
     // Shape.
     out property <length> border: 1px;

@@ -182,6 +182,22 @@ pub struct Tokens {
     pub scale: f64,
     /// Body text size in px (`[font] base-size`).
     pub font_size: f64,
+    /// The family fontconfig's `monospace` alias names (Omarchy sets it
+    /// with its font picker).
+    pub font_family: String,
+}
+
+/// The family behind fontconfig's `monospace` alias, as Omarchy's own
+/// apps use it; `monospace` when fontconfig cannot tell.
+pub fn monospace_family() -> String {
+    std::process::Command::new("fc-match")
+        .args(["-f", "%{family[0]}", "monospace"])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+        .filter(|f| !f.is_empty())
+        .unwrap_or_else(|| "monospace".to_owned())
 }
 
 /// The Spec's `ink`: `col` mixed toward the foreground in 10 % steps until
@@ -233,6 +249,7 @@ impl Tokens {
             halo: p.accent.alpha(0.25),
             scale: s.scale,
             font_size: s.font_size,
+            font_family: "monospace".to_owned(),
         }
     }
 }
@@ -364,7 +381,9 @@ pub fn load(dir: &Path) -> Result<Tokens, String> {
     let colors = std::fs::read_to_string(dir.join("colors.toml"))
         .map_err(|e| format!("{}: {e}", dir.join("colors.toml").display()))?;
     let shell = std::fs::read_to_string(dir.join("shell.toml")).unwrap_or_default();
-    Ok(Tokens::derive(&palette_from(&colors)?, &shell_from(&shell)))
+    let mut t = Tokens::derive(&palette_from(&colors)?, &shell_from(&shell));
+    t.font_family = monospace_family();
+    Ok(t)
 }
 
 /// The built-in theme: Flexoki Light when the desktop prefers light (the
@@ -375,7 +394,9 @@ pub fn fallback(prefer_light: bool) -> Tokens {
     } else {
         tokyo_night()
     };
-    Tokens::derive(&p, &Shell::default())
+    let mut t = Tokens::derive(&p, &Shell::default());
+    t.font_family = monospace_family();
+    t
 }
 
 #[cfg(test)]
