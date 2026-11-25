@@ -10,7 +10,9 @@
 //! [`Notice::LinkOverridden`] is raised and the link stays held until the user
 //! chooses Restore or Leave as is. If a node went away in the meantime (an app
 //! quitting removes its links first), the hold is dropped silently and the
-//! link waits for the app like any other.
+//! link waits for the app like any other. Nodes are compared by
+//! `object.serial`: an app that restarts between two snapshots can get its old
+//! registry id back, and its new stream must be linked, not held (F10).
 //!
 //! Links between JUNC's own nodes (`gain/…`, `sink/…`, `listen/…/bus/…`) are
 //! always restored: they are internal wiring, not routing choices.
@@ -106,8 +108,28 @@ struct Seen {
     serial: Option<u32>,
     junction: String,
     reference: String,
-    output_node: u32,
-    input_node: u32,
+    /// The linked nodes, by [`node_key`].
+    output_node: NodeKey,
+    input_node: NodeKey,
+}
+
+/// A node's id with its `object.serial`: the same id with another serial is
+/// another node.
+type NodeKey = (u32, Option<u32>);
+
+fn node_key(graph: &Graph, id: u32) -> NodeKey {
+    (
+        id,
+        graph
+            .nodes
+            .get(&id)
+            .and_then(|n| n.props.number("object.serial")),
+    )
+}
+
+/// The node `key` names is still in the graph.
+fn present(graph: &Graph, key: NodeKey) -> bool {
+    graph.nodes.contains_key(&key.0) && node_key(graph, key.0) == key
 }
 
 /// A stream JUNC sent somewhere with `target.object`.
@@ -134,7 +156,7 @@ pub struct Reconciler {
     /// Links we asked to destroy and have not seen go yet.
     destroying: HashSet<u32>,
     /// Holds awaiting confirmation on the next snapshot.
-    tentative: HashMap<(String, String), (u32, u32)>,
+    tentative: HashMap<(String, String), (NodeKey, NodeKey)>,
     /// Confirmed holds (notice raised, waiting for the user).
     confirmed: Held,
     /// Saved previous defaults (persisted by the daemon).
@@ -179,7 +201,7 @@ impl Reconciler {
         // Confirm or drop last round's tentative holds.
         let tentative = std::mem::take(&mut self.tentative);
         for (key, (out, inn)) in tentative {
-            if graph.nodes.contains_key(&out) && graph.nodes.contains_key(&inn) {
+            if present(graph, out) && present(graph, inn) {
                 notices.push(Notice::LinkOverridden {
                     junction: key.0.clone(),
                     reference: key.1.clone(),
@@ -200,8 +222,8 @@ impl Reconciler {
                         serial: l.props.number("object.serial"),
                         junction: l.props.get("junc.junction")?.to_owned(),
                         reference: l.props.get("junc.ref")?.to_owned(),
-                        output_node: l.output_node,
-                        input_node: l.input_node,
+                        output_node: node_key(graph, l.output_node),
+                        input_node: node_key(graph, l.input_node),
                     },
                 ))
             })
@@ -213,8 +235,7 @@ impl Reconciler {
             if self.destroying.remove(id) || is_internal(&seen.reference) {
                 continue;
             }
-            let both_present = graph.nodes.contains_key(&seen.output_node)
-                && graph.nodes.contains_key(&seen.input_node);
+            let both_present = present(graph, seen.output_node) && present(graph, seen.input_node);
             let key = (seen.junction.clone(), seen.reference.clone());
             if both_present && !self.confirmed.contains(&key) {
                 self.tentative

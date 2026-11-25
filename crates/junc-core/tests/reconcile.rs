@@ -145,6 +145,39 @@ fn an_app_quitting_is_not_an_override() {
 }
 
 #[test]
+fn an_app_restarting_under_a_reused_id_is_relinked() {
+    let (mut b, cfg, mut r) = setup();
+    // The app quits and starts again between two snapshots, and PipeWire
+    // hands the new stream the id the old one had: only `object.serial`
+    // tells them apart. Its links vanished with the old stream; that is not
+    // the user removing them (F10).
+    let firefox: Vec<u32> = b
+        .graph()
+        .nodes
+        .values()
+        .filter(|n| n.name() == "Firefox")
+        .map(|n| n.id)
+        .collect();
+    let junc_links = |b: &MockBackend| b.graph().links.values().filter(|l| l.is_junc()).count();
+    let before = junc_links(&b);
+    b.graph_mut()
+        .links
+        .retain(|_, l| !firefox.contains(&l.output_node));
+    assert!(junc_links(&b) < before, "firefox was linked");
+    for id in &firefox {
+        let n = b.graph_mut().nodes.get_mut(id).expect("node");
+        let serial = n.props.number("object.serial").expect("serial");
+        n.props.set("object.serial", (serial + 10_000).to_string());
+    }
+    for _ in 0..3 {
+        let s = step(&mut b, &cfg, &mut r);
+        assert!(s.notices.is_empty(), "not an override: {s:?}");
+    }
+    assert!(r.held().is_empty());
+    assert_eq!(junc_links(&b), before, "re-linked");
+}
+
+#[test]
 fn own_destroys_and_internal_links() {
     let (mut b, _, mut r) = setup();
     // Remapping the mic to channel 1 only makes JUNC destroy in/mic/1->2
