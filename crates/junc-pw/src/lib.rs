@@ -44,6 +44,7 @@ pub enum Event {
 #[derive(Debug)]
 enum Command {
     Apply(Vec<Action>),
+    Refresh,
     Shutdown,
 }
 
@@ -84,6 +85,10 @@ impl PwBackend {
         let _ = self.tx.send(Command::Apply(actions));
     }
 
+    /// Asks for a graph snapshot even if nothing changed.
+    pub fn refresh(&self) {
+        let _ = self.tx.send(Command::Refresh);
+    }
 }
 
 impl Drop for PwBackend {

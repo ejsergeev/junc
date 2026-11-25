@@ -403,6 +403,8 @@ version = "0.1.0"
 dependencies = [
  "junc-core",
  "junc-pw",
+ "serde",
+ "toml",
 ]
 
 [[package]]

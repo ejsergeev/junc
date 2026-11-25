@@ -282,6 +282,7 @@ fn serve(
                     ml.quit();
                 }
             }
+            Command::Refresh => request_sync(&st, &core),
             Command::Apply(actions) => {
                 for a in &actions {
                     if let Err(e) = apply(&st, &core, &reg, a) {
@@ -568,6 +569,21 @@ fn apply(
                 .create_object("link-factory", &props)
                 .map_err(|e| e.to_string())?;
             track(st, core, Box::new(link));
+        }
+        Action::SetDefault { kind, name } => {
+            let s = st.borrow();
+            let Some((_, md)) = &s.default_md else {
+                return Err("no default metadata (is WirePlumber running?)".into());
+            };
+            let value = name
+                .as_ref()
+                .map(|n| serde_json::json!({ "name": n }).to_string());
+            md.set_property(
+                0,
+                kind.metadata_key(),
+                value.as_ref().map(|_| "Spa:String:JSON"),
+                value.as_deref(),
+            );
         }
         Action::DestroyNode { node: id } | Action::DestroyLink { link: id } => {
             // Defence in depth for F17: the planner never asks for this, but

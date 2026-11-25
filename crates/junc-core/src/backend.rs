@@ -126,6 +126,25 @@ impl LinkSpec {
     }
 }
 
+/// Which system default a [`Action::SetDefault`] changes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DefaultKind {
+    /// Default input (`default.configured.audio.source`).
+    Source,
+    /// Default output (`default.configured.audio.sink`).
+    Sink,
+}
+
+impl DefaultKind {
+    /// Key in the `default` metadata.
+    pub fn metadata_key(self) -> &'static str {
+        match self {
+            Self::Source => "default.configured.audio.source",
+            Self::Sink => "default.configured.audio.sink",
+        }
+    }
+}
+
 /// One change to the graph.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Action {
@@ -142,6 +161,14 @@ pub enum Action {
     DestroyLink {
         /// Link id.
         link: u32,
+    },
+    /// Set (or, with `None`, clear) the configured system default, the way
+    /// `wpctl set-default` does; WirePlumber persists it.
+    SetDefault {
+        /// Input or output.
+        kind: DefaultKind,
+        /// `node.name` to make default; `None` lets WirePlumber choose.
+        name: Option<String>,
     },
 }
 
@@ -160,6 +187,10 @@ impl fmt::Display for Action {
                 l.output_node, l.output_port, l.input_node, l.input_port, l.reference
             ),
             Self::DestroyLink { link } => write!(f, "unlink {link}"),
+            Self::SetDefault { kind, name } => match name {
+                Some(n) => write!(f, "set {} to {n}", kind.metadata_key()),
+                None => write!(f, "clear {}", kind.metadata_key()),
+            },
         }
     }
 }
@@ -355,6 +386,27 @@ impl Backend for MockBackend {
                     )));
                 }
                 self.graph.links.remove(link);
+            }
+            Action::SetDefault { kind, name } => {
+                // WirePlumber follows the configured default when it exists.
+                let d = &mut self.graph.defaults;
+                let exists = name
+                    .as_ref()
+                    .is_some_and(|n| self.graph.nodes.values().any(|x| x.name() == n));
+                match kind {
+                    DefaultKind::Source => {
+                        d.configured_source.clone_from(name);
+                        if exists {
+                            d.source.clone_from(name);
+                        }
+                    }
+                    DefaultKind::Sink => {
+                        d.configured_sink.clone_from(name);
+                        if exists {
+                            d.sink.clone_from(name);
+                        }
+                    }
+                }
             }
         }
         Ok(())

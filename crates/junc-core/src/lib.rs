@@ -8,6 +8,7 @@
 
 pub mod backend;
 pub mod config;
+pub mod defaults;
 pub mod diag;
 pub mod graph;
 pub mod matcher;

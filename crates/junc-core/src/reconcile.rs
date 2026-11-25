@@ -15,7 +15,8 @@
 //! Links between JUNC's own nodes (`gain/…`, `sink/…`, `listen/…/bus/…`) are
 //! always restored: they are internal wiring, not routing choices.
 
-use crate::backend::Action;
+use crate::backend::{Action, DefaultKind};
+use crate::defaults::{DefaultNotice, DefaultsState, plan_defaults};
 use crate::graph::Graph;
 use crate::model::Config;
 use crate::plan::{Held, Plan, plan};
@@ -30,6 +31,20 @@ pub enum Notice {
         junction: String,
         /// `junc.ref` of the link, e.g. `in/mic/1->2`.
         reference: String,
+    },
+    /// JUNC put back the previous default device (F16).
+    DefaultRestored {
+        /// Input or output.
+        kind: DefaultKind,
+        /// The device made default again; `None` if it was gone.
+        to: Option<String>,
+    },
+    /// The user chose another default elsewhere while a Junction held it.
+    DefaultTakenOver {
+        /// Input or output.
+        kind: DefaultKind,
+        /// The Junction that was the default.
+        junction: String,
     },
 }
 
@@ -51,6 +66,10 @@ pub struct Step {
     pub notices: Vec<Notice>,
     /// The plan the actions came from (statuses, deferred renames).
     pub plan: Plan,
+    /// Ask the backend for another snapshot even if nothing changes: a
+    /// tentative hold is confirmed on the next snapshot, and an idle graph
+    /// would never send one.
+    pub refresh: bool,
 }
 
 /// A JUNC link as seen in a snapshot.
@@ -75,12 +94,27 @@ pub struct Reconciler {
     tentative: HashMap<(String, String), (u32, u32)>,
     /// Confirmed holds (notice raised, waiting for the user).
     confirmed: Held,
+    /// Saved previous defaults (persisted by the daemon).
+    defaults: DefaultsState,
 }
 
 impl Reconciler {
     /// A reconciler with nothing held.
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// A reconciler that continues from saved defaults state.
+    pub fn with_defaults(defaults: DefaultsState) -> Self {
+        Self {
+            defaults,
+            ..Self::default()
+        }
+    }
+
+    /// Defaults state to persist after each step.
+    pub fn defaults(&self) -> &DefaultsState {
+        &self.defaults
     }
 
     /// Links currently not recreated (tentative and confirmed).
@@ -157,10 +191,20 @@ impl Reconciler {
                 self.destroying.insert(*link);
             }
         }
+        let mut actions = p.actions.clone();
+        let (default_actions, default_notices) = plan_defaults(config, graph, &mut self.defaults);
+        actions.extend(default_actions);
+        notices.extend(default_notices.into_iter().map(|n| match n {
+            DefaultNotice::Restored { kind, to } => Notice::DefaultRestored { kind, to },
+            DefaultNotice::TakenOver { kind, junction } => {
+                Notice::DefaultTakenOver { kind, junction }
+            }
+        }));
         Step {
-            actions: p.actions.clone(),
+            actions,
             notices,
             plan: p,
+            refresh: !self.tentative.is_empty(),
         }
     }
 
