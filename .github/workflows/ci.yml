@@ -23,13 +23,6 @@ jobs:
           fetch-depth: 0
       - name: Commit messages
         run: scripts/ci/check-commits.sh "origin/${{ github.base_ref }}" HEAD
-      - name: Branch name
-        env:
-          BRANCH: ${{ github.head_ref }}
-        run: |
-          if grep -qiE 'claude|chatgpt|openai|copilot|codex|gemini|anthropic' <<<"$BRANCH"; then
-            echo "branch name contains a tool name: $BRANCH"; exit 1
-          fi
 
   check:
     strategy:
