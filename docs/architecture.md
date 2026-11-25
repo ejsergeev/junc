@@ -1337,6 +1337,41 @@ an SNI host is present.
   build time to the JSON catalogs Omarchy plugins read through
   `Commons.Translations`.
 
+As built (B11), in `junc-l10n`:
+
+- `registry`: Omarchy's `locales.json` vendored (`data/`, Omarchy 4.5.0,
+  MIT), read in file order; `v1()` is its 46 LTR languages. Codes are found
+  in any form (`pt_BR`, `pt-BR`, `de_DE` → `de`, `nb` → `no`) and map to
+  gettext names (`pt_BR`, `nb`).
+- `resolve` answers a registry code: `--lang`/setting → Omarchy's file (an
+  unknown code there is English, not a fall-through) → `LC_ALL`/
+  `LC_MESSAGES`/`LANG` → `en`; RTL languages resolve to `en` until RTL.
+- `mo` + `plural`: our own `.mo` reader and `Plural-Forms` evaluator. The
+  `gettext` crate was dropped: it pulls the unmaintained `encoding` crate
+  (RUSTSEC-2021-0153), which cargo-deny refuses. `set_language` loads
+  `junc.mo` from `$JUNC_LOCALEDIR` or `/usr/share/locale` (own, else base
+  language); `tr`/`trf`/`trn` look up there, missing messages stay
+  English; the language is process-wide and switchable any time.
+- `en_XA` is computed (no catalog): accented outside `{placeholders}`, +40 %,
+  in `⟦…⟧`, as in the validation.
+- `watch::spawn` follows the Omarchy language file with inotify on its
+  directory (in-place writes and renames), reports only real changes, and
+  never creates Omarchy's directory.
+- `numbers` (feature `numbers`, on for the CLI and GUI, off for juncd):
+  ICU4X `icu_decimal` with the registry's format locale and the numbering
+  system its zero digit names (`arabext`, `beng`, …). juncd's release
+  binary does not link ICU data (3.1 MB).
+- Workflow: `cargo xtask i18n extract` (xgettext ≥ 0.24, `--add-location=file`
+  so line moves do not change the template) → `po/cli/junc.pot`;
+  `cargo xtask i18n check` (in `scripts/ci/check.sh`) fails on a stale
+  template, malformed catalogs, missing messages, placeholder or plural-count
+  mismatches, never on untranslated ones; `cargo xtask i18n build [DIR]`
+  writes `.mo` files with junc-l10n's writer (packaging, B25, installs
+  them to `/usr/share/locale`). First catalog: `po/cli/de.po`,
+  machine-drafted and marked; the other 44 are V1.
+- The CLI sets the language before every command except with `--json`,
+  whose text stays English; doctor's ms and kHz use ICU4X.
+
 ---
 
 ## 9. Agent skill
@@ -1652,6 +1687,7 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 | S3 | **Pass.** A link created through the link factory with `object.linger=true` and `junc.*` props stays after its creator exits, with all props in the registry; without linger it disappears. Prop values containing `:` or `>` must be quoted in SPA-JSON. | Ownership tags on links as designed (§3.2). |
 | S4 | **Pass.** pw-cat → gain node → Junction → recorder is bit-exact at 100 % and exactly ×0.5 at 50 % (144 k frames, max error 0). | No direct-link fallback needed. |
 | S5 | **Pass.** With a JUNC link stream→gain in place, setting `target.object` on the stream to its gain node makes WirePlumber drop its link to the default sink and keep JUNC's; clearing the key restores the default-sink link. | Exclusive targets the Input's gain node (not the Junction). |
+| S6 | **Pass** (B11, Slint 1.19.1, testing backend). `.po` catalogs bundled with `with_bundled_translations`; `select_bundled_translation` switches en → de → ru → bn → en in one process and every `@tr` and accessible label follows; an unbundled language is refused and the UI keeps its own. `@tr("{0} input connected" \| "{0} inputs connected" % inputs, inputs-text)` picks the form from the int and shows ICU4X's text (`1.234`, `২১`). `bench/spikes/s6/`. | GUI as designed. Its catalogs carry `msgctxt` = component name (Slint looks messages up that way); element lookups in GUI tests need Slint debug info. |
 | S8 | **Pass by construction.** In the live session the speaker (node 62) and mic-array (node 56) ALSA nodes are inaccessible (`no global`), only their links are visible. | The planner only ever targets nodes it can see; test kept on the Asahi fixture. |
 
 | S9 | Registry globals carry only part of the properties. Nodes: no `junc.*` tags, no `application.process.binary`, no `audio.channels`. Links: no `junc.*` tags. Ports: everything needed (`port.id`, `audio.channel`, direction, `node.id`). | `junc-pw` binds every audio node and every link to read their full info props (cheap client-side proxies, no objects created); ports are read from globals. |

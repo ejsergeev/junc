@@ -337,9 +337,24 @@ GUI foundation:
 - [x] **B10** [auto] Reference renders of all canvas boards in `docs/design/`
   (2026-11-25: 51 PNGs rendered locally from the artifact's files with
   headless Chromium; regeneration steps in `docs/design/README.md`).
-- [ ] **B11** [auto] `junc-l10n`: language resolution + Omarchy watcher,
+- [x] **B11** [auto] `junc-l10n`: language resolution + Omarchy watcher,
   bundled translations, ICU4X numbers, `en_XA`, extraction and catalog
   checks; spike S6. Req: F14. Acceptance: live switch test; CI catalog checks.
+  Done 2026-11-25 (architecture §8, as built): Omarchy's registry vendored
+  (46 LTR languages in v1, RTL resolves to English); own `.mo` reader and
+  plural evaluator (the `gettext` crate's `encoding` dependency fails
+  cargo-deny); catalogs loaded per language and switchable in place;
+  `en_XA` computed; inotify watcher on Omarchy's language file; ICU4X
+  numbers behind a feature juncd does not use (its binary stays 3.1 MB);
+  `cargo xtask i18n extract|check|build`, `po/cli/junc.pot`, a
+  machine-drafted German catalog; the CLI speaks the chosen language and
+  keeps `--json` English. Tests: live switch on Omarchy's file (in-place,
+  rename, same code, removal, other file), language switch with German
+  and Russian plurals, Arabic/Russian/French plural rules, msgfmt output,
+  catalog checks, CLI in German/en_XA/`--json`. CI runs the catalog check.
+  S6 passes on Slint 1.19.1 (`bench/spikes/s6/`): live switch with
+  accessible labels, plurals with ICU4X-formatted counts; GUI catalogs need
+  `msgctxt` = component name.
 - [ ] **B12** [auto] `junc-gui` skeleton: IPC client, AppState, ThemeService
   with live Omarchy reload and fallback themes, window sizing. Req: F21.
   Acceptance: theme switch test on the owner laptop (`omarchy-theme-set`)
