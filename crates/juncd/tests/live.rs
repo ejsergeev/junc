@@ -233,8 +233,8 @@ fn run_juncd(dir: &std::path::Path, tag: &str, config: &str) -> (Kill, std::path
     let child = Command::new(env!("CARGO_BIN_EXE_juncd"))
         .arg("--config")
         .arg(&cfg)
-        .arg("--state")
-        .arg(dir.join("state.toml"))
+        .arg("--state-dir")
+        .arg(dir)
         .stderr(std::fs::File::create(&log).expect("log"))
         .spawn()
         .expect("juncd");

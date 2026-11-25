@@ -401,6 +401,7 @@ dependencies = [
 name = "juncd"
 version = "0.1.0"
 dependencies = [
+ "inotify",
  "junc-core",
  "junc-pw",
  "serde",

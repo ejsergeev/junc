@@ -13,6 +13,7 @@ publish = false
 workspace = true
 
 [dependencies]
+inotify = "0.11"
 junc-core.workspace = true
 junc-pw.workspace = true
 serde = { version = "1.0.229", features = ["derive"] }
