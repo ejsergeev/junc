@@ -67,43 +67,50 @@ Read-only pre-findings (2026-11-25, observed while writing this plan):
 
 Tasks:
 
-- [ ] **0.1** [owner runs sudo] Install the harness dependencies and replace
+- [x] **0.1** [owner runs sudo] Install the harness dependencies and replace
   jack2 with pipewire-jack (approved 2026-11-25):
   `sudo pacman -S --needed pipewire-jack orca python-gobject at-spi2-core
   jack-example-tools wtype ydotool noto-fonts-cjk ttf-jetbrains-mono gettext
   powertop xorg-server-xvfb xdotool imagemagick` (pacman asks to remove jack2).
   Acceptance: `pacman -Q` lists them and `jack2` is gone.
-- [ ] **0.2** [auto] Copy `junc-validation/` into `bench/validation/` (its own
+  Done 2026-11-25: all installed, jack2 replaced by pipewire-jack; clang added for pipewire-rs bindgen.
+- [x] **0.2** [auto] Copy `junc-validation/` into `bench/validation/` (its own
   `ci:` commit, as imported reference), read every script, adapt paths. Build
   `proto` and `bench/juncd` natively on aarch64. Acceptance: both build with
   `--release --locked`.
-- [ ] **0.3** [auto; owner approved interrupting audio for ~1 h on 2026-11-25] `PW_SESSION=systemd
+  Done 2026-11-25: imported unchanged (`77fe001`), then made safe beside a live session and WirePlumber 0.5 (`fddd2ea`); Rust 1.100 via mise, JACK-Client/numpy in a user venv; both prototypes build.
+- [x] **0.3** [auto; owner approved interrupting audio for ~1 h on 2026-11-25] `PW_SESSION=systemd
   bench/run-bench.sh juncd-links` and `manual` at quantum 1024 and 256, plus
   `powertop --csv` for real wakeups. Acceptance: results in
   `docs/hardware-matrix.md`; any target missed becomes a risk below.
+  Done 2026-11-25 except `powertop` (needs root; ctx-switch counts used instead): all daemon targets met in the isolated instance and the live session; live re-link p95 89 ms is close to the limit (see risks). Results in `docs/hardware-matrix.md`.
 - [ ] **0.4** [auto] Slint prototype under Hyprland: `interaction_test.sh` with
   `wtype`/`ydotool`, AT-SPI dump, `perf.sh` with femtovg on the Apple GPU
   (Mesa asahi) and software renderer, cold start, CPU hidden (minimized /
   other workspace). Acceptance: numbers recorded; femtovg PSS < 80 MB or a
   renderer decision logged.
+  Partly done 2026-11-25: femtovg 88 ms cold start, 62 MB PSS, but 6.4 % CPU with meters (target 2 %, see risks); AT-SPI tree on Wayland matches the VM. Left: keyboard walk with `wtype` and focus screenshots, with the owner at the screen.
 - [ ] **0.5** [owner listens, auto drives] `orca_test.sh` under Hyprland; owner
   confirms Orca speaks switch/slider/popover. Acceptance: speech log stored,
   owner's yes/no logged.
-- [ ] **0.6** [owner sudo once, auto drives] Load `snd-dummy` and `snd-aloop`
+- [x] **0.6** [owner sudo once, auto drives] Load `snd-dummy` and `snd-aloop`
   (`pcm_substreams`, `channels` up to 32), check they appear in PipeWire with
   ACP profiles including `pro-audio`; record `pw-dump` as fixtures. Layer 4
   (UAC2 gadget) is skipped by owner decision; record why (no UDC, no
   `dummy_hcd`). Acceptance: `docs/hardware-matrix.md` lists each layer as
   available/skipped with evidence.
+  Done 2026-11-25: snd-dummy and snd-aloop work; Loopback offers pro-audio with 32-channel nodes; fixtures `45bed80`. Unloading needs WirePlumber stopped, so hot-plug tests switch profiles instead.
 - [ ] **0.7** [owner plugs in] Native Instruments Komplete Audio 2 (USB),
   Google Pixel Buds 2a and Apple AirPods (Bluetooth), each once, Bluetooth
   in both A2DP and headset (HFP) mode. [auto] capture `pw-dump` of each as
   layer-1 fixtures (personal data such as MAC addresses stripped).
   Acceptance: fixtures committed.
-- [ ] **0.8** [auto] Capture the Asahi audio topology (`pw-dump` of the DSP
+- [x] **0.8** [auto] Capture the Asahi audio topology (`pw-dump` of the DSP
   chain) as a layer-1 fixture. Acceptance: fixture committed.
+  Done 2026-11-25: `1f6cb71`; raw speaker and mic-array nodes are hidden from normal clients.
 - [ ] **0.9** [auto] Update `architecture.md` and the risks below with what
   step 0 found. Acceptance: `docs:` commit; owner reads it before alpha.
+  Partly done 2026-11-25: hardware matrix and risks updated; finish after 0.4, 0.5 and 0.7.
 
 ---
 
@@ -333,6 +340,8 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | The real USB interface has 2 channels | F15 (Pro Audio, more channels) never runs on real multichannel hardware before release | snd-aloop multichannel cards in layer 3; ask early adopters with 8+ channel interfaces via the testing channel; compatibility table. |
 | Pi 4 targets cannot be measured (no Pi) | "< 2 % CPU on Pi 4" unverifiable | Best-effort (owner, 2026-11-25); measure on the M1 and in CI aarch64. |
 | Bluetooth on Asahi | AirPods / Pixel Buds HFP mic may behave differently from x86 BlueZ setups | F18 logic is tested on recorded fixtures (layer 1); real devices only confirm detection and the warning. |
+| GUI CPU with meters: 6.4 % of a core on the M1 with femtovg (target < 2 %), ~20 wakeups per meter tick from full-window repaints and Wayland round trips | Battery drain while JUNC is open; fails the PRD GUI target | B15: pause when hidden, repaint only meter regions (skia or software partial rendering), lower rate when unfocused; measure early in beta, before building all screens on one renderer. |
+| Re-link in the live session: p95 89 ms with the prototype (target < 100 ms) | Target missed on busier desktops | A7 batches reconcile per `core.sync` instead of per registry event; A19 re-measures in the live session. |
 | Audio/Duplex visibility differs across pulse/JACK/apps | Junctions missing from some apps' device lists | Spike S1 with real apps (Zoom/Discord/OBS in Chromium, Firefox); two-node fallback. |
 | Gain-stage bit-exactness | "bit-exact" metric fails | Spike S4; direct link at 100 % fallback. |
 | WirePlumber policy changes (0.5.x) | Exclusive/defaults behave differently | CI on current Arch packages (rolling); layer-2 tests pin behaviour; doctor reports WP version. |
