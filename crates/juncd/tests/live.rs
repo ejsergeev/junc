@@ -170,7 +170,7 @@ fn relinks_on_churn_and_does_not_fight_overrides() {
         let linked = wait_for(&rx, &mut g, Duration::from_secs(2), |g| {
             junc_links_from(g, node) == 2
         })
-        .unwrap_or_else(|| panic!("restart {i}: not re-linked within 2 s"));
+        .unwrap_or_else(|| panic!("restart {i}: not re-linked within 2 s\n{}", read(&log)));
         relink_ms.push(linked.duration_since(appeared).as_secs_f64() * 1000.0);
     }
     relink_ms.sort_by(f64::total_cmp);
@@ -183,6 +183,13 @@ fn relinks_on_churn_and_does_not_fight_overrides() {
         relink_ms[relink_ms.len() - 1]
     );
     assert!(p95 < 100.0, "re-link p95 {p95:.1} ms ≥ 100 ms");
+    // A restart can hand the new stream the old one's registry id; its
+    // links died with the old stream, nobody overrode them.
+    let text = read(&log);
+    assert!(
+        !text.contains("link_overridden junction=zoom ref=in/spotify"),
+        "app churn taken for an override:\n{text}"
+    );
 
     // Another tool removes a JUNC link: juncd must not recreate it, and must
     // say so.
