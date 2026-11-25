@@ -111,8 +111,9 @@ junc/
 | `junc-gui` | junc-core (types), junc-ipc, junc-pw (meter feature only), junc-l10n, slint, ksni | — |
 
 CI enforces the table with `cargo deny` bans plus a `cargo tree` check per
-binary. The daemon binary target is < 5 MB stripped (`opt-level = "s"`,
-`lto = "fat"`, `codegen-units = 1`, `panic = "abort"` for juncd only).
+binary. The daemon binary target is < 5 MB stripped (`opt-level = "s"` for
+juncd; `lto = "fat"`, `codegen-units = 1`, `strip`, and `panic = "abort"` for
+the whole release profile, since Cargo cannot set `panic` per package).
 
 ### `junc-core` modules
 
