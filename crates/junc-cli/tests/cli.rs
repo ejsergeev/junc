@@ -374,3 +374,199 @@ fn live_smoke() {
     wait(|| e.status("live-mic")["inputs"][0]["status"] == "disabled");
     e.ok(&["delete", "live-mic", "--yes"]);
 }
+
+fn repo() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+}
+
+/// Compares `json` with tests/golden/<path>; `JUNC_BLESS=1` rewrites it.
+fn golden(path: &str, json: &str) {
+    let file = repo().join("tests/golden").join(path);
+    if std::env::var_os("JUNC_BLESS").is_some() {
+        std::fs::create_dir_all(file.parent().expect("dir")).expect("mkdir");
+        std::fs::write(&file, json).expect("write golden");
+    }
+    let want = std::fs::read_to_string(&file).unwrap_or_default();
+    assert!(
+        want == json,
+        "{} differs (JUNC_BLESS=1 cargo test -p junc-cli --test cli rewrites it):\n{json}",
+        file.display()
+    );
+}
+
+/// Runs junc in the repository root without a bus (offline commands).
+fn offline(args: &[&str]) -> Out {
+    let out = Command::new(env!("CARGO_BIN_EXE_junc"))
+        .args(args)
+        .current_dir(repo())
+        .env("DBUS_SESSION_BUS_ADDRESS", "unix:path=/nonexistent")
+        .output()
+        .expect("junc");
+    Out {
+        code: out.status.code().unwrap_or(-1),
+        stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
+    }
+}
+
+#[test]
+fn schema_is_the_published_one() {
+    let out = offline(&["schema"]);
+    assert_eq!(out.code, 0);
+    let published =
+        std::fs::read_to_string(repo().join("schema/junc-config-v1.json")).expect("schema");
+    assert_eq!(out.stdout.trim_end(), published.trim_end());
+    let doc = offline(&["--json", "schema"]).json();
+    assert_eq!(doc["data"]["title"], "JUNC configuration");
+    assert_eq!(offline(&["schema", "--version", "2"]).code, 2);
+}
+
+#[test]
+fn validation_results_match_the_golden_files() {
+    let dir = repo().join("tests/fixtures/configs/invalid");
+    let mut names: Vec<String> = std::fs::read_dir(&dir)
+        .expect("fixtures")
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".toml"))
+        .collect();
+    names.sort();
+    for name in names {
+        let rel = format!("tests/fixtures/configs/invalid/{name}");
+        let out = offline(&["--json", "config", "validate", &rel]);
+        assert_eq!(out.code, 3, "{rel}: {}", out.stdout);
+        golden(
+            &format!("validate/{}.json", name.trim_end_matches(".toml")),
+            &out.stdout,
+        );
+    }
+    for name in ["minimal", "full", "nested"] {
+        let rel = format!("tests/fixtures/configs/valid/{name}.toml");
+        let out = offline(&["--json", "config", "validate", &rel]);
+        assert_eq!(out.code, 0, "{rel}: {}", out.stdout);
+        assert_eq!(out.json()["data"]["valid"], true);
+    }
+}
+
+#[test]
+fn describe_matches_the_golden_file_and_apply_checks_revisions() {
+    let Some(e) = start("describe", true, false) else {
+        return;
+    };
+    let full = std::fs::read_to_string(repo().join("tests/fixtures/configs/valid/full.toml"))
+        .expect("fixture");
+    let file = e.dir.join("full.toml");
+    std::fs::write(&file, &full).expect("write");
+    let path = file.to_string_lossy().into_owned();
+
+    // A stale revision is refused; the right one applies the text as given.
+    let out = e.junc(&["--json", "apply", &path, "--expect-revision", "99"]);
+    assert_eq!(out.code, 5, "{}", out.stdout);
+    let doc = e
+        .junc(&["--json", "apply", &path, "--expect-revision", "1"])
+        .json();
+    assert_eq!(doc["revision"], 2, "{doc}");
+    assert_eq!(doc["data"]["applied"], true);
+    assert!(
+        doc["data"]["plan"]["summary"][0]
+            .as_str()
+            .is_some_and(|s| s.starts_with("Delete “OBS Mix”")),
+        "{doc}"
+    );
+    assert_eq!(e.file(), full);
+
+    // No PipeWire: a dry run cannot plan, and says so.
+    let out = e.junc(&["--json", "apply", &path, "--dry-run"]);
+    assert_eq!(out.code, 7, "{}", out.stdout);
+
+    let mut d = e.junc(&["--json", "describe"]).json();
+    d["data"]["config_file"] = "<config>".into();
+    d["data"]["daemon_version"] = "<version>".into();
+    golden(
+        "describe/full.json",
+        &(serde_json::to_string_pretty(&d).expect("json") + "\n"),
+    );
+}
+
+/// Hardware layer 2: a dry run changes neither the graph nor the config;
+/// doctor sees the isolated session as healthy.
+#[test]
+fn live_dry_run_changes_nothing_and_doctor_is_happy() {
+    if std::env::var("JUNC_LIVE_PIPEWIRE").as_deref() != Ok("1") {
+        eprintln!("skipped: run scripts/ci/live-pipewire.sh");
+        return;
+    }
+    let Some(e) = start("dryrun", true, true) else {
+        return;
+    };
+    let graph = || {
+        let out = Command::new("pw-dump").output().expect("pw-dump");
+        let g = junc_core::graph::Graph::from_pw_dump(&String::from_utf8_lossy(&out.stdout))
+            .expect("graph");
+        let mut nodes: Vec<String> = g
+            .nodes
+            .values()
+            .filter(|n| n.is_junc())
+            .map(|n| n.name().to_owned())
+            .collect();
+        let mut links: Vec<String> = g
+            .links
+            .values()
+            .filter_map(|l| l.props.get("junc.ref").map(str::to_owned))
+            .collect();
+        nodes.sort();
+        links.sort();
+        (nodes, links)
+    };
+    e.ok(&["create", "junction", "Base"]);
+    // Wait until juncd has finished routing: two equal snapshots in a row.
+    let mut last = graph();
+    wait(|| {
+        std::thread::sleep(Duration::from_millis(300));
+        let now = graph();
+        let settled = now == last && now.1.iter().filter(|r| r.starts_with("sink/")).count() == 4;
+        last = now;
+        settled
+    });
+    let before = (graph(), e.file());
+
+    let proposed = e.dir.join("proposed.toml");
+    std::fs::write(
+        &proposed,
+        format!(
+            "{}\n[[junction.input]]\nid = \"hw\"\nmatch = {{ device = \"fake.hwin\" }}\n\n\
+             [[junction]]\nid = \"extra\"\nname = \"Extra\"\n",
+            e.file().trim_end()
+        ),
+    )
+    .expect("write");
+    let doc = e
+        .junc(&["--json", "apply", &proposed.to_string_lossy(), "--dry-run"])
+        .json();
+    assert_eq!(doc["ok"], true, "{doc}");
+    let summary: Vec<&str> = doc["data"]["plan"]["summary"]
+        .as_array()
+        .expect("summary")
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    assert!(
+        summary
+            .iter()
+            .any(|s| s.starts_with("Add ") && s.ends_with("to “Base”")),
+        "{summary:?}"
+    );
+    assert!(
+        summary.contains(&"Create Junction “Extra” (2 channels)"),
+        "{summary:?}"
+    );
+    std::thread::sleep(Duration::from_millis(500));
+    assert_eq!((graph(), e.file()), before, "a dry run changed something");
+
+    let checks = e.junc(&["--json", "doctor"]).json();
+    for c in checks["data"]["checks"].as_array().expect("checks") {
+        if c["id"] != "jack" {
+            assert_eq!(c["status"], "ok", "{c}");
+        }
+    }
+}
