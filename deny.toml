@@ -6,6 +6,12 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+# Vulnerabilities fail anywhere in the tree. "Unmaintained" fails only for
+# crates JUNC depends on directly: Slint 1.19 (the GUI) brings unmaintained
+# crates of its own (chrono, pin-utils, ttf-parser, and zbus 5's zvariant
+# and zbus_names through accesskit), which only a Slint release can
+# replace. Owner decision, 2026-11-25.
+unmaintained = "workspace"
 
 [licenses]
 version = 2
