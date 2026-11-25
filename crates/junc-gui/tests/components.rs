@@ -198,3 +198,56 @@ fn popovers_and_dialogs_follow_the_keyboard_rules() {
             .is_some()
     );
 }
+
+#[test]
+fn status_components_announce_themselves() {
+    i_slint_backend_testing::init_no_event_loop();
+    let w = GalleryWindow::new().expect("gallery");
+    w.show().expect("show");
+    use i_slint_backend_testing::AccessibleLiveness;
+
+    // Checklist rows: status and detail in the description; Copy hands
+    // over the fix.
+    let rate = item(&w, "Sample rate");
+    assert_eq!(
+        rate.accessible_description().as_deref(),
+        Some("mismatch: HDMI Output runs at 44.1 kHz")
+    );
+    one(&w, "Copy").invoke_accessible_default_action();
+    assert!(w.get_last_event().starts_with("copy pw-metadata"));
+
+    // Banners and toasts are polite live regions.
+    let banner = one(&w, "USB Microphone is offline; its links wait for it.");
+    assert_eq!(
+        banner.accessible_live_region(),
+        Some(AccessibleLiveness::Polite)
+    );
+    let toast = one(&w, "Default input restored.");
+    assert_eq!(
+        toast.accessible_live_region(),
+        Some(AccessibleLiveness::Polite)
+    );
+    one(&w, "Undo").invoke_accessible_default_action();
+    assert_eq!(w.get_last_event(), "undo");
+
+    // The empty state's own button runs its action.
+    let empty = one(&w, "No inputs yet");
+    empty
+        .query_descendants()
+        .match_accessible_role(i_slint_backend_testing::AccessibleRole::Button)
+        .find_first()
+        .expect("its button")
+        .invoke_accessible_default_action();
+    assert_eq!(w.get_last_event(), "empty action");
+
+    // Language: the select is disabled while following Omarchy.
+    let select = ElementHandle::find_by_accessible_label(&w, "Deutsch  \u{f0140}")
+        .next()
+        .expect("language select");
+    assert_eq!(select.accessible_enabled(), Some(false));
+    let follow = ElementHandle::find_by_accessible_label(&w, "Follow Omarchy (Setup > Language)")
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::Switch))
+        .expect("follow switch");
+    follow.invoke_accessible_default_action();
+    assert_eq!(select.accessible_enabled(), Some(true));
+}

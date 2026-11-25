@@ -1,0 +1,46 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Empty state (Spec): a dashed 1px line.divider box, as tall as its row so
+// every column shares its edges: title (type.title), one line in
+// text.subtle, one primary button with its shortcut. The button is the
+// first Tab stop of its column.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+import { JDashedBox } from "dashed.slint";
+
+export component JEmptyState inherits JDashedBox {
+    in property <string> title;
+    in property <string> text;
+    in property <string> action;
+    in property <string> shortcut;
+    callback activated();
+    forward-focus: button;
+    accessible-role: groupbox;
+    accessible-label: root.title;
+    VerticalLayout {
+        alignment: center;
+        padding: Tokens.space-panel-pad;
+        spacing: Tokens.space-row-gap;
+        Text {
+            text: root.title;
+            font-size: Tokens.type-title;
+            color: Tokens.text-strong;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: root.text;
+            color: Tokens.text-subtle;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+        }
+        HorizontalLayout {
+            alignment: center;
+            button := JButton {
+                text: root.action;
+                shortcut: root.shortcut;
+                primary: true;
+                clicked => { root.activated(); }
+            }
+        }
+    }
+}

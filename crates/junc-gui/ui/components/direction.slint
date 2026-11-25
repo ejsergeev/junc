@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Direction-aware layout from day one (architecture §7.2): components with
+// a left/right meaning read `Direction.rtl`; v1 always leaves it false
+// (right-to-left languages show English until RTL ships, PRD).
+
+export global Direction {
+    in-out property <bool> rtl: false;
+    // The arrow key that means "forward" (increase, expand, next column).
+    out property <string> forward-key: rtl ? Key.LeftArrow : Key.RightArrow;
+    out property <string> back-key: rtl ? Key.RightArrow : Key.LeftArrow;
+}
+
+// A row that starts at the reading start.
+export component JRow inherits HorizontalLayout {
+    alignment: Direction.rtl ? end : start;
+}
+
+// A column lane (Inputs, Bus, Listen): content at the reading start.
+export component JColumnLane inherits VerticalLayout {
+    alignment: start;
+}

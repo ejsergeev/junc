@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Toast (Spec): bottom-end of the main pane, surface.window at 97 %, 1px
+// text.default border, accent glyph, one line in text.strong, one action
+// and a dismiss button. Quiet confirmations only (default restored,
+// updated). Hides after 8 s, but not while hovered or focused; Ctrl+Z runs
+// Undo. Announced politely.
+
+import { Tokens } from "../tokens.slint";
+import { JButton, JIconButton } from "button.slint";
+
+export component JToast inherits Rectangle {
+    in property <string> text;
+    in property <string> glyph: "\u{f05e0}";
+    in property <string> action;
+    in-out property <bool> visible-now: true;
+    callback activated();
+    callback dismissed();
+
+    property <bool> held: touch.has-hover || keys.has-focus;
+    visible: root.visible-now;
+    height: Tokens.size-control + 12px;
+    background: Tokens.surface-window.with-alpha(0.97);
+    border-width: Tokens.border;
+    border-color: Tokens.text-default;
+    accessible-role: AccessibleRole.text;
+    accessible-label: root.text;
+    accessible-live-region: polite;
+
+    hide := Timer {
+        interval: 8s;
+        running: root.visible-now && !root.held;
+        triggered => {
+            root.visible-now = false;
+            root.dismissed();
+        }
+    }
+    touch := TouchArea { }
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.modifiers.control && (e.text == "z" || e.text == "Z") && root.action != "" {
+                root.activated();
+                return accept;
+            }
+            reject
+        }
+    }
+    HorizontalLayout {
+        padding-left: Tokens.space-row-pad-x;
+        padding-right: 6px;
+        spacing: Tokens.space-row-gap;
+        Text {
+            text: root.glyph;
+            color: Tokens.accent;
+            vertical-alignment: center;
+            accessible-role: none;
+        }
+        Text {
+            text: root.text;
+            color: Tokens.text-strong;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            accessible-role: none;
+        }
+        if root.action != "": JButton {
+            y: (parent.height - self.height) / 2;
+            text: root.action;
+            shortcut: "Ctrl+Z";
+            clicked => { root.activated(); }
+        }
+        JIconButton {
+            y: (parent.height - self.height) / 2;
+            icon: "\u{f0156}";
+            tooltip: @tr("Dismiss");
+            clicked => {
+                root.visible-now = false;
+                root.dismissed();
+            }
+        }
+    }
+}

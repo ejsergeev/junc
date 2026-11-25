@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Checklist row (Spec: onboarding, service down, doctor): an 18px status
+// square (meter.safe ok, meter.hot waiting or mismatch, urgent missing),
+// the name in text.strong, a detail in text.subtle and the status word in
+// its colour. A row with a fix adds a code field on surface.sidebar with
+// a Copy button.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+
+export component JCheckRow inherits Rectangle {
+    in property <string> name;
+    in property <string> detail;
+    // "ok", "waiting", "missing", "mismatch"
+    in property <string> state: "ok";
+    in property <string> code;
+    callback copy(string);
+
+    property <brush> ink: root.state == "ok" ? Tokens.status-ok
+        : root.state == "missing" ? Tokens.status-urgent : Tokens.status-warn;
+    property <string> word: root.state == "ok" ? @tr("ok")
+        : root.state == "waiting" ? @tr("waiting")
+        : root.state == "missing" ? @tr("missing") : @tr("mismatch");
+    background: Tokens.surface-card;
+    accessible-role: list-item;
+    accessible-label: root.name;
+    accessible-description: root.word + ": " + root.detail;
+
+    VerticalLayout {
+        padding: 10px;
+        spacing: Tokens.space-row-gap;
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Rectangle {
+                width: 18px;
+                height: 18px;
+                border-width: Tokens.border;
+                border-color: root.state == "ok" ? Tokens.meter-safe
+                    : root.state == "missing" ? Tokens.meter-clip : Tokens.meter-hot;
+                Text {
+                    text: root.state == "ok" ? "\u{f012c}" : root.state == "missing" ? "\u{f0156}" : "!";
+                    color: parent.border-color;
+                    font-size: Tokens.type-body-small;
+                    accessible-role: none;
+                }
+            }
+            Text {
+                text: root.name;
+                width: 140px;
+                color: Tokens.text-strong;
+                vertical-alignment: center;
+                accessible-role: none;
+            }
+            Text {
+                text: root.detail;
+                horizontal-stretch: 1;
+                color: Tokens.text-subtle;
+                vertical-alignment: center;
+                overflow: elide;
+                accessible-role: none;
+            }
+            Text {
+                text: root.word;
+                color: root.ink;
+                vertical-alignment: center;
+                accessible-role: none;
+            }
+        }
+        if root.code != "": HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Rectangle {
+                horizontal-stretch: 1;
+                height: Tokens.size-control;
+                background: Tokens.surface-sidebar;
+                border-width: Tokens.border;
+                border-color: Tokens.control-normal-border;
+                Text {
+                    x: Tokens.space-control-pad-x;
+                    width: parent.width - 2 * Tokens.space-control-pad-x;
+                    text: root.code;
+                    color: Tokens.text-strong;
+                    vertical-alignment: center;
+                    overflow: elide;
+                    accessible-role: AccessibleRole.text;
+                    accessible-label: root.code;
+                }
+            }
+            JButton {
+                text: @tr("Copy");
+                icon: "\u{f018f}";
+                clicked => { root.copy(root.code); }
+            }
+        }
+    }
+}

@@ -20,6 +20,11 @@ import { JMenu } from "components/menu.slint";
 import { JRadioGroup } from "components/radio-group.slint";
 import { JInlineField } from "components/inline-field.slint";
 import { JConfirm } from "components/confirm.slint";
+import { JEmptyState } from "components/empty-state.slint";
+import { JCheckRow } from "components/check-row.slint";
+import { JBanner } from "components/banner.slint";
+import { JToast } from "components/toast.slint";
+import { JLanguageRow } from "components/language-row.slint";
 
 component Row inherits HorizontalLayout {
     in property <string> name;
@@ -37,7 +42,6 @@ component Row inherits HorizontalLayout {
 
 export component GalleryWindow inherits Window {
     title: "JUNC components";
-    preferred-width: 1100px;
     preferred-height: 900px;
     background: Tokens.surface-window;
     default-font-family: Tokens.font-family;
@@ -45,8 +49,11 @@ export component GalleryWindow inherits Window {
     // What the last callback was, for tests.
     out property <string> last-event;
 
+    preferred-width: 1300px;
+    HorizontalLayout {
+    padding: Tokens.space-panel-pad;
+    spacing: 2 * Tokens.space-panel-gap;
     VerticalLayout {
-        padding: Tokens.space-panel-pad;
         spacing: Tokens.space-panel-gap;
         alignment: start;
         Row {
@@ -221,5 +228,38 @@ export component GalleryWindow inherits Window {
             JTooltip { text: "Add input"; shortcut: "Ctrl+N"; }
             JTooltip { text: "Add"; compact: true; }
         }
+    }
+    VerticalLayout {
+        width: 460px;
+        spacing: Tokens.space-panel-gap;
+        alignment: start;
+        Text { text: "Empty state"; color: Tokens.text-strong; }
+        JEmptyState {
+            height: 150px;
+            title: "No inputs yet";
+            text: "Add an app, a mic or another Junction.";
+            action: "Add input";
+            shortcut: "Ctrl+N";
+            activated => { root.last-event = "empty action"; }
+        }
+        Text { text: "Checklist rows"; color: Tokens.text-strong; }
+        JCheckRow { name: "PipeWire"; detail: "Audio server · running"; state: "ok"; }
+        JCheckRow { name: "WirePlumber"; detail: "Session manager · starting"; state: "waiting"; }
+        JCheckRow {
+            name: "Sample rate";
+            detail: "HDMI Output runs at 44.1 kHz";
+            state: "mismatch";
+            code: "pw-metadata -n settings 0 clock.allowed-rates \"[ 44100 48000 ]\"";
+            copy(c) => { root.last-event = "copy " + c; }
+        }
+        Text { text: "Banners"; color: Tokens.text-strong; }
+        JBanner { kind: "neutral"; text: "JUNC was updated to 0.2.0."; dismissible: true; }
+        JBanner { kind: "warning"; text: "USB Microphone is offline; its links wait for it."; action: "Use default"; }
+        JBanner { kind: "error"; text: "The config file has an error at line 12."; action: "Open file"; secondary: "Details"; }
+        Text { text: "Toast"; color: Tokens.text-strong; }
+        JToast { text: "Default input restored."; action: "Undo"; activated => { root.last-event = "undo"; } }
+        Text { text: "Language"; color: Tokens.text-strong; }
+        JLanguageRow { current: "Deutsch"; }
+    }
     }
 }

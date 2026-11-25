@@ -1,0 +1,74 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Banner (Spec): a full-width 36px row under the header that shifts the
+// columns down: an 8px mark, one ellipsized line (the tooltip has it all),
+// up to two buttons. Neutral (fg 8 % / 25 %), warning (yellow 8 % / 40 %),
+// error (urgent 8 % / 40 %). Non-blocking; announced politely as a status.
+// Esc dismisses where Dismiss is offered.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+
+export component JBanner inherits Rectangle {
+    // "neutral", "warning", "error"
+    in property <string> kind: "neutral";
+    in property <string> text;
+    in property <string> action;
+    in property <string> secondary;
+    in property <bool> dismissible;
+    callback activated();
+    callback secondary-activated();
+    callback dismissed();
+
+    property <brush> tone: root.kind == "error" ? Tokens.status-urgent
+        : root.kind == "warning" ? Tokens.meter-hot : Tokens.text-default;
+    height: 36px * Tokens.scale;
+    background: root.tone.with-alpha(0.08);
+    border-width: Tokens.border;
+    border-color: root.kind == "neutral" ? root.tone.with-alpha(0.25) : root.tone.with-alpha(0.4);
+    accessible-role: AccessibleRole.text;
+    accessible-label: root.text;
+    accessible-live-region: polite;
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.Escape && root.dismissible { root.dismissed(); return accept; }
+            reject
+        }
+    }
+    HorizontalLayout {
+        padding-left: Tokens.space-row-pad-x;
+        padding-right: 4px;
+        spacing: Tokens.space-row-gap;
+        Rectangle {
+            width: 8px;
+            height: 8px;
+            y: (parent.height - self.height) / 2;
+            background: root.tone;
+        }
+        Text {
+            text: root.text;
+            horizontal-stretch: 1;
+            vertical-alignment: center;
+            overflow: elide;
+            color: Tokens.text-strong;
+            accessible-role: none;
+        }
+        if root.action != "": JButton {
+            y: (parent.height - self.height) / 2;
+            text: root.action;
+            primary: true;
+            clicked => { root.activated(); }
+        }
+        if root.secondary != "": JButton {
+            y: (parent.height - self.height) / 2;
+            text: root.secondary;
+            clicked => { root.secondary-activated(); }
+        }
+        if root.dismissible: JButton {
+            y: (parent.height - self.height) / 2;
+            text: @tr("Dismiss");
+            shortcut: "Esc";
+            clicked => { root.dismissed(); }
+        }
+    }
+}

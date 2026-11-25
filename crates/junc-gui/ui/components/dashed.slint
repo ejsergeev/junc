@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// A dashed 1px box border (Slint has no dash pattern): 4px dashes, 4px
+// gaps along each edge.
+
+import { Tokens } from "../tokens.slint";
+
+export component JDashedBox inherits Rectangle {
+    in property <brush> line: Tokens.line-divider;
+    property <int> across: max(1, floor(root.width / 8px));
+    property <int> down: max(1, floor(root.height / 8px));
+    for i in root.across: Rectangle {
+        x: i * 8px;
+        y: 0;
+        width: 4px;
+        height: 1px;
+        background: root.line;
+    }
+    for i in root.across: Rectangle {
+        x: i * 8px;
+        y: root.height - 1px;
+        width: 4px;
+        height: 1px;
+        background: root.line;
+    }
+    for i in root.down: Rectangle {
+        x: 0;
+        y: i * 8px;
+        width: 1px;
+        height: 4px;
+        background: root.line;
+    }
+    for i in root.down: Rectangle {
+        x: root.width - 1px;
+        y: i * 8px;
+        width: 1px;
+        height: 4px;
+        background: root.line;
+    }
+    @children
+}

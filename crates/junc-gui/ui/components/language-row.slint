@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Language rows (Spec, Settings): a switch "Follow Omarchy (Setup >
+// Language)" whose detail names the current language in its own script,
+// and a Language select, disabled while the switch is on, that opens the
+// searchable picker.
+
+import { Tokens } from "../tokens.slint";
+import { JSwitch } from "switch.slint";
+import { JButton } from "button.slint";
+
+export component JLanguageRow inherits VerticalLayout {
+    in-out property <bool> follow: true;
+    // The current language in its own script, e.g. "Deutsch".
+    in property <string> current;
+    callback follow-changed(bool);
+    callback choose();
+    spacing: 1px;
+
+    Rectangle {
+        height: 48px * Tokens.scale;
+        background: Tokens.surface-card;
+        HorizontalLayout {
+            padding-left: Tokens.space-row-pad-x;
+            padding-right: Tokens.space-row-pad-x;
+            spacing: Tokens.space-row-gap;
+            VerticalLayout {
+                alignment: center;
+                horizontal-stretch: 1;
+                Text { text: @tr("Follow Omarchy (Setup > Language)"); color: Tokens.text-strong; }
+                Text {
+                    text: @tr("Current: {0}", root.current);
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-body-small;
+                }
+            }
+            JSwitch {
+                y: (parent.height - self.height) / 2;
+                label: @tr("Follow Omarchy (Setup > Language)");
+                checked <=> root.follow;
+                toggled(v) => { root.follow-changed(v); }
+            }
+        }
+    }
+    Rectangle {
+        height: 48px * Tokens.scale;
+        background: Tokens.surface-card;
+        HorizontalLayout {
+            padding-left: Tokens.space-row-pad-x;
+            padding-right: Tokens.space-row-pad-x;
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: @tr("Language");
+                color: root.follow ? Tokens.text-subtle : Tokens.text-strong;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            JButton {
+                y: (parent.height - self.height) / 2;
+                text: root.current + "  \u{f0140}";
+                tooltip: @tr("Language");
+                enabled: !root.follow;
+                clicked => { root.choose(); }
+            }
+        }
+    }
+}

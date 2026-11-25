@@ -6,6 +6,7 @@
 
 import { Tokens } from "../tokens.slint";
 import { JMeter } from "meter.slint";
+import { Direction } from "direction.slint";
 
 export struct Channel {
     label: string,
@@ -36,8 +37,8 @@ export component JChannelGroup inherits Rectangle {
 
     focus := FocusScope {
         key-pressed(e) => {
-            if e.text == Key.RightArrow { root.expanded = true; return accept; }
-            if e.text == Key.LeftArrow { root.expanded = false; return accept; }
+            if e.text == Direction.forward-key { root.expanded = true; return accept; }
+            if e.text == Direction.back-key { root.expanded = false; return accept; }
             reject
         }
     }

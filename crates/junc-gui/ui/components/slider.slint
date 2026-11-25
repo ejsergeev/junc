@@ -5,6 +5,7 @@
 // validation's fixes: PageUp/PageDown ±10 and a visible focus ring.
 
 import { Tokens } from "../tokens.slint";
+import { Direction } from "direction.slint";
 
 export component JSlider inherits Rectangle {
     forward-focus: focus;
@@ -99,8 +100,8 @@ export component JSlider inherits Rectangle {
         enabled: root.enabled;
         key-pressed(e) => {
             let step = e.modifiers.shift ? 10 : 1;
-            if e.text == Key.LeftArrow { root.set(root.value - step); return accept; }
-            if e.text == Key.RightArrow { root.set(root.value + step); return accept; }
+            if e.text == Direction.back-key { root.set(root.value - step); return accept; }
+            if e.text == Direction.forward-key { root.set(root.value + step); return accept; }
             if e.text == Key.PageUp { root.set(root.value + 10); return accept; }
             if e.text == Key.PageDown { root.set(root.value - 10); return accept; }
             if e.text == Key.Home { root.set(root.minimum); return accept; }
