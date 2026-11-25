@@ -360,16 +360,35 @@ fn junction_links(
         source.into_iter().chain(sink).collect(),
     ));
     let (Some(source), Some(sink)) = (source, sink) else {
-        // Nodes are being created; links follow on the next round.
+        // Nodes are being created; links follow on the next round. An entry
+        // whose source or output is already there reports it: "waiting"
+        // means the app or device is missing, not that JUNC is busy.
         for i in &j.input {
+            let matched = if j.enabled && i.enabled {
+                resolve(&i.matcher, Use::Input, graph)
+            } else {
+                Vec::new()
+            };
+            let s = match (j.enabled && i.enabled, matched.is_empty()) {
+                (false, _) => Status::Disabled,
+                (true, true) => Status::Waiting,
+                (true, false) => Status::Active,
+            };
+            status.push(st(Entity::Input(i.id.clone()), s, matched));
+        }
+        for l in &j.listen {
+            let output = (j.enabled && l.enabled)
+                .then(|| resolve_output(&l.target, graph))
+                .flatten();
+            let s = match (j.enabled && l.enabled, output) {
+                (false, _) => Status::Disabled,
+                (true, None) => Status::Waiting,
+                (true, Some(_)) => Status::Active,
+            };
             status.push(st(
-                Entity::Input(i.id.clone()),
-                if i.enabled {
-                    Status::Waiting
-                } else {
-                    Status::Disabled
-                },
-                vec![],
+                Entity::Listen(l.id.clone()),
+                s,
+                output.into_iter().collect(),
             ));
         }
         return;

@@ -71,9 +71,20 @@
           "enabled": true,
           "volume": 100,
           "exclusive": false,
-          "status": "waiting",
-          "matched": [],
-          "links": [],
+          "status": "active",
+          "matched": [
+            "alsa_input.platform-snd_aloop.0.analog-stereo"
+          ],
+          "links": [
+            [
+              1,
+              1
+            ],
+            [
+              2,
+              2
+            ]
+          ],
           "custom_links": false,
           "suppressed": []
         },
@@ -98,7 +109,7 @@
           "target": "alsa_output.platform-snd_aloop.0.analog-stereo",
           "enabled": true,
           "volume": 100,
-          "status": "unknown",
+          "status": "active",
           "links": [
             [
               1,
