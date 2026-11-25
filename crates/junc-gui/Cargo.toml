@@ -36,3 +36,7 @@ i-slint-backend-testing = "1.19.1"
 # GUI scenarios (architecture §7.5): `--scenario`, the mock IPC and
 # deterministic snapshots with the bundled font. Not in release builds.
 scenarios = ["dep:junc-core", "dep:serde", "dep:png", "slint/unstable-fontique-012"]
+
+[[test]]
+name = "snapshots"
+required-features = ["scenarios"]
