@@ -371,6 +371,7 @@ fn live_statuses_and_graph_changed() {
             j.status == State::Active
                 && j.inputs[0].status == State::Active
                 && j.inputs[0].matched == ["fake.hwin"]
+                && j.inputs[0].links == [[1, 1], [1, 2]]
         })
         .await;
         let desc: Describe =

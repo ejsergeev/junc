@@ -7,9 +7,10 @@
 
 use junc_core::config;
 use junc_core::diag::{Diagnostic, Location, Severity};
-use junc_core::graph::{Graph, NodeKind};
+use junc_core::graph::{Direction, Graph, NodeKind};
+use junc_core::matcher::resolve_output;
 use junc_core::model::{Config, DefaultRole, Junction, Kind, Match};
-use junc_core::plan::{Entity, EntityStatus, Status};
+use junc_core::plan::{Entity, EntityStatus, Status, default_map};
 use serde::{Deserialize, Serialize};
 
 /// A diagnostic as JSON (owned, so clients can read it back).
@@ -111,6 +112,13 @@ pub struct InputView {
     pub status: State,
     /// Names of the nodes it matched now.
     pub matched: Vec<String>,
+    /// `[input channel, bus channel]` pairs in use: the config's own list,
+    /// or the default mapping for the matched source (empty while waiting).
+    pub links: Vec<[u8; 2]>,
+    /// The links are set in the config rather than the default mapping.
+    pub custom_links: bool,
+    /// Links the user chose to leave removed.
+    pub suppressed: Vec<[u8; 2]>,
 }
 
 /// One Listen output with its state.
@@ -126,6 +134,13 @@ pub struct ListenView {
     pub volume: u16,
     /// State.
     pub status: State,
+    /// `[bus channel, output channel]` pairs in use: the config's own list,
+    /// or the default mapping for the output (empty while it is missing).
+    pub links: Vec<[u8; 2]>,
+    /// The links are set in the config rather than the default mapping.
+    pub custom_links: bool,
+    /// Links the user chose to leave removed.
+    pub suppressed: Vec<[u8; 2]>,
 }
 
 /// A Junction or Cable with its state.
@@ -248,6 +263,13 @@ pub fn junction(j: &Junction, statuses: &[EntityStatus], graph: Option<&Graph>) 
             .iter()
             .map(|i| {
                 let (status, nodes) = status_of(statuses, &j.id, &Entity::Input(i.id.clone()));
+                let links = i.links.clone().unwrap_or_else(|| {
+                    let channels = |g: &Graph, n: u32| g.ports_of(n, Direction::Out).count();
+                    graph
+                        .zip(nodes.first())
+                        .map(|(g, &n)| default_map(channels(g, n), usize::from(j.bus.channels)))
+                        .unwrap_or_default()
+                });
                 InputView {
                     id: i.id.clone(),
                     matcher: i.matcher.clone(),
@@ -256,6 +278,9 @@ pub fn junction(j: &Junction, statuses: &[EntityStatus], graph: Option<&Graph>) 
                     exclusive: i.exclusive,
                     status,
                     matched: names(graph, &nodes),
+                    links,
+                    custom_links: i.links.is_some(),
+                    suppressed: i.suppressed.clone(),
                 }
             })
             .collect(),
@@ -268,6 +293,17 @@ pub fn junction(j: &Junction, statuses: &[EntityStatus], graph: Option<&Graph>) 
                 enabled: l.enabled,
                 volume: l.volume,
                 status: status_of(statuses, &j.id, &Entity::Listen(l.id.clone())).0,
+                links: l.links.clone().unwrap_or_else(|| {
+                    graph
+                        .and_then(|g| {
+                            let out = resolve_output(&l.target, g)?;
+                            let n = g.ports_of(out, Direction::In).count();
+                            Some(default_map(usize::from(j.bus.channels), n))
+                        })
+                        .unwrap_or_default()
+                }),
+                custom_links: l.links.is_some(),
+                suppressed: l.suppressed.clone(),
             })
             .collect(),
         cable_target: (j.kind == Kind::Cable)
