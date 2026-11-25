@@ -12,6 +12,9 @@
 
 #![forbid(unsafe_code)]
 
+pub mod mo;
+pub mod plural;
+
 use std::borrow::Cow;
 use std::fmt::Display;
 use std::path::PathBuf;
