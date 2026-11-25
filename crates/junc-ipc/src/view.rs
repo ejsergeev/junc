@@ -404,16 +404,19 @@ pub fn capture_apps(statuses: &[EntityStatus], graph: Option<&Graph>) -> Vec<Str
     out
 }
 
-/// Nodes a user could route.
+/// Nodes a user could route. Of a loopback or filter chain (the Asahi
+/// DSP, Omarchy's mic, a Bluetooth headset mic) only the device side is
+/// listed; its stream side is plumbing.
 pub fn candidates(graph: &Graph) -> Vec<Candidate> {
     graph
         .nodes
         .values()
-        .filter(|n| !n.is_plumbing() && !n.name().is_empty())
+        .filter(|n| !n.name().is_empty())
         .filter_map(|n| {
             let kind = match n.kind() {
                 NodeKind::Source if n.is_junc() => "junction",
                 _ if n.is_junc() => return None,
+                NodeKind::AppPlayback | NodeKind::AppCapture if n.is_plumbing() => return None,
                 NodeKind::AppPlayback => "app_playback",
                 NodeKind::AppCapture => "app_capture",
                 NodeKind::Source => "source",

@@ -87,3 +87,31 @@ fn views_report_statuses_and_links_in_use() {
     let json = serde_json::to_value(&j).expect("json");
     assert_eq!(json["inputs"][0]["match"]["device"], line.matched[0]);
 }
+
+/// The device side of a loopback or filter chain is what users pick: the
+/// Asahi speakers and mic behind their DSP, Omarchy's mic. Their stream
+/// sides are plumbing and stay hidden.
+#[test]
+fn candidates_list_the_device_side_of_loopbacks_and_filter_chains() {
+    let p = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/graphs/asahi-m1-j293.json");
+    let g = Graph::from_pw_dump(&std::fs::read_to_string(p).expect("fixture")).expect("graph");
+    let names: Vec<String> = view::candidates(&g).into_iter().map(|c| c.node).collect();
+    for shown in [
+        "omarchy_asahi_mic",
+        "audio_effect.j293-convolver",
+        "effect_output.j293-mic",
+    ] {
+        assert!(
+            names.iter().any(|n| n == shown),
+            "{shown} missing: {names:?}"
+        );
+    }
+    for hidden in [
+        "input.omarchy_asahi_mic",
+        "audio_effect.j293-mic",
+        "effect_output.j293-convolver",
+    ] {
+        assert!(!names.iter().any(|n| n == hidden), "{hidden} listed");
+    }
+}
