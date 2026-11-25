@@ -567,28 +567,31 @@ fn pw_cat(mode: &str, app: &str, file: &std::path::Path) -> Kill {
 }
 
 fn pw_cat_to(mode: &str, app: &str, file: &std::path::Path, target: Option<&str>) -> Kill {
+    pw_cat_with(mode, app, file, target, "FL,FR")
+}
+
+/// pw-cat with raw s16 at 48 kHz and the channels of `map`.
+fn pw_cat_with(
+    mode: &str,
+    app: &str,
+    file: &std::path::Path,
+    target: Option<&str>,
+    map: &str,
+) -> Kill {
     let mut c = Command::new("pw-cat");
     if let Some(t) = target {
         c.args(["--target", t]);
     }
+    let channels = map.split(',').count().to_string();
     Kill(
-        c.args([
-            mode,
-            "--raw",
-            "--format",
-            "s16",
-            "--rate",
-            "48000",
-            "--channels",
-            "2",
-        ])
-        .args(["--channel-map", "FL,FR", "-P"])
-        .arg(format!("{{ application.name={app} node.name={app} }}"))
-        .arg(file)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .spawn()
-        .expect("pw-cat"),
+        c.args([mode, "--raw", "--format", "s16", "--rate", "48000"])
+            .args(["--channels", &channels, "--channel-map", map, "-P"])
+            .arg(format!("{{ application.name={app} node.name={app} }}"))
+            .arg(file)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("pw-cat"),
     )
 }
 
@@ -886,6 +889,111 @@ fn ten_junctions_restore_in_under_a_second() {
     assert!(cold < 1000.0, "fresh restore took {cold:.0} ms");
     assert!(warm < 1000.0, "restart took {warm:.0} ms to converge");
     drop(second);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// F3/F4: a four-channel Bus with an Input linked to channels 3–4 only.
+/// The app's stereo must arrive bit-exact on AUX2/AUX3 of the Junction,
+/// and channels 1–2 must stay silent.
+#[test]
+fn custom_links_place_an_input_on_chosen_bus_channels() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-bus-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config = "schema = 1\n[[junction]]\nid = \"wide\"\nname = \"Wide\"\n\
+                  bus = { channels = 4 }\n[[junction.input]]\nid = \"player\"\n\
+                  match = { app = \"junc-player\" }\nlinks = [[1, 3], [2, 4]]\n";
+    let (d, log) = run_juncd(&dir, "bus", config);
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let named = |g: &Graph, id: u32, name: &str| g.nodes.get(&id).is_some_and(|n| n.name() == name);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| {
+            g.node_by_name("junc.wide")
+                .is_some_and(|n| g.ports_of(n.id, junc_core::graph::Direction::Out).count() == 4)
+        })
+        .is_some(),
+        "no 4-channel Junction\n{}",
+        read(&log)
+    );
+
+    let src = noise(2 * RATE);
+    let src_file = dir.join("src.raw");
+    let bytes: Vec<u8> = src.iter().flat_map(|s| s.to_le_bytes()).collect();
+    std::fs::write(&src_file, bytes).expect("write source");
+    let rec_file = dir.join("rec.raw");
+    let recorder = pw_cat_with(
+        "-r",
+        "junc-wide-rec",
+        &rec_file,
+        Some("junc.wide"),
+        "AUX0,AUX1,AUX2,AUX3",
+    );
+    let fed = |g: &Graph| {
+        g.node_by_name("junc-wide-rec").is_some_and(|r| {
+            g.links
+                .values()
+                .filter(|l| l.input_node == r.id && named(g, l.output_node, "junc.wide"))
+                .count()
+                == 4
+        })
+    };
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), fed).is_some(),
+        "recorder not linked to all 4 channels"
+    );
+    let mut player = pw_cat("-p", "junc-player", &src_file);
+    let routed = |g: &Graph| {
+        let refs: Vec<&str> = g
+            .links
+            .values()
+            .filter(|l| l.props.get("junc.junction") == Some("wide"))
+            .filter_map(|l| l.props.get("junc.ref"))
+            .collect();
+        refs.contains(&"in/player/1->3")
+            && refs.contains(&"in/player/2->4")
+            && !refs.contains(&"in/player/1->1")
+    };
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), routed).is_some(),
+        "player not routed as configured"
+    );
+    let end = Instant::now() + Duration::from_secs(10);
+    while player.0.try_wait().ok().flatten().is_none() && Instant::now() < end {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    std::thread::sleep(Duration::from_millis(300));
+    let _ = Command::new("kill")
+        .arg("-INT")
+        .arg(recorder.0.id().to_string())
+        .status();
+    std::thread::sleep(Duration::from_millis(300));
+    drop(recorder);
+
+    // Split the 4-channel recording: channels 3–4 against the source,
+    // channels 1–2 must be silent over the same stretch.
+    let rec = read_s16(&rec_file);
+    let frames = rec.len() / 4;
+    let upper: Vec<i16> = (0..frames)
+        .flat_map(|f| [rec[f * 4 + 2], rec[f * 4 + 3]])
+        .collect();
+    let lower_loud = (0..frames)
+        .filter(|f| rec[f * 4] != 0 || rec[f * 4 + 1] != 0)
+        .count();
+    let n = bit_exact_frames(&src, &upper);
+    assert_eq!(
+        lower_loud, 0,
+        "{lower_loud} frames on Bus channels 1–2 are not silent"
+    );
+    eprintln!("bus channels 3–4: {n} frames bit-exact, channels 1–2 silent");
+    drop(d);
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
