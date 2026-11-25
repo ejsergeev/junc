@@ -1069,6 +1069,52 @@ fn junctions_come_back_after_pipewire_restarts() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// F1/S1–S2: a Junction is a device for every audio API: PulseAudio apps
+/// (`pactl`), JACK apps (`jack_lsp` through pipewire-jack) and native ones
+/// (`pw-cli`) all list it.
+#[test]
+fn every_audio_api_sees_a_junction() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-apis-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let (d, log) = run_juncd(
+        &dir,
+        "apis",
+        "schema = 1\n[[junction]]\nid = \"seen\"\nname = \"Seen Everywhere\"\n",
+    );
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| g
+            .node_by_name("junc.seen")
+            .is_some())
+        .is_some(),
+        "{}",
+        read(&log)
+    );
+    std::thread::sleep(Duration::from_millis(300));
+    let pulse = sh_ok("pactl", &["list", "short", "sources"]);
+    assert!(pulse.contains("junc.seen"), "PulseAudio sources:\n{pulse}");
+    let pulse = sh_ok("pactl", &["list", "short", "sinks"]);
+    assert!(
+        pulse.contains("junc.seen.sink"),
+        "PulseAudio sinks:\n{pulse}"
+    );
+    let jack = sh_ok("pw-jack", &["jack_lsp"]);
+    assert!(jack.contains("Seen Everywhere"), "JACK ports:\n{jack}");
+    let native = sh_ok("pw-cli", &["ls", "Node"]);
+    assert!(native.contains("junc.seen"), "{native}");
+    drop(d);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// F10: a device Input whose device is unplugged and plugged back in ten
 /// times is re-linked every time.
 #[test]
