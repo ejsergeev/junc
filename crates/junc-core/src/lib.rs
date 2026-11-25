@@ -17,3 +17,4 @@ pub mod model;
 pub mod plan;
 pub mod reconcile;
 pub mod schema;
+pub mod store;
