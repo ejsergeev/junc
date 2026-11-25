@@ -193,6 +193,21 @@ pub fn junction(j: &JunctionView) -> String {
         facts.insert(0, r);
     }
     let _ = writeln!(out, "  {}", facts.join(", "));
+    if let Some(to) = &j.cable_to {
+        let shown = to
+            .app
+            .as_ref()
+            .or(to.binary.as_ref())
+            .or(to.node.as_ref())
+            .cloned()
+            .unwrap_or_default();
+        let st = j.cable_target.map_or_else(String::new, state);
+        let _ = writeln!(
+            out,
+            "  {}",
+            trf("Delivers to {app}: {st}", &[("app", &shown), ("st", &st)])
+        );
+    }
     if !j.inputs.is_empty() {
         let _ = writeln!(out, "  {}", tr("Inputs:"));
         let rows: Vec<Vec<String>> = j
