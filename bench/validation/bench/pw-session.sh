@@ -17,6 +17,11 @@ start() {
 }
 stop() {
   if [ -f "$PIDF" ]; then kill $(tac "$PIDF") 2>/dev/null; rm -f "$PIDF"
+  elif [ "$XDG_RUNTIME_DIR" != "/run/user/$(id -u)" ]; then
+    # isolated instance without a pid file: kill only processes bound to this runtime dir
+    for p in $(pgrep -x 'pipewire|wireplumber|pipewire-pulse'); do
+      tr '\0' '\n' </proc/$p/environ 2>/dev/null | grep -qx "XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR" && kill "$p"
+    done
   else pkill -x pipewire-pulse; pkill -x wireplumber; pkill -x pipewire; fi
   sleep 0.3; rm -f "$XDG_RUNTIME_DIR"/pipewire-0*
 }
