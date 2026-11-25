@@ -10,6 +10,8 @@ root=$PWD
 export XDG_RUNTIME_DIR=${JUNC_TEST_RUNTIME_DIR:-$(mktemp -d /tmp/junc-live-XXXXXX)}
 export XDG_CONFIG_HOME=$root/bench/validation/bench/ci-config
 export LOGDIR=$XDG_RUNTIME_DIR/logs PW_SESSION=manual
+# juncd keeps state and the last good config here; never the real home.
+export XDG_STATE_HOME=$XDG_RUNTIME_DIR/state
 export PULSE_SERVER=unix:$XDG_RUNTIME_DIR/pulse/native
 unset PIPEWIRE_REMOTE
 chmod 700 "$XDG_RUNTIME_DIR"
