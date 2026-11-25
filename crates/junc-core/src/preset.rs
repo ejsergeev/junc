@@ -559,7 +559,29 @@ fn inline_short_tables(t: &mut toml_edit::Table) {
 /// Built-in templates (F24), as shipped in `templates/` and installed to
 /// `/usr/share/junc/templates`: `(id, file text)`, in the order to offer
 /// them.
-pub const BUILTIN: &[(&str, &str)] = &[];
+pub const BUILTIN: &[(&str, &str)] = &[
+    (
+        "mic-plus-app",
+        include_str!("../../../templates/mic-plus-app.toml"),
+    ),
+    ("cable", include_str!("../../../templates/cable.toml")),
+    (
+        "combine-inputs",
+        include_str!("../../../templates/combine-inputs.toml"),
+    ),
+    (
+        "separate-tracks",
+        include_str!("../../../templates/separate-tracks.toml"),
+    ),
+    (
+        "stream-mix",
+        include_str!("../../../templates/stream-mix.toml"),
+    ),
+    (
+        "start-empty",
+        include_str!("../../../templates/start-empty.toml"),
+    ),
+];
 
 /// A built-in template by id.
 pub fn builtin(id: &str) -> Option<Preset> {

@@ -3,10 +3,10 @@
 //! Presets and templates (F22, F24): built-in templates, slot filling,
 //! export/import round trips, and the errors a hand-written preset gets.
 
-use junc_core::config;
+use junc_core::config::{self, Flavor};
 use junc_core::diag::Diagnostic;
-use junc_core::model::Kind;
-use junc_core::preset::{self, Fill};
+use junc_core::model::{Config, Kind, Match};
+use junc_core::preset::{self, BUILTIN, Fill, SlotKind};
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -16,6 +16,124 @@ fn root() -> &'static Path {
 
 fn show(d: &[Diagnostic]) -> String {
     d.iter().map(|d| format!("  {d}\n")).collect()
+}
+
+/// A value of the right kind for each slot.
+fn sample(kind: SlotKind, id: &str) -> Fill {
+    Fill::value(match kind {
+        SlotKind::HardwareInput => format!("alsa_input.{id}"),
+        SlotKind::App => format!("{id}-app"),
+        SlotKind::Output => "default".to_owned(),
+        SlotKind::Monitor => format!("alsa_output.{id}"),
+    })
+}
+
+#[test]
+fn the_builtin_list_is_the_templates_folder() {
+    let mut files: Vec<String> = std::fs::read_dir(root().join("templates"))
+        .expect("templates/")
+        .filter_map(Result::ok)
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".toml"))
+        .map(|n| n.trim_end_matches(".toml").to_owned())
+        .collect();
+    files.sort();
+    let mut ids: Vec<String> = BUILTIN.iter().map(|(id, _)| (*id).to_owned()).collect();
+    ids.sort();
+    assert_eq!(files, ids, "templates/ and preset::BUILTIN differ");
+    // F24: the set the PRD names.
+    for id in [
+        "cable",
+        "mic-plus-app",
+        "combine-inputs",
+        "separate-tracks",
+        "stream-mix",
+        "start-empty",
+    ] {
+        assert!(ids.iter().any(|i| i == id), "{id} missing");
+    }
+}
+
+#[test]
+fn every_builtin_template_validates_and_fills_into_a_valid_junction() {
+    for (id, text) in BUILTIN {
+        let loaded = preset::load(text, &format!("{id}.toml"))
+            .unwrap_or_else(|d| panic!("{id}:\n{}", show(&d)));
+        assert!(loaded.warnings.is_empty(), "{id}: {:?}", loaded.warnings);
+        let p = loaded.preset;
+        assert!(p.header.builtin, "{id}: builtin = true");
+        assert!(p.header.description.is_some(), "{id}: description");
+        let fills: BTreeMap<String, Fill> = p
+            .header
+            .slot
+            .iter()
+            .map(|s| (s.id.clone(), sample(s.kind, &s.id)))
+            .collect();
+        let j = p.fill(&fills).unwrap_or_else(|d| panic!("{id}: {d}"));
+        assert!(!j.name.contains('{'), "{id}: name not filled: {}", j.name);
+        let cfg = Config {
+            junction: vec![j],
+            ..Config::default()
+        };
+        let errors: Vec<_> = config::validate(&cfg, Flavor::Config)
+            .into_iter()
+            .filter(|f| f.diagnostic.is_error())
+            .map(|f| f.diagnostic)
+            .collect();
+        assert!(errors.is_empty(), "{id} filled:\n{}", show(&errors));
+        // And the filled Junction is an ordinary config.
+        let text = config::to_toml(&cfg);
+        let back = config::load(&text, "t.toml").unwrap_or_else(|d| panic!("{id}:\n{}", show(&d)));
+        assert_eq!(back.config, cfg, "{id}");
+    }
+}
+
+#[test]
+fn mic_plus_app_fills_matches_and_name() {
+    let p = preset::builtin("mic-plus-app").expect("template");
+    let fills = BTreeMap::from([
+        (
+            "mic".to_owned(),
+            Fill {
+                value: "alsa_input.usb-mic".into(),
+                label: Some("USB Microphone".into()),
+            },
+        ),
+        ("app".to_owned(), Fill::value("spotify")),
+    ]);
+    let j = p.fill(&fills).expect("fill");
+    assert_eq!(j.id, "app-mic");
+    assert_eq!(j.name, "spotify + USB Microphone");
+    assert_eq!(
+        j.input[0].matcher,
+        Match {
+            device: Some("alsa_input.usb-mic".into()),
+            ..Match::default()
+        }
+    );
+    assert_eq!(
+        j.input[1].matcher,
+        Match {
+            binary: Some("spotify".into()),
+            ..Match::default()
+        }
+    );
+}
+
+#[test]
+fn the_cable_template_makes_a_cable() {
+    let p = preset::builtin("cable").expect("template");
+    let fills = BTreeMap::from([
+        ("from".to_owned(), Fill::value("firefox")),
+        ("to".to_owned(), Fill::value("Discord")),
+    ]);
+    let j = p.fill(&fills).expect("fill");
+    assert_eq!(j.kind, Kind::Cable);
+    assert_eq!(j.name, "firefox to Discord");
+    assert_eq!(
+        j.cable.expect("cable").to.binary.as_deref(),
+        Some("Discord")
+    );
 }
 
 #[test]

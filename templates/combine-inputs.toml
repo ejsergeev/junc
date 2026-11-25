@@ -1,0 +1,30 @@
+# Built-in template (F24): two hardware inputs heard as one.
+schema = 1
+
+[preset]
+name = "Combine inputs"
+description = "Two hardware inputs mixed into one input."
+example = "e.g. two USB mics, or two audio interfaces"
+icon = "merge"
+builtin = true
+
+[[preset.slot]]
+id = "first"
+kind = "hardware-input"
+prompt = "Pick the first input"
+
+[[preset.slot]]
+id = "second"
+kind = "hardware-input"
+prompt = "Pick the second input"
+
+[junction]
+name = "{first} + {second}"
+
+[[junction.input]]
+id = "first"
+match = { slot = "first" }
+
+[[junction.input]]
+id = "second"
+match = { slot = "second" }

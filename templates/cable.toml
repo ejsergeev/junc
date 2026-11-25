@@ -1,0 +1,30 @@
+# Built-in template (F24): one app straight into another.
+schema = 1
+
+[preset]
+name = "Cable"
+description = "One app's sound straight into another app, nothing else."
+example = "e.g. Firefox into Discord"
+icon = "cable"
+builtin = true
+
+[[preset.slot]]
+id = "from"
+kind = "app"
+prompt = "Pick the app that plays"
+
+[[preset.slot]]
+id = "to"
+kind = "app"
+prompt = "Pick the app that listens"
+
+[junction]
+name = "{from} to {to}"
+kind = "cable"
+
+[[junction.input]]
+id = "from"
+match = { slot = "from" }
+
+[junction.cable]
+to = { slot = "to" }

@@ -1,0 +1,30 @@
+# Built-in template (F24): a mic and one app as one input, e.g. for calls.
+schema = 1
+
+[preset]
+name = "Mic + App"
+description = "Your mic and one app mixed into one input."
+example = "e.g. USB Microphone + Spotify"
+icon = "mic"
+builtin = true
+
+[[preset.slot]]
+id = "mic"
+kind = "hardware-input"
+prompt = "Pick a mic"
+
+[[preset.slot]]
+id = "app"
+kind = "app"
+prompt = "Pick an app"
+
+[junction]
+name = "{app} + {mic}"
+
+[[junction.input]]
+id = "mic"
+match = { slot = "mic" }
+
+[[junction.input]]
+id = "app"
+match = { slot = "app" }

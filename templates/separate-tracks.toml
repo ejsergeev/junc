@@ -1,0 +1,34 @@
+# Built-in template (F24): a mic and an app on separate channels, for
+# recording them as separate tracks (OBS, a DAW).
+schema = 1
+
+[preset]
+name = "Separate tracks"
+description = "Your mic on channels 1–2 and an app on 3–4 of one input, to record them apart."
+example = "e.g. USB Microphone on 1–2, a game on 3–4"
+icon = "tracks"
+builtin = true
+
+[[preset.slot]]
+id = "mic"
+kind = "hardware-input"
+prompt = "Pick a mic"
+
+[[preset.slot]]
+id = "app"
+kind = "app"
+prompt = "Pick an app"
+
+[junction]
+name = "{mic} and {app} tracks"
+bus = { channels = 4 }
+
+[[junction.input]]
+id = "mic"
+match = { slot = "mic" }
+links = [[1, 1], [1, 2]]           # the mic's first channel on both sides of 1–2
+
+[[junction.input]]
+id = "app"
+match = { slot = "app" }
+links = [[1, 3], [2, 4]]

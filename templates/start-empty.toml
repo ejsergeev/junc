@@ -1,0 +1,11 @@
+# Built-in template (F24): an empty Junction to build by hand.
+schema = 1
+
+[preset]
+name = "Start empty"
+description = "An empty Junction: add Inputs and Listen outputs yourself."
+icon = "plus"
+builtin = true
+
+[junction]
+name = "New Junction"

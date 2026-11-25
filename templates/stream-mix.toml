@@ -1,0 +1,30 @@
+# Built-in template (F24): mic and desktop sound mixed for a stream.
+schema = 1
+
+[preset]
+name = "Stream mix"
+description = "Your mic and everything an output plays, mixed into one input for streaming."
+example = "e.g. USB Microphone + your speakers' sound"
+icon = "broadcast"
+builtin = true
+
+[[preset.slot]]
+id = "mic"
+kind = "hardware-input"
+prompt = "Pick a mic"
+
+[[preset.slot]]
+id = "desktop"
+kind = "monitor"
+prompt = "Pick the output whose sound to include"
+
+[junction]
+name = "Stream mix"
+
+[[junction.input]]
+id = "mic"
+match = { slot = "mic" }
+
+[[junction.input]]
+id = "desktop"
+match = { slot = "desktop" }
