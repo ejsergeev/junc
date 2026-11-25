@@ -16,9 +16,12 @@ mod edit;
 mod human;
 mod service;
 
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::Parser;
 use client::Client;
 use edit::{End, Result, Source, usage};
+use junc_cli::args::{
+    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, Role, ServiceCmd, SourceArgs,
+};
 use junc_ipc::ErrorBody;
 use junc_l10n::{tr, trf};
 use serde_json::{Value, json};
@@ -26,268 +29,21 @@ use std::io::{IsTerminal, Read, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-#[derive(Debug, Parser)]
-#[command(
-    name = "junc",
-    version,
-    about = "Route audio between apps and devices with Junctions"
-)]
-struct Cli {
-    /// Print one JSON document instead of text.
-    #[arg(long, global = true)]
-    json: bool,
-    /// Print nothing on success.
-    #[arg(long, short, global = true)]
-    quiet: bool,
-    /// Do not color the output.
-    #[arg(long, global = true)]
-    no_color: bool,
-    /// Language for messages (e.g. de, pt_BR).
-    #[arg(long, global = true, value_name = "CODE")]
-    lang: Option<String>,
-    #[command(subcommand)]
-    cmd: Cmd,
-}
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-enum Role {
-    Input,
-    Output,
-}
-
-impl Role {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Input => "input",
-            Self::Output => "output",
-        }
+fn to_source(a: SourceArgs) -> Source {
+    match a {
+        SourceArgs { app: Some(a), .. } => Source::App(a),
+        SourceArgs {
+            device: Some(d), ..
+        } => Source::Device(d),
+        SourceArgs {
+            monitor: Some(m), ..
+        } => Source::Monitor(m),
+        SourceArgs {
+            junction: Some(j), ..
+        } => Source::Junction(j),
+        // clap requires exactly one of the four.
+        _ => unreachable!("clap enforces the group"),
     }
-}
-
-#[derive(Debug, Subcommand)]
-enum Cmd {
-    /// List Junctions and Cables with their status.
-    List,
-    /// Show the daemon, or one Junction in detail.
-    Status { name: Option<String> },
-    /// Create a Junction or a Cable.
-    #[command(subcommand)]
-    Create(Create),
-    /// Rename a Junction (its id stays).
-    Rename { name: String, new_name: String },
-    /// Copy a Junction.
-    Duplicate {
-        name: String,
-        /// Name of the copy.
-        #[arg(long = "name")]
-        new_name: Option<String>,
-    },
-    /// Delete a Junction and its routing.
-    Delete {
-        name: String,
-        /// Do not ask.
-        #[arg(long)]
-        yes: bool,
-    },
-    /// Turn a Junction on.
-    Enable { name: String },
-    /// Turn a Junction off.
-    Disable { name: String },
-    /// Turn a Junction on if it is off, and off if it is on.
-    Toggle { name: String },
-    /// Turn a Junction on and make it the default input or output.
-    Switch {
-        name: String,
-        #[arg(long = "as")]
-        role: Option<Role>,
-    },
-    /// Make a Junction the default input or output, or stop that.
-    Default {
-        name: String,
-        #[arg(long = "as", required_unless_present = "clear")]
-        role: Option<Role>,
-        #[arg(long, conflicts_with = "role")]
-        clear: bool,
-    },
-    /// Set the volume of a Junction, one of its Inputs, or a Listen output.
-    Volume {
-        name: String,
-        /// `PERCENT`, or `INPUT PERCENT`.
-        #[arg(num_args = 1..=2, required = true)]
-        args: Vec<String>,
-        /// Set the volume of this Listen output.
-        #[arg(long, value_name = "ID")]
-        listen: Option<String>,
-    },
-    /// Add, remove, enable or disable Inputs.
-    #[command(subcommand)]
-    Input(InputCmd),
-    /// Add or remove Bus channels.
-    #[command(subcommand)]
-    Bus(BusCmd),
-    /// Link an Input channel to a Bus channel (`mic:1 2`), or a Bus channel
-    /// to a Listen output channel (`1 speakers:2`).
-    Link {
-        name: String,
-        from: String,
-        to: String,
-    },
-    /// Remove a link (same arguments as `link`).
-    Unlink {
-        name: String,
-        from: String,
-        to: String,
-    },
-    /// Add or remove Listen outputs.
-    #[command(subcommand)]
-    Listen(ListenCmd),
-    /// Everything an agent needs in one JSON document.
-    Describe,
-    /// Print the JSON Schema of junctions.toml.
-    Schema {
-        /// Config schema version.
-        #[arg(long = "version", default_value_t = 1)]
-        schema_version: u32,
-    },
-    /// Find, check or edit the config file.
-    #[command(subcommand)]
-    Config(ConfigCmd),
-    /// Apply a whole config file (`-` reads stdin).
-    Apply {
-        file: PathBuf,
-        /// Show what would change; change nothing.
-        #[arg(long)]
-        dry_run: bool,
-        /// Refuse if the config changed since this revision.
-        #[arg(long, value_name = "N")]
-        expect_revision: Option<u64>,
-    },
-    /// Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd.
-    Doctor,
-    /// Start juncd at login, or not (`systemctl --user` on juncd.service).
-    #[command(subcommand)]
-    Service(ServiceCmd),
-}
-
-#[derive(Debug, Subcommand)]
-enum ServiceCmd {
-    /// Start juncd at login, and now.
-    Enable,
-    /// Stop starting juncd at login, and stop it now.
-    Disable,
-    /// Whether juncd starts at login and runs.
-    Status,
-}
-
-#[derive(Debug, Subcommand)]
-enum ConfigCmd {
-    /// Print where the config file is.
-    Path,
-    /// Check a config file without applying it (default: the one in use).
-    Validate { file: Option<PathBuf> },
-    /// Open the config in $VISUAL or $EDITOR, then check it.
-    Edit,
-}
-
-#[derive(Debug, Subcommand)]
-enum Create {
-    /// An empty Junction.
-    Junction { name: String },
-    /// One app straight into another.
-    Cable {
-        /// Binary of the app that plays.
-        from_app: String,
-        /// Binary of the app that listens.
-        to_app: String,
-        #[arg(long)]
-        name: Option<String>,
-    },
-}
-
-#[derive(Debug, Args)]
-#[group(required = true, multiple = false)]
-struct SourceArgs {
-    /// An app, by binary name.
-    #[arg(long, value_name = "BINARY")]
-    app: Option<String>,
-    /// A hardware input, by node name.
-    #[arg(long, value_name = "NODE")]
-    device: Option<String>,
-    /// What an output plays, by sink node name.
-    #[arg(long, value_name = "SINK")]
-    monitor: Option<String>,
-    /// Another Junction.
-    #[arg(long, value_name = "NAME")]
-    junction: Option<String>,
-}
-
-impl SourceArgs {
-    fn source(self) -> Source {
-        match self {
-            Self { app: Some(a), .. } => Source::App(a),
-            Self {
-                device: Some(d), ..
-            } => Source::Device(d),
-            Self {
-                monitor: Some(m), ..
-            } => Source::Monitor(m),
-            Self {
-                junction: Some(j), ..
-            } => Source::Junction(j),
-            // clap requires exactly one of the four.
-            _ => unreachable!("clap enforces the group"),
-        }
-    }
-}
-
-#[derive(Debug, Subcommand)]
-enum InputCmd {
-    /// Add an Input.
-    Add {
-        name: String,
-        #[command(flatten)]
-        source: SourceArgs,
-        /// Take the app away from the default output while captured.
-        #[arg(long)]
-        exclusive: bool,
-        /// Id of the new Input.
-        #[arg(long)]
-        id: Option<String>,
-    },
-    /// Remove an Input.
-    Remove { name: String, input: String },
-    /// Turn an Input on.
-    Enable { name: String, input: String },
-    /// Turn an Input off.
-    Disable { name: String, input: String },
-}
-
-#[derive(Debug, Subcommand)]
-enum BusCmd {
-    /// Add channels: a stereo pair, or one with --mono.
-    Add {
-        name: String,
-        #[arg(long)]
-        mono: bool,
-        /// How many pairs (or channels with --mono).
-        #[arg(long, default_value_t = 1)]
-        count: u8,
-    },
-    /// Remove one channel; links to later channels move down.
-    Remove { name: String, channel: u8 },
-}
-
-#[derive(Debug, Subcommand)]
-enum ListenCmd {
-    /// Hear the Bus on an output (`default` follows the system output).
-    Add {
-        name: String,
-        output: String,
-        #[arg(long)]
-        id: Option<String>,
-    },
-    /// Stop hearing the Bus on an output.
-    Remove { name: String, id: String },
 }
 
 /// What a successful command reports.
@@ -756,7 +512,7 @@ fn input(c: &Client, cmd: InputCmd) -> Result<Done> {
             exclusive,
             id,
         } => {
-            let source = source.source();
+            let source = to_source(source);
             let mut shown = String::new();
             let (id, rev) = c.edit(|cfg| {
                 let i = named(cfg, &name, &mut shown)?;
@@ -856,20 +612,6 @@ fn links(c: &Client, name: &str, from: &str, to: &str, add: bool) -> Result<Done
     ))
 }
 
-/// Exit codes of architecture §5.3.
-fn exit_code(code: &str) -> u8 {
-    match code {
-        "E_USAGE" => 2,
-        "E_CONFIG_CONFLICT" => 5,
-        c if c.starts_with("E_CONFIG_") => 3,
-        "E_NOT_FOUND" => 4,
-        "E_DAEMON_UNAVAILABLE" | "E_DBUS" => 6,
-        "E_PIPEWIRE_UNAVAILABLE" => 7,
-        "E_NEEDS_CONFIRMATION" => 8,
-        _ => 1,
-    }
-}
-
 fn error_json(e: &ErrorBody) -> Value {
     let mut error = json!({ "code": e.code, "message": e.message });
     if let Some(h) = &e.hint {
@@ -925,7 +667,7 @@ fn main() -> ExitCode {
             } else {
                 eprint!("{}", human::error(&e));
             }
-            ExitCode::from(exit_code(&e.code))
+            ExitCode::from(junc_cli::errors::exit_code(&e.code))
         }
     }
 }
