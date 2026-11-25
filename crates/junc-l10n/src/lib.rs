@@ -17,6 +17,7 @@
 pub mod mo;
 pub mod plural;
 pub mod registry;
+pub mod watch;
 
 use mo::Catalog;
 use std::borrow::Cow;

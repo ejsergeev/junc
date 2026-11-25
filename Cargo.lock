@@ -591,6 +591,7 @@ dependencies = [
 name = "junc-l10n"
 version = "0.1.0"
 dependencies = [
+ "inotify",
  "serde",
  "serde_json",
 ]
