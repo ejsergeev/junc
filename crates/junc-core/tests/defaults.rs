@@ -183,3 +183,69 @@ fn a_stale_snapshot_is_not_a_takeover() {
     }
     assert!(set || source(&b).as_deref() == Some("junc.zoom"));
 }
+
+/// Found on the owner's laptop (A19): the configured mic was the headset
+/// jack, unplugged, so WirePlumber used the built-in mic. After the
+/// Junction stopped being the default, JUNC put the headset back as
+/// configured, but WirePlumber, with the headset unavailable, picked the
+/// Junction from its history. JUNC must end with the built-in mic in use.
+#[test]
+fn restores_the_device_in_use_when_the_configured_one_is_unavailable() {
+    let mut b = backend();
+    let props = [
+        ("media.class", "Audio/Source"),
+        ("node.name", "builtin.mic"),
+        ("node.description", "Built-in mic"),
+    ]
+    .into_iter()
+    .collect();
+    b.add_node(props, 2);
+    b.graph_mut().defaults.source = Some("builtin.mic".into()); // in use
+    let mut r = Reconciler::new();
+    run(&mut b, &cfg("input", true), &mut r, 4);
+    assert_eq!(source(&b).as_deref(), Some("junc.zoom"));
+    assert_eq!(
+        r.defaults().source.previous_in_use.as_deref(),
+        Some("builtin.mic")
+    );
+
+    // Clearing restores the configured headset...
+    let mut notices = run(&mut b, &cfg("none", true), &mut r, 1);
+    assert_eq!(source(&b).as_deref(), Some("fake.hwin"));
+    // ...which is unavailable: WirePlumber keeps using the Junction.
+    b.graph_mut().defaults.source = Some("junc.zoom".into());
+    notices.extend(run(&mut b, &cfg("none", true), &mut r, 3));
+    assert_eq!(source(&b).as_deref(), Some("builtin.mic"));
+    assert_eq!(b.graph().defaults.source.as_deref(), Some("builtin.mic"));
+    assert_eq!(
+        notices,
+        [
+            Notice::DefaultRestored {
+                kind: DefaultKind::Source,
+                to: Some("fake.hwin".into())
+            },
+            Notice::DefaultRestored {
+                kind: DefaultKind::Source,
+                to: Some("builtin.mic".into())
+            },
+        ]
+    );
+    assert!(
+        run(&mut b, &cfg("none", true), &mut r, 2).is_empty(),
+        "settled"
+    );
+}
+
+/// The usual case is unchanged: configured and in use are the same device,
+/// one restore, no second step.
+#[test]
+fn a_normal_restore_takes_one_step() {
+    let mut b = backend();
+    b.graph_mut().defaults.source = Some("fake.hwin".into());
+    let mut r = Reconciler::new();
+    run(&mut b, &cfg("input", true), &mut r, 4);
+    assert_eq!(r.defaults().source.previous_in_use, None);
+    let n = run(&mut b, &cfg("none", true), &mut r, 4);
+    assert_eq!(n.len(), 1);
+    assert_eq!(source(&b).as_deref(), Some("fake.hwin"));
+}

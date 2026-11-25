@@ -28,6 +28,11 @@ pub struct Saved {
     /// there was no configured default (WirePlumber chose).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub previous: Option<Option<String>>,
+    /// The default actually in use before JUNC changed it, when it differed
+    /// from the configured one (the configured device was unavailable, so
+    /// WirePlumber had picked another).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub previous_in_use: Option<String>,
     /// The node JUNC last made default.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub applied: Option<String>,
@@ -42,6 +47,11 @@ pub struct Saved {
     /// (the `default` metadata lives in WirePlumber, so snapshots lag).
     #[serde(skip)]
     pub restoring: bool,
+    /// After a restore: if WirePlumber still picks a Junction (the restored
+    /// configured device is unavailable and the Junction is the newest in
+    /// its history), make this device, the one in use before, the default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verify: Option<String>,
 }
 
 /// Persistent defaults state for both kinds.
@@ -85,16 +95,18 @@ pub fn plan_defaults(
     let mut actions = Vec::new();
     let mut notices = Vec::new();
     for kind in [DefaultKind::Source, DefaultKind::Sink] {
-        let (role, saved, current) = match kind {
+        let (role, saved, current, in_use) = match kind {
             DefaultKind::Source => (
                 DefaultRole::Input,
                 &mut state.source,
                 &graph.defaults.configured_source,
+                &graph.defaults.source,
             ),
             DefaultKind::Sink => (
                 DefaultRole::Output,
                 &mut state.sink,
                 &graph.defaults.configured_sink,
+                &graph.defaults.sink,
             ),
         };
         let node_of = |id: &str| match kind {
@@ -118,6 +130,21 @@ pub fn plan_defaults(
                 continue; // the restore has not landed yet
             }
             saved.restoring = false;
+        }
+        // The configured device is back but WirePlumber still uses a
+        // Junction: put back the device that was really in use.
+        if let Some(v) = saved.verify.take()
+            && want.is_none()
+            && is_ours(in_use)
+            && graph.nodes.values().any(|x| x.name() == v)
+        {
+            actions.push(Action::SetDefault {
+                kind,
+                name: Some(v.clone()),
+            });
+            notices.push(DefaultNotice::Restored { kind, to: Some(v) });
+            saved.restoring = true;
+            continue;
         }
         // Someone else moved the default away from what JUNC set.
         if !saved.pending
@@ -157,6 +184,9 @@ pub fn plan_defaults(
                 }
                 if saved.previous.is_none() && !is_ours(current) {
                     saved.previous = Some(current.clone());
+                    saved.previous_in_use = in_use
+                        .clone()
+                        .filter(|u| !is_ours(&Some(u.clone())) && Some(u) != current.as_ref());
                 }
                 saved.applied = Some(w.clone());
                 saved.pending = true;
@@ -171,7 +201,9 @@ pub fn plan_defaults(
                 // previous one if it is still there.
                 let previous = saved.previous.clone().flatten();
                 let to = previous.filter(|p| graph.nodes.values().any(|x| x.name() == p));
+                let verify = saved.previous_in_use.take();
                 *saved = Saved::default();
+                saved.verify = verify;
                 if is_ours(current) {
                     actions.push(Action::SetDefault {
                         kind,
