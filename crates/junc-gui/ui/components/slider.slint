@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Slider (Spec): 4px track fg 10 %, accent fill, 10 × 16 thumb in
+// text.strong with a 1px surface.window outline, value in type.body at a
+// fixed width. Keys: ← → 1 %, Shift ×10, Home/End 0/100 %, and the
+// validation's fixes: PageUp/PageDown ±10 and a visible focus ring.
+
+import { Tokens } from "../tokens.slint";
+
+export component JSlider inherits Rectangle {
+    in property <string> label;
+    in property <int> minimum: 0;
+    in property <int> maximum: 100;
+    in-out property <int> value;
+    in property <bool> enabled: true;
+    out property <bool> has-focus: focus.has-focus;
+    callback changed(int);
+
+    height: Tokens.size-control;
+    min-width: 120px;
+    opacity: root.enabled ? 1 : 0.45;
+
+    accessible-role: slider;
+    accessible-label: root.label;
+    accessible-value: root.value + "%";
+    accessible-value-minimum: root.minimum;
+    accessible-value-maximum: root.maximum;
+    accessible-value-step: 1;
+    accessible-enabled: root.enabled;
+    accessible-action-increment => { root.set(root.value + 1); }
+    accessible-action-decrement => { root.set(root.value - 1); }
+    accessible-action-set-value(v) => { root.set(v.to-float()); }
+
+    function set(v: int) {
+        if !root.enabled { return; }
+        let c = clamp(v, root.minimum, root.maximum);
+        if c != root.value {
+            root.value = c;
+            root.changed(c);
+        }
+    }
+
+    property <length> value-width: 4 * Tokens.type-body * 0.62 + 8px;
+    property <length> track-width: root.width - root.value-width - 12px;
+    property <float> ratio: (root.value - root.minimum) / max(1, root.maximum - root.minimum);
+
+    if focus.has-focus: Rectangle {
+        x: -3px;
+        width: root.track-width + 6px;
+        height: root.height;
+        border-width: Tokens.border;
+        border-color: Tokens.accent;
+    }
+    track := Rectangle {
+        x: 0;
+        y: (root.height - self.height) / 2;
+        width: root.track-width;
+        height: 4px;
+        background: Tokens.track;
+        Rectangle {
+            x: 0;
+            width: parent.width * root.ratio;
+            background: Tokens.accent;
+        }
+    }
+    thumb := Rectangle {
+        width: 10px * Tokens.scale;
+        height: 16px * Tokens.scale;
+        x: (root.track-width - self.width) * root.ratio;
+        y: (root.height - self.height) / 2;
+        background: touch.pressed ? Tokens.text-default : Tokens.text-strong;
+        border-width: Tokens.border;
+        border-color: Tokens.surface-window;
+    }
+    Text {
+        x: root.width - root.value-width;
+        width: root.value-width;
+        height: root.height;
+        text: root.value + "%";
+        font-size: Tokens.type-body;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        color: focus.has-focus ? Tokens.accent : Tokens.text-default;
+        accessible-role: none;
+    }
+    touch := TouchArea {
+        width: root.track-width;
+        enabled: root.enabled;
+        function at(x: length) -> int {
+            return round(root.minimum + clamp(x / root.track-width, 0, 1) * (root.maximum - root.minimum));
+        }
+        pointer-event(e) => {
+            if e.kind == PointerEventKind.down { focus.focus(); }
+        }
+        moved => { if self.pressed { root.set(self.at(self.mouse-x)); } }
+        clicked => { root.set(self.at(self.mouse-x)); }
+    }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(e) => {
+            let step = e.modifiers.shift ? 10 : 1;
+            if e.text == Key.LeftArrow { root.set(root.value - step); return accept; }
+            if e.text == Key.RightArrow { root.set(root.value + step); return accept; }
+            if e.text == Key.PageUp { root.set(root.value + 10); return accept; }
+            if e.text == Key.PageDown { root.set(root.value - 10); return accept; }
+            if e.text == Key.Home { root.set(root.minimum); return accept; }
+            // 100 %, not the boost range above it (Spec: Home/End 0/100 %).
+            if e.text == Key.End { root.set(min(root.maximum, 100)); return accept; }
+            reject
+        }
+    }
+}

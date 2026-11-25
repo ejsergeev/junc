@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Tooltip (Spec): surface.window at 97 %, 1px text.default border, padding
+// 10 × 6, optional shortcut chip. Compact variant (18px, body-small,
+// padding 6) for the columns' "+" buttons. The owner shows it after 500 ms
+// of hover, at once on keyboard focus; it never takes the pointer.
+
+import { Tokens } from "../tokens.slint";
+import { JKbd } from "kbd.slint";
+
+export component JTooltip inherits Rectangle {
+    in property <string> text;
+    in property <string> shortcut;
+    in property <bool> compact;
+    background: Tokens.surface-window.with-alpha(0.97);
+    border-width: Tokens.border;
+    border-color: Tokens.text-default;
+    accessible-role: none;
+    HorizontalLayout {
+        padding-left: root.compact ? 6px : Tokens.space-control-pad-x;
+        padding-right: self.padding-left;
+        padding-top: root.compact ? 2px : Tokens.space-control-pad-y;
+        padding-bottom: self.padding-top;
+        spacing: Tokens.space-row-gap;
+        Text {
+            text: root.text;
+            color: Tokens.text-strong;
+            font-size: root.compact ? Tokens.type-body-small : Tokens.type-body;
+            vertical-alignment: center;
+        }
+        if root.shortcut != "": JKbd { text: root.shortcut; }
+    }
+}

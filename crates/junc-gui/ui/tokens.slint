@@ -64,4 +64,15 @@ export global Tokens {
     // Shape.
     out property <length> border: 1px;
     out property <length> border-popover: 2px;
+    out property <length> port: 10px;
+    out property <length> port-hover: 12px;
+
+    // Motion: Omarchy's "animations off" sets reduced-motion, and every
+    // duration goes to 0 through these.
+    in-out property <bool> reduced-motion: false;
+    out property <duration> dur-hover: reduced-motion ? 0ms : 160ms;
+    out property <duration> dur-popover-in: reduced-motion ? 0ms : 180ms;
+    out property <duration> dur-popover-out: reduced-motion ? 0ms : 120ms;
+    // Delay before a tooltip opens on hover (none on keyboard focus).
+    out property <duration> tooltip-delay: 500ms;
 }

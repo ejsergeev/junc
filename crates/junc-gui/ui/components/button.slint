@@ -1,0 +1,117 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Button and icon button (Spec): height size.control, padding 10 × 6, icon
+// 14 + gap 8, the five control states. Primary buttons (the next step) use
+// the hover fill and accent text; toggle buttons sit in "selected";
+// destructive ones use urgent text, urgent fill 8 % and border 40 %.
+// Tab reachable; Space and Enter activate. The tooltip names the shortcut,
+// which is also the accessible description.
+
+import { Tokens } from "../tokens.slint";
+import { ControlState } from "state.slint";
+import { JTooltip } from "tooltip.slint";
+
+export component JButton inherits Rectangle {
+    in property <string> text;
+    // A Nerd Font glyph, e.g. "\u{f0415}" (nf-md-plus).
+    in property <string> icon;
+    in property <string> tooltip;
+    in property <string> shortcut;
+    in property <bool> enabled: true;
+    in property <bool> primary;
+    in property <bool> destructive;
+    // Toggle buttons (Show Listen).
+    in property <bool> checkable;
+    in-out property <bool> checked;
+    out property <bool> has-focus: focus.has-focus;
+    callback clicked();
+
+    property <bool> pressed: touch.pressed;
+    property <bool> hover: touch.has-hover;
+    property <bool> show-tip: (focus.has-focus || tip-timer.fired) && (root.tooltip != "" || root.shortcut != "");
+    property <bool> tip-armed: touch.has-hover;
+
+    height: Tokens.size-control;
+    min-width: row.preferred-width;
+    background: root.destructive ? Tokens.status-urgent.with-alpha(0.08)
+        : ControlState.fill(root.hover || root.primary, focus.has-focus, root.pressed, root.checked);
+    border-width: Tokens.border;
+    border-color: root.destructive ? Tokens.status-urgent.with-alpha(0.4)
+        : ControlState.border(root.hover || root.primary, focus.has-focus, root.checked);
+    opacity: root.enabled ? 1 : 0.45;
+    transform-scale: root.pressed ? 0.97 : 1;
+    animate transform-scale { duration: Tokens.dur-hover; }
+
+    accessible-role: button;
+    accessible-label: root.text != "" ? root.text : root.tooltip;
+    accessible-description: root.shortcut;
+    accessible-enabled: root.enabled;
+    accessible-checkable: root.checkable;
+    accessible-checked: root.checked;
+    accessible-action-default => { root.activate(); }
+
+    function activate() {
+        if !root.enabled { return; }
+        if root.checkable { root.checked = !root.checked; }
+        root.clicked();
+    }
+
+    tip-timer := Timer {
+        property <bool> fired;
+        interval: Tokens.tooltip-delay;
+        running: root.tip-armed && !self.fired;
+        triggered => { self.fired = true; }
+    }
+    changed tip-armed => { tip-timer.fired = false; }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            focus.focus();
+            root.activate();
+        }
+    }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(e) => {
+            if e.text == " " || e.text == "\n" {
+                root.activate();
+                return accept;
+            }
+            reject
+        }
+    }
+    row := HorizontalLayout {
+        padding-left: Tokens.space-control-pad-x;
+        padding-right: Tokens.space-control-pad-x;
+        spacing: 8px * Tokens.scale;
+        alignment: center;
+        if root.icon != "": Text {
+            text: root.icon;
+            font-size: 14px * Tokens.scale;
+            vertical-alignment: center;
+            color: label.color;
+            accessible-role: none;
+        }
+        label := Text {
+            text: root.text;
+            font-size: Tokens.type-body;
+            vertical-alignment: center;
+            color: root.destructive ? Tokens.status-urgent
+                : root.primary || focus.has-focus ? Tokens.accent
+                : root.checked ? Tokens.text-strong : Tokens.text-default;
+            accessible-role: none;
+        }
+    }
+    if root.show-tip: JTooltip {
+        x: 0;
+        y: root.height + 4px;
+        text: root.tooltip != "" ? root.tooltip : root.text;
+        shortcut: root.shortcut;
+    }
+}
+
+// A square button with only a glyph; its accessible label is required.
+export component JIconButton inherits JButton {
+    width: Tokens.size-control;
+}

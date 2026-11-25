@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Component gallery (B13): every component of ui/components in its states,
+// laid out like section 2 of the Spec board, for screenshots and the AT-SPI
+// dump. `junc-gui --scenario gallery` opens it.
+
+import { Tokens } from "tokens.slint";
+import { JButton, JIconButton } from "components/button.slint";
+import { JSwitch } from "components/switch.slint";
+import { JSlider } from "components/slider.slint";
+import { JKbd } from "components/kbd.slint";
+import { JBadge } from "components/badge.slint";
+import { JTooltip } from "components/tooltip.slint";
+
+component Row inherits HorizontalLayout {
+    in property <string> name;
+    spacing: Tokens.space-panel-gap;
+    alignment: start;
+    Text {
+        text: root.name;
+        width: 140px;
+        color: Tokens.text-strong;
+        vertical-alignment: center;
+        accessible-role: none;
+    }
+    @children
+}
+
+export component GalleryWindow inherits Window {
+    title: "JUNC components";
+    preferred-width: 1100px;
+    preferred-height: 900px;
+    background: Tokens.surface-window;
+    default-font-family: Tokens.font-family;
+    default-font-size: Tokens.type-body;
+
+    VerticalLayout {
+        padding: Tokens.space-panel-pad;
+        spacing: Tokens.space-panel-gap;
+        alignment: start;
+        Row {
+            name: "Button";
+            JButton { text: "Delete"; destructive: true; }
+            JButton { text: "Show Listen"; checkable: true; checked: true; }
+            JButton { text: "Add input"; icon: "\u{f0415}"; shortcut: "Ctrl+N"; primary: true; }
+            JButton { text: "Disabled"; enabled: false; }
+            JIconButton { icon: "\u{f0415}"; tooltip: "Add input"; shortcut: "Ctrl+N"; }
+        }
+        Row {
+            name: "Toggle";
+            JSwitch { label: "Zoom Mic"; checked: true; }
+            JSwitch { label: "OBS Mix"; checked: false; }
+            JSwitch { label: "Disabled"; enabled: false; }
+        }
+        Row {
+            name: "Slider";
+            JSlider { label: "Zoom Mic volume"; value: 50; width: 220px; }
+            JSlider { label: "Boost"; value: 120; maximum: 150; width: 220px; }
+        }
+        Row {
+            name: "Badge";
+            JBadge { text: "Default input"; kind: "state"; }
+            JBadge { text: "Pro Audio"; kind: "fact"; }
+            JBadge { text: "device-specific"; kind: "caution"; }
+        }
+        Row {
+            name: "Keyboard chip";
+            JKbd { text: "Ctrl+N"; }
+            JKbd { text: "Esc"; }
+        }
+        Row {
+            name: "Tooltip";
+            JTooltip { text: "Add input"; shortcut: "Ctrl+N"; }
+            JTooltip { text: "Add"; compact: true; }
+        }
+    }
+}

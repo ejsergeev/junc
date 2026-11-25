@@ -28,7 +28,11 @@ fn color(c: Color) -> slint::Color {
 /// Retints the window: every token, in one pass; bindings re-render in
 /// place.
 pub fn apply(window: &AppWindow, t: &theme::Tokens) {
-    let g = window.global::<Tokens>();
+    apply_to(&window.global::<Tokens>(), t);
+}
+
+/// [`apply`] for any window's `Tokens` global (the app, the gallery).
+pub fn apply_to(g: &Tokens<'_>, t: &theme::Tokens) {
     g.set_dark(t.dark);
     g.set_surface_desktop(color(t.surface_desktop));
     g.set_surface_window(color(t.surface_window));

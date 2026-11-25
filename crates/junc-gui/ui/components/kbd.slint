@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Keyboard chip (Spec: footer hint bar, tooltips): a key name in a 1px
+// control-normal box, type.body-small. Decorative: the action it belongs to
+// carries the shortcut in its own accessible description.
+
+import { Tokens } from "../tokens.slint";
+
+export component JKbd inherits Rectangle {
+    in property <string> text;
+    height: Tokens.type-body-small + 6px;
+    min-width: label.preferred-width + 8px;
+    border-width: Tokens.border;
+    border-color: Tokens.control-normal-border;
+    accessible-role: none;
+    label := Text {
+        text: root.text;
+        color: Tokens.text-subtle;
+        font-size: Tokens.type-body-small;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

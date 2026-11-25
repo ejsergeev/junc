@@ -9,6 +9,17 @@ use junc_gui::{daemon, state, theme, theme_service, ui};
 use slint::ComponentHandle;
 
 fn main() -> Result<(), slint::PlatformError> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.iter().any(|a| a == "--scenario")
+        && args
+            .iter()
+            .skip_while(|a| *a != "--scenario")
+            .nth(1)
+            .map(String::as_str)
+            == Some("gallery")
+    {
+        return gallery();
+    }
     let window = ui::AppWindow::new()?;
     let dir = theme::omarchy_dir();
     let (tokens, source) =
@@ -37,5 +48,16 @@ fn main() -> Result<(), slint::PlatformError> {
             }
         });
     });
+    window.run()
+}
+
+/// `--scenario gallery`: every component in its states (B13), tinted by the
+/// current theme like the app.
+fn gallery() -> Result<(), slint::PlatformError> {
+    let window = ui::GalleryWindow::new()?;
+    let dir = theme::omarchy_dir();
+    let (tokens, _) =
+        theme_service::current(dir.as_deref(), true, theme_service::portal_prefers_light);
+    ui::apply_to(&window.global::<ui::Tokens>(), &tokens);
     window.run()
 }

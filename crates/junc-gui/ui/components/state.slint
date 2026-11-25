@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The five control states of the Spec ([controls]): fill and border for
+// normal, hover/cursor, focus, selected and pressed. Every interactive
+// component draws its chrome through these two functions.
+
+import { Tokens } from "../tokens.slint";
+
+export global ControlState {
+    pure public function fill(hover: bool, focus: bool, pressed: bool, selected: bool) -> brush {
+        if pressed { return Tokens.control-pressed-fill; }
+        if selected { return Tokens.control-selected-fill; }
+        if hover || focus { return Tokens.control-hover-fill; }
+        return Tokens.control-normal-fill;
+    }
+    pure public function border(hover: bool, focus: bool, selected: bool) -> brush {
+        if selected { return transparent; }
+        if focus { return Tokens.control-focus-border; }
+        if hover { return Tokens.control-hover-border; }
+        return Tokens.control-normal-border;
+    }
+}

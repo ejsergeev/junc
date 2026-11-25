@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Toggle (Spec): 30 × 16 switch, 10px square knob. On: accent fill and
+// border, knob surface.window. Off: control normal fill and border, knob
+// fg 40 %. Space toggles; the knob slides in 160 ms (0 with reduced motion).
+// A11y fix from the validation: Orca read only "toggle button pressed", so
+// the switch carries its label and an "on"/"off" description.
+
+import { Tokens } from "../tokens.slint";
+import { ControlState } from "state.slint";
+
+export component JSwitch inherits Rectangle {
+    // What it turns on and off, e.g. "Zoom Mic".
+    in property <string> label;
+    in property <bool> enabled: true;
+    in-out property <bool> checked;
+    out property <bool> has-focus: focus.has-focus;
+    callback toggled(bool);
+
+    width: 30px * Tokens.scale;
+    height: 16px * Tokens.scale;
+    background: root.checked ? Tokens.accent : ControlState.fill(touch.has-hover, focus.has-focus, false, false);
+    border-width: Tokens.border;
+    border-color: root.checked ? Tokens.accent : ControlState.border(touch.has-hover, focus.has-focus, false);
+    opacity: root.enabled ? 1 : 0.45;
+
+    accessible-role: switch;
+    accessible-label: root.label;
+    accessible-checkable: true;
+    accessible-checked: root.checked;
+    accessible-description: root.checked ? @tr("on") : @tr("off");
+    accessible-enabled: root.enabled;
+    accessible-action-default => { root.flip(); }
+
+    function flip() {
+        if !root.enabled { return; }
+        root.checked = !root.checked;
+        root.toggled(root.checked);
+    }
+
+    // Focus ring outside the track, so the "on" fill never hides it.
+    if focus.has-focus: Rectangle {
+        x: -3px;
+        y: -3px;
+        width: root.width + 6px;
+        height: root.height + 6px;
+        border-width: Tokens.border;
+        border-color: Tokens.accent;
+    }
+    knob := Rectangle {
+        width: 10px * Tokens.scale;
+        height: 10px * Tokens.scale;
+        y: (root.height - self.height) / 2;
+        x: root.checked ? root.width - self.width - 3px : 3px;
+        background: root.checked ? Tokens.surface-window : Tokens.text-default.with-alpha(0.4);
+        animate x { duration: Tokens.dur-hover; easing: ease-in-out-quad; }
+    }
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => {
+            focus.focus();
+            root.flip();
+        }
+    }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(e) => {
+            if e.text == " " {
+                root.flip();
+                return accept;
+            }
+            reject
+        }
+    }
+}

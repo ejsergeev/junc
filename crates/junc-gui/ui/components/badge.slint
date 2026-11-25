@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Badge (Spec): a 16px chip, never interactive. "state" (Default input) in
+// accent, "fact" (Pro Audio) in text.default, "caution" (device-specific)
+// in the status ink.
+
+import { Tokens } from "../tokens.slint";
+
+export component JBadge inherits Rectangle {
+    in property <string> text;
+    // "state", "fact" or "caution"
+    in property <string> kind: "fact";
+    height: 16px * Tokens.scale;
+    min-width: label.preferred-width + 8px;
+    border-width: Tokens.border;
+    border-color: Tokens.control-normal-border;
+    accessible-role: AccessibleRole.text;
+    accessible-label: root.text;
+    label := Text {
+        text: root.text;
+        font-size: Tokens.type-body-small;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        color: root.kind == "state" ? Tokens.accent : root.kind == "caution" ? Tokens.status-warn : Tokens.text-default;
+        accessible-role: none;
+    }
+}
