@@ -10,6 +10,7 @@ members = [
     "crates/juncd",
     "crates/junc-cli",
     "crates/junc-gui",
+    "crates/junc-bench",
     "xtask",
 ]
 default-members = [
