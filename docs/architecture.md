@@ -804,6 +804,16 @@ juncd; `--bug-report` arrives with F19's bundle in beta.
 `{"event":"capture","apps":["Spotify"]}`, `{"event":"notice", …}`,
 `{"event":"junction","id":"…","enabled":false}`.
 
+As built in B7: the stream starts with the current state (one `capture`
+line, one `junction` line per Junction with `name`, `kind`, `enabled`,
+`status`), then prints changes only. It follows `GraphChanged`, `Notice`
+(`{"event":"notice","kind":…,"body":{…}}`) and changes of `CaptureApps`,
+`Revision` and `Junctions`, re-reading `Describe` and printing what differs
+(a deleted Junction gives `{"event":"junction","id":…,"removed":true}`). It
+also reports juncd going away and coming back (`{"event":"daemon",
+"running":false}`). One line per event, flushed at once, so a bar can read
+it as it comes. Without `--json` the lines are for people.
+
 ### 5.3 Exit codes
 
 `0` ok · `1` error · `2` usage · `3` invalid config · `4` not found ·

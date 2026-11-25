@@ -294,8 +294,16 @@ Daemon features first (they gate GUI screens):
   same PID, no JUNC object recreated; teardown leaves no `junc.managed`
   object and the default input comes back. The hook is tested with
   stand-in `loginctl`/`runuser`.
-- [ ] **B7** [auto] Capture indicator + `junc watch --json`. Req: F23.
+- [x] **B7** [auto] Capture indicator + `junc watch --json`. Req: F23.
   Acceptance: event stream tests.
+  Done 2026-11-25 (architecture §5.2, as built): the daemon's
+  `CaptureApps` (with change signals, since the alpha) feeds `junc watch`,
+  which starts with the current state and streams captured apps,
+  Junctions on/off/created/removed, graph changes, notices and the
+  daemon's presence. Tests: on the mock daemon, Junction events for off,
+  on, create and delete; live, an app routed into a Junction appears in
+  `capture` and leaves it when the Junction is turned off, with graph
+  events in between.
 - [ ] **B8** [auto] Presets/templates: export, import with slots, built-in
   set. Req: F22, F24. Acceptance: round-trip tests; every built-in template
   validates.
