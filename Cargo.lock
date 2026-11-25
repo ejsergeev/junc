@@ -1627,6 +1627,7 @@ dependencies = [
  "clap",
  "junc-cli",
  "junc-core",
+ "junc-l10n",
 ]
 
 [[package]]
