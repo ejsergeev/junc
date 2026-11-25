@@ -997,3 +997,74 @@ fn custom_links_place_an_input_on_chosen_bus_channels() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// §3.6 recovery: PipeWire restarts (crash, update). Its objects die with
+/// it; juncd must wait for the new instance and rebuild every Junction.
+#[test]
+fn junctions_come_back_after_pipewire_restarts() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-pwrestart-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("tmp dir");
+    let config = "schema = 1\n[[junction]]\nid = \"back\"\nname = \"Back\"\n\
+                  [[junction.input]]\nid = \"mic\"\nmatch = { device = \"fake.hwin\" }\n\
+                  [[junction.listen]]\nid = \"hp\"\ntarget = \"default\"\n";
+    let (d, log) = run_juncd(&dir, "pwrestart", config);
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    let routed = |g: &Graph| {
+        let refs: Vec<&str> = g
+            .links
+            .values()
+            .filter(|l| l.props.get("junc.junction") == Some("back"))
+            .filter_map(|l| l.props.get("junc.ref"))
+            .collect();
+        [
+            "in/mic/1->1",
+            "in/mic/1->2",
+            "listen/hp/1->1",
+            "listen/hp/2->2",
+        ]
+        .iter()
+        .all(|r| refs.contains(r))
+    };
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), routed).is_some(),
+        "{}",
+        read(&log)
+    );
+
+    let session = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../bench/validation/bench/pw-session.sh");
+    let ok = |arg: &str| {
+        let s = Command::new(&session)
+            .arg(arg)
+            .status()
+            .expect("pw-session.sh");
+        assert!(s.success(), "pw-session.sh {arg}");
+    };
+    ok("stop");
+    std::thread::sleep(Duration::from_millis(300));
+    let t = Instant::now();
+    ok("start");
+    let back = wait_for(&rx, &mut Graph::default(), Duration::from_secs(10), routed)
+        .unwrap_or_else(|| panic!("not rebuilt after the restart\n{}", read(&log)));
+    let ms = back.duration_since(t).as_secs_f64() * 1000.0;
+    eprintln!("PipeWire restart: Junction rebuilt and routed {ms:.0} ms after PipeWire started");
+    let text = read(&log);
+    assert!(
+        text.contains("lost PipeWire") && text.matches("connected to PipeWire").count() >= 2,
+        "{text}"
+    );
+    // Let the session settle before the next test (pulse socket).
+    std::thread::sleep(Duration::from_millis(1000));
+    drop(d);
+    let mut g = Graph::default();
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
