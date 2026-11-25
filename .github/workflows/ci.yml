@@ -60,6 +60,8 @@ jobs:
           fi
       - name: Checks in Arch container
         run: docker run --rm -v "$PWD:/src" -w /src "${{ steps.image.outputs.name }}" scripts/ci/in-container.sh
+      - name: systemd user session (A15)
+        run: scripts/ci/systemd-user.sh "${{ steps.image.outputs.name }}"
       - name: Restore cache ownership
         if: always()
         run: sudo chown -R "$(id -u):$(id -g)" .ci-cache || true
