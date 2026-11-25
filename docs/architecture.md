@@ -459,13 +459,32 @@ D-Bus property with change signals, consumed by the bar plugin and the tray
 
 ### 3.14 Service and activation
 
-- `juncd.service` (user unit): `Type=notify`, `After=pipewire.service
-  wireplumber.service`, `Wants=pipewire.service`, `Restart=on-failure`,
-  `WantedBy=default.target` (enabled by the "Start at login" setting, F9;
-  on by default after onboarding).
-- D-Bus activation file so any CLI/GUI call starts the daemon if needed.
+- `juncd.service` (user unit, `packaging/systemd/`): `Type=notify`,
+  `After=pipewire.service wireplumber.service`, `Wants=pipewire.service`,
+  `Restart=on-failure` except for exits a restart cannot fix
+  (`RestartPreventExitStatus=2 3 4`: bad arguments, no usable config,
+  another juncd owns the bus name), `WantedBy=default.target`, enabled by
+  the "Start at login" setting (F9; `junc service enable`; on by default
+  after onboarding).
+- Readiness: juncd sends `READY=1` once it serves D-Bus and has loaded
+  the config (callers can talk to it from then on; PipeWire may come
+  later), and a one-line `STATUS=` for `systemctl status`. One datagram to
+  `$NOTIFY_SOCKET`, no libsystemd.
+- D-Bus activation file (`packaging/dbus/`, `SystemdService=juncd.service`)
+  so any CLI/GUI call starts the daemon if needed. juncd serves its
+  objects with their first state before taking the bus name, so the call
+  that activated it never sees an empty daemon. Commands that only report
+  on the daemon (`doctor`, `service status`) ask the bus whether the name
+  has an owner instead of calling it, so they do not start it.
 - Logs go to the journal (`journalctl --user -u juncd`). English only.
 - Runs as the user; no root, no kernel modules (PRD security).
+- Tested in CI with systemd as PID 1 (`scripts/ci/systemd-user.sh`; the
+  image gets its packages before it boots, since a booted Arch Linux ARM
+  image replaces Docker's DNS): a lingering login with no GUI, D-Bus
+  activation, `junc service`, logging out and in. From login to ten
+  Junctions routed takes 230–300 ms including the user manager and
+  PipeWire; juncd's own restore is 17–40 ms. On the isolated PipeWire, a
+  restart adopts lingering objects without recreating any.
 
 ---
 
