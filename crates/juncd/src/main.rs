@@ -21,6 +21,7 @@
 
 mod dbus;
 mod notify;
+mod upgrade;
 mod watch;
 
 use dbus::{Edit, Reply, Req, Resp, Responder, Server, Shared};
@@ -55,6 +56,8 @@ enum Msg {
     Backend(Event),
     ConfigFile,
     Request(Req, Responder),
+    /// The executable on disk was replaced by an upgrade (F20).
+    Upgraded,
 }
 
 /// Daemon state that is not user intent.
@@ -625,6 +628,9 @@ fn main() -> ExitCode {
         |d| d.join("last-good.toml"),
     );
 
+    if std::env::var_os("JUNC_REEXEC").is_some() {
+        log("re-executed after an upgrade; adopting the running Junctions");
+    }
     let store = match open_store(&config_path, &last_good) {
         Ok(s) => s,
         Err(code) => return code,
@@ -676,6 +682,18 @@ fn main() -> ExitCode {
             }
         }
     };
+    let exe = std::env::current_exe().ok();
+    if let Some(exe) = &exe {
+        let tx = tx.clone();
+        if let Err(e) = upgrade::spawn(exe, move || {
+            let _ = tx.send(Msg::Upgraded);
+        }) {
+            log(&format!(
+                "cannot watch {}: {e}; restart juncd after upgrades",
+                exe.display()
+            ));
+        }
+    }
     if let Err(e) = watch::spawn(&config_path, move || {
         let _ = tx.send(Msg::ConfigFile);
     }) {
@@ -738,6 +756,22 @@ fn main() -> ExitCode {
                 d.graph = Some(*g);
                 d.phase = "connected";
                 d.reconcile(&backend);
+            }
+            Msg::Upgraded => {
+                let Some(exe) = &exe else { continue };
+                log("the juncd executable was upgraded; re-executing, audio keeps running");
+                if let Some(p) = &d.state_path {
+                    save_state(p, &d.state);
+                }
+                use std::os::unix::process::CommandExt;
+                let e = std::process::Command::new(exe)
+                    .args(std::env::args_os().skip(1))
+                    .env("JUNC_REEXEC", "1")
+                    .exec();
+                log(&format!(
+                    "cannot re-execute {}: {e}; keeping the old daemon",
+                    exe.display()
+                ));
             }
         }
     }

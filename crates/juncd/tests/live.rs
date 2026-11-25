@@ -1500,3 +1500,177 @@ fn exclusive_takes_the_app_off_the_speakers_and_back() {
     clean(&dir, &rx, &mut g);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A counter signal: frame k carries `k % 30000 + 1` on both channels, so
+/// a recording shows any lost or repeated frame.
+fn counter(frames: usize) -> Vec<i16> {
+    (0..frames)
+        .flat_map(|k| {
+            let v = i16::try_from(k % 30_000 + 1).expect("fits");
+            [v, v]
+        })
+        .collect()
+}
+
+/// The longest run of consecutive counter frames in a recording, and the
+/// counter value it starts at.
+fn longest_count(rec: &[i16]) -> (usize, i16) {
+    let (mut best, mut best_first) = (0, 0i16);
+    let (mut run, mut first, mut prev) = (0, 0i16, 0i16);
+    for &[v, w] in rec.as_chunks::<2>().0 {
+        if v == 0 || w != v {
+            run = 0;
+        } else if run > 0 && v == prev % 30_000 + 1 {
+            run += 1;
+        } else {
+            run = 1;
+            first = v;
+        }
+        prev = v;
+        if run > best {
+            best = run;
+            best_first = first;
+        }
+    }
+    (best, best_first)
+}
+
+/// F20 (B6): pacman replaces juncd while audio plays through a Junction.
+/// juncd waits for the pacman lock, re-executes itself and adopts its
+/// lingering nodes and links: the counter arrives without a gap, and no
+/// JUNC object is recreated.
+#[test]
+fn an_upgrade_reexecs_without_an_audio_gap() {
+    if !enabled() {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("juncd-upgrade-{}", std::process::id()));
+    std::fs::create_dir_all(dir.join("bin")).expect("tmp dir");
+    let exe = dir.join("bin/juncd");
+    std::fs::copy(env!("CARGO_BIN_EXE_juncd"), &exe).expect("copy juncd");
+    let lock = dir.join("db.lck");
+    let cfg = dir.join("up.toml");
+    std::fs::write(
+        &cfg,
+        "schema = 1\n[[junction]]\nid = \"up\"\nname = \"Upgrade\"\n\
+         [[junction.input]]\nid = \"player\"\nmatch = { app = \"up-player\" }\n",
+    )
+    .expect("config");
+    let log = dir.join("up.log");
+    let daemon = Kill(
+        Command::new(&exe)
+            .args(["--no-dbus", "--config"])
+            .arg(&cfg)
+            .arg("--state-dir")
+            .arg(&dir)
+            .env("JUNC_PACMAN_LOCK", &lock)
+            .stderr(std::fs::File::create(&log).expect("log"))
+            .spawn()
+            .expect("juncd"),
+    );
+    let pid = daemon.0.id();
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .expect("observer");
+    let mut g = Graph::default();
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(10), |g| g
+            .node_by_name("junc.up.in.player")
+            .is_some())
+        .is_some(),
+        "{}",
+        read(&log)
+    );
+    let junc_objects = |g: &Graph| -> BTreeSet<u32> {
+        g.nodes
+            .values()
+            .filter(|n| n.is_junc())
+            .map(|n| n.id)
+            .chain(g.links.values().filter(|l| l.is_junc()).map(|l| l.id))
+            .collect()
+    };
+
+    let secs = 6;
+    let src = counter(secs * RATE);
+    let src_file = dir.join("counter.raw");
+    let bytes: Vec<u8> = src.iter().flat_map(|s| s.to_le_bytes()).collect();
+    std::fs::write(&src_file, bytes).expect("write source");
+    let rec_file = dir.join("rec.raw");
+    let recorder = pw_cat_to("-r", "up-rec", &rec_file, Some("junc.up"));
+    std::thread::sleep(Duration::from_millis(500));
+    let mut player = pw_cat_to("-p", "up-player", &src_file, None);
+    assert!(
+        wait_for(&rx, &mut g, Duration::from_secs(5), |g| g
+            .node_by_name("up-player")
+            .is_some_and(|p| g
+                .links
+                .values()
+                .any(|l| l.output_node == p.id && l.is_junc())))
+        .is_some()
+    );
+    let before = junc_objects(&g);
+
+    // pacman takes its lock and puts a new juncd in place (write, rename).
+    std::thread::sleep(Duration::from_secs(1));
+    std::fs::write(&lock, "").expect("lock");
+    let fresh = dir.join("bin/juncd.new");
+    std::fs::copy(env!("CARGO_BIN_EXE_juncd"), &fresh).expect("copy");
+    std::fs::rename(&fresh, &exe).expect("replace");
+    std::thread::sleep(Duration::from_millis(800));
+    assert!(
+        !read(&log).contains("re-executing"),
+        "must wait for the pacman lock:\n{}",
+        read(&log)
+    );
+    std::fs::remove_file(&lock).expect("unlock");
+    let until = Instant::now() + Duration::from_secs(5);
+    while !read(&log).contains("re-executed after an upgrade") {
+        assert!(Instant::now() < until, "no re-exec:\n{}", read(&log));
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    eprintln!("re-executed in place (pid {pid})");
+    // Same objects while the player still plays: nothing was recreated.
+    let _ = wait_for(&rx, &mut g, Duration::from_millis(700), |_| false);
+    assert_eq!(junc_objects(&g), before, "{}", read(&log));
+
+    let end = Instant::now() + Duration::from_secs(10);
+    while player.0.try_wait().ok().flatten().is_none() && Instant::now() < end {
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    std::thread::sleep(Duration::from_millis(300));
+    let _ = Command::new("kill")
+        .arg("-INT")
+        .arg(recorder.0.id().to_string())
+        .status();
+    std::thread::sleep(Duration::from_millis(300));
+    drop(recorder);
+
+    assert!(
+        std::fs::metadata(format!("/proc/{pid}")).is_ok(),
+        "juncd died:\n{}",
+        read(&log)
+    );
+    let (run, first) = longest_count(&read_s16(&rec_file));
+    let skipped = usize::try_from(first).expect("positive") - 1;
+    eprintln!(
+        "counter: {run} consecutive frames from frame {skipped} of {}",
+        secs * RATE
+    );
+    // The player sounds on its default output for a moment before JUNC
+    // links it, and pw-cat may drop its last partial buffer; everything in
+    // between, across the re-exec at about 1.5 s, arrives unbroken.
+    assert!(
+        skipped < RATE / 2,
+        "the Junction got the player late: {skipped}"
+    );
+    assert!(
+        skipped + run + 2048 >= secs * RATE,
+        "gap in the audio: {run} frames from {skipped}"
+    );
+
+    drop(daemon);
+    clean(&dir, &rx, &mut g);
+    let _ = std::fs::remove_dir_all(&dir);
+}
