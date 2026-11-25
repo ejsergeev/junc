@@ -57,10 +57,11 @@ In paths, characters of the id outside `[A-Za-z0-9]` become `_xx` (hex):
 | `Plan` | `(s toml) → s` | Dry run against the live graph: `{"actions": [...], "deferred": [...], "junctions": [...]}`. Needs PipeWire. |
 | `Apply` | `(s toml, t expected) → (t, s)` | Validates, writes the text as given, routes it. Returns the revision and the plan that ran. |
 | `CreateJunction` | `(s name) → (o, t)` | New empty Junction; the id comes from the name. |
+| `ScanImportable` | `() → s` | Since 1.1. Null sinks and loopbacks in the graph that can become Junctions or Cables (F13), as JSON; see `junc import scan`. |
 | `ResolveLink` | `(s junction, s ref, s action) → t` | After a `link_overridden` notice: `restore` puts the link back, `leave` keeps it removed (also after restarts). |
 | `GraphChanged` | signal `(t)` | Statuses changed; re-read what you show. |
 | `Notice` | signal `(s kind, s json)` | See below. |
-| `ApiVersion` | property `(uu)` | `(1, 1)`: 1.1 added `devices` to `Describe`, `bluetooth` on headset mics and cards, the `set_device_profile` plan action and the `profile_changed` notice. |
+| `ApiVersion` | property `(uu)` | `(1, 1)`: 1.1 added `ScanImportable`, `devices` to `Describe`, `bluetooth` on headset mics and cards, the `set_device_profile` plan action and the `profile_changed` notice. |
 | `DaemonVersion` | property `s` | Package version. |
 | `State` | property `s` | `starting`, `connected`, `waiting_for_pipewire`. |
 | `Revision` | property `t` | Config revision. |

@@ -745,6 +745,18 @@ reads the config, edits it with `junc_core::store` (comments kept) and sends
 it with `Apply` and the revision it read, redoing the edit if another change
 raced it.
 
+Import (F13), as built in B5: `junc_core::import::scan` finds null sinks
+(`support.null-audio-sink` not made by JUNC; origin `pactl load-module` when
+`pulse.module.id` is set, else `config`) and loopbacks whose two sides are
+streams (`pw-loopback`, or a loopback module set up that way). Loopbacks
+that present a virtual device (Omarchy's mic), Bluetooth's own and filter
+chains are system parts and not offered. What feeds a setup (links, or the
+loopback's capture target) becomes Inputs, the outputs it plays to become
+Listen targets, and apps recording from it are listed; one app into one
+recording app is suggested as a Cable. juncd answers `ScanImportable`; the
+CLI builds the Junctions or Cables and applies them like any edit. The old
+setup is never removed.
+
 `junc describe --json` → `data`: `{ pipewire, defaults, junctions[], candidates:
 { apps[], hardware_inputs[], outputs[], monitors[] }, devices[] (with profiles,
 channel counts, bluez profile) }` — everything an agent needs in one call.

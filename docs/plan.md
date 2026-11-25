@@ -271,9 +271,17 @@ Daemon features first (they gate GUI screens):
   Found on the way: candidates hid the device side of every loopback and
   filter chain, so the headset mic, Omarchy's mic and the Asahi DSP sink
   were not offered; fixed and tested on the Asahi dump.
-- [ ] **B5** [auto] Import of null-sink / pw-loopback setups. Req: F13.
+- [x] **B5** [auto] Import of null-sink / pw-loopback setups. Req: F13.
   Acceptance: layer-2 test with `pactl load-module module-null-sink` and
   `pw-loopback` setups.
+  Done 2026-11-25 (architecture §5, import as built): `junc import scan` /
+  `junc import ID… [--as junction|cable]`, D-Bus `ScanImportable` (API 1.1).
+  Layer 2 in the isolated session: a `pactl` null sink with Firefox
+  playing into it became a Junction with a Firefox Input; a `pw-loopback`
+  from a device to an output became a Junction with that Input and
+  Listen; a null sink with one app playing and one recording became a
+  Cable; the old modules kept running. Layer 1 on the real dumps: the
+  Asahi DSP chains, Omarchy's mic and Bluetooth loopbacks are not offered.
 - [ ] **B6** [auto] Upgrade re-exec, `junc teardown`, pre_remove hook. Req:
   F20. Acceptance: counter-signal continuity test across re-exec; teardown
   leaves no `junc.managed` object.
