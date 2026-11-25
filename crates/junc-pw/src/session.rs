@@ -28,6 +28,8 @@ struct Bound {
     _proxy: Option<Box<dyn ProxyT>>,
     /// Nodes keep their proxy typed, to set their volume.
     node: Option<pw::node::Node>,
+    /// Cards keep theirs, to switch profiles (F15).
+    device: Option<Rc<pw::device::Device>>,
     _listeners: Vec<Box<dyn Listener>>,
 }
 
@@ -376,6 +378,7 @@ fn on_global(
                     Bound {
                         _proxy: None,
                         node: Some(node),
+                        device: None,
                         _listeners: vec![Box::new(l)],
                     },
                 );
@@ -445,6 +448,7 @@ fn on_global(
                     id,
                     Bound {
                         node: None,
+                        device: None,
                         _proxy: Some(Box::new(link)),
                         _listeners: vec![Box::new(l)],
                     },
@@ -452,6 +456,7 @@ fn on_global(
             }
         }
         ObjectType::Device => {
+            let usb_channels = usb_channels(&props);
             st.borrow_mut().graph.devices.insert(
                 id,
                 junc_core::graph::Device {
@@ -459,9 +464,74 @@ fn on_global(
                     props,
                     profiles: Vec::new(),
                     active_profile: None,
-                    usb_channels: None,
+                    usb_channels,
                 },
             );
+            // Profiles (F15): the list and the active one, kept current.
+            if let Ok(device) = reg.bind::<pw::device::Device, _>(g) {
+                let device = Rc::new(device);
+                let (st2, core2) = (st.clone(), core.downgrade());
+                let weak = Rc::downgrade(&device);
+                let l = device
+                    .add_listener_local()
+                    // A subscription does not report a profile switch;
+                    // read both params again whenever they change, as
+                    // pw-dump does.
+                    .info(move |info| {
+                        if !info
+                            .change_mask()
+                            .contains(pw::device::DeviceChangeMask::PARAMS)
+                        {
+                            return;
+                        }
+                        let Some(d) = weak.upgrade() else { return };
+                        for p in info.params() {
+                            let id = p.id();
+                            if matches!(
+                                id,
+                                pw::spa::param::ParamType::EnumProfile
+                                    | pw::spa::param::ParamType::Profile
+                            ) && p.flags().contains(pw::spa::param::ParamInfoFlags::READ)
+                            {
+                                d.enum_params(0, Some(id), 0, u32::MAX);
+                            }
+                        }
+                    })
+                    .param(move |_seq, kind, index, _next, pod| {
+                        let profile = pod.and_then(parse_profile);
+                        {
+                            let mut s = st2.borrow_mut();
+                            let Some(d) = s.graph.devices.get_mut(&id) else {
+                                return;
+                            };
+                            match kind {
+                                pw::spa::param::ParamType::EnumProfile => {
+                                    if index == 0 {
+                                        d.profiles.clear();
+                                    }
+                                    d.profiles.extend(profile);
+                                }
+                                pw::spa::param::ParamType::Profile => {
+                                    d.active_profile = profile.map(|p| p.name);
+                                }
+                                _ => return,
+                            }
+                        }
+                        if let Some(core) = core2.upgrade() {
+                            request_sync(&st2, &core);
+                        }
+                    })
+                    .register();
+                st.borrow_mut().bound.insert(
+                    id,
+                    Bound {
+                        _proxy: None,
+                        node: None,
+                        device: Some(device),
+                        _listeners: vec![Box::new(l)],
+                    },
+                );
+            }
         }
         ObjectType::Metadata if props.get("metadata.name") == Some("default") => {
             if let Ok(md) = reg.bind::<pw::metadata::Metadata, _>(g) {
@@ -489,6 +559,7 @@ fn on_global(
                     id,
                     Bound {
                         node: None,
+                        device: None,
                         _proxy: None,
                         _listeners: vec![Box::new(l)],
                     },
@@ -624,6 +695,14 @@ fn apply(
             let pod = volume_pod(*channels, gain)?;
             proxy.set_param(pw::spa::param::ParamType::Props, 0, pod_ref(&pod)?);
         }
+        Action::SetDeviceProfile { device, index, .. } => {
+            let s = st.borrow();
+            let Some(proxy) = s.bound.get(device).and_then(|b| b.device.as_ref()) else {
+                return Err(format!("device {device} is not bound"));
+            };
+            let pod = profile_pod(*index)?;
+            proxy.set_param(pw::spa::param::ParamType::Profile, 0, pod_ref(&pod)?);
+        }
         Action::SetTarget { node, target, .. } => {
             let s = st.borrow();
             let Some((_, md)) = &s.default_md else {
@@ -674,4 +753,67 @@ fn volume_pod(channels: u8, gain: f32) -> Result<Vec<u8>, String> {
 
 fn pod_ref(bytes: &[u8]) -> Result<&pw::spa::pod::Pod, String> {
     pw::spa::pod::Pod::from_bytes(bytes).ok_or_else(|| "invalid volume pod".to_owned())
+}
+
+/// A `Profile` param: index and name from `EnumProfile` or `Profile`.
+fn parse_profile(pod: &pw::spa::pod::Pod) -> Option<junc_core::graph::Profile> {
+    use pw::spa::pod::Value;
+    use pw::spa::pod::deserialize::PodDeserializer;
+    use pw::spa::sys as spa;
+    let (_, Value::Object(obj)) = PodDeserializer::deserialize_any_from(pod.as_bytes()).ok()?
+    else {
+        return None;
+    };
+    let mut p = junc_core::graph::Profile {
+        index: u32::MAX,
+        name: String::new(),
+        description: String::new(),
+        available: true,
+    };
+    for prop in obj.properties {
+        match (prop.key, prop.value) {
+            (spa::SPA_PARAM_PROFILE_index, Value::Int(i)) => p.index = u32::try_from(i).ok()?,
+            (spa::SPA_PARAM_PROFILE_name, Value::String(s)) => p.name = s,
+            (spa::SPA_PARAM_PROFILE_description, Value::String(s)) => p.description = s,
+            (spa::SPA_PARAM_PROFILE_available, Value::Id(a)) => {
+                p.available = a.0 != spa::SPA_PARAM_AVAILABILITY_no;
+            }
+            _ => {}
+        }
+    }
+    (p.index != u32::MAX && !p.name.is_empty()).then_some(p)
+}
+
+/// The pod `wpctl set-profile` sends: index, and save so WirePlumber
+/// remembers the choice for the card.
+fn profile_pod(index: u32) -> Result<Vec<u8>, String> {
+    use pw::spa::pod::serialize::PodSerializer;
+    use pw::spa::pod::{Object, Property, Value};
+    let index = i32::try_from(index).map_err(|_| format!("profile index {index} too large"))?;
+    let obj = Value::Object(Object {
+        type_: pw::spa::sys::SPA_TYPE_OBJECT_ParamProfile,
+        id: pw::spa::sys::SPA_PARAM_Profile,
+        properties: vec![
+            Property::new(pw::spa::sys::SPA_PARAM_PROFILE_index, Value::Int(index)),
+            Property::new(pw::spa::sys::SPA_PARAM_PROFILE_save, Value::Bool(true)),
+        ],
+    });
+    PodSerializer::serialize(std::io::Cursor::new(Vec::new()), &obj)
+        .map(|(c, _)| c.into_inner())
+        .map_err(|e| format!("cannot build the profile pod: {e:?}"))
+}
+
+/// Channel counts ALSA reports for a USB card (F15), read without
+/// switching profiles: `/proc/asound/card<N>/stream*`.
+fn usb_channels(props: &Props) -> Option<junc_core::proaudio::UsbChannels> {
+    if props.get("device.api") != Some("alsa") || props.get("device.bus") != Some("usb") {
+        return None;
+    }
+    let card = props.number("api.alsa.card")?;
+    let dir = std::fs::read_dir(format!("/proc/asound/card{card}")).ok()?;
+    dir.filter_map(Result::ok)
+        .filter(|e| e.file_name().to_string_lossy().starts_with("stream"))
+        .filter_map(|e| std::fs::read_to_string(e.path()).ok())
+        .filter_map(|t| junc_core::proaudio::parse_usb_stream(&t))
+        .reduce(junc_core::proaudio::UsbChannels::merge)
 }

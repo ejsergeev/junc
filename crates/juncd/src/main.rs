@@ -174,6 +174,14 @@ fn notice_json(n: &Notice) -> (&'static str, serde_json::Value) {
             "default_taken_over",
             json!({ "kind": kind_name(*kind), "junction": junction }),
         ),
+        Notice::ProfileChanged {
+            junction,
+            input,
+            profile,
+        } => (
+            "profile_changed",
+            json!({ "junction": junction, "input": input, "profile": profile }),
+        ),
     }
 }
 
@@ -195,6 +203,14 @@ fn log_notice(n: &Notice) {
         Notice::DefaultTakenOver { kind, junction } => log(&format!(
             "notice default_taken_over key={} junction={junction}",
             kind.metadata_key()
+        )),
+        Notice::ProfileChanged {
+            junction,
+            input,
+            profile,
+        } => log(&format!(
+            "notice profile_changed junction={junction} input={input} profile={}",
+            profile.as_deref().unwrap_or("(card off, config kept)")
         )),
     }
 }
@@ -265,7 +281,7 @@ impl Daemon {
     /// Reconciles and publishes; returns the plan that ran, if any.
     fn reconcile(&mut self, backend: &PwBackend) -> Option<Plan> {
         let graph = self.graph.as_ref()?;
-        let step = self.reconciler.on_graph(self.store.config(), graph);
+        let mut step = self.reconciler.on_graph(self.store.config(), graph);
         for n in &step.notices {
             log_notice(n);
             let (kind, body) = notice_json(n);
@@ -280,6 +296,7 @@ impl Daemon {
         if step.refresh {
             backend.refresh();
         }
+        let new_config = step.config.take();
         let status_changed = step.plan.status != self.statuses;
         self.statuses.clone_from(&step.plan.status);
         self.publish();
@@ -298,19 +315,27 @@ impl Daemon {
                     self.store.config().junction.len()
                 ));
             }
-            return Some(step.plan);
+        } else {
+            log(&format!("applying {} action(s)", step.actions.len()));
+            for a in &step.actions {
+                if matches!(
+                    a,
+                    junc_core::backend::Action::SetDefault { .. }
+                        | junc_core::backend::Action::SetVolume { .. }
+                        | junc_core::backend::Action::SetDeviceProfile { .. }
+                ) {
+                    log(&a.to_string());
+                }
+            }
+            backend.apply(std::mem::take(&mut step.actions));
         }
-        log(&format!("applying {} action(s)", step.actions.len()));
-        for a in &step.actions {
-            if matches!(
-                a,
-                junc_core::backend::Action::SetDefault { .. }
-                    | junc_core::backend::Action::SetVolume { .. }
-            ) {
-                log(&a.to_string());
+        if let Some(config) = new_config {
+            // The user picked another device profile elsewhere (F15): save
+            // it like any edit, which also routes the new config.
+            if let Err(e) = self.write(config, backend) {
+                log(&format!("cannot save the profile the user picked: {e:?}"));
             }
         }
-        backend.apply(step.actions);
         Some(step.plan)
     }
 

@@ -198,6 +198,16 @@ pub enum Action {
         /// Reference used for holds, e.g. `cable/target/412`.
         reference: String,
     },
+    /// Switch a card to another profile (F15), as `wpctl set-profile`
+    /// does; WirePlumber remembers it for the card.
+    SetDeviceProfile {
+        /// Device (card) id.
+        device: u32,
+        /// Profile index from `EnumProfile`.
+        index: u32,
+        /// Profile name, for logs and plans.
+        profile: String,
+    },
 }
 
 impl fmt::Display for Action {
@@ -226,6 +236,9 @@ impl fmt::Display for Action {
                 Some(t) => write!(f, "send stream {node} to {t}"),
                 None => write!(f, "return stream {node} to the default"),
             },
+            Self::SetDeviceProfile {
+                device, profile, ..
+            } => write!(f, "switch device {device} to the {profile} profile"),
         }
     }
 }
@@ -467,6 +480,23 @@ impl Backend for MockBackend {
                     self.graph.targets.remove(node);
                 }
             },
+            Action::SetDeviceProfile { device, index, .. } => {
+                let d = self
+                    .graph
+                    .devices
+                    .get_mut(device)
+                    .ok_or_else(|| BackendError(format!("no device {device}")))?;
+                let p = d
+                    .profiles
+                    .iter()
+                    .find(|p| p.index == *index)
+                    .ok_or_else(|| {
+                        BackendError(format!("device {device} has no profile {index}"))
+                    })?;
+                // The mock only flips the name; tests swap in the nodes of
+                // the new profile themselves.
+                d.active_profile = Some(p.name.clone());
+            }
         }
         Ok(())
     }

@@ -63,6 +63,8 @@ pub enum ActionView {
         #[serde(rename = "ref")]
         reference: String,
     },
+    /// A card switches profile (F15), e.g. to `pro-audio`.
+    SetDeviceProfile { device: String, profile: String },
 }
 
 /// The plan as clients see it.
@@ -157,6 +159,14 @@ fn action(a: &Action, graph: Option<&Graph>) -> ActionView {
             target: target.clone(),
             junction: junction.clone(),
             reference: reference.clone(),
+        },
+        Action::SetDeviceProfile {
+            device, profile, ..
+        } => ActionView::SetDeviceProfile {
+            device: graph
+                .and_then(|g| g.devices.get(device))
+                .map_or_else(|| format!("#{device}"), |d| d.name().to_owned()),
+            profile: profile.clone(),
         },
     }
 }

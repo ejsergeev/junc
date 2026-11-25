@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! F15 (B3) on layer-1 fixtures: Pro Audio detection, channel groups
-//! and binding an Input to the Pro Audio node.
+//! F15 (B3) on layer-1 fixtures: Pro Audio detection, channel groups,
+//! binding an Input to the Pro Audio node, and profile memory.
 
+use junc_core::backend::{Action, Backend, MockBackend};
+use junc_core::config;
 use junc_core::graph::{Direction, Graph};
 use junc_core::matcher::{Use, resolve};
-use junc_core::model::Match;
+use junc_core::model::{Config, Match};
 use junc_core::proaudio::{
     self, ProAudioOffer, UsbChannels, card_name, channel_groups, parse_usb_stream,
 };
+use junc_core::reconcile::{Notice, Reconciler, Step};
 use std::path::Path;
 
 fn fixture(dir: &str, name: &str) -> String {
@@ -136,4 +139,202 @@ fn a_pro_audio_input_waits_for_the_profile_then_takes_every_channel() {
     // Without a profile the stereo name simply waits in Pro Audio.
     let plain = Match { profile: None, ..m };
     assert!(resolve(&plain, Use::Input, &pro).is_empty());
+}
+
+const MIX: &str = r#"
+schema = 1
+[[junction]]
+id = "mix"
+name = "Mix"
+[[junction.input]]
+id = "desk"
+match = { device = "alsa_input.usb-JUNC_Test_18in-00.analog-stereo", profile = "pro-audio" }
+"#;
+
+fn step(b: &mut MockBackend, cfg: &Config, r: &mut Reconciler) -> Step {
+    let s = r.on_graph(cfg, b.graph());
+    for a in &s.actions {
+        b.apply(a).unwrap_or_else(|e| panic!("{a}: {e}"));
+    }
+    s
+}
+
+fn card_id(g: &Graph) -> u32 {
+    g.devices
+        .values()
+        .find(|d| d.name() == CARD)
+        .expect("card")
+        .id
+}
+
+/// The card switched, as PipeWire shows it afterwards.
+fn now_pro(b: &mut MockBackend) {
+    *b.graph_mut() = graph("usb-18in-proaudio.json");
+}
+
+#[test]
+fn the_profile_is_applied_on_plug_kept_and_the_users_choice_remembered() {
+    let cfg = config::load(MIX, "t.toml").expect("config").config;
+    let mut b = MockBackend::new(graph("usb-18in-stereo.json"));
+    let mut r = Reconciler::new();
+
+    // Plugged in on its stereo profile: JUNC switches it, once.
+    let s = step(&mut b, &cfg, &mut r);
+    let switches: Vec<&Action> = s
+        .actions
+        .iter()
+        .filter(|a| matches!(a, Action::SetDeviceProfile { .. }))
+        .collect();
+    assert_eq!(switches.len(), 1, "{:?}", s.actions);
+    assert!(
+        matches!(switches[0], Action::SetDeviceProfile { profile, .. } if profile == "pro-audio")
+    );
+    let again = r.on_graph(&cfg, b.graph());
+    assert!(
+        !again
+            .actions
+            .iter()
+            .any(|a| matches!(a, Action::SetDeviceProfile { .. })),
+        "not asked twice while the switch is under way"
+    );
+
+    // The card comes back in Pro Audio: the Input takes all 18 channels.
+    now_pro(&mut b);
+    for _ in 0..4 {
+        step(&mut b, &cfg, &mut r);
+    }
+    let gain = b.graph().node_by_name("junc.mix.in.desk").expect("gain").id;
+    let into_gain = b
+        .graph()
+        .links
+        .values()
+        .filter(|l| l.input_node == gain)
+        .count();
+    assert_eq!(into_gain, 2, "channels 1–2 of 18 feed the 2-channel Bus");
+    assert!(r.on_graph(&cfg, b.graph()).actions.is_empty(), "converged");
+
+    // The user picks the stereo profile elsewhere: JUNC keeps it and saves
+    // it, without switching back.
+    let id = card_id(b.graph());
+    let stereo = "output:analog-stereo+input:analog-stereo";
+    b.graph_mut()
+        .devices
+        .get_mut(&id)
+        .expect("card")
+        .active_profile = Some(stereo.into());
+    let s = step(&mut b, &cfg, &mut r);
+    assert_eq!(
+        s.notices,
+        [Notice::ProfileChanged {
+            junction: "mix".into(),
+            input: "desk".into(),
+            profile: Some(stereo.into()),
+        }]
+    );
+    let saved = s.config.expect("config change");
+    assert_eq!(
+        saved.junction[0].input[0].matcher.profile.as_deref(),
+        Some(stereo)
+    );
+    assert!(
+        !s.actions
+            .iter()
+            .any(|a| matches!(a, Action::SetDeviceProfile { .. }))
+    );
+    let s = step(&mut b, &saved, &mut r);
+    assert!(s.notices.is_empty() && s.config.is_none(), "{s:?}");
+
+    // Re-plugged (a new card) with the original config: Pro Audio again.
+    let mut b = MockBackend::new(graph("usb-18in-stereo.json"));
+    let id = card_id(b.graph());
+    b.graph_mut()
+        .devices
+        .get_mut(&id)
+        .expect("card")
+        .props
+        .set("object.serial", "99999");
+    let s = step(&mut b, &cfg, &mut r);
+    assert!(
+        s.actions
+            .iter()
+            .any(|a| matches!(a, Action::SetDeviceProfile { .. })),
+        "{:?}",
+        s.actions
+    );
+}
+
+#[test]
+fn a_card_turned_off_is_left_off_and_the_config_kept() {
+    let cfg = config::load(MIX, "t.toml").expect("config").config;
+    let mut b = MockBackend::new(graph("usb-18in-proaudio.json"));
+    let mut r = Reconciler::new();
+    for _ in 0..3 {
+        step(&mut b, &cfg, &mut r);
+    }
+    let id = card_id(b.graph());
+    b.graph_mut()
+        .devices
+        .get_mut(&id)
+        .expect("card")
+        .active_profile = Some("off".into());
+    let s = step(&mut b, &cfg, &mut r);
+    assert_eq!(
+        s.notices,
+        [Notice::ProfileChanged {
+            junction: "mix".into(),
+            input: "desk".into(),
+            profile: None,
+        }]
+    );
+    assert!(s.config.is_none());
+    for _ in 0..3 {
+        let s = step(&mut b, &cfg, &mut r);
+        assert!(
+            !s.actions
+                .iter()
+                .any(|a| matches!(a, Action::SetDeviceProfile { .. })),
+            "not switched back on"
+        );
+    }
+}
+
+/// UCM cards (the Asahi built-in audio) set up amplifiers and speaker
+/// processing; Pro Audio would bypass that. Never offered, never switched,
+/// even when a config asks for it.
+#[test]
+fn ucm_cards_never_get_pro_audio() {
+    let g = graph("asahi-m1-j293.json");
+    for d in g
+        .devices
+        .values()
+        .filter(|d| d.props.get("device.api") == Some("alsa"))
+    {
+        assert!(d.uses_ucm(), "{}", d.name());
+        assert_eq!(proaudio::offer(&g, d), None, "{}", d.name());
+    }
+    for name in ["snd-aloop-stereo.json", "usb-18in-stereo.json"] {
+        let g = graph(name);
+        assert!(g.devices.values().all(|d| !d.uses_ucm()), "{name}");
+    }
+    let cfg = config::load(
+        &MIX.replace(
+            "alsa_input.usb-JUNC_Test_18in-00.analog-stereo",
+            "alsa_input.platform-sound.HiFi__Headset__source",
+        ),
+        "t.toml",
+    )
+    .expect("config")
+    .config;
+    let mut b = MockBackend::new(graph("asahi-m1-j293.json"));
+    let mut r = Reconciler::new();
+    for _ in 0..3 {
+        let s = step(&mut b, &cfg, &mut r);
+        assert!(
+            !s.actions
+                .iter()
+                .any(|a| matches!(a, Action::SetDeviceProfile { .. })),
+            "{:?}",
+            s.actions
+        );
+    }
 }

@@ -46,6 +46,18 @@ pub enum Notice {
         /// The Junction that was the default.
         junction: String,
     },
+    /// The user switched a card JUNC keeps in a profile (F15) to another
+    /// one elsewhere. JUNC keeps their choice: the Input's `profile` now
+    /// names it (`None`: the card was turned off; the config is left as is
+    /// and JUNC asks again when the card comes back).
+    ProfileChanged {
+        /// Junction id.
+        junction: String,
+        /// Input id.
+        input: String,
+        /// The profile the user picked, as saved in the config.
+        profile: Option<String>,
+    },
 }
 
 /// How the user answered a [`Notice::LinkOverridden`].
@@ -70,6 +82,21 @@ pub struct Step {
     /// tentative hold is confirmed on the next snapshot, and an idle graph
     /// would never send one.
     pub refresh: bool,
+    /// A change JUNC makes to the config itself (the user picked another
+    /// device profile elsewhere); the daemon saves it.
+    pub config: Option<Config>,
+}
+
+/// A card JUNC keeps in a profile, by `object.serial` (a re-plug is a new
+/// card).
+#[derive(Debug, Clone)]
+struct CardProfile {
+    /// The profile the config wants.
+    want: String,
+    /// The card has shown it since JUNC asked (or already had it).
+    confirmed: bool,
+    /// The user switched away while the card stayed: leave it alone.
+    user: bool,
 }
 
 /// A JUNC link as seen in a snapshot.
@@ -98,6 +125,8 @@ struct Targeted {
 pub struct Reconciler {
     /// Gain JUNC set on its nodes, by `object.serial` (ids are reused).
     volumes: HashMap<u32, u16>,
+    /// Cards JUNC keeps in a profile, by `object.serial`.
+    cards: HashMap<u32, CardProfile>,
     /// Streams whose `target.object` JUNC set, by stream node id.
     targeted: HashMap<u32, Targeted>,
     /// JUNC links in the last snapshot, by link id.
@@ -242,6 +271,8 @@ impl Reconciler {
         let mut actions = p.actions.clone();
         actions.extend(self.track_targets(config, graph, &p.actions));
         actions.extend(self.track_volumes(config, graph));
+        let (profile_actions, new_config) = self.track_profiles(config, graph, &mut notices);
+        actions.extend(profile_actions);
         let (default_actions, default_notices) = plan_defaults(config, graph, &mut self.defaults);
         actions.extend(default_actions);
         notices.extend(default_notices.into_iter().map(|n| match n {
@@ -255,6 +286,7 @@ impl Reconciler {
             notices,
             plan: p,
             refresh: !self.tentative.is_empty(),
+            config: new_config,
         }
     }
 
@@ -337,6 +369,107 @@ impl Reconciler {
             false
         });
         out
+    }
+
+    /// Device profiles (F15): a device Input with `profile` switches its
+    /// card to it when the card appears (and when the config changes it).
+    /// If the user then picks another profile elsewhere while the card
+    /// stays, JUNC keeps their choice and saves it as the Input's `profile`
+    /// (unless they turned the card off), so it is what comes back on the
+    /// next re-plug.
+    fn track_profiles(
+        &mut self,
+        config: &Config,
+        graph: &Graph,
+        notices: &mut Vec<Notice>,
+    ) -> (Vec<Action>, Option<Config>) {
+        let serial = |d: &crate::graph::Device| d.props.number("object.serial").unwrap_or(d.id);
+        let mut actions = Vec::new();
+        let mut new_config: Option<Config> = None;
+        let mut seen = HashSet::new();
+        for (jx, j) in config
+            .junction
+            .iter()
+            .enumerate()
+            .filter(|(_, j)| j.enabled)
+        {
+            for (ix, input) in j.input.iter().enumerate().filter(|(_, i)| i.enabled) {
+                let (Some(device), Some(want)) = (&input.matcher.device, &input.matcher.profile)
+                else {
+                    continue;
+                };
+                let Some(card) = crate::proaudio::card(graph, device) else {
+                    continue;
+                };
+                // Never on UCM cards: Pro Audio would bypass the speaker
+                // setup UCM does (Asahi built-in audio).
+                if want == crate::proaudio::PRO_AUDIO && card.uses_ucm() {
+                    continue;
+                }
+                let key = serial(card);
+                // One wish per card: the first Input in the config wins.
+                if !seen.insert(key) {
+                    continue;
+                }
+                let Some(active) = card.active_profile.clone() else {
+                    continue; // profiles not read yet
+                };
+                let entry = self.cards.get_mut(&key).filter(|e| &e.want == want);
+                match entry {
+                    Some(e) if e.user => {}
+                    Some(e) if &active == want => e.confirmed = true,
+                    Some(e) if e.confirmed => {
+                        e.user = true;
+                        let keep = active != "off";
+                        if keep {
+                            let c = new_config.get_or_insert_with(|| config.clone());
+                            c.junction[jx].input[ix].matcher.profile = Some(active.clone());
+                        }
+                        notices.push(Notice::ProfileChanged {
+                            junction: j.id.clone(),
+                            input: input.id.clone(),
+                            profile: keep.then_some(active),
+                        });
+                    }
+                    Some(_) => {} // JUNC's switch has not shown up yet
+                    None if &active == want => {
+                        self.cards.insert(
+                            key,
+                            CardProfile {
+                                want: want.clone(),
+                                confirmed: true,
+                                user: false,
+                            },
+                        );
+                    }
+                    None => {
+                        let Some(p) = card
+                            .profiles
+                            .iter()
+                            .find(|p| &p.name == want && p.available)
+                        else {
+                            continue;
+                        };
+                        actions.push(Action::SetDeviceProfile {
+                            device: card.id,
+                            index: p.index,
+                            profile: p.name.clone(),
+                        });
+                        self.cards.insert(
+                            key,
+                            CardProfile {
+                                want: want.clone(),
+                                confirmed: false,
+                                user: false,
+                            },
+                        );
+                    }
+                }
+            }
+        }
+        let present: HashSet<u32> = graph.devices.values().map(serial).collect();
+        self.cards.retain(|k, _| present.contains(k));
+        (actions, new_config)
     }
 
     /// Volumes (F7): the Junction's master on its source node, each Input's
