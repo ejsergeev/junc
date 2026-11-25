@@ -1,0 +1,33 @@
+[
+  {
+    "id": "pipewire",
+    "status": "ok",
+    "detail": "running 1.6.9"
+  },
+  {
+    "id": "wireplumber",
+    "status": "ok",
+    "detail": "running"
+  },
+  {
+    "id": "pipewire-pulse",
+    "status": "ok",
+    "detail": "running"
+  },
+  {
+    "id": "jack",
+    "status": "ok",
+    "detail": "pipewire-jack: JACK apps go through PipeWire"
+  },
+  {
+    "id": "clock",
+    "status": "ok",
+    "detail": "48000 Hz, quantum 1024 (21.3 ms)"
+  },
+  {
+    "id": "juncd",
+    "status": "down",
+    "detail": "not running",
+    "fix": "systemctl --user start juncd"
+  }
+]

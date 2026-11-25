@@ -3,8 +3,13 @@
 //! `junc doctor` (F19): is everything JUNC depends on installed and
 //! running, and how is the audio clock set. Each check says what it found
 //! and, when something is wrong, the command that fixes it.
+//!
+//! [`Facts::gather`] reads the system once (processes, packages,
+//! `pw-metadata`, juncd); the checks are pure functions of those facts, so
+//! their output is tested against golden files.
 
 use crate::client::Client;
+use junc_ipc::view::Describe;
 use junc_l10n::{tr, trf};
 use serde::Serialize;
 use std::os::unix::fs::MetadataExt;
@@ -101,9 +106,63 @@ pub fn metadata(text: &str) -> Vec<(String, String)> {
         .collect()
 }
 
-fn juncd(client: Option<&Client>) -> Check {
+/// Whether a program is running, installed, or neither.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Proc {
+    Running,
+    Installed,
+    Missing,
+}
+
+impl Proc {
+    fn of(binary: &str) -> Self {
+        if running(binary) {
+            Self::Running
+        } else if installed(binary) {
+            Self::Installed
+        } else {
+            Self::Missing
+        }
+    }
+}
+
+/// Everything the checks look at.
+#[derive(Debug, Clone)]
+pub struct Facts {
+    /// `pipewire --version`, parsed.
+    pub pipewire_version: Option<String>,
+    /// The PipeWire socket exists.
+    pub pipewire_socket: bool,
+    pub wireplumber: Proc,
+    pub pipewire_pulse: Proc,
+    /// Installed packages (`None` without pacman).
+    pub pipewire_jack: Option<bool>,
+    pub jack2: Option<bool>,
+    /// `pw-metadata -n settings 0` output.
+    pub settings: Option<String>,
+    /// juncd's snapshot, if it runs.
+    pub daemon: Option<Describe>,
+}
+
+impl Facts {
+    /// Reads the system.
+    pub fn gather(client: Option<&Client>) -> Self {
+        Self {
+            pipewire_version: run("pipewire", &["--version"]).and_then(|t| pipewire_version(&t)),
+            pipewire_socket: pipewire_socket().is_some_and(|s| s.exists()),
+            wireplumber: Proc::of("wireplumber"),
+            pipewire_pulse: Proc::of("pipewire-pulse"),
+            pipewire_jack: package("pipewire-jack"),
+            jack2: package("jack2"),
+            settings: run("pw-metadata", &["-n", "settings", "0"]),
+            daemon: client.and_then(Client::describe_if_running),
+        }
+    }
+}
+
+fn juncd(daemon: Option<&Describe>) -> Check {
     let fix = "systemctl --user start juncd";
-    let Some(d) = client.and_then(Client::describe_if_running) else {
+    let Some(d) = daemon else {
         return check(
             "juncd",
             Status::Down,
@@ -146,10 +205,8 @@ fn juncd(client: Option<&Client>) -> Check {
     }
 }
 
-fn pipewire() -> Check {
-    let version = run("pipewire", &["--version"]).and_then(|t| pipewire_version(&t));
-    let socket = pipewire_socket().is_some_and(|s| s.exists());
-    match (socket, version) {
+fn pipewire(f: &Facts) -> Check {
+    match (f.pipewire_socket, f.pipewire_version.clone()) {
         (true, Some(v)) if !at_least_1_0(&v) => check(
             "pipewire",
             Status::Warn,
@@ -179,23 +236,21 @@ fn pipewire() -> Check {
     }
 }
 
-fn service(id: &'static str, binary: &str, why: &str) -> Check {
-    if running(binary) {
-        check(id, Status::Ok, tr("running").into_owned(), None)
-    } else if installed(binary) {
-        check(
+fn service(id: &'static str, binary: &str, state: Proc, why: &str) -> Check {
+    match state {
+        Proc::Running => check(id, Status::Ok, tr("running").into_owned(), None),
+        Proc::Installed => check(
             id,
             Status::Down,
             trf("installed but not running; {why}", &[("why", &why)]),
             Some(&format!("systemctl --user start {binary}")),
-        )
-    } else {
-        check(
+        ),
+        Proc::Missing => check(
             id,
             Status::Missing,
             trf("not installed; {why}", &[("why", &why)]),
             Some(&format!("sudo pacman -S {binary}")),
-        )
+        ),
     }
 }
 
@@ -204,8 +259,8 @@ fn package(name: &str) -> Option<bool> {
     Some(out.status.success())
 }
 
-fn jack() -> Check {
-    match (package("pipewire-jack"), package("jack2")) {
+fn jack(f: &Facts) -> Check {
+    match (f.pipewire_jack, f.jack2) {
         (Some(true), _) => check(
             "jack",
             Status::Ok,
@@ -233,8 +288,8 @@ fn jack() -> Check {
     }
 }
 
-fn clock() -> Check {
-    let Some(text) = run("pw-metadata", &["-n", "settings", "0"]) else {
+fn clock(f: &Facts) -> Check {
+    let Some(text) = &f.settings else {
         return check(
             "clock",
             Status::Warn,
@@ -242,7 +297,7 @@ fn clock() -> Check {
             None,
         );
     };
-    let m = metadata(&text);
+    let m = metadata(text);
     let get = |k: &str| {
         m.iter()
             .find(|(key, _)| key == k)
@@ -276,28 +331,87 @@ fn clock() -> Check {
 }
 
 /// All checks, in the order a person would fix them.
-pub fn checks(client: Option<&Client>) -> Vec<Check> {
+pub fn checks(f: &Facts) -> Vec<Check> {
     vec![
-        pipewire(),
+        pipewire(f),
         service(
             "wireplumber",
             "wireplumber",
+            f.wireplumber,
             &tr("nothing gets connected without it"),
         ),
         service(
             "pipewire-pulse",
             "pipewire-pulse",
+            f.pipewire_pulse,
             &tr("apps that use PulseAudio cannot be routed"),
         ),
-        jack(),
-        clock(),
-        juncd(client),
+        jack(f),
+        clock(f),
+        juncd(f.daemon.as_ref()),
     ]
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const SETTINGS: &str = "Found \"settings\" metadata 31\n\
+        update: id:0 key:'clock.rate' value:'48000' type:''\n\
+        update: id:0 key:'clock.allowed-rates' value:'[ 48000 ]' type:''\n\
+        update: id:0 key:'clock.quantum' value:'1024' type:''\n";
+
+    /// A healthy session without juncd.
+    fn healthy() -> Facts {
+        Facts {
+            pipewire_version: Some("1.6.9".into()),
+            pipewire_socket: true,
+            wireplumber: Proc::Running,
+            pipewire_pulse: Proc::Running,
+            pipewire_jack: Some(true),
+            jack2: Some(false),
+            settings: Some(SETTINGS.into()),
+            daemon: None,
+        }
+    }
+
+    /// Compares the checks' JSON with tests/golden/doctor/<name>.json;
+    /// `JUNC_BLESS=1` rewrites it.
+    fn golden(name: &str, f: &Facts) {
+        let json = serde_json::to_string_pretty(&checks(f)).expect("json") + "\n";
+        let file = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/golden/doctor")
+            .join(format!("{name}.json"));
+        if std::env::var_os("JUNC_BLESS").is_some() {
+            std::fs::create_dir_all(file.parent().expect("dir")).expect("mkdir");
+            std::fs::write(&file, &json).expect("write golden");
+        }
+        let want = std::fs::read_to_string(&file).unwrap_or_default();
+        assert!(
+            want == json,
+            "{} differs (JUNC_BLESS=1 cargo test -p junc-cli --bin junc doctor rewrites it):\n{json}",
+            file.display()
+        );
+    }
+
+    #[test]
+    fn a_healthy_session() {
+        golden("healthy", &healthy());
+    }
+
+    #[test]
+    fn a_broken_session() {
+        let f = Facts {
+            pipewire_version: Some("0.3.80".into()),
+            wireplumber: Proc::Installed,
+            pipewire_pulse: Proc::Missing,
+            pipewire_jack: Some(false),
+            jack2: Some(true),
+            settings: None,
+            ..healthy()
+        };
+        golden("broken", &f);
+    }
 
     #[test]
     fn versions_and_metadata_parse() {

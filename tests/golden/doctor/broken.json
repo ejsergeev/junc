@@ -1,0 +1,37 @@
+[
+  {
+    "id": "pipewire",
+    "status": "warn",
+    "detail": "running 0.3.80; JUNC needs 1.0 or newer",
+    "fix": "sudo pacman -Syu pipewire"
+  },
+  {
+    "id": "wireplumber",
+    "status": "down",
+    "detail": "installed but not running; nothing gets connected without it",
+    "fix": "systemctl --user start wireplumber"
+  },
+  {
+    "id": "pipewire-pulse",
+    "status": "missing",
+    "detail": "not installed; apps that use PulseAudio cannot be routed",
+    "fix": "sudo pacman -S pipewire-pulse"
+  },
+  {
+    "id": "jack",
+    "status": "warn",
+    "detail": "jack2 is installed: JACK apps bypass PipeWire and cannot be routed",
+    "fix": "sudo pacman -S pipewire-jack"
+  },
+  {
+    "id": "clock",
+    "status": "warn",
+    "detail": "cannot read the PipeWire settings"
+  },
+  {
+    "id": "juncd",
+    "status": "down",
+    "detail": "not running",
+    "fix": "systemctl --user start juncd"
+  }
+]

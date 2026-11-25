@@ -213,7 +213,7 @@ fn offline(cmd: &Cmd) -> Option<Result<Done>> {
         }
         Cmd::Doctor => {
             let client = Client::connect().ok();
-            let checks = doctor::checks(client.as_ref());
+            let checks = doctor::checks(&doctor::Facts::gather(client.as_ref()));
             let text = human::doctor(&checks);
             Ok(Done {
                 revision: None,
