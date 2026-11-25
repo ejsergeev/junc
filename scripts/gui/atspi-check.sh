@@ -17,10 +17,13 @@ for s in "$@"; do
   got=""
   for _ in $(seq 1 30); do
     sleep 0.5
+    if ! kill -0 "$gui" 2>/dev/null; then
+      echo "atspi $s: junc-gui exited early:"; cat "$session_tmp/gui-$s.log"; exit 1
+    fi
     got=$(python3 scripts/gui/atspi_dump.py tree junc 2>/dev/null || true)
     [[ $got == *"push button"* || $got == *"label"* ]] && break
   done
-  kill "$gui"; wait "$gui" 2>/dev/null || true
+  kill "$gui" 2>/dev/null || true; wait "$gui" 2>/dev/null || true
   golden=tests/golden/atspi/$s.txt
   if [[ -n ${JUNC_BLESS:-} ]]; then
     mkdir -p tests/golden/atspi; printf '%s\n' "$got" >"$golden"
