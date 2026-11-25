@@ -33,6 +33,8 @@ allow = [
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Internal crates use path dependencies without a version; none are published.
+allow-wildcard-paths = true
 # Direct-dependency boundaries from docs/architecture.md §2: these crates may
 # only be pulled in by the JUNC crate that owns that concern.
 deny = [
