@@ -153,11 +153,12 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   Acceptance: layer-2 test creates a Junction visible to pulse, JACK and
   native clients.
   Done 2026-11-25: `junc-pw` thread mirrors the registry (binding nodes/links, spike S9), applies actions, batches snapshots per `core.sync`, reconnects via inotify. Live test (`scripts/ci/live-pipewire.sh`, also in CI) builds a Junction in 2 rounds, visible to PulseAudio and JACK, adopted by a fresh backend, cleaned up exactly. Spike S10 led to deferred renames.
-- [ ] **A7** [auto] Daemon reconcile loop and link state machine
+- [x] **A7** [auto] Daemon reconcile loop and link state machine
   (Waiting/Active/Overridden/Disabled), adoption of surviving objects,
   overridden detection with `core.sync`. Req: F10, F17. Acceptance: layer-2
   churn test ≥ 99 % (target 100 %) links restored, re-link p95 < 100 ms;
   foreign links untouched; `link_overridden` raised.
+  Done 2026-11-25: `junc-core::reconcile` + `juncd` main loop. Live test (isolated PipeWire, M1): 20/20 app restarts re-linked, re-link p50 14–21 ms, p95 40–45 ms; a link removed with `pw-cli` is not recreated and `link_overridden` is logged; foreign links untouched. Still to verify in the live desktop session in A19.
 - [ ] **A8** [auto] Default device handling with save/restore and the
   `default` Listen target following the system default. Req: F16.
   Acceptance: layer-2 tests incl. "restore target missing".
