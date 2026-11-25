@@ -1,0 +1,5 @@
+quantum=256
+jack_iodelay baseline_frames=256.000 junction_frames=256.000
+impulse      baseline: frames=0 min=0 max=0 n=12 quantum=256
+impulse      junction: frames=0 min=0 max=0 n=12 quantum=256
+RESULT extra_frames=0 extra_quanta=0.00

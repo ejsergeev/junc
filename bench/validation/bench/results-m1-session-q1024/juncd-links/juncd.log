@@ -1,0 +1,103 @@
+EV 1.0 connected
+EV 1.8 bus_created
+EV 2.4 setup_done since_connect_ms=1.5
+EV 13.8 app_node id=146 name=juncbench-app2
+EV 13.9 app_node id=147 name=juncbench-app1
+EV 15.5 app_node id=148 name=juncbench-app3
+EV 73.1 app_linked node=146 relink_ms=59.25
+EV 73.2 app_linked node=146 relink_ms=59.33
+EV 90.9 app_linked node=147 relink_ms=77.00
+EV 91.0 app_linked node=147 relink_ms=77.06
+EV 100.7 graph_complete links=12
+EV 101.3 app_linked node=148 relink_ms=85.84
+EV 101.7 app_linked node=148 relink_ms=86.26
+EV 445303.6 app_node id=147 name=juncbench-app1
+EV 445311.1 app_linked node=147 relink_ms=7.52
+EV 445313.7 app_linked node=147 relink_ms=10.18
+EV 505810.0 app_node id=146 name=juncbench-app2
+EV 505829.1 app_linked node=146 relink_ms=19.02
+EV 505829.1 app_linked node=146 relink_ms=19.10
+EV 566325.1 app_node id=148 name=juncbench-app3
+EV 566328.0 app_linked node=148 relink_ms=2.89
+EV 566328.2 app_linked node=148 relink_ms=3.12
+EV 626829.9 app_node id=147 name=juncbench-app1
+EV 626836.0 app_linked node=147 relink_ms=6.15
+EV 626836.1 app_linked node=147 relink_ms=6.19
+EV 687345.4 app_node id=156 name=juncbench-app2
+EV 687356.1 app_linked node=156 relink_ms=10.69
+EV 687356.1 app_linked node=156 relink_ms=10.74
+EV 687468.8 core_error id=0 res=-32 msg=connection error
+EV 687468.9 disconnected
+EV 687491.0 connected
+EV 687504.9 bus_created
+EV 687505.2 setup_done since_connect_ms=14.1
+EV 687964.1 app_node id=121 name=juncbench-app1
+EV 687964.5 app_node id=122 name=juncbench-app3
+EV 687969.3 app_node id=124 name=juncbench-app2
+EV 687996.2 app_linked node=121 relink_ms=32.08
+EV 687996.4 app_linked node=121 relink_ms=32.23
+EV 688002.4 app_linked node=122 relink_ms=37.91
+EV 688002.6 app_linked node=122 relink_ms=38.09
+EV 688009.1 graph_complete links=12
+EV 688009.6 app_linked node=124 relink_ms=40.33
+EV 688009.9 app_linked node=124 relink_ms=40.60
+EV 691016.1 core_error id=0 res=-32 msg=connection error
+EV 691017.5 disconnected
+EV 691040.0 connected
+EV 691040.2 bus_created
+EV 691040.5 setup_done since_connect_ms=0.4
+EV 691408.0 app_node id=128 name=juncbench-app3
+EV 691408.6 app_node id=130 name=juncbench-app1
+EV 691409.8 app_node id=132 name=juncbench-app2
+EV 691536.8 app_linked node=128 relink_ms=128.73
+EV 691536.9 app_linked node=128 relink_ms=128.86
+EV 691548.3 app_linked node=130 relink_ms=139.64
+EV 691548.6 app_linked node=130 relink_ms=139.98
+EV 691555.1 graph_complete links=12
+EV 691555.6 app_linked node=132 relink_ms=145.84
+EV 691555.8 app_linked node=132 relink_ms=146.00
+EV 694450.5 core_error id=0 res=-32 msg=connection error
+EV 694450.5 disconnected
+EV 694471.3 connected
+EV 694480.1 bus_created
+EV 694480.3 setup_done since_connect_ms=9.0
+EV 694911.5 app_node id=120 name=juncbench-app2
+EV 694911.7 app_node id=121 name=juncbench-app3
+EV 694915.1 app_node id=123 name=juncbench-app1
+EV 694947.6 app_linked node=120 relink_ms=36.02
+EV 694947.9 app_linked node=120 relink_ms=36.37
+EV 694954.1 app_linked node=121 relink_ms=42.45
+EV 694954.4 app_linked node=121 relink_ms=42.77
+EV 694959.9 graph_complete links=12
+EV 694960.3 app_linked node=123 relink_ms=45.21
+EV 694960.7 app_linked node=123 relink_ms=45.63
+EV 697985.9 core_error id=0 res=-32 msg=connection error
+EV 697986.0 disconnected
+EV 698013.3 connected
+EV 698013.5 bus_created
+EV 698014.0 setup_done since_connect_ms=0.7
+EV 698421.3 app_node id=129 name=juncbench-app2
+EV 698421.3 app_node id=130 name=juncbench-app1
+EV 698421.7 app_node id=132 name=juncbench-app3
+EV 698512.5 app_linked node=129 relink_ms=91.22
+EV 698512.5 app_linked node=129 relink_ms=91.25
+EV 698524.5 app_linked node=130 relink_ms=103.16
+EV 698524.6 app_linked node=130 relink_ms=103.26
+EV 698530.7 graph_complete links=12
+EV 698531.2 app_linked node=132 relink_ms=109.48
+EV 698531.4 app_linked node=132 relink_ms=109.68
+EV 701488.3 core_error id=0 res=-32 msg=connection error
+EV 701488.4 disconnected
+EV 701510.0 connected
+EV 701511.5 bus_created
+EV 701511.7 setup_done since_connect_ms=1.7
+EV 701914.3 app_node id=112 name=juncbench-app1
+EV 701917.7 app_node id=116 name=juncbench-app2
+EV 701918.1 app_node id=117 name=juncbench-app3
+EV 701972.9 app_linked node=112 relink_ms=58.54
+EV 701973.0 app_linked node=112 relink_ms=58.65
+EV 701980.7 app_linked node=116 relink_ms=63.02
+EV 701980.8 app_linked node=116 relink_ms=63.13
+EV 701988.9 graph_complete links=12
+EV 701989.4 app_linked node=117 relink_ms=71.25
+EV 701989.5 app_linked node=117 relink_ms=71.38

@@ -1,0 +1,26 @@
+# JUNC bench mode=manual host=omarchy kernel=7.2.11-14-1-ARCH cpus=8 pipewire=1.6.9 date=2026-11-25T08:41:00Z
+build_graph_ms=143 (graph_up + 3 apps -> full graph present)
+daemon_pids=684228 684229 
+latency: quantum=1024
+latency: jack_iodelay baseline_frames=1024.000 junction_frames=NA
+latency: impulse      baseline: frames=0 min=0 max=0 n=12 quantum=1024
+latency: impulse      junction: frames=0 min=0 max=0 n=12 quantum=1024
+latency: RESULT extra_frames=0 extra_quanta=0.00
+pss_idle_kb=9206
+wakeups_per_s_idle=93.80 (all threads, voluntary+involuntary ctx switches)
+pwtop: samples=599 quanta_seen=[1024]
+pwtop: node=fake.hp err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=fake.hwin err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=fake.obs err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=input.junc.listen.hp err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=input.junc.listen.obs err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=junc.bus err_delta=0 err_end=0 bq_max=0.0
+pwtop: node=juncbench-app1 err_delta=0 err_end=0 bq_max=0.01
+pwtop: node=juncbench-app2 err_delta=0 err_end=0 bq_max=0.07
+pwtop: node=juncbench-app3 err_delta=0 err_end=0 bq_max=0.01
+pwtop: node=output.junc.listen.hp err_delta=0 err_end=1 bq_max=0.0
+pwtop: node=output.junc.listen.obs err_delta=0 err_end=1 bq_max=0.0
+pwtop: ERR_TOTAL_DELTA=0
+relink_ms n=3 min=37.70 p50=46.58 p95=50.67 max=50.67
+recovery_ms(core graph back after restart; manual includes re-running graph-manual.sh) NA NA NA NA NA 
+daemon_pids_after=699025 699026  pss_end_kb=9358

@@ -1,0 +1,9 @@
+samples=299 quanta_seen=[256, 1024]
+node=fake.hp err_delta=0 err_end=0 bq_max=0.0
+node=fake.hwin err_delta=0 err_end=0 bq_max=0.0
+node=fake.obs err_delta=0 err_end=0 bq_max=0.0
+node=junc.bus err_delta=0 err_end=0 bq_max=0.0
+node=juncbench-app1 err_delta=283 err_end=361 bq_max=0.02
+node=juncbench-app2 err_delta=264 err_end=314 bq_max=0.04
+node=juncbench-app3 err_delta=301 err_end=380 bq_max=0.57
+ERR_TOTAL_DELTA=848

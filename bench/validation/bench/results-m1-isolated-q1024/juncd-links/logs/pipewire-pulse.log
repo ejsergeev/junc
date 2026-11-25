@@ -1,0 +1,1 @@
+[E][09:40:56.478414] mod.protocol-pulse | [     dbus-name.c:   53 dbus_request_name()] D-Bus name org.pulseaudio.Server already taken.

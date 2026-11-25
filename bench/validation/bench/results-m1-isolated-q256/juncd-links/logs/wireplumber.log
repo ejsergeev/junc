@@ -1,0 +1,3 @@
+N 10:06:11.585962        wireplumber ../wireplumber/src/main.c:166:warn_about_deprecated_config: Old configuration file detected: /tmp/bench-config-q256/wireplumber/bluetooth.lua.d/80-ci-no-bluez.lua
+W 10:06:11.586010        wireplumber ../wireplumber/src/main.c:172:warn_about_deprecated_config: Lua configuration files are NOT supported in WirePlumber 0.5. You need to port them to the new format if you want to use them.
+-> See https://pipewire.pages.freedesktop.org/wireplumber/daemon/configuration/migration.html
