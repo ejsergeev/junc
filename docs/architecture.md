@@ -1403,6 +1403,40 @@ and fails on regression beyond noise (thresholds in `bench/thresholds.toml`):
 | GUI CPU hidden | 0 %; meter callbacks = 0 | CI gate + owner |
 | Frame time while dragging links | p95 < 16 ms | owner |
 
+As built (A17): `crates/junc-bench` drives the real juncd (release build,
+private D-Bus, ten Junctions) on the isolated PipeWire
+(`scripts/ci/with-pipewire.sh`); `scripts/ci/bench.sh` runs it after the
+layer-2 suite on every PR, compares with `bench/thresholds.toml` (the
+targets above as `max`/`min`, plus `regress`/`slack` against
+`bench/baseline/<arch>.json` recorded on the same CI runners) and checks
+that the gate fails on an injected regression. Results are uploaded per
+architecture. How each daemon metric is taken:
+
+- Restore: process start → every Junction routed, seen by an observer.
+- PSS: `/proc/<pid>/smaps_rollup` one second after routing, with the
+  anon/file/shmem split and huge-page backing recorded alongside. juncd
+  runs with one glibc malloc arena (unit `Environment=`): on Arch Linux
+  ARM each extra arena of its helper threads was backed by a 2 MB
+  transparent huge page, 9.8–11.5 MB PSS instead of ~5.5 MB.
+- Idle wakeups: context switches of all juncd threads over 10 s idle.
+- CLI: `junc enable|disable`, process start to exit, p95 of 20.
+- Re-link: 30 app restarts, appearance → links back, p95.
+- Recovery: three PipeWire restarts. Gated: from the devices and the
+  default output being back to all routed (juncd's share, ~50 ms);
+  tracked: from PipeWire's start (~1.3 s, mostly WirePlumber starting).
+- Added latency: synchronous JACK clients on the graph clock hear a burst
+  directly and through a Junction (the validation's method); 0 frames.
+  Timing two `pw-cat` streams instead shows 2048–4096 samples even for a
+  single plain node, depending on how the graph orders those
+  asynchronous clients, so that number is not the Junction's latency.
+- Bit-exact: seeded noise through a Junction against the direct copy.
+
+First baselines (CI runners, 2026-11-25): PSS 5.9 MB (x86_64) / 5.5 MB
+(aarch64), 0 idle wakeups, restore 114 / 147 ms, re-link p95 6 / 9 ms,
+recovery 8 ms after the devices return (190–250 ms from PipeWire's
+start), `junc enable` p95 3–36 ms, 0 added frames, bit-exact, juncd
+3.1 / 2.9 MB.
+
 ### 11.5 CI vs owner laptop
 
 | CI (every PR / nightly) | Owner's Omarchy laptop (developer runs, owner assists) |
