@@ -14,6 +14,7 @@ mod client;
 mod doctor;
 mod edit;
 mod human;
+mod service;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use client::Client;
@@ -163,6 +164,19 @@ enum Cmd {
     },
     /// Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd.
     Doctor,
+    /// Start juncd at login, or not (`systemctl --user` on juncd.service).
+    #[command(subcommand)]
+    Service(ServiceCmd),
+}
+
+#[derive(Debug, Subcommand)]
+enum ServiceCmd {
+    /// Start juncd at login, and now.
+    Enable,
+    /// Stop starting juncd at login, and stop it now.
+    Disable,
+    /// Whether juncd starts at login and runs.
+    Status,
 }
 
 #[derive(Debug, Subcommand)]
@@ -392,6 +406,25 @@ fn offline(cmd: &Cmd) -> Option<Result<Done>> {
             "This build knows schema version 1.",
         )),
         Cmd::Config(ConfigCmd::Validate { file: Some(f) }) => validate(f),
+        Cmd::Service(sub) => {
+            if let ServiceCmd::Enable | ServiceCmd::Disable = sub
+                && let Err(e) = service::set(matches!(sub, ServiceCmd::Enable))
+            {
+                return Some(Err(e));
+            }
+            let client = Client::connect().ok();
+            match service::status(client.as_ref()) {
+                Ok(st) => {
+                    let text = service::describe(&st);
+                    Ok(Done {
+                        revision: None,
+                        data: json!(st),
+                        text,
+                    })
+                }
+                Err(e) => Err(e),
+            }
+        }
         Cmd::Doctor => {
             let client = Client::connect().ok();
             let checks = doctor::checks(client.as_ref());
@@ -463,7 +496,7 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
                 Ok(done(rev, json!({ "applied": true, "plan": plan }), out))
             }
         }
-        Cmd::Schema { .. } | Cmd::Doctor | Cmd::Config(_) => {
+        Cmd::Schema { .. } | Cmd::Doctor | Cmd::Config(_) | Cmd::Service(_) => {
             unreachable!("handled above")
         }
         Cmd::List => {

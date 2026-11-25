@@ -625,3 +625,91 @@ fn nesting_loops_are_refused_before_any_change() {
     let a = e.status("a");
     assert!(a["inputs"].as_array().is_none_or(Vec::is_empty), "{a}");
 }
+
+/// F9: `junc service` drives `systemctl --user` on juncd.service (a fake
+/// systemctl here, recording its calls).
+#[test]
+fn service_commands_drive_systemctl() {
+    let dir = std::env::temp_dir().join(format!("junc-cli-service-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("dir");
+    let fake = dir.join("systemctl");
+    std::fs::write(
+        &fake,
+        r#"#!/bin/sh
+echo "$*" >> "$JUNC_TEST_DIR/calls"
+state=$(cat "$JUNC_TEST_DIR/state" 2>/dev/null || echo disabled)
+case "$2" in
+  is-enabled) echo "$state"; [ "$state" = enabled ];;
+  is-active) if [ "$state" = enabled ]; then echo active; else echo inactive; exit 3; fi;;
+  enable) [ -e "$JUNC_TEST_DIR/missing" ] && { echo "Failed to enable unit: Unit file juncd.service does not exist." >&2; exit 1; }
+          echo enabled > "$JUNC_TEST_DIR/state";;
+  disable) echo disabled > "$JUNC_TEST_DIR/state";;
+esac
+"#,
+    )
+    .expect("fake systemctl");
+    Command::new("chmod")
+        .arg("755")
+        .arg(&fake)
+        .status()
+        .expect("chmod");
+    let path = format!(
+        "{}:{}",
+        dir.display(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    let junc = |args: &[&str]| {
+        let out = Command::new(env!("CARGO_BIN_EXE_junc"))
+            .args(args)
+            .env("PATH", &path)
+            .env("JUNC_TEST_DIR", &dir)
+            .env("DBUS_SESSION_BUS_ADDRESS", "unix:path=/nonexistent")
+            .output()
+            .expect("junc");
+        Out {
+            code: out.status.code().unwrap_or(-1),
+            stdout: String::from_utf8_lossy(&out.stdout).into_owned(),
+            stderr: String::from_utf8_lossy(&out.stderr).into_owned(),
+        }
+    };
+
+    let st = junc(&["--json", "service", "status"]).json();
+    assert_eq!(st["data"]["enabled"], false, "{st}");
+    assert_eq!(st["data"]["active"], "inactive");
+
+    let on = junc(&["--json", "service", "enable"]);
+    assert_eq!(on.code, 0, "{}{}", on.stdout, on.stderr);
+    let v = on.json();
+    assert_eq!(
+        (v["data"]["enabled"].clone(), v["data"]["active"].clone()),
+        (true.into(), "active".into())
+    );
+    assert!(
+        junc(&["service", "status"])
+            .stdout
+            .contains("starts at login")
+    );
+
+    let off = junc(&["--json", "service", "disable"]).json();
+    assert_eq!(off["data"]["enabled"], false);
+
+    let calls = std::fs::read_to_string(dir.join("calls")).expect("calls");
+    assert!(
+        calls.contains("--user enable --now juncd.service"),
+        "{calls}"
+    );
+    assert!(
+        calls.contains("--user disable --now juncd.service"),
+        "{calls}"
+    );
+
+    std::fs::write(dir.join("missing"), "").expect("flag");
+    let out = junc(&["--json", "service", "enable"]);
+    assert_eq!(out.code, 4, "{}", out.stdout);
+    assert_eq!(
+        out.json()["error"]["hint"],
+        "Install the junc package (it ships the user unit)."
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
