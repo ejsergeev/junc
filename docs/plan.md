@@ -147,11 +147,12 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   targets an untagged object. Req: F3, F4, F17. Acceptance: property-based
   tests pass; invariant holds over all fixtures.
   Done 2026-11-25: planner + MockBackend; 9 scenario tests and a property test (64 random configs × 6 recorded graphs) for the untagged-object invariant, convergence and cleanup; a mutation that removes foreign links is caught.
-- [ ] **A6** [auto] `junc-pw` backend: registry → graph, create tagged
+- [x] **A6** [auto] `junc-pw` backend: registry → graph, create tagged
   lingering nodes and links, metadata, inotify socket watch with the
   validated fallback poll and backoff reset. Req: F1, F9, F10.
   Acceptance: layer-2 test creates a Junction visible to pulse, JACK and
   native clients.
+  Done 2026-11-25: `junc-pw` thread mirrors the registry (binding nodes/links, spike S9), applies actions, batches snapshots per `core.sync`, reconnects via inotify. Live test (`scripts/ci/live-pipewire.sh`, also in CI) builds a Junction in 2 rounds, visible to PulseAudio and JACK, adopted by a fresh backend, cleaned up exactly. Spike S10 led to deferred renames.
 - [ ] **A7** [auto] Daemon reconcile loop and link state machine
   (Waiting/Active/Overridden/Disabled), adoption of surviving objects,
   overridden detection with `core.sync`. Req: F10, F17. Acceptance: layer-2
