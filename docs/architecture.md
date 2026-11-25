@@ -202,9 +202,20 @@ at 100 % and insert the gain node only when volume ≠ 100 % (one re-link,
 accepted glitch on the first volume change).
 
 A **Cable** (F5) is a Junction with `kind = "cable"`, one app Input, a 2-ch
-Bus, no Listen by default, and a *target app*: the target's capture stream is
-linked from the Junction's monitor ports (and optionally moved to it via the
-`target.object` metadata so the app's own device picker shows the Cable).
+Bus, no Listen by default, and a *target app*. JUNC sets the target app's
+capture streams' `target.object` (in the `default` metadata) to the Cable's
+source node, the way moving a stream in pavucontrol does, and WirePlumber
+links it there and drops its default-mic link (spike S11). JUNC makes no
+link into the target app itself: next to WirePlumber's routing the app
+would hear the mic and the Cable mixed, and WirePlumber removes links to a
+stream's old target when it moves the stream. The app's own device picker
+shows the Cable as its input. The reconciler remembers which streams it
+sent: a value someone else writes later is the user's choice, reported as
+`link_overridden` with reference `cable/target/<object.serial>` and held
+(Restore re-sends it; Leave as is holds it until the app quits, since a
+stream has no place in the config). When the Cable is deleted, turned off
+or no longer matches the app, JUNC clears only the values it wrote; a
+stream the user sent to a Junction themselves is left alone.
 
 **Nesting** (F2): a Junction may be an Input of another. The planner builds a
 directed graph of Junctions and rejects a config with a cycle
@@ -241,7 +252,8 @@ enforces this over every fixture graph (F17).
 Implemented in `junc-core::plan` with `MockBackend` for tests. Desired and
 existing JUNC links are compared by their port pair; `junc.ref` names each
 link (`in/<input>/<from>-><to>`, `gain/<input>/<ch>`, `sink/<ch>`,
-`listen/<id>/…`, `cable/…`). Links are planned only once both nodes' ports
+`listen/<id>/…`; a Cable's target stream is held as `cable/target/<serial>`).
+Links are planned only once both nodes' ports
 exist, so a new Junction converges in two rounds. Links in the *held* set
 (removed by another tool, awaiting Restore / Leave as is) are not recreated,
 and no JUNC link is added where a foreign link already joins the same ports.
@@ -1397,6 +1409,7 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 
 | S9 | Registry globals carry only part of the properties. Nodes: no `junc.*` tags, no `application.process.binary`, no `audio.channels`. Links: no `junc.*` tags. Ports: everything needed (`port.id`, `audio.channel`, direction, `node.id`). | `junc-pw` binds every audio node and every link to read their full info props (cheap client-side proxies, no objects created); ports are read from globals. |
 
+| S11 | A recording app linked by WirePlumber to the default source (`fake.hwin`), plus a JUNC link from a Cable's source: the app hears both. Setting the stream's `target.object` to the Cable's source makes WirePlumber drop the default-source link and link the Cable itself (both channels into a mono stream); clearing it restores the default source and also removes the links from the Cable, JUNC's included. | Cables use `target.object` only and leave the linking to WirePlumber; JUNC links into the target app are gone. Bit-exact through a Cable confirmed by the A13 live test (s16 → s16, 1.46 s of noise, 3 runs). |
 | S10 | `node.description` cannot be changed after creation (`set-param Props` ignores it). When a node is destroyed, WirePlumber moves its recording apps (PulseAudio and native) to the default source and back once a node with the same `node.name` reappears. | Renaming recreates the node, but only while no foreign link touches it; otherwise the rename is *deferred* (the GUI shows the new name at once, PipeWire gets it when the Junction is idle), so a recording app never hears the real mic for a moment. Gain nodes carry id-based descriptions and are never renamed. A Bus resize still recreates at once; the GUI warns when the Junction is in use. |
 
 Other findings: ports must be looked up by direction and `audio.channel`, never
