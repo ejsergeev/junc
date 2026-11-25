@@ -443,6 +443,17 @@ that node. Call quality differs by codec (AirPods mSBC, Pixel Buds 2a
 LC3-SWB), so the warning names the codec class from `api.bluez5.codec` of the
 HFP profile where known.
 
+As built in B4 (`junc_core::bluetooth`; the picker dialog is the GUI's):
+`junc describe` gives headset mics and Bluetooth cards a `bluetooth` object
+with the profile, `mode` (`playback`/`call`), the call codec and its class
+(CVSD narrowband, mSBC wideband, LC3-SWB super-wideband) and, on a mic in
+A2DP, `switches_to_call`. In A2DP the codec comes from the description of
+the `headset-head-unit` profile WirePlumber would pick; in a call, from the
+nodes. `junc input add` with such a mic adds it and prints the warning.
+The headset mic is the device side of a loopback (`node.link-group`), as
+are the Asahi DSP sink and mic and Omarchy's mic: candidates hide only the
+stream side of loopbacks and filter chains (they hid both before B4).
+
 ### 3.10 Exclusive (F11)
 
 Exclusive moves the app's stream to its Input gain node instead of adding a

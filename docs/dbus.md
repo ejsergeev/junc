@@ -60,7 +60,7 @@ In paths, characters of the id outside `[A-Za-z0-9]` become `_xx` (hex):
 | `ResolveLink` | `(s junction, s ref, s action) → t` | After a `link_overridden` notice: `restore` puts the link back, `leave` keeps it removed (also after restarts). |
 | `GraphChanged` | signal `(t)` | Statuses changed; re-read what you show. |
 | `Notice` | signal `(s kind, s json)` | See below. |
-| `ApiVersion` | property `(uu)` | `(1, 1)`: 1.1 added `devices` to `Describe`, the `set_device_profile` plan action and the `profile_changed` notice. |
+| `ApiVersion` | property `(uu)` | `(1, 1)`: 1.1 added `devices` to `Describe`, `bluetooth` on headset mics and cards, the `set_device_profile` plan action and the `profile_changed` notice. |
 | `DaemonVersion` | property `s` | Package version. |
 | `State` | property `s` | `starting`, `connected`, `waiting_for_pipewire`. |
 | `Revision` | property `t` | Config revision. |

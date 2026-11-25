@@ -260,8 +260,17 @@ Daemon features first (they gate GUI screens):
   re-run: profile switches went unseen (now re-read on every parameter
   change), and the Asahi built-in UCM cards were offered Pro Audio (UCM
   cards are now never offered or switched).
-- [ ] **B4** [auto] Bluetooth profile detection and warning data. Req: F18.
+- [x] **B4** [auto] Bluetooth profile detection and warning data. Req: F18.
   Acceptance: layer-1 fixtures from the owner's headset dump (0.7).
+  Done 2026-11-25 (architecture §3.9, as built): `bluetooth` on headset
+  mics and cards in `junc describe` (profile, playback/call, call codec and
+  quality, `switches_to_call`), the warning on `junc input add`, the skill
+  tells agents to ask first. Layer 1 on the AirPods and Pixel Buds 2a
+  dumps: A2DP mics warn (mSBC wideband, LC3-SWB super-wideband from the
+  call profile's description), HFP mics do not (codec from the nodes).
+  Found on the way: candidates hid the device side of every loopback and
+  filter chain, so the headset mic, Omarchy's mic and the Asahi DSP sink
+  were not offered; fixed and tested on the Asahi dump.
 - [ ] **B5** [auto] Import of null-sink / pw-loopback setups. Req: F13.
   Acceptance: layer-2 test with `pactl load-module module-null-sink` and
   `pw-loopback` setups.
