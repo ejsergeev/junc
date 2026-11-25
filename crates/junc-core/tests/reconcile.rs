@@ -174,3 +174,97 @@ fn holds_end_with_their_junction() {
     step(&mut b, &empty, &mut r);
     assert!(r.overridden().is_empty());
 }
+
+const CABLE: &str = r#"
+schema = 1
+[[junction]]
+id = "ff-discord"
+name = "Firefox to Discord"
+kind = "cable"
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+[junction.cable]
+to = { binary = "Discord" }
+"#;
+
+/// Discord's capture streams in the fixture.
+fn discord(b: &MockBackend) -> Vec<u32> {
+    let m = junc_core::model::Match {
+        binary: Some("Discord".into()),
+        ..Default::default()
+    };
+    junc_core::matcher::resolve(&m, junc_core::matcher::Use::CableTarget, b.graph())
+}
+
+#[test]
+fn cable_targets_are_set_respected_and_returned() {
+    let p = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/fixtures/graphs/apps-browser-two-streams.json");
+    let g = Graph::from_pw_dump(&std::fs::read_to_string(p).expect("fixture")).expect("graph");
+    let cfg = config::load(CABLE, "t.toml").expect("config").config;
+    let mut b = MockBackend::new(g);
+    let mut r = Reconciler::new();
+    for _ in 0..4 {
+        step(&mut b, &cfg, &mut r);
+    }
+    let streams = discord(&b);
+    let d = streams[0];
+    assert_eq!(
+        b.graph().targets.get(&d).map(String::as_str),
+        Some("junc.ff_discord")
+    );
+    assert!(r.on_graph(&cfg, b.graph()).actions.is_empty(), "converged");
+
+    // The user moves Discord to the real mic: held and reported, not fought.
+    b.graph_mut().targets.insert(d, "fake.hwin".into());
+    let s = step(&mut b, &cfg, &mut r);
+    let reference = junc_core::plan::cable_target_ref(b.graph(), d);
+    assert_eq!(s.notices, [overridden("ff-discord", &reference)]);
+    assert!(s.actions.is_empty(), "{:?}", s.actions);
+    assert!(step(&mut b, &cfg, &mut r).actions.is_empty());
+    assert_eq!(
+        b.graph().targets.get(&d).map(String::as_str),
+        Some("fake.hwin")
+    );
+
+    // Leave as is keeps holding; Restore sends it back to the Cable.
+    assert_eq!(
+        r.resolve(&cfg, "ff-discord", &reference, Resolution::LeaveAsIs),
+        None
+    );
+    assert!(r.is_held("ff-discord", &reference));
+    assert!(step(&mut b, &cfg, &mut r).actions.is_empty());
+    r.resolve(&cfg, "ff-discord", &reference, Resolution::Restore);
+    step(&mut b, &cfg, &mut r);
+    assert_eq!(
+        b.graph().targets.get(&d).map(String::as_str),
+        Some("junc.ff_discord")
+    );
+
+    // A stream the user sent to a Junction themselves is not JUNC's to undo.
+    let other = *b
+        .graph()
+        .nodes
+        .keys()
+        .find(|n| !streams.contains(n))
+        .expect("node");
+    b.graph_mut()
+        .targets
+        .insert(other, "junc.ff_discord".into());
+
+    // Deleting the Cable returns JUNC's streams to the default, only those.
+    let empty = config::load("schema = 1\n", "t.toml")
+        .expect("config")
+        .config;
+    for _ in 0..3 {
+        step(&mut b, &empty, &mut r);
+    }
+    for s in &streams {
+        assert_eq!(b.graph().targets.get(s), None, "stream {s} still targeted");
+    }
+    assert_eq!(
+        b.graph().targets.get(&other).map(String::as_str),
+        Some("junc.ff_discord")
+    );
+}

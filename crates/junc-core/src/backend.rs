@@ -170,6 +170,19 @@ pub enum Action {
         /// `node.name` to make default; `None` lets WirePlumber choose.
         name: Option<String>,
     },
+    /// Set (or clear) a stream's `target.object` in the `default` metadata,
+    /// as moving it in pavucontrol does; WirePlumber then links it to the
+    /// target and drops its default routing (spikes S5, S11).
+    SetTarget {
+        /// Stream node id.
+        node: u32,
+        /// `node.name` to send it to; `None` returns it to the default.
+        target: Option<String>,
+        /// Junction id the change is for.
+        junction: String,
+        /// Reference used for holds, e.g. `cable/target/412`.
+        reference: String,
+    },
 }
 
 impl fmt::Display for Action {
@@ -190,6 +203,10 @@ impl fmt::Display for Action {
             Self::SetDefault { kind, name } => match name {
                 Some(n) => write!(f, "set {} to {n}", kind.metadata_key()),
                 None => write!(f, "clear {}", kind.metadata_key()),
+            },
+            Self::SetTarget { node, target, .. } => match target {
+                Some(t) => write!(f, "send stream {node} to {t}"),
+                None => write!(f, "return stream {node} to the default"),
             },
         }
     }
@@ -258,6 +275,7 @@ impl MockBackend {
     /// client goes away or a device is unplugged.
     pub fn remove_node(&mut self, node: u32) {
         self.graph.nodes.remove(&node);
+        self.graph.targets.remove(&node);
         self.graph.ports.retain(|_, p| p.node != node);
         self.graph
             .links
@@ -408,6 +426,14 @@ impl Backend for MockBackend {
                     }
                 }
             }
+            Action::SetTarget { node, target, .. } => match target {
+                Some(t) => {
+                    self.graph.targets.insert(*node, t.clone());
+                }
+                None => {
+                    self.graph.targets.remove(node);
+                }
+            },
         }
         Ok(())
     }

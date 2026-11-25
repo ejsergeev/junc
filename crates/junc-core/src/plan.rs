@@ -180,8 +180,17 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
 
     // --- links ------------------------------------------------------------
     let mut want_links: BTreeMap<(u32, u32), LinkSpec> = BTreeMap::new();
+    let mut set_targets = Vec::new();
     for j in &config.junction {
-        junction_links(j, graph, &ready, held, &mut want_links, &mut out.status);
+        junction_links(
+            j,
+            graph,
+            &ready,
+            held,
+            &mut want_links,
+            &mut set_targets,
+            &mut out.status,
+        );
     }
     let destroyed: HashSet<u32> = destroy_nodes
         .iter()
@@ -219,7 +228,19 @@ pub fn plan(config: &Config, graph: &Graph, held: &Held) -> Plan {
     out.actions.extend(create_nodes);
     out.actions
         .extend(want_links.into_values().map(Action::CreateLink));
+    out.actions.extend(set_targets);
     out
+}
+
+/// Hold reference for a Cable's target stream: by `object.serial`, so an
+/// override of one stream does not hold back the app's next one.
+pub fn cable_target_ref(graph: &Graph, stream: u32) -> String {
+    let serial = graph
+        .nodes
+        .get(&stream)
+        .and_then(|n| n.props.number("object.serial"))
+        .unwrap_or(stream);
+    format!("cable/target/{serial}")
 }
 
 /// An app (or another tool) uses the node: any link touching it that JUNC
@@ -294,6 +315,7 @@ fn junction_links(
     ready: &BTreeMap<String, u32>,
     held: &Held,
     want: &mut BTreeMap<(u32, u32), LinkSpec>,
+    targets_out: &mut Vec<Action>,
     status: &mut Vec<EntityStatus>,
 ) {
     let st = |entity, status, nodes| EntityStatus {
@@ -437,10 +459,21 @@ fn junction_links(
         } else {
             Vec::new()
         };
+        // WirePlumber links the target app to the Cable once its stream's
+        // `target.object` names the Cable (spike S11); JUNC links of its own
+        // would mix with WirePlumber's default routing instead.
+        let name = junction_node_name(&j.id);
         for &t in &targets {
-            let n_in = graph.ports_of(t, Direction::In).count();
-            for [from, to] in default_map(usize::from(bus), n_in) {
-                add(source, from, t, to, format!("cable/{from}->{to}"));
+            let reference = cable_target_ref(graph, t);
+            if graph.targets.get(&t) != Some(&name)
+                && !held.contains(&(j.id.clone(), reference.clone()))
+            {
+                targets_out.push(Action::SetTarget {
+                    node: t,
+                    target: Some(name.clone()),
+                    junction: j.id.clone(),
+                    reference,
+                });
             }
         }
         let s = match (j.enabled, targets.is_empty()) {

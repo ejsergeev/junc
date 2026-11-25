@@ -83,9 +83,21 @@ struct Seen {
     input_node: u32,
 }
 
+/// A stream JUNC sent somewhere with `target.object`.
+#[derive(Debug, Clone)]
+struct Targeted {
+    junction: String,
+    reference: String,
+    value: String,
+    /// The graph has shown the value since JUNC set it.
+    confirmed: bool,
+}
+
 /// Reconcile state for one daemon.
 #[derive(Debug, Default)]
 pub struct Reconciler {
+    /// Streams whose `target.object` JUNC set, by stream node id.
+    targeted: HashMap<u32, Targeted>,
     /// JUNC links in the last snapshot, by link id.
     last: HashMap<u32, Seen>,
     /// Links we asked to destroy and have not seen go yet.
@@ -181,9 +193,41 @@ impl Reconciler {
         self.destroying.retain(|id| current.contains_key(id));
         self.last = current;
 
-        // Holds for Junctions or entries no longer in the config are moot.
+        // Streams JUNC sent to a Cable: a value someone else wrote since is
+        // the user's choice (F17); hold it like an overridden link.
+        let holds = &mut self.confirmed;
+        self.targeted.retain(|stream, t| {
+            if !graph.nodes.contains_key(stream) {
+                return false;
+            }
+            if graph.targets.get(stream) == Some(&t.value) {
+                t.confirmed = true;
+                return true;
+            }
+            if !t.confirmed {
+                return true; // our write has not shown up yet
+            }
+            let key = (t.junction.clone(), t.reference.clone());
+            if holds.insert(key) {
+                notices.push(Notice::LinkOverridden {
+                    junction: t.junction.clone(),
+                    reference: t.reference.clone(),
+                });
+            }
+            false
+        });
+
+        // Holds for Junctions or entries no longer in the config are moot,
+        // and so are holds for streams that are gone.
         let known: HashSet<&str> = config.junction.iter().map(|j| j.id.as_str()).collect();
-        self.confirmed.retain(|(j, _)| known.contains(j.as_str()));
+        let serials: HashSet<String> = graph
+            .nodes
+            .values()
+            .map(|n| crate::plan::cable_target_ref(graph, n.id))
+            .collect();
+        self.confirmed.retain(|(j, r)| {
+            known.contains(j.as_str()) && (!r.starts_with("cable/target/") || serials.contains(r))
+        });
 
         let p = plan(config, graph, &self.held());
         for a in &p.actions {
@@ -192,6 +236,7 @@ impl Reconciler {
             }
         }
         let mut actions = p.actions.clone();
+        actions.extend(self.track_targets(config, graph, &p.actions));
         let (default_actions, default_notices) = plan_defaults(config, graph, &mut self.defaults);
         actions.extend(default_actions);
         notices.extend(default_notices.into_iter().map(|n| match n {
@@ -208,6 +253,66 @@ impl Reconciler {
         }
     }
 
+    /// Records the streams this step sends to Cables, and returns the
+    /// streams JUNC sent earlier that no Cable wants now (Cable deleted or
+    /// off, app no longer matched) to their default. Values someone else
+    /// wrote are never touched.
+    fn track_targets(&mut self, config: &Config, graph: &Graph, planned: &[Action]) -> Vec<Action> {
+        for a in planned {
+            if let Action::SetTarget {
+                node,
+                target: Some(value),
+                junction,
+                reference,
+            } = a
+            {
+                self.targeted.insert(
+                    *node,
+                    Targeted {
+                        junction: junction.clone(),
+                        reference: reference.clone(),
+                        value: value.clone(),
+                        confirmed: false,
+                    },
+                );
+            }
+        }
+        let wanted: HashSet<(u32, String)> = config
+            .junction
+            .iter()
+            .filter(|j| j.enabled && j.kind == crate::model::Kind::Cable)
+            .filter_map(|j| Some((j, j.cable.as_ref()?)))
+            .flat_map(|(j, c)| {
+                let name = crate::matcher::junction_node_name(&j.id);
+                crate::matcher::resolve(&c.to, crate::matcher::Use::CableTarget, graph)
+                    .into_iter()
+                    .map(move |s| (s, name.clone()))
+            })
+            .collect();
+        let mut out = Vec::new();
+        self.targeted.retain(|stream, t| {
+            if wanted.contains(&(*stream, t.value.clone())) {
+                return true;
+            }
+            if graph.targets.get(stream) == Some(&t.value) {
+                out.push(Action::SetTarget {
+                    node: *stream,
+                    target: None,
+                    junction: t.junction.clone(),
+                    reference: t.reference.clone(),
+                });
+            }
+            false
+        });
+        out
+    }
+
+    /// Whether a link or stream target is held, waiting for the user.
+    pub fn is_held(&self, junction: &str, reference: &str) -> bool {
+        self.confirmed
+            .contains(&(junction.to_owned(), reference.to_owned()))
+    }
+
     /// Applies the user's answer. For [`Resolution::LeaveAsIs`] returns the
     /// config with the link added to `suppressed` (the caller saves it).
     pub fn resolve(
@@ -220,6 +325,12 @@ impl Reconciler {
         let key = (junction.to_owned(), reference.to_owned());
         let was_held = self.confirmed.remove(&key) | self.tentative.remove(&key).is_some();
         if !was_held || how == Resolution::Restore {
+            return None;
+        }
+        if reference.starts_with("cable/target/") {
+            // A stream lives as long as the app runs; the config has no
+            // place for it. Keep holding it until it goes.
+            self.confirmed.insert(key);
             return None;
         }
         suppress(config, junction, reference)

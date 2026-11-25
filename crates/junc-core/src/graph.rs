@@ -281,6 +281,9 @@ pub struct Graph {
     pub devices: BTreeMap<u32, Device>,
     /// Defaults.
     pub defaults: Defaults,
+    /// `target.object` of streams in the `default` metadata, by stream node
+    /// id: where the user (or JUNC, for a Cable) sent the stream.
+    pub targets: BTreeMap<u32, String>,
 }
 
 impl Graph {
@@ -414,6 +417,7 @@ impl Graph {
                         == Some("default") =>
                 {
                     read_defaults(o.get("metadata"), &mut g.defaults);
+                    read_targets(o.get("metadata"), &mut g.targets);
                 }
                 _ => {}
             }
@@ -433,6 +437,22 @@ fn parse_profile(p: &Value) -> Option<Profile> {
             .to_owned(),
         available: p.get("available").and_then(Value::as_str) != Some("no"),
     })
+}
+
+fn read_targets(entries: Option<&Value>, t: &mut BTreeMap<u32, String>) {
+    for e in entries.and_then(Value::as_array).into_iter().flatten() {
+        let subject = e
+            .get("subject")
+            .and_then(Value::as_u64)
+            .and_then(|s| u32::try_from(s).ok());
+        if let (Some(s), Some("target.object"), Some(v)) = (
+            subject.filter(|s| *s != 0),
+            e.get("key").and_then(Value::as_str),
+            e.get("value").and_then(Value::as_str),
+        ) {
+            t.insert(s, v.to_owned());
+        }
+    }
 }
 
 fn read_defaults(entries: Option<&Value>, d: &mut Defaults) {

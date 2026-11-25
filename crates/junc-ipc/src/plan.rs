@@ -52,6 +52,15 @@ pub enum ActionView {
     },
     /// The system default input or output changes (`None`: WirePlumber picks).
     SetDefault { kind: String, node: Option<String> },
+    /// A stream is sent to a node (`None`: back to its default), e.g. the
+    /// app a Cable delivers to.
+    SetTarget {
+        stream: String,
+        target: Option<String>,
+        junction: String,
+        #[serde(rename = "ref")]
+        reference: String,
+    },
 }
 
 /// The plan as clients see it.
@@ -131,6 +140,17 @@ fn action(a: &Action, graph: Option<&Graph>) -> ActionView {
         Action::SetDefault { kind, name } => ActionView::SetDefault {
             kind: kind_name(*kind).to_owned(),
             node: name.clone(),
+        },
+        Action::SetTarget {
+            node,
+            target,
+            junction,
+            reference,
+        } => ActionView::SetTarget {
+            stream: node_name(graph, *node),
+            target: target.clone(),
+            junction: junction.clone(),
+            reference: reference.clone(),
         },
     }
 }

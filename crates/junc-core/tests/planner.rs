@@ -5,7 +5,8 @@
 use junc_core::backend::{Action, Backend, MockBackend};
 use junc_core::config;
 use junc_core::graph::{Direction, Graph, Props};
-use junc_core::model::Config;
+use junc_core::matcher::{Use, resolve};
+use junc_core::model::{Config, Match};
 use junc_core::plan::{Entity, Held, Status, default_map, plan, sink_node_name};
 use proptest::prelude::*;
 use std::path::Path;
@@ -346,13 +347,30 @@ match = { binary = "firefox" }
 to = { binary = "Discord" }
 "#);
     converge(&mut b, &c, &Held::new());
+    // WirePlumber links Discord to the Cable once its stream targets it
+    // (spike S11); JUNC sets the target and makes no link into Discord.
+    let discord = resolve(
+        &Match {
+            binary: Some("Discord".into()),
+            ..Match::default()
+        },
+        Use::CableTarget,
+        b.graph(),
+    );
+    assert!(!discord.is_empty());
+    for d in &discord {
+        assert_eq!(
+            b.graph().targets.get(d).map(String::as_str),
+            Some("junc.ff_discord")
+        );
+    }
     let links = junc_links(&b);
-    let discord_in = links.iter().filter(|l| l.2 == "Discord").count();
-    assert!(discord_in >= 1, "{links:?}");
+    assert!(!links.iter().any(|l| l.2 == "Discord"), "{links:?}");
     assert!(
         links
             .iter()
-            .any(|l| l.0 == "junc.ff_discord" && l.2 == "Discord")
+            .any(|l| l.0 == "firefox" || l.2 == "junc.ff_discord.in.firefox"),
+        "{links:?}"
     );
     assert!(
         b.graph()

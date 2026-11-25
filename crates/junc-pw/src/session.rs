@@ -246,6 +246,7 @@ fn serve(
                 let mut s = st_rm.borrow_mut();
                 let g = &mut s.graph;
                 g.nodes.remove(&id);
+                g.targets.remove(&id);
                 g.ports.remove(&id);
                 g.links.remove(&id);
                 g.devices.remove(&id);
@@ -465,9 +466,11 @@ fn on_global(
                     .property(move |subject, key, _type, value| {
                         if subject == 0 {
                             set_default(&mut st2.borrow_mut().graph, key, value);
-                            if let Some(core) = core2.upgrade() {
-                                request_sync(&st2, &core);
-                            }
+                        } else {
+                            set_target(&mut st2.borrow_mut().graph, subject, key, value);
+                        }
+                        if let Some(core) = core2.upgrade() {
+                            request_sync(&st2, &core);
                         }
                         0
                     })
@@ -489,6 +492,20 @@ fn on_global(
         _ => return,
     }
     request_sync(st, core);
+}
+
+/// A stream's `target.object` (spike S11). A clear of the subject (key
+/// `None`) removes it too.
+fn set_target(g: &mut Graph, subject: u32, key: Option<&str>, value: Option<&str>) {
+    match (key, value) {
+        (Some("target.object"), Some(v)) => {
+            g.targets.insert(subject, v.to_owned());
+        }
+        (Some("target.object") | None, _) => {
+            g.targets.remove(&subject);
+        }
+        _ => {}
+    }
 }
 
 fn set_default(g: &mut Graph, key: Option<&str>, value: Option<&str>) {
@@ -584,6 +601,14 @@ fn apply(
                 value.as_ref().map(|_| "Spa:String:JSON"),
                 value.as_deref(),
             );
+        }
+        Action::SetTarget { node, target, .. } => {
+            let s = st.borrow();
+            let Some((_, md)) = &s.default_md else {
+                return Err("no default metadata (is WirePlumber running?)".into());
+            };
+            // A node name, as pavucontrol and `pw-metadata` write it.
+            md.set_property(*node, "target.object", None, target.as_deref());
         }
         Action::DestroyNode { node: id } | Action::DestroyLink { link: id } => {
             // Defence in depth for F17: the planner never asks for this, but
