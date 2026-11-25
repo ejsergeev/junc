@@ -43,7 +43,9 @@ use std::sync::{Arc, mpsc};
 use std::time::Instant;
 
 fn usage() -> ExitCode {
-    eprintln!("usage: juncd [--config FILE] [--state-dir DIR] [--no-dbus] [--version]");
+    eprintln!(
+        "usage: juncd [--config FILE] [--state-dir DIR] [--no-dbus] [--teardown] [--version]"
+    );
     ExitCode::from(2)
 }
 
@@ -58,6 +60,8 @@ enum Msg {
     Request(Req, Responder),
     /// The executable on disk was replaced by an upgrade (F20).
     Upgraded,
+    /// `--teardown` ran out of time.
+    TeardownTimeout,
 }
 
 /// Daemon state that is not user intent.
@@ -234,6 +238,11 @@ struct Daemon {
     notifier: notify::Notifier,
     started: Instant,
     converged: bool,
+}
+
+/// Any node or link JUNC made, meters included.
+fn has_junc_objects(g: &Graph) -> bool {
+    g.nodes.values().any(|n| n.is_junc()) || g.links.values().any(|l| l.is_junc())
 }
 
 fn json<T: serde::Serialize>(v: &T) -> String {
@@ -597,6 +606,7 @@ impl Daemon {
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
     let (mut config_path, mut state_dir, mut use_dbus) = (None, None, true);
+    let mut teardown = false;
     while let Some(a) = args.next() {
         match a.as_str() {
             "--version" => {
@@ -612,6 +622,7 @@ fn main() -> ExitCode {
                 None => return usage(),
             },
             "--no-dbus" => use_dbus = false,
+            "--teardown" => teardown = true,
             _ => return usage(),
         }
     }
@@ -631,11 +642,21 @@ fn main() -> ExitCode {
     if std::env::var_os("JUNC_REEXEC").is_some() {
         log("re-executed after an upgrade; adopting the running Junctions");
     }
-    let store = match open_store(&config_path, &last_good) {
-        Ok(s) => s,
-        Err(code) => return code,
+    // Teardown (F20, uninstall): an empty config removes every JUNC object
+    // and gives the system defaults back; nothing is written to the config.
+    if teardown {
+        use_dbus = false;
+    }
+    let store = if teardown {
+        Store::empty(&config_path.display().to_string())
+    } else {
+        match open_store(&config_path, &last_good) {
+            Ok(s) => s,
+            Err(code) => return code,
+        }
     };
-    if store.error().is_none()
+    if !teardown
+        && store.error().is_none()
         && let Err(e) = write_atomic(&last_good, store.good_text())
     {
         log(&format!("cannot save {}: {e}", last_good.display()));
@@ -683,24 +704,32 @@ fn main() -> ExitCode {
         }
     };
     let exe = std::env::current_exe().ok();
-    if let Some(exe) = &exe {
+    if teardown {
         let tx = tx.clone();
-        if let Err(e) = upgrade::spawn(exe, move || {
-            let _ = tx.send(Msg::Upgraded);
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_secs(10));
+            let _ = tx.send(Msg::TeardownTimeout);
+        });
+    } else {
+        if let Some(exe) = &exe {
+            let tx = tx.clone();
+            if let Err(e) = upgrade::spawn(exe, move || {
+                let _ = tx.send(Msg::Upgraded);
+            }) {
+                log(&format!(
+                    "cannot watch {}: {e}; restart juncd after upgrades",
+                    exe.display()
+                ));
+            }
+        }
+        if let Err(e) = watch::spawn(&config_path, move || {
+            let _ = tx.send(Msg::ConfigFile);
         }) {
             log(&format!(
-                "cannot watch {}: {e}; restart juncd after upgrades",
-                exe.display()
+                "cannot watch {}: {e}; hand edits need a restart",
+                config_path.display()
             ));
         }
-    }
-    if let Err(e) = watch::spawn(&config_path, move || {
-        let _ = tx.send(Msg::ConfigFile);
-    }) {
-        log(&format!(
-            "cannot watch {}: {e}; hand edits need a restart",
-            config_path.display()
-        ));
     }
 
     let mut d = Daemon {
@@ -756,6 +785,27 @@ fn main() -> ExitCode {
                 d.graph = Some(*g);
                 d.phase = "connected";
                 d.reconcile(&backend);
+                if teardown && d.converged && d.graph.as_ref().is_some_and(|g| !has_junc_objects(g))
+                {
+                    log("teardown: no JUNC objects left");
+                    return ExitCode::SUCCESS;
+                }
+            }
+            Msg::TeardownTimeout => {
+                return match &d.graph {
+                    None => {
+                        log("teardown: PipeWire is not running; nothing to remove");
+                        ExitCode::SUCCESS
+                    }
+                    Some(g) => {
+                        log(&format!(
+                            "teardown: JUNC objects still there after 10 s: {}",
+                            g.nodes.values().filter(|n| n.is_junc()).count()
+                                + g.links.values().filter(|l| l.is_junc()).count()
+                        ));
+                        ExitCode::FAILURE
+                    }
+                };
             }
             Msg::Upgraded => {
                 let Some(exe) = &exe else { continue };
