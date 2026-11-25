@@ -4,7 +4,10 @@
 # build dependencies from the distro, then run the checks as an unprivileged
 # user (makepkg-style), with cargo's home inside the mounted workspace cache.
 set -euo pipefail
-pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny >/dev/null
+for i in 1 2 3; do
+  pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny >/dev/null && break
+  (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
+done
 id builder >/dev/null 2>&1 || useradd -m builder
 chown -R builder: /src
 exec su builder -c 'export CARGO_HOME=/src/.ci-cache/cargo CARGO_TARGET_DIR=/src/.ci-cache/target; \
