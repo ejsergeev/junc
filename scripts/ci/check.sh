@@ -8,6 +8,8 @@ step "toolchain"; rustc --version; cargo --version
 step "fmt";       cargo fmt --all --check
 step "clippy";    cargo clippy --workspace --all-targets --locked -- -D warnings
 step "test";      cargo test --workspace --locked
+step "i18n";      command -v xgettext >/dev/null || { echo "xgettext (gettext) is missing"; exit 1; }
+cargo xtask i18n check
 step "deps";      scripts/ci/check-deps.sh
 step "deny";      cargo deny --locked check
 step "release";   cargo build --workspace --release --locked
