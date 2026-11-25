@@ -1,0 +1,19 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgctxt "App"
+msgid "Inputs"
+msgstr "Входы"
+
+msgctxt "App"
+msgid "Add input…"
+msgstr "Добавить вход…"
+
+msgctxt "App"
+msgid "{0} input connected"
+msgid_plural "{0} inputs connected"
+msgstr[0] "{0} вход подключён"
+msgstr[1] "{0} входа подключено"
+msgstr[2] "{0} входов подключено"

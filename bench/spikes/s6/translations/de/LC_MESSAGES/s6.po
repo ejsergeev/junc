@@ -1,0 +1,18 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "App"
+msgid "Inputs"
+msgstr "Eingänge"
+
+msgctxt "App"
+msgid "Add input…"
+msgstr "Eingang hinzufügen…"
+
+msgctxt "App"
+msgid "{0} input connected"
+msgid_plural "{0} inputs connected"
+msgstr[0] "{0} Eingang verbunden"
+msgstr[1] "{0} Eingänge verbunden"

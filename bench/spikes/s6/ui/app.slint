@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+import { Button } from "std-widgets.slint";
+
+export component App inherits Window {
+    // The count picks the plural form; the text is the same count as
+    // ICU4X formats it for the language.
+    in property <int> inputs: 3;
+    in property <string> inputs-text: "3";
+    VerticalLayout {
+        Text { text: @tr("Inputs"); }
+        Button { text: @tr("Add input…"); }
+        Text { text: @tr("{0} input connected" | "{0} inputs connected" % inputs, inputs-text); }
+    }
+}

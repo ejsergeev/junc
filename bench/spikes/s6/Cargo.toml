@@ -1,0 +1,19 @@
+# Spike S6 (docs/architecture.md §8, §12): Slint bundled translations, a
+# live language switch, and plurals whose number is formatted by ICU4X.
+# Standalone (the workspace excludes bench/); run `cargo test` here.
+[package]
+name = "s6"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+slint = "1.19.1"
+
+[build-dependencies]
+slint-build = "1.19.1"
+
+[dev-dependencies]
+junc-l10n = { path = "../../../crates/junc-l10n", features = ["numbers"] }
+i-slint-backend-testing = "1.19.1"

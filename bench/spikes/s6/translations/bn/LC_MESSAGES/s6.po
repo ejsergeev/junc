@@ -1,0 +1,18 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "App"
+msgid "Inputs"
+msgstr "ইনপুট"
+
+msgctxt "App"
+msgid "Add input…"
+msgstr "ইনপুট যোগ করুন…"
+
+msgctxt "App"
+msgid "{0} input connected"
+msgid_plural "{0} inputs connected"
+msgstr[0] "{0}টি ইনপুট সংযুক্ত"
+msgstr[1] "{0}টি ইনপুট সংযুক্ত"
