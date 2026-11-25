@@ -16,10 +16,13 @@ workspace = true
 # No Qt backend: winit with femtovg (GPU) and the software renderer
 # fallback (architecture §7.1).
 slint = { version = "1.19.1", default-features = false, features = ["std", "compat-1-2", "backend-winit", "renderer-femtovg", "renderer-software", "accessibility"] }
+junc-core = { workspace = true, optional = true }
 futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
 inotify = "0.11"
 junc-ipc.workspace = true
 serde_json = "1.0.154"
+serde = { version = "1.0.229", features = ["derive"], optional = true }
+png = { version = "0.18.1", optional = true }
 zbus = "6.5"
 toml = "1.2.3"
 
@@ -28,3 +31,8 @@ slint-build = "1.19.1"
 
 [dev-dependencies]
 i-slint-backend-testing = "1.19.1"
+
+[features]
+# GUI scenarios (architecture §7.5): `--scenario`, the mock IPC and
+# deterministic snapshots with the bundled font. Not in release builds.
+scenarios = ["dep:junc-core", "dep:serde", "dep:png", "slint/unstable-fontique-012"]

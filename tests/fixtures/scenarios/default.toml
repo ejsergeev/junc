@@ -1,0 +1,42 @@
+# GUI scenario (architecture §7.5): design board 1, "Main · Tokyo Night".
+# The mock IPC runs this config against the graph until it settles, as
+# juncd would, and shows the result.
+board = 1
+title = "Main · Tokyo Night"
+theme = "dark"
+size = [1440, 900]
+daemon = "connected"
+graph = "apps-browser-two-streams.json"
+config = """
+schema = 1
+
+[[junction]]
+id = "virtual-mic-for-zoom"
+name = "Virtual Mic for Zoom"
+default = "input"
+bus = { channels = 4 }
+
+[[junction.input]]
+id = "spotify"
+match = { binary = "spotify" }
+
+[[junction.input]]
+id = "mic"
+match = { device = "fake.hwin" }
+
+[[junction.listen]]
+id = "hp"
+target = "default"
+
+[[junction]]
+id = "firefox-to-obs"
+name = "Firefox → OBS"
+kind = "cable"
+
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+
+[junction.cable]
+to = { binary = "Discord" }
+"""
