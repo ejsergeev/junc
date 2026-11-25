@@ -402,6 +402,32 @@ mic in use.
   config is updated, not overridden).
 - Shows device channel count and active profile as a badge.
 
+As built in B3 (daemon and CLI; the picker is the GUI's, B9+):
+
+- The backend binds every card, subscribes to `EnumProfile` and `Profile`,
+  and for USB cards reads `/proc/asound/card<N>/stream*` once when the card
+  appears (`proaudio::parse_usb_stream`). `junc describe` lists `devices`
+  with profile, input channels, groups of 8 and `pro_audio: {now, all}`.
+- `junc input add … --device NODE --pro-audio` stores `profile =
+  "pro-audio"` with the device match. The match may keep the stereo node
+  name: the card comes from the node, or from the name when the node is
+  gone (`alsa_input.<card>.<part>` → `alsa_card.<card>`). While the card
+  runs another profile the Input waits; then it takes the card's widest
+  capture node of that profile.
+- The reconciler switches the card (`SetDeviceProfile`, saved by
+  WirePlumber like `wpctl set-profile`) once per card appearance (by
+  `object.serial`) or config change. If the user switches it elsewhere
+  while it stays plugged in, the Input's `profile` becomes their choice
+  (saved like any edit, `profile_changed` notice), so a re-plug brings
+  that back; a card turned `off` is left off and the config kept. One
+  profile per card: the first Input in the config wins.
+- Never on UCM cards (profiles like `HiFi` instead of ACP's
+  `output:…+input:…`): UCM sets up amplifiers and speaker processing, as
+  on the Asahi built-in audio, and Pro Audio would bypass it. Not offered,
+  not switched even when a config asks.
+- Profiles are re-read on every parameter change of the card: a
+  parameter subscription alone does not report a switch.
+
 ### 3.9 Bluetooth (F18)
 
 From `device.api = bluez5` and `api.bluez5.profile`: the picker marks a

@@ -170,3 +170,26 @@ where the time goes in a busy session is a beta task.
 Also noticed: the log line "graph complete after N ms" counted from the
 daemon's start, so it showed 62 s after a hand edit and 190 s after a
 PipeWire restart; it now counts from the change or reconnection.
+
+## Pro Audio on the owner laptop (B3, layer 3, 2026-11-25)
+
+Release `juncd` and `junc` from the B3 branch in the owner's live desktop
+session, with a test config and state directory (the owner's own config
+untouched) and the `snd-aloop` card already loaded. One Junction, **B3
+Loop**, with one Input: `device = "alsa_input.platform-snd_aloop.0.pro-input-1"`,
+`profile = "pro-audio"`. Cleaned up afterwards: no JUNC objects left,
+Loopback profile `off`.
+
+| Check | Req | Result |
+| --- | --- | --- |
+| Card on its stereo profile when juncd starts | F15 | ✅ juncd switched it to `pro-audio`; the Input became `active` on the 32-channel `pro-input-1` (links 1→1, 2→2) |
+| First try | F15 | ❌ the card switched but juncd still saw the stereo profile and the Input stayed `waiting`: a parameter subscription does not report a profile switch → fixed (re-read `Profile`/`EnumProfile` on every parameter change, as `pw-dump` does) and re-run ✅ |
+| `junc describe` devices | F15, F25 | ✅ Loopback: `pro-audio`, 32 inputs in groups 1–8 … 25–32, no offer (already Pro Audio). The Asahi built-in cards (UCM `HiFi`) offered Pro Audio on the first try → fixed: UCM cards are never offered or switched (it would bypass the speaker setup) ✅ |
+| Noise → `pro-output-0` → snd-aloop (real ALSA path) → `pro-input-1` → Junction → recorder | F2, F15 | ✅ 72 000 of 72 000 frames bit-exact |
+| User switches the card to stereo with `wpctl set-profile` | F15, F17 | ✅ `profile_changed` notice; the Input's `profile` saved as `output:analog-stereo+input:analog-stereo` (file formatting kept); not switched back; the Input follows to the stereo capture node |
+| User turns the card `off` | F15 | ✅ notice, config kept, left off |
+
+A real re-plug was not simulated (unloading `snd-aloop` needs WirePlumber
+stopped); a card JUNC sees for the first time is switched, which is what a
+re-plug looks like, and the mock tests cover a new `object.serial`.
+

@@ -51,7 +51,7 @@ In paths, characters of the id outside `[A-Za-z0-9]` become `_xx` (hex):
 
 | Member | Signature | What it does |
 | --- | --- | --- |
-| `Describe` | `() → s` | Everything at once: state, revision, config errors, Junctions with statuses and matched nodes, apps being captured, default devices, nodes you could route (`candidates`). |
+| `Describe` | `() → s` | Everything at once: state, revision, config errors, Junctions with statuses and matched nodes, apps being captured, default devices, nodes you could route (`candidates`), sound cards with profiles, input channels and the Pro Audio offer (`devices`, since 1.1). |
 | `GetConfig` | `() → (s, t)` | The config text in use and its revision. |
 | `Validate` | `(s toml) → s` | JSON list of diagnostics; `[]` means valid. Changes nothing. |
 | `Plan` | `(s toml) → s` | Dry run against the live graph: `{"actions": [...], "deferred": [...], "junctions": [...]}`. Needs PipeWire. |
@@ -60,7 +60,7 @@ In paths, characters of the id outside `[A-Za-z0-9]` become `_xx` (hex):
 | `ResolveLink` | `(s junction, s ref, s action) → t` | After a `link_overridden` notice: `restore` puts the link back, `leave` keeps it removed (also after restarts). |
 | `GraphChanged` | signal `(t)` | Statuses changed; re-read what you show. |
 | `Notice` | signal `(s kind, s json)` | See below. |
-| `ApiVersion` | property `(uu)` | `(1, 0)` |
+| `ApiVersion` | property `(uu)` | `(1, 1)`: 1.1 added `devices` to `Describe`, the `set_device_profile` plan action and the `profile_changed` notice. |
 | `DaemonVersion` | property `s` | Package version. |
 | `State` | property `s` | `starting`, `connected`, `waiting_for_pipewire`. |
 | `Revision` | property `t` | Config revision. |
@@ -75,6 +75,7 @@ Notices:
 | `link_overridden` | `{"junction": "zoom", "ref": "in/mic/1->1"}` — another tool removed a JUNC link; answer with `ResolveLink`. |
 | `default_restored` | `{"kind": "input", "to": "alsa_input.…"}` — JUNC put the previous default back. |
 | `default_taken_over` | `{"kind": "output", "junction": "zoom"}` — the user chose another default elsewhere; JUNC stops claiming it. |
+| `profile_changed` | `{"junction": "studio", "input": "desk", "profile": "output:analog-stereo+input:analog-stereo"}` — the user switched a card JUNC keeps in a profile; JUNC keeps their choice and saved it as the Input's `profile` (`null`: the card was turned off; the config is kept). |
 | `config_error` | `{"diagnostics": [...]}` — a hand edit did not validate; the last good config stays in use. |
 
 ## `Junction`

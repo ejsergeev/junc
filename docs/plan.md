@@ -244,9 +244,22 @@ Daemon features first (they gate GUI screens):
   A restarted daemon adopts streams already at a wanted target or at a
   JUNC Input gain node, so turning Exclusive off after a restart still
   returns them (unit test).
-- [ ] **B3** [auto] Pro Audio detection/switching, channel groups, profile
+- [x] **B3** [auto] Pro Audio detection/switching, channel groups, profile
   memory on re-plug. Req: F15. Acceptance: layer-1 fixtures (18-ch) + layer-3
   `snd-aloop` on the owner laptop.
+  Done 2026-11-25, daemon and CLI (architecture §3.8, as built): cards bound
+  with their profiles, ALSA channel counts for USB cards, `devices` in
+  `junc describe` (API 1.1), `junc input add --device … --pro-audio`,
+  switching on plug and config change, the user's own choice kept and
+  saved. Layer 1: synthetic 18-input USB card (2 of 18, groups 1–8, 9–16,
+  17–18), Komplete Audio 2 negative case, snd-aloop "available", binding
+  to the Pro Audio node, profile memory over a re-plug, card turned off.
+  Layer 3 on the owner laptop (`docs/hardware-matrix.md`): snd-aloop
+  switched to Pro Audio on sight, bit-exact through the real ALSA path,
+  the user's own switch kept and saved. It found two bugs, both fixed and
+  re-run: profile switches went unseen (now re-read on every parameter
+  change), and the Asahi built-in UCM cards were offered Pro Audio (UCM
+  cards are now never offered or switched).
 - [ ] **B4** [auto] Bluetooth profile detection and warning data. Req: F18.
   Acceptance: layer-1 fixtures from the owner's headset dump (0.7).
 - [ ] **B5** [auto] Import of null-sink / pw-loopback setups. Req: F13.
