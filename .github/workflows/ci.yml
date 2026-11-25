@@ -1,0 +1,65 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  git-rules:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Commit messages
+        run: scripts/ci/check-commits.sh "origin/${{ github.base_ref }}" HEAD
+      - name: Branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if grep -qiE 'claude|chatgpt|openai|copilot|codex|gemini|anthropic' <<<"$BRANCH"; then
+            echo "branch name contains a tool name: $BRANCH"; exit 1
+          fi
+
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    name: check (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: .ci-cache
+          key: cargo-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-${{ matrix.arch }}-
+      - name: Container image
+        id: image
+        run: |
+          if [ "${{ matrix.arch }}" = x86_64 ]; then
+            echo "name=docker.io/library/archlinux:base-devel" >> "$GITHUB_OUTPUT"
+          else
+            scripts/ci/alarm-image.sh
+            echo "name=junc-ci-alarm" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Checks in Arch container
+        run: docker run --rm -v "$PWD:/src" -w /src "${{ steps.image.outputs.name }}" scripts/ci/in-container.sh
+      - name: Restore cache ownership
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" .ci-cache || true
