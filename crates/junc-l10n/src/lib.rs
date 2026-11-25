@@ -15,6 +15,8 @@
 #![forbid(unsafe_code)]
 
 pub mod mo;
+#[cfg(feature = "numbers")]
+pub mod numbers;
 pub mod plural;
 pub mod registry;
 pub mod watch;
