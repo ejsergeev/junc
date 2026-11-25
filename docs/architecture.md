@@ -262,7 +262,7 @@ Each desired link has a state:
   removed by another tool. JUNC does not fight: it raises a `LinkOverridden`
   notice ("EasyEffects removed the Link …", culprit from the client that
   owns the replacing link when known) with **Restore** / **Leave as is**
-  (design state `linkOverridden`). "Leave as is" sets `suppressed = true` on
+  (design state `linkOverridden`). "Leave as is" adds the link's channel pair to the `suppressed` list of
   that link in the config, so the choice survives restarts and is editable.
 - JUNC never destroys links it did not create, including WirePlumber's
   app→default-sink links. Non-exclusive capture *adds* links (an app plays to
@@ -666,6 +666,7 @@ links = [[1, 3], [2, 4]]
 id = "usb-mic"
 match = { device = "alsa_input.usb-Generic_USB_Microphone-00.mono-fallback" }
 links = [[1, 1], [1, 2]]           # mono mic to both sides
+suppressed = [[1, 2]]              # removed by another tool, left as is (F17)
 
 [[junction.listen]]
 id = "builtin"
@@ -684,15 +685,48 @@ match = { binary = "firefox" }
 to = { binary = "obs" }            # the app that hears the Cable as its input
 ```
 
-Rules (enforced by the validator, all with line numbers):
+Implemented in `junc-core` (`model.rs`, `config.rs`, `migrate.rs`); the
+model types are the single source of truth and `schema/junc-config-v1.json`
+is generated from them (`cargo xtask schema`, freshness tested).
 
-- `schema` is required; unknown keys are errors (with suggestions).
-- ids are unique per scope, `[a-z0-9-]+`; names are free text (any script).
-- `links` reference existing channels; a missing `links` uses the default
-  mapping (F4); `suppressed = true` may mark a link left as is (F17).
-- Bus channels ≤ 64 (F3); total Inputs unrestricted but warned above 32.
-- At most one Junction per role may have `default = "input"` / `"output"`.
-- Nesting must be acyclic.
+Rules (enforced by the validator, all with file, line and column):
+
+- `schema` is a whole number; a missing key means v0 and is migrated; a
+  newer schema is refused. Unknown keys are errors with "did you mean".
+- ids are `[a-z0-9-]+` (no leading/trailing `-`, ≤ 64), unique per scope
+  (Junctions; Inputs and Listen outputs within a Junction); names are free
+  text in any script but not empty.
+- `links` pairs are 1-based `[from, to]` channels within range (input side
+  1–64 since device channels are only known live; Bus side ≤ `bus.channels`);
+  a missing `links` uses the default mapping (F4). `suppressed` lists pairs
+  another tool removed and the user left as is (F17).
+- Bus channels 1–64 (F3); volumes 0–150 %; fixed rates 44100–192000 Hz.
+  More than 32 Inputs on one Junction is a warning.
+- A `match` uses exactly one kind of key: app keys (`app`, `binary`,
+  `role`, `node`), `device`, `monitor`, `junction`, or `slot` (presets only);
+  `profile` may accompany a device match (F15).
+- At most one Junction per role has `default = "input"` / `"output"`.
+- Nesting must name an existing Junction and be acyclic (self-nesting
+  included).
+- `kind = "cable"` needs `[junction.cable] to = { … }` and exactly one app
+  Input; a `cable` table on a Junction is an error.
+
+Diagnostic codes (stable; also listed in the skill reference):
+
+| Code | Meaning |
+| --- | --- |
+| `E_CONFIG_SYNTAX` | Not valid TOML |
+| `E_CONFIG_SCHEMA_NEWER` / `E_CONFIG_SCHEMA_INVALID` | Unknown or too new `schema` |
+| `E_CONFIG_UNKNOWN_KEY` / `E_CONFIG_MISSING_KEY` / `E_CONFIG_INVALID_VALUE` | Shape errors |
+| `E_CONFIG_ID_FORMAT` / `E_CONFIG_ID_DUPLICATE` | Bad or repeated id |
+| `E_CONFIG_RANGE` | Number out of range |
+| `E_CONFIG_LINK_CHANNEL` | Link to a channel that does not exist |
+| `E_CONFIG_DEFAULT_DUPLICATE` | Two defaults for one role |
+| `E_CONFIG_MATCH_KIND` | Empty or mixed match |
+| `E_CONFIG_JUNCTION_UNKNOWN` / `E_CONFIG_CYCLE` | Bad nesting |
+| `E_CONFIG_CABLE` | Cable shaped wrong |
+| `E_CONFIG_SLOT_OUTSIDE_PRESET` | Template slot in a config |
+| `W_CONFIG_MANY_INPUTS` | Warning: > 32 Inputs |
 
 ### 6.3 Presets and templates (F22, F24)
 
