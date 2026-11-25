@@ -79,7 +79,7 @@ junc/
 │   ├── arch/PKGBUILD             split package junc + junc-gui
 │   ├── arch/junc-keyring/        keyring package for the signed repo
 │   ├── systemd/juncd.service     user unit
-│   ├── dbus/io.github.junc_audio.Junc1.service   D-Bus activation
+│   ├── dbus/io.github.ejsergeev.Junc1.service   D-Bus activation
 │   ├── desktop/junc.desktop, icons/ (from design AppIcons board)
 │   └── repo/                     repo layout docs + publish scripts
 ├── tests/
@@ -392,7 +392,7 @@ D-Bus property with change signals, consumed by the bar plugin and the tray
 
 ## 4. D-Bus API v1
 
-Session bus only. Well-known name `io.github.junc_audio.Junc1`; the trailing
+Session bus only. Well-known name `io.github.ejsergeev.Junc1`; the trailing
 `1` is the major API version. Generated reference: `docs/dbus.md` (from the
 zbus interface definitions, checked in CI).
 
@@ -400,8 +400,8 @@ zbus interface definitions, checked in CI).
 
 | Path | Interfaces |
 | --- | --- |
-| `/io/github/junc_audio/Junc1` | `io.github.junc_audio.Junc1.Daemon`, `org.freedesktop.DBus.Properties`, `org.freedesktop.DBus.ObjectManager` |
-| `/io/github/junc_audio/Junc1/junction/<id>` | `io.github.junc_audio.Junc1.Junction` |
+| `/io/github/ejsergeev/Junc1` | `io.github.ejsergeev.Junc1.Daemon`, `org.freedesktop.DBus.Properties`, `org.freedesktop.DBus.ObjectManager` |
+| `/io/github/ejsergeev/Junc1/junction/<id>` | `io.github.ejsergeev.Junc1.Junction` |
 
 `<id>` is the Junction id with characters outside `[A-Za-z0-9_]` encoded as
 `_xx` (hex). Inputs, Bus channels, Listen outputs and Links are not separate
@@ -470,7 +470,7 @@ Methods (each returns the new config revision `t`):
 
 ### 4.4 Errors
 
-All errors are `io.github.junc_audio.Junc1.Error.<Name>`; the message is JSON
+All errors are `io.github.ejsergeev.Junc1.Error.<Name>`; the message is JSON
 `{"code","message","hint","location"?}` so CLI and GUI can show actionable
 text and agents can parse it:
 
@@ -1094,15 +1094,15 @@ Split package, `arch=(x86_64 aarch64)`:
 | `junc-gui` | `junc-gui`, `.desktop`, icons (hicolor + symbolic), Omarchy bar plugin, menu snippet | `junc`, `fontconfig`, `libxkbcommon`, `wayland`, `libgl`/mesa; optdepends `libx11` (X11) |
 
 `pipewire-pulse` and `pipewire-jack` are optdepends (doctor/onboarding report
-them). Source: `git+https://github.com/junc-audio/junc.git#tag=v$pkgver`
+them). Source: `git+https://github.com/ejsergeev/junc.git#tag=v$pkgver`
 (pinned, as omarchy-pkgs requires). `check()` runs `cargo test --workspace
 --locked` (layer 1). `junc.install` handles `pre_remove` teardown (§3.13).
 Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 
 ### 10.2 Signed pacman repository
 
-- Hosted on GitHub Pages of `junc-audio/pkgs`:
-  `https://junc-audio.github.io/pkgs/$repo/$arch/` with repos `junc` (stable)
+- Hosted on GitHub Pages of `ejsergeev/junc-pkgs`:
+  `https://ejsergeev.github.io/junc-pkgs/$repo/$arch/` with repos `junc` (stable)
   and `junc-testing`. Each has `junc*.pkg.tar.zst`, `.sig`, and the signed db
   (`$repo.db.tar.zst` + `.sig`). Last 3 versions kept.
 - Signing: the owner creates the OpenPGP key (primary key offline) and a
@@ -1113,7 +1113,7 @@ Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 
   ```ini
   [junc]
-  Server = https://junc-audio.github.io/pkgs/$repo/$arch
+  Server = https://ejsergeev.github.io/junc-pkgs/$repo/$arch
   ```
   after `pacman-key --add` + `--lsign-key <fingerprint>` (bootstrap), then
   `pacman -S junc-keyring junc-gui`.
@@ -1138,7 +1138,7 @@ Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 | --- | --- | --- |
 | Launcher entry | `junc.desktop` (Omarchy's app launcher reads XDG data dirs) | — |
 | Menu entry "Audio routing · JUNC" under Setup, next to Audio | `junc omarchy install` adds a marked entry to `~/.config/omarchy/extensions/omarchy-menu.jsonc` (only with consent, idempotent, removable) | PR to omacom/omarchy: entry in `default/omarchy/omarchy-menu.jsonc` with `when: command -v junc-gui` + `menu.json` catalog key |
-| Bar module (count of Junctions on, capture dot, popup with switches) | Quickshell plugin `io.github.junc_audio.junc` (manifest kinds `bar-widget`, `service`), shipped in `/usr/share/junc/omarchy/plugin/`, symlinked into `~/.config/omarchy/plugins/` by `junc omarchy install` (Omarchy loads plugins only from there); data from `junc watch --json`, actions via `junc enable/disable`; validated with `omarchy plugin validate` | Optional: propose as a built-in plugin |
+| Bar module (count of Junctions on, capture dot, popup with switches) | Quickshell plugin `io.github.ejsergeev.junc` (manifest kinds `bar-widget`, `service`), shipped in `/usr/share/junc/omarchy/plugin/`, symlinked into `~/.config/omarchy/plugins/` by `junc omarchy install` (Omarchy loads plugins only from there); data from `junc watch --json`, actions via `junc enable/disable`; validated with `omarchy plugin validate` | Optional: propose as a built-in plugin |
 | Keybinding | Suggest Super+Shift+J (free in Omarchy's defaults) in onboarding and skill; never written automatically | — |
 | Theme + language live | §7.7, §8 | — |
 | Skill pointer | `junc skill link` | PR adds a pointer in the `omarchy` skill |
@@ -1156,8 +1156,8 @@ Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 | 1 · Mocked graph | `MockBackend` + fixtures for 1–64 ch devices, odd channel maps, appear/disappear, profile changes, Bluetooth props, Asahi DSP topology, foreign links; full daemon (D-Bus + reconcile) against the mock | CI, every PR | must pass |
 | 2 · Virtual PipeWire devices | Headless PipeWire + WirePlumber (validation `ci-config`: null-audio-sink fake devices, no bluez/logind) in a container; real `juncd`; `pw-cat` test signals; record and compare bit-exact; app churn; PipeWire restart; re-exec upgrade continuity; 18-ch null device | CI, every PR (short), nightly (long soak) | must pass |
 | 3 · Virtual kernel cards | `snd-dummy`, `snd-aloop` (up to 32 ch) through the real ALSA path, ACP profiles incl. pro-audio (F15), hot-plug by `modprobe -r`/`modprobe` | Owner laptop (sudo once per session); CI attempt if the runner kernel has the modules | per stage |
-| 4 · Emulated USB audio | UAC2 gadget via configfs on a virtual UDC | **Not available on the owner's laptop** (no `dummy_hcd`, no UDC; see plan step 0) | skipped unless step 0 changes it |
-| 5 · Real devices | Owner's USB interface, built-in audio, HDMI if present, Bluetooth headset | Owner | per stage |
+| 4 · Emulated USB audio | UAC2 gadget via configfs on a virtual UDC | **Skipped** (owner agreed 2026-11-25): no `dummy_hcd` and no UDC on the owner's laptop. USB hot-plug is covered by `snd-aloop` reload and the real interface | — |
+| 5 · Real devices | Native Instruments Komplete Audio 2 (USB class-compliant, 2 in / 2 out), MacBook built-in audio behind the Asahi DSP, Google Pixel Buds 2a and Apple AirPods (Bluetooth, F18). No HDMI audio on this laptop. The Komplete Audio 2 has only 2 channels, so F15 (more channels in Pro Audio) is proven on `snd-aloop` only | Owner | per stage |
 
 ### 11.2 Daemon integration scenarios (layer 2)
 
@@ -1189,8 +1189,7 @@ real `juncd`).
   tolerance; goldens update in their own commit. Overflow check: any text
   element reporting elision outside allowed elements fails.
 - **Design comparison**: the developer compares goldens side by side with the
-  canvas boards at each stage (PNG exports from the owner, see plan open
-  questions).
+  reference renders in `docs/design/` (same numbering as §7.5) at each stage.
 - **AT-SPI**: from the validation harness (`env-up.sh`, `atspi_dump.py`,
   `keyboard_walk.sh`, `interaction_test.sh`): role/name/state tree per
   scenario compared to an expected dump; Tab order; switch/slider/picker
@@ -1218,7 +1217,7 @@ and fails on regression beyond noise (thresholds in `bench/thresholds.toml`):
 | Daemon binary | < 5 MB stripped | CI |
 | GUI cold start | < 300 ms to first frame with live state | owner (GPU); CI tracked, not gated |
 | GUI PSS | < 80 MB | owner; CI tracked |
-| GUI CPU with meters | < 2 % of one core at ~7 Hz | owner laptop (Pi 4 not available, see plan risks) |
+| GUI CPU with meters | < 2 % of one core at ~7 Hz | owner laptop (M1); the Pi 4 target is best-effort, no Pi available |
 | GUI CPU hidden | 0 %; meter callbacks = 0 | CI gate + owner |
 | Frame time while dragging links | p95 < 16 ms | owner |
 
