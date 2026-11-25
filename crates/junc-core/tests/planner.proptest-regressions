@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 2cb0e3f79e8700e597451da3fad1455c517e8644209c5ac59211f5b0300aa608 # shrinks to (fixture, text) = ("apps-browser-two-streams.json", "schema = 1\n[[junction]]\nid = \"j0\"\nname = \"J 0\"\nenabled = false\nbus = { channels = 1 }\n")

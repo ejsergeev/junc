@@ -13,4 +13,5 @@ pub mod graph;
 pub mod matcher;
 pub mod migrate;
 pub mod model;
+pub mod plan;
 pub mod schema;
