@@ -1275,3 +1275,21 @@ this file (and a changed design if it fails):
 | S6 | Slint bundled translations + live switch + ICU4X `{0}` | Language switch in place, AT-SPI names update | gettext runtime with `setlocale` to a UTF-8 locale |
 | S7 | Hidden-window detection on Hyprland (minimize, other workspace, closed) | Meters stop within 1 s in each case | Hyprland IPC only on Omarchy; frame starvation elsewhere |
 | S8 | Asahi DSP chain: linking Listen to the default filter-chain sink, never raw speakers | No direct link to speaker ALSA nodes in any test | Exclude `alsa_output.*` with `api.alsa.path` of protected speakers |
+
+### 12.1 Spike results (2026-11-25, PipeWire 1.6.9, WirePlumber 0.5.18)
+
+Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
+
+| ID | Result | Consequence |
+| --- | --- | --- |
+| S1 | **Fallback needed.** `Audio/Duplex` is listed by PulseAudio as both sink and source and by JACK, but WirePlumber does not link recording apps to it: `parecord -d`, `pw-record --target` and the default source all fall back to another source. `Audio/Source/Virtual` is linked in all three cases. Playback into Duplex/Internal nodes is linked. | A Junction is two nodes: `junc.<slug>` (`Audio/Source/Virtual`, what apps record; Inputs are linked into its input ports) and `junc.<slug>.sink` (`Audio/Sink`, what apps can play into, F1/F16 output) whose monitor feeds the source. Pending owner confirmation (decisions log rule). |
+| S2 | `Audio/Duplex/Internal` is hidden from PulseAudio and `wpctl` device lists but linkable; `Audio/Sink/Internal` still shows in `wpctl`; `node.hidden`/`node.virtual` hide nothing. JACK lists every node's ports. | Gain nodes use `Audio/Duplex/Internal`. They are visible in JACK patchbays, like PipeWire's own filter-chain nodes. |
+| S3 | **Pass.** A link created through the link factory with `object.linger=true` and `junc.*` props stays after its creator exits, with all props in the registry; without linger it disappears. Prop values containing `:` or `>` must be quoted in SPA-JSON. | Ownership tags on links as designed (§3.2). |
+| S4 | **Pass.** pw-cat → gain node → Junction → recorder is bit-exact at 100 % and exactly ×0.5 at 50 % (144 k frames, max error 0). | No direct-link fallback needed. |
+| S5 | **Pass.** With a JUNC link stream→gain in place, setting `target.object` on the stream to its gain node makes WirePlumber drop its link to the default sink and keep JUNC's; clearing the key restores the default-sink link. | Exclusive targets the Input's gain node (not the Junction). |
+| S8 | **Pass by construction.** In the live session the speaker (node 62) and mic-array (node 56) ALSA nodes are inaccessible (`no global`), only their links are visible. | The planner only ever targets nodes it can see; test kept on the Asahi fixture. |
+
+Other findings: ports must be looked up by direction and `audio.channel`, never
+by name (`Audio/Source/Virtual` names its inputs `input_FL`, sinks use
+`playback_FL`), and links can only be created once a new node's ports exist
+(wait for the port globals, not just the node).
