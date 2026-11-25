@@ -4,11 +4,13 @@
 //! environment), translation catalogs and locale-aware number formatting
 //! (docs/architecture.md §8).
 //!
-//! Alpha scaffold: every message goes through [`tr`], [`trf`] or [`trn`]
-//! with its English text as the gettext msgid, so `xgettext
-//! --keyword=tr --keyword=trf --keyword=trn:1,2` can extract them later.
-//! Catalogs are not loaded yet; the English text is returned. Placeholders
-//! are named (`{name}`) and whole sentences are translated, never fragments.
+//! Every message goes through [`tr`], [`trf`] or [`trn`] with its English
+//! text as the gettext msgid (`cargo xtask i18n extract` collects them).
+//! [`set_language`] loads the catalog `junc.mo` of a registry language from
+//! `$JUNC_LOCALEDIR` or `/usr/share/locale`; a message the catalog lacks
+//! stays English. Placeholders are named (`{name}`) and whole sentences
+//! are translated, never fragments. The pseudo-locale `en_XA` (accented,
+//! +40 %, bracketed) shows untranslated or clipped text in layout tests.
 
 #![forbid(unsafe_code)]
 
@@ -16,13 +18,125 @@ pub mod mo;
 pub mod plural;
 pub mod registry;
 
+use mo::Catalog;
 use std::borrow::Cow;
 use std::fmt::Display;
 use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
+
+/// The gettext domain: catalogs are `<dir>/<lang>/LC_MESSAGES/junc.mo`.
+pub const DOMAIN: &str = "junc";
+
+/// The language in use and its catalog.
+#[derive(Debug)]
+struct Active {
+    code: String,
+    catalog: Option<Catalog>,
+}
+
+static ACTIVE: RwLock<Option<Arc<Active>>> = RwLock::new(None);
+
+fn active() -> Option<Arc<Active>> {
+    ACTIVE.read().ok().and_then(|a| a.clone())
+}
+
+/// Where catalogs are: `$JUNC_LOCALEDIR` (tests, development) or
+/// `/usr/share/locale`.
+pub fn locale_dir() -> PathBuf {
+    std::env::var_os("JUNC_LOCALEDIR")
+        .filter(|v| !v.is_empty())
+        .map_or_else(|| PathBuf::from("/usr/share/locale"), PathBuf::from)
+}
+
+/// The catalog for `lang`: its own (`pt_BR`), else its base language's.
+fn load(dir: &std::path::Path, lang: &registry::Language) -> Option<Catalog> {
+    let code = lang.gettext();
+    let base = code.split('_').next().unwrap_or(&code).to_owned();
+    [code, base].iter().find_map(|c| {
+        let path = dir.join(c).join("LC_MESSAGES").join(format!("{DOMAIN}.mo"));
+        Catalog::parse(&std::fs::read(path).ok()?).ok()
+    })
+}
+
+/// Switches every following message to `code` (any form [`resolve`]
+/// accepts) and returns the language now in use: a registry code, `en`
+/// for unknown and right-to-left languages, or `en_XA`.
+pub fn set_language(code: &str) -> String {
+    set_language_in(&locale_dir(), code)
+}
+
+/// [`set_language`] with catalogs from `dir`.
+pub fn set_language_in(dir: &std::path::Path, code: &str) -> String {
+    let lang = effective(code);
+    let catalog = registry::find(&lang)
+        .filter(|_| lang != "en")
+        .and_then(|l| load(dir, l));
+    let next = Arc::new(Active {
+        code: lang.clone(),
+        catalog,
+    });
+    if let Ok(mut a) = ACTIVE.write() {
+        *a = Some(next);
+    }
+    lang
+}
+
+/// The language in use (`en` until [`set_language`]).
+pub fn language() -> String {
+    active().map_or_else(|| "en".to_owned(), |a| a.code.clone())
+}
+
+/// What [`set_language`] would use for `code`.
+fn effective(code: &str) -> String {
+    let Some(code) = normalize(code) else {
+        return "en".to_owned();
+    };
+    if code.eq_ignore_ascii_case(registry::PSEUDO) {
+        return registry::PSEUDO.to_owned();
+    }
+    match registry::find(&code) {
+        Some(l) if !l.rtl => l.code.clone(),
+        _ => "en".to_owned(),
+    }
+}
+
+/// `en_XA`: letters accented outside `{placeholders}`, padded to +40 %,
+/// in brackets, so clipping and untranslated text show.
+pub fn pseudo(s: &str) -> String {
+    const FROM: &str = "aceinousyACEINOUSY";
+    const TO: [char; 18] = [
+        'å', 'ç', 'é', 'î', 'ñ', 'ö', 'û', 'š', 'ý', 'Å', 'Ç', 'É', 'Î', 'Ñ', 'Ö', 'Û', 'Š', 'Ý',
+    ];
+    let mut body = String::with_capacity(s.len() * 2);
+    let mut depth = 0usize;
+    for c in s.chars() {
+        match c {
+            '{' => depth += 1,
+            '}' => depth = depth.saturating_sub(1),
+            _ => {}
+        }
+        let swapped = (depth == 0)
+            .then(|| FROM.find(c).and_then(|i| TO.get(i).copied()))
+            .flatten();
+        body.push(swapped.unwrap_or(c));
+    }
+    let len = s.chars().count();
+    let pad = ((len * 4 + 5) / 10).max(1);
+    format!("⟦{body} {}⟧", "·".repeat(pad - 1))
+}
 
 /// The message for `msgid` in the current language.
 pub fn tr(msgid: &'static str) -> Cow<'static, str> {
-    Cow::Borrowed(msgid)
+    let Some(a) = active() else {
+        return Cow::Borrowed(msgid);
+    };
+    if a.code == registry::PSEUDO {
+        return Cow::Owned(pseudo(msgid));
+    }
+    match a.catalog.as_ref().and_then(|c| c.get(msgid)) {
+        Some(t) => Cow::Owned(t.to_owned()),
+        None => Cow::Borrowed(msgid),
+    }
 }
 
 /// The message for `msgid` with `{name}` placeholders filled in.
@@ -38,10 +152,20 @@ pub fn trn(
     n: u64,
     args: &[(&str, &dyn Display)],
 ) -> String {
-    let text = if n == 1 { singular } else { plural };
+    let english = if n == 1 { singular } else { plural };
+    let text = match active() {
+        Some(a) if a.code == registry::PSEUDO => pseudo(english),
+        Some(a) => a
+            .catalog
+            .as_ref()
+            .and_then(|c| c.nget(singular, n))
+            .unwrap_or(english)
+            .to_owned(),
+        None => english.to_owned(),
+    };
     let mut all: Vec<(&str, &dyn Display)> = vec![("n", &n)];
     all.extend_from_slice(args);
-    fill(&tr(text), &all)
+    fill(&text, &all)
 }
 
 fn fill(text: &str, args: &[(&str, &dyn Display)]) -> String {
@@ -114,18 +238,26 @@ impl Sources {
     }
 }
 
-/// The language to use: the first source that names one, else `en`.
+/// The language to use, as [`set_language`] takes it: `--lang` or the
+/// setting, else the Omarchy language file (an unknown code there means
+/// English), else the first usable locale variable, else `en`.
 pub fn resolve(sources: &Sources) -> String {
-    let from_file = || {
-        let text = std::fs::read_to_string(sources.omarchy_file.as_ref()?).ok()?;
-        normalize(text.lines().next()?)
-    };
+    if let Some(code) = sources.explicit.as_deref().and_then(normalize) {
+        return effective(&code);
+    }
+    let file = sources
+        .omarchy_file
+        .as_ref()
+        .and_then(|f| std::fs::read_to_string(f).ok());
+    if let Some(text) = file {
+        return effective(text.lines().next().unwrap_or(""));
+    }
     sources
-        .explicit
-        .as_deref()
-        .and_then(normalize)
-        .or_else(from_file)
-        .or_else(|| sources.env.iter().find_map(|v| normalize(v)))
+        .env
+        .iter()
+        .filter_map(|v| normalize(v))
+        .map(|c| effective(&c))
+        .find(|c| c != "en")
         .unwrap_or_else(|| "en".to_owned())
 }
 
@@ -143,6 +275,12 @@ mod tests {
         assert_eq!(trf("keep {unknown} and {", &[]), "keep {unknown} and {");
         assert_eq!(trn("{n} input", "{n} inputs", 1, &[]), "1 input");
         assert_eq!(trn("{n} input", "{n} inputs", 3, &[]), "3 inputs");
+    }
+
+    #[test]
+    fn the_pseudo_locale_keeps_placeholders() {
+        assert_eq!(pseudo("Turn {name} on"), "⟦Tûrñ {name} öñ ·····⟧");
+        assert_eq!(pseudo("Ok"), "⟦Ök ⟧");
     }
 
     #[test]
@@ -167,11 +305,19 @@ mod tests {
         };
         assert_eq!(resolve(&s), "fr");
         s.explicit = None;
-        assert_eq!(resolve(&s), "pt_BR");
+        assert_eq!(resolve(&s), "pt-BR");
+        // An unknown code in Omarchy's file means English, not the locale.
+        std::fs::write(&file, "tlh\n").expect("file");
+        assert_eq!(resolve(&s), "en");
+        // Right-to-left languages show English until RTL lands.
+        std::fs::write(&file, "ar\n").expect("file");
+        assert_eq!(resolve(&s), "en");
         s.omarchy_file = Some(dir.join("missing"));
-        assert_eq!(resolve(&s), "de_DE", "C is skipped");
+        assert_eq!(resolve(&s), "de", "C is skipped");
         s.env.clear();
         assert_eq!(resolve(&s), "en");
+        s.explicit = Some("en_XA".into());
+        assert_eq!(resolve(&s), "en_XA");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
