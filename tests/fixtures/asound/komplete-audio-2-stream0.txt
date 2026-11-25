@@ -1,0 +1,25 @@
+Native Instruments Komplete Audio 2 at usb-xhci-hcd.2.auto-1, high speed : USB Audio
+
+Playback:
+  Status: Stop
+  Interface 1
+    Altset 1
+    Format: S24_3LE
+    Channels: 2
+    Endpoint: 0x01 (1 OUT) (ASYNC)
+    Rates: 44100, 48000, 88200, 96000, 176400, 192000
+    Data packet interval: 125 us
+    Bits: 24
+    Channel map: FL FR
+
+Capture:
+  Status: Stop
+  Interface 2
+    Altset 1
+    Format: S24_3LE
+    Channels: 2
+    Endpoint: 0x82 (2 IN) (ASYNC)
+    Rates: 44100, 48000, 88200, 96000, 176400, 192000
+    Data packet interval: 125 us
+    Bits: 24
+    Channel map: FL FR

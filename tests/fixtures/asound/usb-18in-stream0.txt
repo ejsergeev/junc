@@ -1,0 +1,35 @@
+JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed : USB Audio
+
+Playback:
+  Status: Stop
+  Interface 1
+    Altset 1
+    Format: S32_LE
+    Channels: 20
+    Endpoint: 0x01 (1 OUT) (ASYNC)
+    Rates: 44100, 48000, 88200, 96000
+    Data packet interval: 125 us
+    Bits: 24
+    Sync Endpoint: 0x81 (1 IN)
+    Sync EP Interface: 2
+    Sync EP Altset: 1
+    Implicit Feedback Mode: Yes
+
+Capture:
+  Status: Stop
+  Interface 2
+    Altset 1
+    Format: S32_LE
+    Channels: 18
+    Endpoint: 0x81 (1 IN) (ASYNC)
+    Rates: 44100, 48000, 88200, 96000
+    Data packet interval: 125 us
+    Bits: 24
+  Interface 2
+    Altset 2
+    Format: S32_LE
+    Channels: 8
+    Endpoint: 0x81 (1 IN) (ASYNC)
+    Rates: 176400, 192000
+    Data packet interval: 125 us
+    Bits: 24

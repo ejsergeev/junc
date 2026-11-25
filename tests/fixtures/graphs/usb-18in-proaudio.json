@@ -1,0 +1,3811 @@
+[
+  {
+    "id": 126,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "params": {
+        "EnumProfile": [
+          {
+            "available": "yes",
+            "classes": [
+              0
+            ],
+            "description": "Off",
+            "index": 0,
+            "name": "off",
+            "priority": 0
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              2,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  0
+                ]
+              ],
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  4
+                ]
+              ]
+            ],
+            "description": "Analog Stereo Duplex",
+            "index": 1,
+            "name": "output:analog-stereo+input:analog-stereo",
+            "priority": 6565
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              2,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  3
+                ]
+              ],
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  4
+                ]
+              ]
+            ],
+            "description": "Analog Stereo Output + Digital Stereo (IEC958) Input",
+            "index": 2,
+            "name": "output:analog-stereo+input:iec958-stereo",
+            "priority": 6555
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              1,
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  4
+                ]
+              ]
+            ],
+            "description": "Analog Stereo Output",
+            "index": 3,
+            "name": "output:analog-stereo",
+            "priority": 6500
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              2,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  0
+                ]
+              ],
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  5
+                ]
+              ]
+            ],
+            "description": "Digital Stereo (IEC958) Output + Analog Stereo Input",
+            "index": 4,
+            "name": "output:iec958-stereo+input:analog-stereo",
+            "priority": 5565
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              2,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  3
+                ]
+              ],
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  5
+                ]
+              ]
+            ],
+            "description": "Digital Stereo Duplex (IEC958)",
+            "index": 5,
+            "name": "output:iec958-stereo+input:iec958-stereo",
+            "priority": 5555
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              1,
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  5
+                ]
+              ]
+            ],
+            "description": "Digital Stereo (IEC958) Output",
+            "index": 6,
+            "name": "output:iec958-stereo",
+            "priority": 5500
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              1,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  0
+                ]
+              ]
+            ],
+            "description": "Analog Stereo Input",
+            "index": 7,
+            "name": "input:analog-stereo",
+            "priority": 65
+          },
+          {
+            "available": "unknown",
+            "classes": [
+              1,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  3
+                ]
+              ]
+            ],
+            "description": "Digital Stereo (IEC958) Input",
+            "index": 8,
+            "name": "input:iec958-stereo",
+            "priority": 55
+          },
+          {
+            "available": "yes",
+            "classes": [
+              2,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  2
+                ]
+              ],
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  1
+                ]
+              ]
+            ],
+            "description": "Pro Audio",
+            "index": 9,
+            "name": "pro-audio",
+            "priority": 1
+          }
+        ],
+        "EnumRoute": [
+          {
+            "available": "unknown",
+            "description": "Microphone",
+            "devices": [
+              0
+            ],
+            "direction": "Input",
+            "index": 0,
+            "info": [
+              3,
+              "port.type",
+              "mic",
+              "device.icon_name",
+              "audio-input-microphone",
+              "card.profile.port",
+              "0"
+            ],
+            "name": "analog-input-mic",
+            "priority": 8700,
+            "profiles": [
+              7,
+              1,
+              4
+            ]
+          },
+          {
+            "available": "unknown",
+            "description": "Digital Input (S/PDIF)",
+            "devices": [
+              3
+            ],
+            "direction": "Input",
+            "index": 1,
+            "info": [
+              2,
+              "port.type",
+              "spdif",
+              "card.profile.port",
+              "1"
+            ],
+            "name": "iec958-stereo-input",
+            "priority": 0,
+            "profiles": [
+              8,
+              2,
+              5
+            ]
+          },
+          {
+            "available": "unknown",
+            "description": "Analog Output",
+            "devices": [
+              4
+            ],
+            "direction": "Output",
+            "index": 2,
+            "info": [
+              2,
+              "port.type",
+              "analog",
+              "card.profile.port",
+              "2"
+            ],
+            "name": "analog-output",
+            "priority": 9900,
+            "profiles": [
+              3,
+              1,
+              2
+            ]
+          },
+          {
+            "available": "unknown",
+            "description": "Digital Output (S/PDIF)",
+            "devices": [
+              5
+            ],
+            "direction": "Output",
+            "index": 3,
+            "info": [
+              2,
+              "port.type",
+              "spdif",
+              "card.profile.port",
+              "3"
+            ],
+            "name": "iec958-stereo-output",
+            "priority": 0,
+            "profiles": [
+              6,
+              4,
+              5
+            ]
+          }
+        ],
+        "Profile": [
+          {
+            "available": "yes",
+            "classes": [
+              2,
+              [
+                "Audio/Source",
+                1,
+                "card.profile.devices",
+                [
+                  2
+                ]
+              ],
+              [
+                "Audio/Sink",
+                1,
+                "card.profile.devices",
+                [
+                  1
+                ]
+              ]
+            ],
+            "description": "Pro Audio",
+            "index": 9,
+            "name": "pro-audio",
+            "priority": 1,
+            "save": true
+          }
+        ],
+        "Route": [
+          {
+            "available": "unknown",
+            "description": "Microphone",
+            "device": 0,
+            "devices": [
+              0
+            ],
+            "direction": "Input",
+            "index": 0,
+            "info": [
+              5,
+              "port.type",
+              "mic",
+              "device.icon_name",
+              "audio-input-microphone",
+              "card.profile.port",
+              "0",
+              "route.hw-mute",
+              "true",
+              "route.hw-volume",
+              "true"
+            ],
+            "name": "analog-input-mic",
+            "priority": 8700,
+            "profile": 1,
+            "profiles": [
+              7,
+              1,
+              4
+            ],
+            "props": {
+              "channelMap": [
+                "FL",
+                "FR"
+              ],
+              "channelVolumes": [
+                1.0,
+                1.0
+              ],
+              "latencyOffsetNsec": 0,
+              "mute": false,
+              "softVolumes": [
+                1.0,
+                1.0
+              ],
+              "volumeBase": 1.0,
+              "volumeStep": 1.5e-05
+            },
+            "save": false
+          },
+          {
+            "available": "unknown",
+            "description": "Analog Output",
+            "device": 4,
+            "devices": [
+              4
+            ],
+            "direction": "Output",
+            "index": 2,
+            "info": [
+              4,
+              "port.type",
+              "analog",
+              "card.profile.port",
+              "2",
+              "route.hw-mute",
+              "false",
+              "route.hw-volume",
+              "false"
+            ],
+            "name": "analog-output",
+            "priority": 9900,
+            "profile": 1,
+            "profiles": [
+              3,
+              1,
+              2
+            ],
+            "props": {
+              "channelMap": [
+                "FL",
+                "FR"
+              ],
+              "channelVolumes": [
+                0.063997,
+                0.063997
+              ],
+              "latencyOffsetNsec": 0,
+              "mute": false,
+              "softVolumes": [
+                0.063997,
+                0.063997
+              ],
+              "volumeBase": 1.0,
+              "volumeStep": 1.5e-05
+            },
+            "save": false
+          }
+        ]
+      },
+      "props": {
+        "alsa.card": 2,
+        "alsa.card_name": "JUNC Test 18in",
+        "alsa.components": "USB17cc:1840",
+        "alsa.driver_name": "snd_usb_audio",
+        "alsa.id": "K2",
+        "alsa.long_card_name": "JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed",
+        "alsa.mixer_name": "USB Mixer",
+        "api.acp.auto-port": false,
+        "api.acp.auto-profile": false,
+        "api.alsa.card": 2,
+        "api.alsa.card.longname": "JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed",
+        "api.alsa.card.name": "JUNC Test 18in",
+        "api.alsa.path": "hw:2",
+        "api.alsa.split-enable": true,
+        "api.alsa.use-acp": true,
+        "api.dbus.ReserveDevice1": "Audio2",
+        "api.dbus.ReserveDevice1.Priority": -20,
+        "client.id": 46,
+        "device.api": "alsa",
+        "device.bus": "usb",
+        "device.bus-id": "usb-JUNC_Test_18in-00",
+        "device.bus-path": "platform-xhci-hcd.2.auto-usb-0:1:1.0",
+        "device.description": "JUNC Test 18in",
+        "device.enum.api": "udev",
+        "device.icon-name": "audio-card-analog-usb",
+        "device.name": "alsa_card.usb-JUNC_Test_18in-00",
+        "device.nick": "JUNC Test 18in",
+        "device.plugged.usec": 45673195131,
+        "device.product.id": "0x1840",
+        "device.product.name": "JUNC Test 18in",
+        "device.serial": "JUNC_Test_18in",
+        "device.string": 2,
+        "device.subsystem": "sound",
+        "device.sysfs.path": "/devices/platform/soc/502280000.usb/xhci-hcd.2.auto/usb1/1-1/1-1:1.0/sound/card2",
+        "device.vendor.id": "0x17cc",
+        "device.vendor.name": "JUNC Test",
+        "factory.id": 15,
+        "media.class": "Audio/Device",
+        "object.id": 126,
+        "object.path": "alsa:acp:K2",
+        "object.serial": 233,
+        "spa.object.id": 6
+      }
+    },
+    "permissions": [
+      "r",
+      "w",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Device",
+    "version": 3
+  },
+  {
+    "id": 127,
+    "info": {
+      "change-mask": [
+        "input-ports",
+        "output-ports",
+        "state",
+        "props",
+        "params"
+      ],
+      "error": null,
+      "max-input-ports": 129,
+      "max-output-ports": 0,
+      "n-input-ports": 2,
+      "n-output-ports": 2,
+      "params": {
+        "EnumFormat": [
+          {
+            "channels": 2,
+            "format": "S32LE",
+            "mediaSubtype": "raw",
+            "mediaType": "audio",
+            "position": [
+              "AUX0",
+              "AUX1"
+            ],
+            "rate": {
+              "default": 48000,
+              "max": 192000,
+              "min": 44100
+            }
+          }
+        ],
+        "EnumPortConfig": [
+          {
+            "control": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            },
+            "direction": "Input",
+            "mode": {
+              "alt1": "none",
+              "alt2": "dsp",
+              "alt3": "convert",
+              "default": "none"
+            },
+            "monitor": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          }
+        ],
+        "Format": [],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          }
+        ],
+        "PortConfig": [
+          {
+            "control": false,
+            "direction": "Input",
+            "format": {
+              "channels": 2,
+              "format": "F32P",
+              "mediaSubtype": "raw",
+              "mediaType": "audio",
+              "position": [
+                "AUX0",
+                "AUX1"
+              ]
+            },
+            "mode": "dsp",
+            "monitor": true
+          }
+        ],
+        "ProcessLatency": [
+          {
+            "ns": 0,
+            "quantum": 0.0,
+            "rate": 0
+          }
+        ],
+        "PropInfo": [
+          {
+            "description": "Volume",
+            "id": "volume",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Mute",
+            "id": "mute",
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Channel Volumes",
+            "id": "channelVolumes",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Channel Map",
+            "id": "channelMap",
+            "type": ""
+          },
+          {
+            "description": "Monitor Mute",
+            "id": "monitorMute",
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Monitor Volumes",
+            "id": "monitorVolumes",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Soft Mute",
+            "id": "softMute",
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Soft Volumes",
+            "id": "softVolumes",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Monitor channel volume",
+            "name": "monitor.channel-volumes",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable Channel mixing",
+            "name": "channelmix.disable",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Minimum volume level",
+            "name": "channelmix.min-volume",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Maximum volume level",
+            "name": "channelmix.max-volume",
+            "params": true,
+            "type": {
+              "default": 10.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Normalize Volumes",
+            "name": "channelmix.normalize",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Mix LFE into channels",
+            "name": "channelmix.mix-lfe",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "Enable upmixing",
+            "name": "channelmix.upmix",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "LFE cutoff frequency",
+            "name": "channelmix.lfe-cutoff",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 1000.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "FC cutoff frequency (Hz)",
+            "name": "channelmix.fc-cutoff",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 48000.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Rear channels delay (ms)",
+            "name": "channelmix.rear-delay",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 1000.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Stereo widen",
+            "name": "channelmix.stereo-widen",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 1.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Taps for phase shift of rear",
+            "name": "channelmix.hilbert-taps",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 255,
+              "min": 0
+            }
+          },
+          {
+            "description": "Upmix method to use",
+            "labels": [
+              "none",
+              "Disabled",
+              "simple",
+              "Simple upmixing",
+              "psd",
+              "Passive Surround Decoding"
+            ],
+            "name": "channelmix.upmix-method",
+            "params": true,
+            "type": "none"
+          },
+          {
+            "description": "Rate scaler",
+            "id": "rate",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Resample Quality",
+            "id": "quality",
+            "name": "resample.quality",
+            "params": true,
+            "type": {
+              "default": 4,
+              "max": 14,
+              "min": 0
+            }
+          },
+          {
+            "description": "Disable Resampling",
+            "name": "resample.disable",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Add noise bits",
+            "name": "dither.noise",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 16,
+              "min": 0
+            }
+          },
+          {
+            "description": "The dithering method",
+            "labels": [
+              "none",
+              "Disabled",
+              "rectangular",
+              "Rectangular dithering",
+              "triangular",
+              "Triangular dithering",
+              "triangular-hf",
+              "Sloped Triangular dithering",
+              "wannamaker3",
+              "Wannamaker 3 dithering",
+              "shaped5",
+              "Lipshitz 5 dithering"
+            ],
+            "name": "dither.method",
+            "params": true,
+            "type": "none"
+          },
+          {
+            "description": "Path to WAV file",
+            "name": "debug.wav-path",
+            "params": true,
+            "type": ""
+          },
+          {
+            "description": "Disable volume updates",
+            "name": "channelmix.lock-volumes",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable Filter graph updates",
+            "name": "audioconvert.filter-graph.disable",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "A filter graph to load",
+            "name": "audioconvert.filter-graph.N",
+            "params": true,
+            "type": ""
+          },
+          {
+            "description": "The ALSA device",
+            "id": "device",
+            "name": "api.alsa.path",
+            "type": "hw:2,0"
+          },
+          {
+            "description": "The ALSA device name",
+            "id": "deviceName",
+            "type": ""
+          },
+          {
+            "description": "The ALSA card name",
+            "id": "cardName",
+            "type": ""
+          },
+          {
+            "description": "Latency offset (ns)",
+            "id": "latencyOffsetNsec",
+            "type": {
+              "default": 0,
+              "max": 2000000000,
+              "min": 0
+            }
+          },
+          {
+            "description": "Audio Channels",
+            "name": "audio.channels",
+            "params": true,
+            "type": 2
+          },
+          {
+            "description": "Audio Rate",
+            "name": "audio.rate",
+            "params": true,
+            "type": 0
+          },
+          {
+            "description": "Audio Format",
+            "name": "audio.format",
+            "params": true,
+            "type": "UNKNOWN"
+          },
+          {
+            "description": "Audio Position",
+            "name": "audio.position",
+            "params": true,
+            "type": "[ AUX0, AUX1 ]"
+          },
+          {
+            "description": "Audio Allowed Rates",
+            "name": "audio.allowed-rates",
+            "params": true,
+            "type": "[ ]"
+          },
+          {
+            "description": "Period Size",
+            "name": "api.alsa.period-size",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 8192,
+              "min": 0
+            }
+          },
+          {
+            "description": "Number of Periods",
+            "name": "api.alsa.period-num",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 1024,
+              "min": 0
+            }
+          },
+          {
+            "description": "Headroom",
+            "name": "api.alsa.headroom",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 8192,
+              "min": 0
+            }
+          },
+          {
+            "description": "Start Delay",
+            "name": "api.alsa.start-delay",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 8192,
+              "min": 0
+            }
+          },
+          {
+            "description": "Disable MMAP",
+            "name": "api.alsa.disable-mmap",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable Batch",
+            "name": "api.alsa.disable-batch",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable timer based scheduling",
+            "name": "api.alsa.disable-tsched",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "Use the driver channelmap",
+            "name": "api.alsa.use-chmap",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Support multiple rates",
+            "name": "api.alsa.multi-rate",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "Use hires timestamps",
+            "name": "api.alsa.htimestamp",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Internal latency in samples",
+            "name": "latency.internal.rate",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 65536,
+              "min": 0
+            }
+          },
+          {
+            "description": "Internal latency in nanoseconds",
+            "name": "latency.internal.ns",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 2000000000,
+              "min": 0
+            }
+          },
+          {
+            "description": "The name of the clock",
+            "name": "clock.name",
+            "params": true,
+            "type": "api.alsa.2"
+          },
+          {
+            "description": "Max errors before disabling htimestamp",
+            "name": "api.alsa.htimestamp.max-errors",
+            "params": true,
+            "type": {
+              "default": 64,
+              "max": 2147483647,
+              "min": 0
+            }
+          }
+        ],
+        "Props": [
+          {
+            "channelMap": [
+              "AUX0",
+              "AUX1"
+            ],
+            "channelVolumes": [
+              1.0,
+              1.0
+            ],
+            "monitorMute": false,
+            "monitorVolumes": [
+              1.0,
+              1.0
+            ],
+            "mute": false,
+            "params": [
+              "monitor.channel-volumes",
+              false,
+              "channelmix.disable",
+              false,
+              "channelmix.min-volume",
+              0.0,
+              "channelmix.max-volume",
+              10.0,
+              "channelmix.normalize",
+              false,
+              "channelmix.mix-lfe",
+              true,
+              "channelmix.upmix",
+              true,
+              "channelmix.lfe-cutoff",
+              0.0,
+              "channelmix.fc-cutoff",
+              0.0,
+              "channelmix.rear-delay",
+              0.0,
+              "channelmix.stereo-widen",
+              0.0,
+              "channelmix.hilbert-taps",
+              0,
+              "channelmix.upmix-method",
+              "none",
+              "resample.quality",
+              4,
+              "resample.disable",
+              false,
+              "dither.noise",
+              0,
+              "dither.method",
+              "none",
+              "debug.wav-path",
+              "",
+              "channelmix.lock-volumes",
+              false,
+              "audioconvert.filter-graph.disable",
+              false,
+              "audioconvert.filter-graph",
+              ""
+            ],
+            "softMute": false,
+            "softVolumes": [
+              1.0,
+              1.0
+            ],
+            "volume": 1.0
+          },
+          {
+            "cardName": "",
+            "device": "hw:2,0",
+            "deviceName": "",
+            "latencyOffsetNsec": 0,
+            "params": [
+              "audio.channels",
+              2,
+              "audio.rate",
+              0,
+              "audio.format",
+              "UNKNOWN",
+              "audio.position",
+              "[ AUX0, AUX1 ]",
+              "audio.allowed-rates",
+              "[ ]",
+              "api.alsa.period-size",
+              0,
+              "api.alsa.period-num",
+              0,
+              "api.alsa.headroom",
+              0,
+              "api.alsa.start-delay",
+              0,
+              "api.alsa.disable-mmap",
+              false,
+              "api.alsa.disable-batch",
+              false,
+              "api.alsa.disable-tsched",
+              true,
+              "api.alsa.use-chmap",
+              false,
+              "api.alsa.multi-rate",
+              true,
+              "api.alsa.htimestamp",
+              false,
+              "api.alsa.htimestamp.max-errors",
+              64,
+              "latency.internal.rate",
+              0,
+              "latency.internal.ns",
+              0,
+              "clock.name",
+              "api.alsa.2"
+            ]
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "alsa.card": 2,
+        "alsa.card_name": "JUNC Test 18in",
+        "alsa.class": "generic",
+        "alsa.components": "USB17cc:1840",
+        "alsa.device": 0,
+        "alsa.driver_name": "snd_usb_audio",
+        "alsa.id": "K2",
+        "alsa.long_card_name": "JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed",
+        "alsa.mixer_name": "USB Mixer",
+        "alsa.name": "USB Audio",
+        "alsa.resolution_bits": 32,
+        "alsa.subclass": "generic-mix",
+        "alsa.subdevice": 0,
+        "alsa.subdevice_name": "subdevice #0",
+        "alsa.sync.id": "00000000:00000000:00000000:00000000",
+        "api.alsa.auto-link": true,
+        "api.alsa.card.longname": "JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed",
+        "api.alsa.card.name": "JUNC Test 18in",
+        "api.alsa.disable-tsched": true,
+        "api.alsa.path": "hw:2,0",
+        "api.alsa.pcm.card": 2,
+        "api.alsa.pcm.stream": "playback",
+        "audio.channels": 2,
+        "audio.position": "[ AUX0, AUX1 ]",
+        "card.profile.device": 1,
+        "client.id": 39,
+        "clock.name": "api.alsa.2",
+        "clock.quantum-limit": 8192,
+        "device.api": "alsa",
+        "device.bus": "usb",
+        "device.class": "sound",
+        "device.icon-name": "audio-card-analog",
+        "device.id": 126,
+        "device.profile.description": "Pro",
+        "device.profile.name": "pro-output-0",
+        "device.profile.pro": true,
+        "device.routes": 0,
+        "factory.id": 19,
+        "factory.name": "api.alsa.pcm.sink",
+        "library.name": "audioconvert/libspa-audioconvert",
+        "media.class": "Audio/Sink",
+        "node.description": "JUNC Test 18in Pro",
+        "node.driver": true,
+        "node.driver-id": 123,
+        "node.group": "pro-audio-2",
+        "node.loop.name": "data-loop.0",
+        "node.name": "alsa_output.usb-JUNC_Test_18in-00.pro-output-0",
+        "node.nick": "JUNC Test 18in",
+        "node.pause-on-idle": false,
+        "object.id": 127,
+        "object.path": "alsa:acp:K2:1:playback",
+        "object.serial": 267,
+        "port.group": "playback",
+        "priority.driver": 1600,
+        "priority.session": 1600
+      },
+      "state": "suspended"
+    },
+    "permissions": [
+      "r",
+      "w",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Node",
+    "version": 3
+  },
+  {
+    "id": 123,
+    "info": {
+      "change-mask": [
+        "input-ports",
+        "output-ports",
+        "state",
+        "props",
+        "params"
+      ],
+      "error": null,
+      "max-input-ports": 0,
+      "max-output-ports": 129,
+      "n-input-ports": 0,
+      "n-output-ports": 18,
+      "params": {
+        "EnumFormat": [
+          {
+            "channels": 2,
+            "format": "S32LE",
+            "mediaSubtype": "raw",
+            "mediaType": "audio",
+            "position": [
+              "AUX0",
+              "AUX1"
+            ],
+            "rate": {
+              "default": 48000,
+              "max": 192000,
+              "min": 44100
+            }
+          }
+        ],
+        "EnumPortConfig": [
+          {
+            "control": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            },
+            "direction": "Output",
+            "mode": {
+              "alt1": "none",
+              "alt2": "dsp",
+              "alt3": "convert",
+              "default": "none"
+            },
+            "monitor": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          }
+        ],
+        "Format": [],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "PortConfig": [
+          {
+            "control": false,
+            "direction": "Output",
+            "format": {
+              "channels": 2,
+              "format": "F32P",
+              "mediaSubtype": "raw",
+              "mediaType": "audio",
+              "position": [
+                "AUX0",
+                "AUX1"
+              ]
+            },
+            "mode": "dsp",
+            "monitor": true
+          }
+        ],
+        "ProcessLatency": [
+          {
+            "ns": 0,
+            "quantum": 0.0,
+            "rate": 0
+          }
+        ],
+        "PropInfo": [
+          {
+            "description": "Volume",
+            "id": "volume",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Mute",
+            "id": "mute",
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Channel Volumes",
+            "id": "channelVolumes",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Channel Map",
+            "id": "channelMap",
+            "type": ""
+          },
+          {
+            "description": "Monitor Mute",
+            "id": "monitorMute",
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Monitor Volumes",
+            "id": "monitorVolumes",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Soft Mute",
+            "id": "softMute",
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "container": "Array",
+            "description": "Soft Volumes",
+            "id": "softVolumes",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Monitor channel volume",
+            "name": "monitor.channel-volumes",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable Channel mixing",
+            "name": "channelmix.disable",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Minimum volume level",
+            "name": "channelmix.min-volume",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Maximum volume level",
+            "name": "channelmix.max-volume",
+            "params": true,
+            "type": {
+              "default": 10.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Normalize Volumes",
+            "name": "channelmix.normalize",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Mix LFE into channels",
+            "name": "channelmix.mix-lfe",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "Enable upmixing",
+            "name": "channelmix.upmix",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "LFE cutoff frequency",
+            "name": "channelmix.lfe-cutoff",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 1000.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "FC cutoff frequency (Hz)",
+            "name": "channelmix.fc-cutoff",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 48000.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Rear channels delay (ms)",
+            "name": "channelmix.rear-delay",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 1000.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Stereo widen",
+            "name": "channelmix.stereo-widen",
+            "params": true,
+            "type": {
+              "default": 0.0,
+              "max": 1.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Taps for phase shift of rear",
+            "name": "channelmix.hilbert-taps",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 255,
+              "min": 0
+            }
+          },
+          {
+            "description": "Upmix method to use",
+            "labels": [
+              "none",
+              "Disabled",
+              "simple",
+              "Simple upmixing",
+              "psd",
+              "Passive Surround Decoding"
+            ],
+            "name": "channelmix.upmix-method",
+            "params": true,
+            "type": "none"
+          },
+          {
+            "description": "Rate scaler",
+            "id": "rate",
+            "type": {
+              "default": 1.0,
+              "max": 10.0,
+              "min": 0.0
+            }
+          },
+          {
+            "description": "Resample Quality",
+            "id": "quality",
+            "name": "resample.quality",
+            "params": true,
+            "type": {
+              "default": 4,
+              "max": 14,
+              "min": 0
+            }
+          },
+          {
+            "description": "Disable Resampling",
+            "name": "resample.disable",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Add noise bits",
+            "name": "dither.noise",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 16,
+              "min": 0
+            }
+          },
+          {
+            "description": "The dithering method",
+            "labels": [
+              "none",
+              "Disabled",
+              "rectangular",
+              "Rectangular dithering",
+              "triangular",
+              "Triangular dithering",
+              "triangular-hf",
+              "Sloped Triangular dithering",
+              "wannamaker3",
+              "Wannamaker 3 dithering",
+              "shaped5",
+              "Lipshitz 5 dithering"
+            ],
+            "name": "dither.method",
+            "params": true,
+            "type": "none"
+          },
+          {
+            "description": "Path to WAV file",
+            "name": "debug.wav-path",
+            "params": true,
+            "type": ""
+          },
+          {
+            "description": "Disable volume updates",
+            "name": "channelmix.lock-volumes",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable Filter graph updates",
+            "name": "audioconvert.filter-graph.disable",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "A filter graph to load",
+            "name": "audioconvert.filter-graph.N",
+            "params": true,
+            "type": ""
+          },
+          {
+            "description": "The ALSA device",
+            "id": "device",
+            "name": "api.alsa.path",
+            "type": "hw:2,0"
+          },
+          {
+            "description": "The ALSA device name",
+            "id": "deviceName",
+            "type": ""
+          },
+          {
+            "description": "The ALSA card name",
+            "id": "cardName",
+            "type": ""
+          },
+          {
+            "description": "Latency offset (ns)",
+            "id": "latencyOffsetNsec",
+            "type": {
+              "default": 0,
+              "max": 2000000000,
+              "min": 0
+            }
+          },
+          {
+            "description": "Audio Channels",
+            "name": "audio.channels",
+            "params": true,
+            "type": 2
+          },
+          {
+            "description": "Audio Rate",
+            "name": "audio.rate",
+            "params": true,
+            "type": 0
+          },
+          {
+            "description": "Audio Format",
+            "name": "audio.format",
+            "params": true,
+            "type": "UNKNOWN"
+          },
+          {
+            "description": "Audio Position",
+            "name": "audio.position",
+            "params": true,
+            "type": "[ AUX0, AUX1 ]"
+          },
+          {
+            "description": "Audio Allowed Rates",
+            "name": "audio.allowed-rates",
+            "params": true,
+            "type": "[ ]"
+          },
+          {
+            "description": "Period Size",
+            "name": "api.alsa.period-size",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 8192,
+              "min": 0
+            }
+          },
+          {
+            "description": "Number of Periods",
+            "name": "api.alsa.period-num",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 1024,
+              "min": 0
+            }
+          },
+          {
+            "description": "Headroom",
+            "name": "api.alsa.headroom",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 8192,
+              "min": 0
+            }
+          },
+          {
+            "description": "Start Delay",
+            "name": "api.alsa.start-delay",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 8192,
+              "min": 0
+            }
+          },
+          {
+            "description": "Disable MMAP",
+            "name": "api.alsa.disable-mmap",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable Batch",
+            "name": "api.alsa.disable-batch",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Disable timer based scheduling",
+            "name": "api.alsa.disable-tsched",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "Use the driver channelmap",
+            "name": "api.alsa.use-chmap",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Support multiple rates",
+            "name": "api.alsa.multi-rate",
+            "params": true,
+            "type": {
+              "alt1": true,
+              "alt2": false,
+              "default": true
+            }
+          },
+          {
+            "description": "Use hires timestamps",
+            "name": "api.alsa.htimestamp",
+            "params": true,
+            "type": {
+              "alt1": false,
+              "alt2": true,
+              "default": false
+            }
+          },
+          {
+            "description": "Internal latency in samples",
+            "name": "latency.internal.rate",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 65536,
+              "min": 0
+            }
+          },
+          {
+            "description": "Internal latency in nanoseconds",
+            "name": "latency.internal.ns",
+            "params": true,
+            "type": {
+              "default": 0,
+              "max": 2000000000,
+              "min": 0
+            }
+          },
+          {
+            "description": "The name of the clock",
+            "name": "clock.name",
+            "params": true,
+            "type": "api.alsa.2"
+          },
+          {
+            "description": "Max errors before disabling htimestamp",
+            "name": "api.alsa.htimestamp.max-errors",
+            "params": true,
+            "type": {
+              "default": 64,
+              "max": 2147483647,
+              "min": 0
+            }
+          }
+        ],
+        "Props": [
+          {
+            "channelMap": [
+              "AUX0",
+              "AUX1"
+            ],
+            "channelVolumes": [
+              1.0,
+              1.0
+            ],
+            "monitorMute": false,
+            "monitorVolumes": [
+              1.0,
+              1.0
+            ],
+            "mute": false,
+            "params": [
+              "monitor.channel-volumes",
+              false,
+              "channelmix.disable",
+              false,
+              "channelmix.min-volume",
+              0.0,
+              "channelmix.max-volume",
+              10.0,
+              "channelmix.normalize",
+              false,
+              "channelmix.mix-lfe",
+              true,
+              "channelmix.upmix",
+              true,
+              "channelmix.lfe-cutoff",
+              0.0,
+              "channelmix.fc-cutoff",
+              0.0,
+              "channelmix.rear-delay",
+              0.0,
+              "channelmix.stereo-widen",
+              0.0,
+              "channelmix.hilbert-taps",
+              0,
+              "channelmix.upmix-method",
+              "none",
+              "resample.quality",
+              4,
+              "resample.disable",
+              false,
+              "dither.noise",
+              0,
+              "dither.method",
+              "none",
+              "debug.wav-path",
+              "",
+              "channelmix.lock-volumes",
+              false,
+              "audioconvert.filter-graph.disable",
+              false,
+              "audioconvert.filter-graph",
+              ""
+            ],
+            "softMute": false,
+            "softVolumes": [
+              1.0,
+              1.0
+            ],
+            "volume": 1.0
+          },
+          {
+            "cardName": "",
+            "device": "hw:2,0",
+            "deviceName": "",
+            "latencyOffsetNsec": 0,
+            "params": [
+              "audio.channels",
+              2,
+              "audio.rate",
+              0,
+              "audio.format",
+              "UNKNOWN",
+              "audio.position",
+              "[ AUX0, AUX1 ]",
+              "audio.allowed-rates",
+              "[ ]",
+              "api.alsa.period-size",
+              0,
+              "api.alsa.period-num",
+              0,
+              "api.alsa.headroom",
+              0,
+              "api.alsa.start-delay",
+              0,
+              "api.alsa.disable-mmap",
+              false,
+              "api.alsa.disable-batch",
+              false,
+              "api.alsa.disable-tsched",
+              true,
+              "api.alsa.use-chmap",
+              false,
+              "api.alsa.multi-rate",
+              true,
+              "api.alsa.htimestamp",
+              false,
+              "api.alsa.htimestamp.max-errors",
+              64,
+              "latency.internal.rate",
+              0,
+              "latency.internal.ns",
+              0,
+              "clock.name",
+              "api.alsa.2"
+            ]
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "alsa.card": 2,
+        "alsa.card_name": "JUNC Test 18in",
+        "alsa.class": "generic",
+        "alsa.components": "USB17cc:1840",
+        "alsa.device": 0,
+        "alsa.driver_name": "snd_usb_audio",
+        "alsa.id": "K2",
+        "alsa.long_card_name": "JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed",
+        "alsa.mixer_name": "USB Mixer",
+        "alsa.name": "USB Audio",
+        "alsa.resolution_bits": 32,
+        "alsa.subclass": "generic-mix",
+        "alsa.subdevice": 0,
+        "alsa.subdevice_name": "subdevice #0",
+        "alsa.sync.id": "00000000:00000000:00000000:00000000",
+        "api.alsa.auto-link": true,
+        "api.alsa.card.longname": "JUNC Test 18in at usb-xhci-hcd.2.auto-1, high speed",
+        "api.alsa.card.name": "JUNC Test 18in",
+        "api.alsa.disable-tsched": true,
+        "api.alsa.path": "hw:2,0",
+        "api.alsa.pcm.card": 2,
+        "api.alsa.pcm.stream": "capture",
+        "audio.channels": 18,
+        "audio.position": "[ AUX0, AUX1, AUX2, AUX3, AUX4, AUX5, AUX6, AUX7, AUX8, AUX9, AUX10, AUX11, AUX12, AUX13, AUX14, AUX15, AUX16, AUX17 ]",
+        "card.profile.device": 2,
+        "client.id": 39,
+        "clock.name": "api.alsa.2",
+        "clock.quantum-limit": 8192,
+        "device.api": "alsa",
+        "device.bus": "usb",
+        "device.class": "sound",
+        "device.icon-name": "audio-card-analog",
+        "device.id": 126,
+        "device.profile.description": "Pro",
+        "device.profile.name": "pro-input-0",
+        "device.profile.pro": true,
+        "device.routes": 0,
+        "factory.id": 19,
+        "factory.name": "api.alsa.pcm.source",
+        "library.name": "audioconvert/libspa-audioconvert",
+        "media.class": "Audio/Source",
+        "node.description": "JUNC Test 18in Pro",
+        "node.driver": true,
+        "node.group": "pro-audio-2",
+        "node.loop.name": "data-loop.0",
+        "node.name": "alsa_input.usb-JUNC_Test_18in-00.pro-input-0",
+        "node.nick": "JUNC Test 18in",
+        "node.pause-on-idle": false,
+        "object.id": 123,
+        "object.path": "alsa:acp:K2:2:capture",
+        "object.serial": 268,
+        "port.group": "capture",
+        "priority.driver": 2600,
+        "priority.session": 2600
+      },
+      "state": "suspended"
+    },
+    "permissions": [
+      "r",
+      "w",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Node",
+    "version": 3
+  },
+  {
+    "id": 128,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "input",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX0",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 127,
+        "object.id": 128,
+        "object.path": "alsa:acp:K2:1:playback:playback_0",
+        "object.serial": 272,
+        "port.alias": "JUNC Test 18in:playback_AUX0",
+        "port.direction": "in",
+        "port.group": "playback",
+        "port.id": 0,
+        "port.name": "playback_AUX0",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 116,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "input",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX1",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 127,
+        "object.id": 116,
+        "object.path": "alsa:acp:K2:1:playback:playback_1",
+        "object.serial": 273,
+        "port.alias": "JUNC Test 18in:playback_AUX1",
+        "port.direction": "in",
+        "port.group": "playback",
+        "port.id": 1,
+        "port.name": "playback_AUX1",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 124,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX0",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 127,
+        "object.id": 124,
+        "object.path": "alsa:acp:K2:1:playback:monitor_0",
+        "object.serial": 274,
+        "port.alias": "JUNC Test 18in:monitor_AUX0",
+        "port.direction": "out",
+        "port.group": "playback",
+        "port.id": 0,
+        "port.monitor": true,
+        "port.name": "monitor_AUX0"
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 125,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX1",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 127,
+        "object.id": 125,
+        "object.path": "alsa:acp:K2:1:playback:monitor_1",
+        "object.serial": 275,
+        "port.alias": "JUNC Test 18in:monitor_AUX1",
+        "port.direction": "out",
+        "port.group": "playback",
+        "port.id": 1,
+        "port.monitor": true,
+        "port.name": "monitor_AUX1"
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 119,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX0",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 119,
+        "object.path": "alsa:acp:K2:2:capture:capture_0",
+        "object.serial": 277,
+        "port.alias": "JUNC Test 18in:capture_AUX0",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 0,
+        "port.name": "capture_AUX0",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 120,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX1",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 120,
+        "object.path": "alsa:acp:K2:2:capture:capture_1",
+        "object.serial": 278,
+        "port.alias": "JUNC Test 18in:capture_AUX1",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 1,
+        "port.name": "capture_AUX1",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9002,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX2",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9002,
+        "object.path": "alsa:acp:K2:2:capture:capture_2",
+        "object.serial": 281,
+        "port.alias": "JUNC Test 18in:capture_AUX2",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 2,
+        "port.name": "capture_AUX2",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9003,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX3",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9003,
+        "object.path": "alsa:acp:K2:2:capture:capture_3",
+        "object.serial": 282,
+        "port.alias": "JUNC Test 18in:capture_AUX3",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 3,
+        "port.name": "capture_AUX3",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9004,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX4",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9004,
+        "object.path": "alsa:acp:K2:2:capture:capture_4",
+        "object.serial": 283,
+        "port.alias": "JUNC Test 18in:capture_AUX4",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 4,
+        "port.name": "capture_AUX4",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9005,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX5",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9005,
+        "object.path": "alsa:acp:K2:2:capture:capture_5",
+        "object.serial": 284,
+        "port.alias": "JUNC Test 18in:capture_AUX5",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 5,
+        "port.name": "capture_AUX5",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9006,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX6",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9006,
+        "object.path": "alsa:acp:K2:2:capture:capture_6",
+        "object.serial": 285,
+        "port.alias": "JUNC Test 18in:capture_AUX6",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 6,
+        "port.name": "capture_AUX6",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9007,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX7",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9007,
+        "object.path": "alsa:acp:K2:2:capture:capture_7",
+        "object.serial": 286,
+        "port.alias": "JUNC Test 18in:capture_AUX7",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 7,
+        "port.name": "capture_AUX7",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9008,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX8",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9008,
+        "object.path": "alsa:acp:K2:2:capture:capture_8",
+        "object.serial": 287,
+        "port.alias": "JUNC Test 18in:capture_AUX8",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 8,
+        "port.name": "capture_AUX8",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9009,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX9",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9009,
+        "object.path": "alsa:acp:K2:2:capture:capture_9",
+        "object.serial": 288,
+        "port.alias": "JUNC Test 18in:capture_AUX9",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 9,
+        "port.name": "capture_AUX9",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9010,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX10",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9010,
+        "object.path": "alsa:acp:K2:2:capture:capture_10",
+        "object.serial": 289,
+        "port.alias": "JUNC Test 18in:capture_AUX10",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 10,
+        "port.name": "capture_AUX10",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9011,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX11",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9011,
+        "object.path": "alsa:acp:K2:2:capture:capture_11",
+        "object.serial": 290,
+        "port.alias": "JUNC Test 18in:capture_AUX11",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 11,
+        "port.name": "capture_AUX11",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9012,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX12",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9012,
+        "object.path": "alsa:acp:K2:2:capture:capture_12",
+        "object.serial": 291,
+        "port.alias": "JUNC Test 18in:capture_AUX12",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 12,
+        "port.name": "capture_AUX12",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9013,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX13",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9013,
+        "object.path": "alsa:acp:K2:2:capture:capture_13",
+        "object.serial": 292,
+        "port.alias": "JUNC Test 18in:capture_AUX13",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 13,
+        "port.name": "capture_AUX13",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9014,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX14",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9014,
+        "object.path": "alsa:acp:K2:2:capture:capture_14",
+        "object.serial": 293,
+        "port.alias": "JUNC Test 18in:capture_AUX14",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 14,
+        "port.name": "capture_AUX14",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9015,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX15",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9015,
+        "object.path": "alsa:acp:K2:2:capture:capture_15",
+        "object.serial": 294,
+        "port.alias": "JUNC Test 18in:capture_AUX15",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 15,
+        "port.name": "capture_AUX15",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9016,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX16",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9016,
+        "object.path": "alsa:acp:K2:2:capture:capture_16",
+        "object.serial": 295,
+        "port.alias": "JUNC Test 18in:capture_AUX16",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 16,
+        "port.name": "capture_AUX16",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  },
+  {
+    "id": 9017,
+    "info": {
+      "change-mask": [
+        "props",
+        "params"
+      ],
+      "direction": "output",
+      "params": {
+        "Buffers": [],
+        "EnumFormat": [
+          {
+            "format": "F32P",
+            "mediaSubtype": "dsp",
+            "mediaType": "audio"
+          }
+        ],
+        "Format": [],
+        "IO": [
+          {
+            "id": "Buffers",
+            "size": 8
+          },
+          {
+            "id": "AsyncBuffers",
+            "size": 8
+          }
+        ],
+        "Latency": [
+          {
+            "direction": "Input",
+            "maxNs": 0,
+            "maxQuantum": 0.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 0.0,
+            "minRate": 0
+          },
+          {
+            "direction": "Output",
+            "maxNs": 0,
+            "maxQuantum": 1.0,
+            "maxRate": 0,
+            "minNs": 0,
+            "minQuantum": 1.0,
+            "minRate": 0
+          }
+        ],
+        "Meta": [
+          {
+            "size": 32,
+            "type": "Header"
+          }
+        ],
+        "Tag": []
+      },
+      "props": {
+        "audio.channel": "AUX17",
+        "format.dsp": "32 bit float mono audio",
+        "node.id": 123,
+        "object.id": 9017,
+        "object.path": "alsa:acp:K2:2:capture:capture_17",
+        "object.serial": 296,
+        "port.alias": "JUNC Test 18in:capture_AUX17",
+        "port.direction": "out",
+        "port.group": "capture",
+        "port.id": 17,
+        "port.name": "capture_AUX17",
+        "port.physical": true,
+        "port.terminal": true
+      }
+    },
+    "permissions": [
+      "r",
+      "x",
+      "m"
+    ],
+    "type": "PipeWire:Interface:Port",
+    "version": 3
+  }
+]
