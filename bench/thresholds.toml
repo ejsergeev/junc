@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Performance gate of `junc-bench compare` (docs/architecture.md §11.4).
+# max/min: the PRD target, always enforced. regress/slack: a run may not
+# exceed baseline × regress + slack, against bench/baseline/<arch>.json from
+# the same CI runners; slack absorbs noise where a factor means little.
+
+[metrics.restore_ms]          # process start → 10 Junctions routed
+max = 1000
+regress = 1.5
+slack = 50
+unit = "ms"
+
+[metrics.pss_kb]              # juncd with 10 Junctions
+max = 10240
+regress = 1.25
+slack = 256
+unit = "kB"
+
+[metrics.idle_wakeups_per_s]  # all juncd threads, idle
+max = 0.5
+unit = "/s"
+
+[metrics.cli_enable_p95_ms]   # `junc enable X`, process start to exit
+max = 50
+regress = 2.0
+slack = 5
+unit = "ms"
+
+[metrics.relink_p95_ms]       # app restart → its links back
+max = 100
+regress = 2.0
+slack = 10
+unit = "ms"
+
+[metrics.recovery_max_ms]     # devices back after a PipeWire restart → all routed
+max = 1000
+regress = 2.0
+slack = 50
+unit = "ms"
+
+[metrics.recovery_total_max_ms] # PipeWire start → all routed (includes WirePlumber)
+max = 5000
+unit = "ms"
+
+[metrics.binary_size_bytes]   # stripped release juncd
+max = 5242880
+regress = 1.1
+unit = "B"
+
+[metrics.added_latency_frames] # Junction vs direct, JACK clients on the graph clock
+max = 0
+unit = "frames"
+
+[metrics.bit_exact]           # noise through a Junction at unity
+min = 1
+unit = "bool"

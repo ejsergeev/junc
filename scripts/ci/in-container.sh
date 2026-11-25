@@ -16,4 +16,6 @@ exec su builder -c 'export CARGO_HOME=/src/.ci-cache/cargo CARGO_TARGET_DIR=/src
   && s=$SECONDS && scripts/ci/check.sh && echo "== checks took $((SECONDS - s)) s" \
   && s=$SECONDS && scripts/ci/live-pipewire.sh \
   && t=$((SECONDS - s)) && echo "== layer-2 suite took $t s" \
-  && { (( t < 600 )) || { echo "layer-2 suite over its 10 min budget"; exit 1; }; }'
+  && { (( t < 600 )) || { echo "layer-2 suite over its 10 min budget"; exit 1; }; } \
+  && s=$SECONDS && scripts/ci/bench.sh && cat target/bench-results.json \
+  && echo "== bench took $((SECONDS - s)) s"'
