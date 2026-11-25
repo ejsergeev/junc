@@ -453,11 +453,15 @@ dependencies = [
 name = "juncd"
 version = "0.1.0"
 dependencies = [
+ "futures-util",
  "inotify",
  "junc-core",
+ "junc-ipc",
  "junc-pw",
  "serde",
+ "serde_json",
  "toml",
+ "zbus",
 ]
 
 [[package]]

@@ -12,23 +12,36 @@
 //!
 //! State that is not user intent lives in `$XDG_STATE_HOME/junc/`:
 //! `state.toml` (saved default devices) and `last-good.toml`.
+//!
+//! The D-Bus API (docs/dbus.md) is served on the session bus; its calls
+//! arrive here as [`Msg::Request`] and run on the main thread like any other
+//! event. Owning the bus name also keeps a second daemon from starting.
 
 #![forbid(unsafe_code)]
 
+mod dbus;
 mod watch;
 
+use dbus::{Edit, Reply, Req, Resp, Responder, Server, Shared};
+use junc_core::backend::DefaultKind;
+use junc_core::config;
 use junc_core::defaults::DefaultsState;
+use junc_core::diag::{Diagnostic, codes};
 use junc_core::graph::Graph;
-use junc_core::reconcile::{Notice, Reconciler};
+use junc_core::model::{Config, DefaultRole, Junction};
+use junc_core::plan::{EntityStatus, Plan};
+use junc_core::reconcile::{Notice, Reconciler, Resolution};
 use junc_core::store::{Reload, Store};
+use junc_ipc::{ErrorBody, view};
 use junc_pw::{Event, PwBackend};
+use serde_json::json;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 use std::time::Instant;
 
 fn usage() -> ExitCode {
-    eprintln!("usage: juncd [--config FILE] [--state-dir DIR] [--version]");
+    eprintln!("usage: juncd [--config FILE] [--state-dir DIR] [--no-dbus] [--version]");
     ExitCode::from(2)
 }
 
@@ -40,6 +53,7 @@ fn log(msg: &str) {
 enum Msg {
     Backend(Event),
     ConfigFile,
+    Request(Req, Responder),
 }
 
 /// Daemon state that is not user intent.
@@ -134,6 +148,34 @@ fn open_store(config: &Path, last_good: &Path) -> Result<Store, ExitCode> {
     }
 }
 
+fn kind_name(k: DefaultKind) -> &'static str {
+    match k {
+        DefaultKind::Source => "input",
+        DefaultKind::Sink => "output",
+    }
+}
+
+/// Kind and JSON body of a notice, as sent in the `Notice` signal.
+fn notice_json(n: &Notice) -> (&'static str, serde_json::Value) {
+    match n {
+        Notice::LinkOverridden {
+            junction,
+            reference,
+        } => (
+            "link_overridden",
+            json!({ "junction": junction, "ref": reference }),
+        ),
+        Notice::DefaultRestored { kind, to } => (
+            "default_restored",
+            json!({ "kind": kind_name(*kind), "to": to }),
+        ),
+        Notice::DefaultTakenOver { kind, junction } => (
+            "default_taken_over",
+            json!({ "kind": kind_name(*kind), "junction": junction }),
+        ),
+    }
+}
+
 fn log_notice(n: &Notice) {
     match n {
         Notice::LinkOverridden {
@@ -161,17 +203,58 @@ struct Daemon {
     reconciler: Reconciler,
     state: State,
     state_path: Option<PathBuf>,
+    config_path: PathBuf,
     last_good: PathBuf,
     graph: Option<Graph>,
+    /// Status of every config entry from the last plan.
+    statuses: Vec<EntityStatus>,
+    /// `starting`, `connected` or `waiting_for_pipewire`.
+    phase: &'static str,
+    server: Option<Server>,
     started: Instant,
     converged: bool,
 }
 
+fn json<T: serde::Serialize>(v: &T) -> String {
+    serde_json::to_string(v).unwrap_or_default()
+}
+
+fn not_found(what: String) -> ErrorBody {
+    ErrorBody::new(
+        "E_NOT_FOUND",
+        what,
+        Some("List what exists with `junc describe`."),
+    )
+}
+
+fn diags(d: &[Diagnostic]) -> ErrorBody {
+    ErrorBody::from_diagnostics(d)
+}
+
+/// The plan as JSON: actions (as text), deferred renames and the Junction
+/// views the plan's statuses give.
+fn plan_json(p: &Plan, config: &Config, graph: Option<&Graph>) -> String {
+    json(&json!({
+        "actions": p.actions.iter().map(ToString::to_string).collect::<Vec<_>>(),
+        "deferred": p.deferred,
+        "junctions": config
+            .junction
+            .iter()
+            .map(|j| view::junction(j, &p.status, graph))
+            .collect::<Vec<_>>(),
+    }))
+}
+
 impl Daemon {
-    fn reconcile(&mut self, backend: &PwBackend) {
-        let Some(graph) = &self.graph else { return };
+    /// Reconciles and publishes; returns the plan that ran, if any.
+    fn reconcile(&mut self, backend: &PwBackend) -> Option<Plan> {
+        let graph = self.graph.as_ref()?;
         let step = self.reconciler.on_graph(self.store.config(), graph);
-        step.notices.iter().for_each(log_notice);
+        for n in &step.notices {
+            log_notice(n);
+            let (kind, body) = notice_json(n);
+            self.signal(|s| s.notice(kind, &body));
+        }
         if self.reconciler.defaults() != &self.state.defaults {
             self.state.defaults = self.reconciler.defaults().clone();
             if let Some(p) = &self.state_path {
@@ -181,6 +264,12 @@ impl Daemon {
         if step.refresh {
             backend.refresh();
         }
+        let status_changed = step.plan.status != self.statuses;
+        self.statuses.clone_from(&step.plan.status);
+        self.publish();
+        if status_changed {
+            self.signal(Server::graph_changed);
+        }
         if step.actions.is_empty() {
             if !self.converged {
                 self.converged = true;
@@ -189,7 +278,7 @@ impl Daemon {
                     self.started.elapsed().as_millis()
                 ));
             }
-            return;
+            return Some(step.plan);
         }
         log(&format!("applying {} action(s)", step.actions.len()));
         for a in &step.actions {
@@ -198,9 +287,45 @@ impl Daemon {
             }
         }
         backend.apply(step.actions);
+        Some(step.plan)
     }
 
-    fn config_file_changed(&mut self, path: &Path, backend: &PwBackend) {
+    /// Runs `f` on the D-Bus server, logging failures (a client going away
+    /// must never stop the daemon).
+    fn signal(&mut self, f: impl FnOnce(&mut Server) -> zbus::Result<()>) {
+        if let Some(server) = &mut self.server
+            && let Err(e) = f(server)
+        {
+            log(&format!("D-Bus: {e}"));
+        }
+    }
+
+    fn shared(&self) -> Shared {
+        let graph = self.graph.as_ref();
+        Shared {
+            state: self.phase.to_owned(),
+            revision: self.store.revision(),
+            config_error: self.store.error().map_or_else(String::new, |d| {
+                json(&d.iter().map(view::Diag::from).collect::<Vec<_>>())
+            }),
+            junctions: self
+                .store
+                .config()
+                .junction
+                .iter()
+                .map(|j| view::junction(j, &self.statuses, graph))
+                .collect(),
+            capture_apps: view::capture_apps(&self.statuses, graph),
+        }
+    }
+
+    fn publish(&mut self) {
+        let shared = self.shared();
+        self.signal(|s| s.publish(shared));
+    }
+
+    fn config_file_changed(&mut self, backend: &PwBackend) {
+        let path = &self.config_path;
         let text = match std::fs::read_to_string(path) {
             Ok(t) => t,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -212,22 +337,199 @@ impl Daemon {
         };
         match self.store.reload(&text) {
             Reload::Unchanged => {}
-            Reload::Invalid(diags) => {
-                for d in &diags {
-                    log(&format!("notice config_error {d}"));
+            Reload::Invalid(d) => {
+                for x in &d {
+                    log(&format!("notice config_error {x}"));
                 }
                 log("keeping the last good config");
+                let body =
+                    json!({ "diagnostics": d.iter().map(view::Diag::from).collect::<Vec<_>>() });
+                self.signal(|s| s.notice("config_error", &body));
+                self.publish();
             }
             Reload::Changed(rev) => {
                 log(&format!(
                     "config revision {rev}: {} Junction(s)",
                     self.store.config().junction.len()
                 ));
-                if let Err(e) = write_atomic(&self.last_good, self.store.good_text()) {
-                    log(&format!("cannot save {}: {e}", self.last_good.display()));
-                }
+                self.save_last_good();
                 self.converged = false;
                 self.reconcile(backend);
+                self.publish();
+            }
+        }
+    }
+
+    fn save_last_good(&self) {
+        if let Err(e) = write_atomic(&self.last_good, self.store.good_text()) {
+            log(&format!("cannot save {}: {e}", self.last_good.display()));
+        }
+    }
+
+    /// After the store accepted a change: write the file, then route.
+    fn committed(&mut self, backend: &PwBackend) -> Result<Option<Plan>, ErrorBody> {
+        let rev = self.store.revision();
+        log(&format!(
+            "config revision {rev} via D-Bus: {} Junction(s)",
+            self.store.config().junction.len()
+        ));
+        write_atomic(&self.config_path, self.store.good_text()).map_err(|e| {
+            ErrorBody::new(
+                "E_WRITE_FAILED",
+                format!("cannot write {}: {e}", self.config_path.display()),
+                Some("Check that the config directory is writable."),
+            )
+        })?;
+        self.save_last_good();
+        self.converged = false;
+        let plan = self.reconcile(backend);
+        self.publish();
+        Ok(plan)
+    }
+
+    /// Stores `config` (merged into the file, comments kept) and routes it.
+    fn write(&mut self, config: Config, backend: &PwBackend) -> Reply {
+        self.store.update(None, config).map_err(|d| diags(&d))?;
+        self.committed(backend)?;
+        Ok(Resp::Revision(self.store.revision()))
+    }
+
+    fn describe(&self) -> String {
+        let file = self.config_path.display().to_string();
+        let info = view::DaemonInfo {
+            state: self.phase,
+            revision: self.store.revision(),
+            config_file: &file,
+            config_error: self.store.error(),
+        };
+        json(&view::describe(
+            info,
+            self.store.config(),
+            &self.statuses,
+            self.graph.as_ref(),
+        ))
+    }
+
+    fn handle(&mut self, req: Req, backend: &PwBackend) -> Reply {
+        let file = self.config_path.display().to_string();
+        match req {
+            Req::Describe => Ok(Resp::Text(self.describe())),
+            Req::GetConfig => Ok(Resp::Config(
+                self.store.good_text().to_owned(),
+                self.store.revision(),
+            )),
+            Req::Validate(text) => Ok(Resp::Text(json(&view::validate_text(&text, &file)))),
+            Req::Plan(text) => {
+                let loaded = config::load(&text, &file).map_err(|d| diags(&d))?;
+                let Some(graph) = &self.graph else {
+                    return Err(ErrorBody::new(
+                        "E_PIPEWIRE_UNAVAILABLE",
+                        "PipeWire is not running, so there is no graph to plan against",
+                        Some("Start PipeWire: systemctl --user start pipewire wireplumber"),
+                    ));
+                };
+                let p = junc_core::plan::plan(&loaded.config, graph, &self.reconciler.held());
+                Ok(Resp::Text(plan_json(&p, &loaded.config, Some(graph))))
+            }
+            Req::Apply { text, expected } => {
+                let expected = (expected != 0).then_some(expected);
+                self.store.replace(expected, &text).map_err(|d| diags(&d))?;
+                let plan = self.committed(backend)?.unwrap_or_default();
+                let config = self.store.config();
+                Ok(Resp::Applied(
+                    self.store.revision(),
+                    plan_json(&plan, config, self.graph.as_ref()),
+                ))
+            }
+            Req::Create { name } => {
+                let mut config = self.store.config().clone();
+                let base = config::slugify(&name);
+                let id = (1..)
+                    .map(|n| {
+                        if n == 1 {
+                            base.clone()
+                        } else {
+                            format!("{base}-{n}")
+                        }
+                    })
+                    .find(|id| config.junction.iter().all(|j| &j.id != id))
+                    .unwrap_or(base);
+                let mut table = toml::Table::new();
+                table.insert("id".into(), id.clone().into());
+                table.insert("name".into(), name.into());
+                let j: Junction = toml::Value::Table(table)
+                    .try_into()
+                    .map_err(|e| ErrorBody::new(codes::INVALID_VALUE, e.to_string(), None))?;
+                config.junction.push(j);
+                let Resp::Revision(rev) = self.write(config, backend)? else {
+                    unreachable!("write answers with a revision")
+                };
+                Ok(Resp::Created(junc_ipc::junction_path(&id), rev))
+            }
+            Req::ResolveLink {
+                junction,
+                reference,
+                action,
+            } => {
+                let how = match action.as_str() {
+                    "restore" => Resolution::Restore,
+                    "leave" => Resolution::LeaveAsIs,
+                    other => {
+                        return Err(ErrorBody::new(
+                            codes::INVALID_VALUE,
+                            format!("unknown action '{other}'"),
+                            Some("Use \"restore\" or \"leave\"."),
+                        ));
+                    }
+                };
+                let config = self.store.config().clone();
+                match self.reconciler.resolve(&config, &junction, &reference, how) {
+                    Some(new) => self.write(new, backend),
+                    None if how == Resolution::LeaveAsIs => Err(not_found(format!(
+                        "no overridden link '{reference}' on '{junction}'"
+                    ))),
+                    None => {
+                        self.reconcile(backend);
+                        Ok(Resp::Revision(self.store.revision()))
+                    }
+                }
+            }
+            Req::Edit { id, edit } => {
+                let mut config = self.store.config().clone();
+                let Some(pos) = config.junction.iter().position(|j| j.id == id) else {
+                    return Err(not_found(format!("no Junction with id '{id}'")));
+                };
+                let j = &mut config.junction[pos];
+                match edit {
+                    Edit::Rename(name) => j.name = name,
+                    Edit::Enabled(on) => j.enabled = on,
+                    Edit::Volume(v) => j.volume = u16::try_from(v).unwrap_or(u16::MAX),
+                    Edit::Default(role) => {
+                        j.default = match role.as_str() {
+                            "none" => DefaultRole::None,
+                            "input" => DefaultRole::Input,
+                            "output" => DefaultRole::Output,
+                            other => {
+                                return Err(ErrorBody::new(
+                                    codes::INVALID_VALUE,
+                                    format!("unknown default role '{other}'"),
+                                    Some("Use \"none\", \"input\" or \"output\"."),
+                                ));
+                            }
+                        };
+                    }
+                    Edit::Delete(confirm) => {
+                        if !confirm {
+                            return Err(ErrorBody::new(
+                                "E_NEEDS_CONFIRMATION",
+                                format!("deleting '{id}' removes it and its routing"),
+                                Some("Call Delete(true) to confirm."),
+                            ));
+                        }
+                        config.junction.remove(pos);
+                    }
+                }
+                self.write(config, backend)
             }
         }
     }
@@ -235,7 +537,7 @@ impl Daemon {
 
 fn main() -> ExitCode {
     let mut args = std::env::args().skip(1);
-    let (mut config_path, mut state_dir) = (None, None);
+    let (mut config_path, mut state_dir, mut use_dbus) = (None, None, true);
     while let Some(a) = args.next() {
         match a.as_str() {
             "--version" => {
@@ -250,6 +552,7 @@ fn main() -> ExitCode {
                 Some(p) => state_dir = Some(PathBuf::from(p)),
                 None => return usage(),
             },
+            "--no-dbus" => use_dbus = false,
             _ => return usage(),
         }
     }
@@ -283,6 +586,27 @@ fn main() -> ExitCode {
     let state = state_path.as_deref().map(load_state).unwrap_or_default();
 
     let (tx, rx) = mpsc::channel();
+    // The bus name first: a second daemon stops here, before it touches
+    // the graph.
+    let server = if use_dbus {
+        let tx = tx.clone();
+        let dispatch: dbus::Dispatch = Arc::new(move |req, reply| {
+            // If the main loop is gone, dropping `reply` fails the call.
+            let _ = tx.send(Msg::Request(req, reply));
+        });
+        match Server::start(dispatch) {
+            Ok(s) => Some(s),
+            Err(e) => {
+                log(&format!(
+                    "cannot serve {} on the session bus: {e}",
+                    junc_ipc::BUS_NAME
+                ));
+                return ExitCode::from(4);
+            }
+        }
+    } else {
+        None
+    };
     let backend = {
         let tx = tx.clone();
         match PwBackend::spawn(move |e| {
@@ -309,27 +633,41 @@ fn main() -> ExitCode {
         store,
         state,
         state_path,
+        config_path,
         last_good,
         graph: None,
+        statuses: Vec::new(),
+        phase: "starting",
+        server,
         started: Instant::now(),
         converged: false,
     };
+    d.publish();
     for msg in rx {
         match msg {
-            Msg::ConfigFile => d.config_file_changed(&config_path, &backend),
+            Msg::Request(req, reply) => {
+                let r = d.handle(req, &backend);
+                reply.send(r);
+            }
+            Msg::ConfigFile => d.config_file_changed(&backend),
             Msg::Backend(Event::Connected) => log("connected to PipeWire"),
             Msg::Backend(Event::Disconnected) => {
                 log("lost PipeWire; waiting for it to come back");
                 // Objects die with PipeWire; only the saved defaults carry over.
                 d.reconciler = Reconciler::with_defaults(d.reconciler.defaults().clone());
                 d.graph = None;
+                d.statuses.clear();
+                d.phase = "waiting_for_pipewire";
                 d.converged = false;
+                d.publish();
+                d.signal(Server::graph_changed);
             }
             Msg::Backend(Event::ActionFailed { action, error }) => {
-                log(&format!("action failed: {action}: {error}"))
+                log(&format!("action failed: {action}: {error}"));
             }
             Msg::Backend(Event::Graph(g)) => {
                 d.graph = Some(*g);
+                d.phase = "connected";
                 d.reconcile(&backend);
             }
         }

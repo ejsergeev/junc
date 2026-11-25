@@ -128,6 +128,7 @@ fn relinks_on_churn_and_does_not_fight_overrides() {
     let mut app = spotify();
     let daemon = Kill(
         Command::new(env!("CARGO_BIN_EXE_juncd"))
+            .arg("--no-dbus")
             .arg("--config")
             .arg(&cfg)
             .stderr(std::fs::File::create(&log).expect("log"))
@@ -231,6 +232,7 @@ fn run_juncd(dir: &std::path::Path, tag: &str, config: &str) -> (Kill, std::path
     std::fs::write(&cfg, config).expect("config");
     let log = dir.join(format!("{tag}.log"));
     let child = Command::new(env!("CARGO_BIN_EXE_juncd"))
+        .arg("--no-dbus")
         .arg("--config")
         .arg(&cfg)
         .arg("--state-dir")
@@ -505,6 +507,7 @@ fn hand_edits_apply_live_and_bad_edits_keep_the_last_good_config() {
     // Restarting with the broken file uses the last good config.
     drop(_d);
     let child = Command::new(env!("CARGO_BIN_EXE_juncd"))
+        .arg("--no-dbus")
         .arg("--config")
         .arg(&cfg)
         .arg("--state-dir")
