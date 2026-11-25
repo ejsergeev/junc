@@ -204,6 +204,14 @@ mod tests {
         assert_eq!(junc_words("junc describe --json | jq ."), None);
     }
 
+    /// The skill in the repository passes its own checks.
+    #[test]
+    fn the_skill_passes_skill_check() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..");
+        let problems = check(&root);
+        assert!(problems.is_empty(), "{}", problems.join("\n"));
+    }
+
     /// A broken command or config example is caught.
     #[test]
     fn mistakes_are_caught() {
