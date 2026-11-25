@@ -335,3 +335,24 @@ pub fn doctor(checks: &[crate::doctor::Check]) -> String {
     }
     out
 }
+
+/// `junc skill`.
+pub fn skill(entries: &[crate::skill::Entry]) -> String {
+    use crate::skill::State;
+    if entries.is_empty() {
+        return tr("No agent skills folders found (~/.claude/skills, ~/.codex/skills, …).")
+            .into_owned();
+    }
+    let rows: Vec<Vec<String>> = entries
+        .iter()
+        .map(|e| {
+            let st = match e.state {
+                State::Linked => tr("linked"),
+                State::Missing => tr("not linked"),
+                State::UsersOwn => tr("your own junc, kept"),
+            };
+            vec![e.folder.display().to_string(), st.into_owned()]
+        })
+        .collect();
+    table(&rows)
+}

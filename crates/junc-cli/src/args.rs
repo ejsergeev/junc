@@ -147,6 +147,19 @@ pub enum Cmd {
     /// Start juncd at login, or not (`systemctl --user` on juncd.service).
     #[command(subcommand)]
     Service(ServiceCmd),
+    /// Make the JUNC skill visible to your coding agents, or not.
+    #[command(subcommand)]
+    Skill(SkillCmd),
+}
+
+#[derive(Debug, Subcommand)]
+pub enum SkillCmd {
+    /// Link the skill into every agent skills folder you have.
+    Link,
+    /// Remove JUNC's skill links (your own `junc` folders stay).
+    Unlink,
+    /// Show which agent folders have the skill.
+    Status,
 }
 
 #[derive(Debug, Subcommand)]

@@ -15,12 +15,14 @@ mod doctor;
 mod edit;
 mod human;
 mod service;
+mod skill;
 
 use clap::Parser;
 use client::Client;
 use edit::{End, Result, Source, usage};
 use junc_cli::args::{
-    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, Role, ServiceCmd, SourceArgs,
+    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, Role, ServiceCmd, SkillCmd,
+    SourceArgs,
 };
 use junc_ipc::ErrorBody;
 use junc_l10n::{tr, trf};
@@ -181,6 +183,30 @@ fn offline(cmd: &Cmd) -> Option<Result<Done>> {
                 Err(e) => Err(e),
             }
         }
+        Cmd::Skill(sub) => {
+            let run = || -> Result<Vec<skill::Entry>> {
+                let dir = skill::skill_dir()?;
+                let home = std::env::var_os("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_default();
+                match sub {
+                    SkillCmd::Link => skill::link(&home, &dir),
+                    SkillCmd::Unlink => skill::unlink(&home, &dir),
+                    SkillCmd::Status => Ok(skill::status(&home, &dir)),
+                }
+            };
+            match run() {
+                Ok(entries) => {
+                    let text = human::skill(&entries);
+                    Ok(Done {
+                        revision: None,
+                        data: json!({ "folders": entries }),
+                        text,
+                    })
+                }
+                Err(e) => Err(e),
+            }
+        }
         Cmd::Doctor => {
             let client = Client::connect().ok();
             let checks = doctor::checks(client.as_ref());
@@ -252,7 +278,7 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
                 Ok(done(rev, json!({ "applied": true, "plan": plan }), out))
             }
         }
-        Cmd::Schema { .. } | Cmd::Doctor | Cmd::Config(_) | Cmd::Service(_) => {
+        Cmd::Schema { .. } | Cmd::Doctor | Cmd::Config(_) | Cmd::Service(_) | Cmd::Skill(_) => {
             unreachable!("handled above")
         }
         Cmd::List => {
