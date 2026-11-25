@@ -167,9 +167,10 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   comment-preserving writes. Req: F22. Acceptance: hand-edit tests (valid,
   invalid with line numbers, concurrent edit → `E_CONFLICT`).
   Done 2026-11-25: `junc-core::store` (7 tests: one-value edits keep comments byte for byte, add/remove entries, suppressed lists, hand edits with positions, comment-only edits, own writes, conflicts) and live reload in `juncd` (live test: rename-style edit applied, invalid edit reported at 5:1 with a hint, restart falls back to the last good config).
-- [ ] **A10** [auto] D-Bus API v1 (`Daemon`, `Junction`), errors, generated
+- [x] **A10** [auto] D-Bus API v1 (`Daemon`, `Junction`), errors, generated
   `docs/dbus.md`. Req: F12, F23 (property only). Acceptance: zbus round-trip
   tests; `time junc enable X` < 50 ms in CI.
+  Done 2026-11-25: contract in `junc-ipc` (constants, proxies, error enum with JSON bodies, `view` JSON types shared with `--json`); server in `juncd` (calls run on the main loop, properties from a published snapshot, Junction objects added and removed live, `GraphChanged`/`Notice` signals, single instance via `DO_NOT_QUEUE`, exit 4). Tests on a private bus: every call and error class, comments kept through edits, hand edits reflected in properties, second daemon refused, call latency p95 ≈ 2 ms (budget 50 ms; the CLI half of the check moves to A11), live statuses and `GraphChanged` on the isolated PipeWire. Introspection XML generated from the daemon with a freshness test; reference in `docs/dbus.md`. v1.0 is the surface above; per-entry methods arrive as minor versions (architecture §4).
 - [ ] **A11** [auto] CLI for alpha scope: list, status, create, rename,
   duplicate, delete, enable/disable/toggle/switch, default, volume (master),
   input/bus/link/listen basics, `--json` envelope, exit codes, localized
@@ -386,3 +387,4 @@ decisions log once the owner answers.
 | 2026-11-25 | Spike S1 ended in the two-node fallback; every Junction is always both a source (`Audio/Source/Virtual`) and a sink (`Audio/Sink`), like a Loopback device | owner |
 | 2026-11-25 | Public repository `ejsergeev/junc` on GitHub | owner |
 | 2026-11-25 | The developer merges a PR once its CI is green, by fast-forwarding `main` (no GitHub merge commits, so every commit keeps the owner as author and committer); the owner reviews at will and signs off stages and releases | owner |
+| 2026-11-25 | D-Bus carries structured values (Junction view, `Describe`, diagnostics, plans, notices) as JSON strings with the `--json` shapes instead of `a{sv}`; API v1.0 ships the calls the CLI needs, the rest arrive as minor versions | developer |
