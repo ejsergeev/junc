@@ -320,6 +320,24 @@ pub fn validate(config: &Config, flavor: Flavor) -> Vec<Finding> {
             }
             check_volume(input.volume, ip("volume"), &mut push);
             check_match(&input.matcher, ip("match"), flavor, &mut push);
+            if input.exclusive
+                && matches!(
+                    input.matcher.kinds().as_slice(),
+                    [MatchKind::Device | MatchKind::Monitor | MatchKind::Junction]
+                )
+            {
+                push(
+                    ip("exclusive"),
+                    Diagnostic::error(
+                        codes::INVALID_VALUE,
+                        "exclusive is set on an Input that is not an app",
+                    )
+                    .with_hint(
+                        "Exclusive takes an app off the speakers while it is captured; \
+                         remove it from device, monitor and Junction Inputs.",
+                    ),
+                );
+            }
             for (n, [from, to]) in input.links.iter().flatten().enumerate() {
                 let lp = [ip("links"), vec![Seg::Index(n)]].concat();
                 if *from == 0 || *from > MAX_BUS_CHANNELS {

@@ -318,3 +318,13 @@ fn volumes_are_set_where_they_belong_and_only_when_needed() {
     }
     assert!((b.volume(node(&b, "junc.zoom.in.firefox")) - 0.343).abs() < 1e-6);
 }
+
+#[test]
+fn exclusive_is_for_app_inputs_only() {
+    let text = ZOOM.replace(
+        "match = { device = \"fake.hwin\" }",
+        "match = { device = \"fake.hwin\" }\nexclusive = true",
+    );
+    let err = config::load(&text, "t.toml").expect_err("device Input with exclusive");
+    assert!(format!("{err:?}").contains("exclusive"), "{err:?}");
+}
