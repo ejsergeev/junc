@@ -41,6 +41,44 @@ pub fn junction_path(id: &str) -> String {
     p
 }
 
+/// The Junction id of an object path from [`junction_path`], if it is one.
+pub fn junction_id(path: &str) -> Option<String> {
+    let rest = path.strip_prefix(ROOT_PATH)?.strip_prefix("/junction/")?;
+    let mut id = String::new();
+    let mut chars = rest.chars();
+    while let Some(c) = chars.next() {
+        if c == '_' {
+            let hex: String = chars.by_ref().take(2).collect();
+            id.push(char::from(u8::from_str_radix(&hex, 16).ok()?));
+        } else if c.is_ascii_alphanumeric() {
+            id.push(c);
+        } else {
+            return None;
+        }
+    }
+    (!id.is_empty()).then_some(id)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn junction_paths_round_trip() {
+        for id in ["zoom", "podcast-mix", "a-b-c-1"] {
+            let path = junction_path(id);
+            assert!(zbus::ObjectPath::try_from(path.as_str()).is_ok(), "{path}");
+            assert_eq!(junction_id(&path).as_deref(), Some(id));
+        }
+        assert_eq!(
+            junction_path("podcast-mix"),
+            format!("{ROOT_PATH}/junction/podcast_2dmix")
+        );
+        assert_eq!(junction_id(ROOT_PATH), None);
+        assert_eq!(junction_id(&format!("{ROOT_PATH}/junction/bad_zz")), None);
+    }
+}
+
 /// The error body sent with every D-Bus error: what is wrong, where, and how
 /// to fix it.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
