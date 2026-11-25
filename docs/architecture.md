@@ -167,10 +167,11 @@ Validated shape: server-side adapter nodes + links (report §4,
 
 | Object | Factory / class | Count | Purpose |
 | --- | --- | --- | --- |
-| Junction node `junc.<slug>` | `adapter`, `factory.name = support.null-audio-sink`, class per spike S1 (`Audio/Duplex` preferred) | 1 | What apps see: a device that can be played into and recorded from. `node.description` = Junction name. Bus = its channels. Master volume (F7) = its `channelVolumes`. |
-| Input gain node `junc.<slug>.in.<input-id>` | `adapter`, null-audio-sink, internal class (spike S2), `monitor.channel-volumes = true` | *I* | Per-Input volume and on/off (F7, F8) without touching the app's own volume. Not listed as a device. |
+| Junction source (the Bus) `junc.<slug>` | `adapter`, `factory.name = support.null-audio-sink`, `media.class = Audio/Source/Virtual` (spike S1) | 1 | What apps record from: the "virtual mic". `node.description` = Junction name. Bus = its channels. Master volume (F7) = its `channelVolumes`. Inputs are linked into its input ports. |
+| Junction sink `junc.<slug>.sink` | same factory, `media.class = Audio/Sink`, same channels | 1 | What apps can play into (F1, "Use as default output" F16). Its monitor ports are linked into the Junction source, so whatever is played into it reaches the Bus like any other Input. Always present, like a Loopback device (owner decision 2026-11-25). |
+| Input gain node `junc.<slug>.in.<input-id>` | `adapter`, null-audio-sink, `media.class = Audio/Duplex/Internal` (spike S2), `monitor.channel-volumes = true` | *I* | Per-Input volume and on/off (F7, F8) without touching the app's own volume. Not listed as a device (still visible in JACK patchbays, like filter-chain nodes). |
 | Listen gain node `junc.<slug>.listen.<n>` | same as above | *L* | Per-Listen volume and on/off. |
-| Links | `link-factory` | as configured | app → input gain → Junction; Junction monitor → listen gain → output device. |
+| Links | link factory | as configured | app → input gain → Junction source; Junction sink monitor → Junction source; Junction source outputs → listen gain → output device. |
 
 Properties on every node and link JUNC creates:
 
@@ -349,10 +350,11 @@ HFP profile where known.
 
 ### 3.10 Exclusive (F11)
 
-Exclusive moves the app's stream to the Junction instead of adding a second
-link: set the stream's `target.object` in the `default` metadata to the
-Junction (the same mechanism as moving a stream in pavucontrol). WirePlumber
-then removes its own link to the speakers. Turning Exclusive off clears the
+Exclusive moves the app's stream to its Input gain node instead of adding a
+second link: set the stream's `target.object` in the `default` metadata to the
+gain node (the same mechanism as moving a stream in pavucontrol). WirePlumber
+then removes its own link to the speakers and leaves JUNC's link in place
+(spike S5). Turning Exclusive off clears the
 metadata key and WirePlumber restores its default routing. JUNC still never
 destroys a foreign link itself.
 
@@ -1282,7 +1284,7 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 
 | ID | Result | Consequence |
 | --- | --- | --- |
-| S1 | **Fallback needed.** `Audio/Duplex` is listed by PulseAudio as both sink and source and by JACK, but WirePlumber does not link recording apps to it: `parecord -d`, `pw-record --target` and the default source all fall back to another source. `Audio/Source/Virtual` is linked in all three cases. Playback into Duplex/Internal nodes is linked. | A Junction is two nodes: `junc.<slug>` (`Audio/Source/Virtual`, what apps record; Inputs are linked into its input ports) and `junc.<slug>.sink` (`Audio/Sink`, what apps can play into, F1/F16 output) whose monitor feeds the source. Pending owner confirmation (decisions log rule). |
+| S1 | **Fallback taken.** `Audio/Duplex` is listed by PulseAudio as both sink and source and by JACK, but WirePlumber does not link recording apps to it: `parecord -d`, `pw-record --target` and the default source all fall back to another source. `Audio/Source/Virtual` is linked in all three cases. Playback into Duplex/Internal nodes is linked. | A Junction is two nodes: `junc.<slug>` (`Audio/Source/Virtual`, what apps record; Inputs are linked into its input ports) and `junc.<slug>.sink` (`Audio/Sink`, what apps can play into, F1/F16 output) whose monitor feeds the source. Owner chose Loopback-like behaviour: both nodes always (2026-11-25). |
 | S2 | `Audio/Duplex/Internal` is hidden from PulseAudio and `wpctl` device lists but linkable; `Audio/Sink/Internal` still shows in `wpctl`; `node.hidden`/`node.virtual` hide nothing. JACK lists every node's ports. | Gain nodes use `Audio/Duplex/Internal`. They are visible in JACK patchbays, like PipeWire's own filter-chain nodes. |
 | S3 | **Pass.** A link created through the link factory with `object.linger=true` and `junc.*` props stays after its creator exits, with all props in the registry; without linger it disappears. Prop values containing `:` or `>` must be quoted in SPA-JSON. | Ownership tags on links as designed (§3.2). |
 | S4 | **Pass.** pw-cat → gain node → Junction → recorder is bit-exact at 100 % and exactly ×0.5 at 50 % (144 k frames, max error 0). | No direct-link fallback needed. |

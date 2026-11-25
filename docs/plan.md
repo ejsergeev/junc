@@ -374,3 +374,5 @@ decisions log once the owner answers.
 | 2026-11-25 | Split packages `junc` (daemon, CLI, skill) and `junc-gui`; Omarchy's install entry installs `junc-gui`; no `junc-bin` | owner |
 | 2026-11-25 | The language picker lists the 46 v1 languages; the four RTL languages are added when RTL ships | owner |
 | 2026-11-25 | The Junction node class follows spike S1 without another owner decision, unless S1 ends in the two-node fallback | owner |
+| 2026-11-25 | Spike S1 ended in the two-node fallback; every Junction is always both a source (`Audio/Source/Virtual`) and a sink (`Audio/Sink`), like a Loopback device | owner |
+| 2026-11-25 | Public repository `ejsergeev/junc` on GitHub | owner |
