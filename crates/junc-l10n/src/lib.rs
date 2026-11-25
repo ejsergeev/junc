@@ -14,6 +14,7 @@
 
 pub mod mo;
 pub mod plural;
+pub mod registry;
 
 use std::borrow::Cow;
 use std::fmt::Display;
