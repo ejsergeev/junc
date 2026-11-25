@@ -299,8 +299,43 @@ fn merge_tables_by_id(item: &mut Item, old: &[toml::Value], new: &[toml::Value])
     *item = Item::ArrayOfTables(out);
 }
 
+/// Keys whose value is the model default everywhere they occur
+/// (`enabled`, `volume` on Junctions, Inputs and Listen outputs alike).
+/// New entries are written without them, the way people write the file.
+const DEFAULTS: &[(&str, &str)] = &[
+    ("kind", "\"junction\""),
+    ("enabled", "true"),
+    ("volume", "100"),
+    ("default", "\"none\""),
+    ("rate", "\"follow\""),
+    ("bus", "{ channels = 2 }"),
+    ("exclusive", "false"),
+];
+
+fn is_default(key: &str, value: &toml::Value) -> bool {
+    DEFAULTS.iter().any(|(k, d)| {
+        *k == key
+            && format!("v = {d}")
+                .parse::<toml::Table>()
+                .is_ok_and(|t| t.get("v") == Some(value))
+    })
+}
+
+fn is_array_of_tables(v: &toml::Value) -> bool {
+    v.as_array()
+        .is_some_and(|a| !a.is_empty() && a.iter().all(toml::Value::is_table))
+}
+
+/// A new table for the document: model field order, defaults left out,
+/// small subtables inline, nested arrays of tables (`[[junction.input]]`)
+/// built the same way.
 fn to_table(t: &toml::Table) -> Table {
-    let text = toml::to_string(t).unwrap_or_default();
+    let values: toml::Table = t
+        .iter()
+        .filter(|(k, v)| !is_default(k, v) && !is_array_of_tables(v))
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    let text = toml::to_string(&values).unwrap_or_default();
     let mut table = text
         .parse::<DocumentMut>()
         .map(|d| d.as_table().clone())
@@ -316,7 +351,34 @@ fn to_table(t: &toml::Table) -> Table {
     };
     table.sort_values_by(|k1, _, k2, _| pos(k1.get()).cmp(&pos(k2.get())));
     toml_edit::TableLike::fmt(&mut table);
+    for (k, v) in t.iter().filter(|(_, v)| is_array_of_tables(v)) {
+        let mut aot = toml_edit::ArrayOfTables::new();
+        for sub in v
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(toml::Value::as_table)
+        {
+            aot.push(to_table(sub));
+        }
+        table.insert(k, Item::ArrayOfTables(aot));
+    }
+    clear_positions(&mut table);
     table
+}
+
+/// Tables parsed from a scratch document carry that document's positions;
+/// left in place, a new `[[junction.input]]` would be printed among the
+/// existing Junctions. Without positions they follow their parent.
+fn clear_positions(t: &mut Table) {
+    t.set_position(None);
+    for (_, item) in t.iter_mut() {
+        match item {
+            Item::Table(sub) => clear_positions(sub),
+            Item::ArrayOfTables(aot) => aot.iter_mut().for_each(clear_positions),
+            _ => {}
+        }
+    }
 }
 
 /// Writes nested plain tables (`match`, `bus`, `cable`) inline, the way the
@@ -331,6 +393,13 @@ fn inline_subtables(t: &mut Table) {
             let mut sub = sub.clone();
             inline_subtables(&mut sub);
             *item = Item::Value(toml_edit::Value::InlineTable(sub.into_inline_table()));
+        }
+    }
+    // A former `[header]` key has no space before `=`; use the default.
+    let keys: Vec<String> = t.iter().map(|(k, _)| k.to_owned()).collect();
+    for k in keys {
+        if let Some(mut key) = t.key_mut(&k) {
+            key.leaf_decor_mut().clear();
         }
     }
 }

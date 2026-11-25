@@ -176,3 +176,30 @@ fn replacing_the_file_keeps_the_given_text_and_checks_the_revision() {
     assert_eq!(bad[0].code, "E_CONFIG_UNKNOWN_KEY");
     assert_eq!(s.config().junction[1].name, "OBS");
 }
+
+#[test]
+fn new_entries_are_written_without_defaults() {
+    let mut s = store();
+    let text = write(&mut s, |c| {
+        let mut j = c.junction[1].clone();
+        j.id = "cable".into();
+        j.name = "Cable".into();
+        j.kind = junc_core::model::Kind::Cable;
+        let mut i = c.junction[0].input[0].clone();
+        i.volume = 100;
+        j.input.push(i);
+        j.cable = Some(junc_core::model::Cable {
+            to: junc_core::model::Match {
+                binary: Some("obs".into()),
+                ..Default::default()
+            },
+        });
+        c.junction.push(j);
+    });
+    let tail = &text[text.find("id = \"cable\"").expect("new entry")..];
+    assert_eq!(
+        tail,
+        "id = \"cable\"\nname = \"Cable\"\nkind = \"cable\"\ncable = { to = { binary = \"obs\" } }\n\n\
+         [[junction.input]]\nid = \"spotify\"\nmatch = { binary = \"spotify\" }\n"
+    );
+}
