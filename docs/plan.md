@@ -188,9 +188,10 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
 - [x] **A14** [auto] Nesting with cycle detection. Req: F2. Acceptance: nested
   depth 1–4 works; a cycle is rejected with `E_CYCLE` before any change.
   Done 2026-11-25: nesting and cycle validation already existed; A14 proves them. Planner on the mock: chains of depth 1–4 converge in ≤ 3 rounds with every level linked and active. CLI on the mock daemon: a loop via `input add --junction`, via `apply`, via `apply --dry-run` and via a hand edit is refused with `E_CONFIG_CYCLE` (`a → b → a`), the file and revision unchanged, and the hand edit leaves the last good config in use. Live: seeded noise through five Junctions (four levels) arrives bit-exact (70 208 frames). The code is `E_CONFIG_CYCLE`, as for every config error.
-- [ ] **A15** [auto] `juncd.service`, D-Bus activation, `junc service`,
+- [x] **A15** [auto] `juncd.service`, D-Bus activation, `junc service`,
   sd_notify. Req: F9. Acceptance: in a systemd-user container, Junctions exist
   after login with no GUI; restore < 1 s for 10 Junctions.
+  Done 2026-11-25: `packaging/systemd/juncd.service` (`Type=notify`, after PipeWire, no restart for unfixable exits) and the D-Bus activation file; juncd sends `READY=1` and a status line without libsystemd; `junc service enable|disable|status`. CI boots the Arch image with systemd as PID 1 on both arches: a lingering login with ten Junctions and no GUI has them routed 230–300 ms after login (juncd's own restore 17–40 ms), the unit verifies, D-Bus activation brings juncd back when stopped, `junc service` works, and a second login restores again. Found and fixed: juncd took its bus name before publishing its state, so the call that activated it saw an empty daemon; `doctor` and `service status` started juncd by asking about it.
 - [ ] **A16** [auto] Layer-2 integration suite in CI using the validation
   `ci-config` (fake devices, no bluez/logind). Req: F1–F5, F9, F10, F16,
   F17. Acceptance: runs on every PR in < 10 min on both arches.
