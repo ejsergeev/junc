@@ -196,10 +196,11 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   `ci-config` (fake devices, no bluez/logind). Req: F1–F5, F9, F10, F16,
   F17. Acceptance: runs on every PR in < 10 min on both arches.
   Done 2026-11-25: the suite (`scripts/ci/live-pipewire.sh`, validation `ci-config`) now also proves F3/F4 channel placement (4-ch Bus, Input on ch 3–4 bit-exact, ch 1–2 silent), recovery from a PipeWire restart (rebuilt in 72–79 ms in CI), F10 with 60 app restarts (p95 6–8 ms in CI) and 10 device re-plugs, and visibility to PulseAudio, JACK and native clients; every test cleans up after itself; architecture §11.2 maps each requirement to its test. In CI the suite takes 23–25 s and the whole check job 3–5 min on both arches; CI fails if the suite reaches 10 min.
-- [ ] **A17** [auto] Port `bench/` to drive the real `juncd`; daemon perf
+- [x] **A17** [auto] Port `bench/` to drive the real `juncd`; daemon perf
   gates with a stored baseline (PSS, wakeups, re-link, recovery, CLI latency,
   binary size, 0 extra quanta, bit-exact). Req: PRD performance. Acceptance:
   gate fails on an injected regression.
+  Done 2026-11-25: `crates/junc-bench` drives the real juncd (release, private D-Bus, ten Junctions, isolated PipeWire) and `scripts/ci/bench.sh` gates every PR against `bench/thresholds.toml` and per-arch baselines from the CI runners; CI checks the gate fails when a regression is injected. Found on the way: the Junction adds 0 frames (synchronous JACK clients, as in the validation); timing `pw-cat` streams reports 2048–4096 samples for any plain node and is not a latency measure. PipeWire restart recovery is ~8 ms of juncd's own work but 190–250 ms in CI and ~1.3 s locally from PipeWire's start, mostly WirePlumber; the gate takes juncd's share against the 1 s target and tracks the total. juncd's PSS on the aarch64 runner was 9.8–11.5 MB because glibc arenas of its helper threads were backed by huge pages; one malloc arena brings it to 5.5 MB.
 - [ ] **A18** [auto] *parallel* Skill draft: `SKILL.md`, `recipes.md`,
   `troubleshooting.md`, `reference.md` generator, `skill-check`, `junc skill
   link/unlink`. Req: F25. Acceptance: skill-check green; a coding agent with
