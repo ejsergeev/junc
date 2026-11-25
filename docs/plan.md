@@ -185,8 +185,9 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
 - [x] **A13** [auto] Cable: one app → another, target app's capture linked.
   Req: F5. Acceptance: layer-2 test with two `pw-cat` clients, bit-exact.
   Done 2026-11-25: spike S11 showed that a JUNC link into the recording app is mixed with WirePlumber's default-mic link, so Cables now set the target app's `target.object` to the Cable and WirePlumber does the linking (new `Action::SetTarget`, stream targets in the graph model from the `default` metadata). The reconciler tracks what it sent, holds a stream the user moves elsewhere (`link_overridden`, `cable/target/<serial>`), and returns only its own streams to the default when the Cable goes. Tests: planner and reconciler on the mock (target set, override held, Restore, cleanup leaves the user's own choice); live: the recording `pw-cat` is fed by the Cable alone, and 70 208 frames of noise arrive bit-exact (the last partial buffer is never played by `pw-cat` itself and arrives as silence).
-- [ ] **A14** [auto] Nesting with cycle detection. Req: F2. Acceptance: nested
+- [x] **A14** [auto] Nesting with cycle detection. Req: F2. Acceptance: nested
   depth 1–4 works; a cycle is rejected with `E_CYCLE` before any change.
+  Done 2026-11-25: nesting and cycle validation already existed; A14 proves them. Planner on the mock: chains of depth 1–4 converge in ≤ 3 rounds with every level linked and active. CLI on the mock daemon: a loop via `input add --junction`, via `apply`, via `apply --dry-run` and via a hand edit is refused with `E_CONFIG_CYCLE` (`a → b → a`), the file and revision unchanged, and the hand edit leaves the last good config in use. Live: seeded noise through five Junctions (four levels) arrives bit-exact (70 208 frames). The code is `E_CONFIG_CYCLE`, as for every config error.
 - [ ] **A15** [auto] `juncd.service`, D-Bus activation, `junc service`,
   sd_notify. Req: F9. Acceptance: in a systemd-user container, Junctions exist
   after login with no GUI; restore < 1 s for 10 Junctions.
