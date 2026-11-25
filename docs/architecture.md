@@ -1327,23 +1327,37 @@ Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 
 ### 11.2 Daemon integration scenarios (layer 2)
 
-Reusing `junc-validation/bench`: `pw-session.sh` (start/stop/restart; systemd
-mode on real machines), `apps.sh` (fake app streams, churn), `pwobs` (an
-independent observer timing globals), `run-bench.sh` (rewritten to drive the
-real `juncd`).
+`scripts/ci/live-pipewire.sh` starts a headless PipeWire + WirePlumber +
+pipewire-pulse with the validation `ci-config` (null-audio fake devices,
+no bluez/logind), runs the live tests of `junc-pw`, `juncd` and `junc-cli`
+against it one at a time, and stops it. Every live test removes what it
+created, so tests that time things run on a clean graph. CI runs it on
+every PR on x86_64 and aarch64 and fails if it takes 10 minutes or more
+(about 20–40 s today). Systemd itself is covered by
+`scripts/ci/systemd-user.sh` (§3.14).
 
-- F1/F2/F4: create Junction, add app + device + monitor + nested Junction;
-  verify ports and links; pulse (`pactl`), JACK (`jack_lsp` via `pw-jack`) and
-  native (`pw-cli`) all see the Junction.
-- Bit-exact: white noise at unity through Input → Bus → Listen, compare.
-- F10: 60 app restarts, 10 device remove/re-add; ≥ 99 % links restored
-  (target 100 %), re-link < 100 ms p95.
-- F17: a foreign tool (script with `pw-link`) adds/removes links; JUNC never
-  touches them; removal of a JUNC link raises `link_overridden`.
-- F16: default set/restore, including restore target missing.
-- F20: counter signal continuity across daemon re-exec and SIGKILL+restart.
-- F22: hand edit valid/invalid; last good kept; diagnostics line numbers.
-- Recovery: PipeWire restart < 1 s, 100 % links.
+As built (A16), requirement → test (`crates/<crate>/tests/<file>`):
+
+| Req | Scenario | Test |
+| --- | --- | --- |
+| F1 | Create, route, disable, delete through the CLI | `junc-cli/cli.rs` `live_smoke` |
+| F1 | A Junction is a device for PulseAudio (`pactl`), JACK (`pw-jack jack_lsp`) and native (`pw-cli`) apps | `juncd/live.rs` `every_audio_api_sees_a_junction` |
+| F1/F9 | Build, adopt after restart, clean up | `junc-pw/live.rs` `builds_adopts_and_cleans_up_a_junction` |
+| F2 | Four levels of nesting, noise bit-exact end to end | `juncd/live.rs` `nesting_four_deep_is_bit_exact` |
+| F3/F4 | 4-ch Bus, Input linked to ch 3–4 only: bit-exact there, ch 1–2 silent | `juncd/live.rs` `custom_links_place_an_input_on_chosen_bus_channels` |
+| F4 | Mono device → default mapping 1→1, 1→2 | `juncd/dbus.rs` `live_statuses_and_graph_changed`, `junc-cli/cli.rs` `live_smoke` |
+| F5 | Cable between two apps, recorder fed by the Cable alone, bit-exact | `juncd/live.rs` `cable_delivers_one_app_to_another_bit_exact` |
+| F9 | Ten Junctions restored < 1 s; restart adopts without recreating | `juncd/live.rs` `ten_junctions_restore_in_under_a_second` |
+| F10 | 60 app restarts re-linked, p95 < 100 ms | `juncd/live.rs` `relinks_on_churn_and_does_not_fight_overrides` |
+| F10 | A device unplugged and plugged back 10 times, re-linked every time | `juncd/live.rs` `a_device_that_comes_and_goes_is_relinked_every_time` |
+| F16 | Default input set, restored, cleared; Listen follows the default output | `juncd/live.rs` `default_input_set_restored_and_cleared`, `listen_default_follows_the_system_output` |
+| F17 | A JUNC link removed by another tool is reported, not recreated; foreign links untouched | `juncd/live.rs` `relinks_on_churn_and_does_not_fight_overrides` |
+| F22 | Hand edits applied live; a bad edit keeps the last good config | `juncd/live.rs` `hand_edits_apply_live_and_bad_edits_keep_the_last_good_config` |
+| F25 | A dry run changes no node, link or file; doctor sees a healthy session | `junc-cli/cli.rs` `live_dry_run_changes_nothing_and_doctor_is_happy` |
+| §3.6 | PipeWire restarts: Junctions rebuilt (≈ 0.3 s after PipeWire is back) | `juncd/live.rs` `junctions_come_back_after_pipewire_restarts` |
+
+Still to come: F20 signal continuity across re-exec (B6) and the long
+nightly soak.
 
 ### 11.3 GUI tests
 
