@@ -356,36 +356,42 @@ pub struct Server {
 }
 
 impl Server {
-    /// Connects to the session bus, serves the daemon object and takes the
-    /// well-known name. Fails if another juncd already owns it.
-    pub fn start(dispatch: Dispatch) -> zbus::Result<Self> {
+    /// Connects to the session bus, serves the daemon and Junction objects
+    /// with `initial` as their state, and only then takes the well-known
+    /// name, so the first call (often the one that activated the daemon)
+    /// never sees an empty daemon. Fails if another juncd owns the name.
+    pub fn start(dispatch: Dispatch, initial: Shared) -> zbus::Result<Self> {
         let shared = SharedRef::default();
         let iface = DaemonIface {
             dispatch: dispatch.clone(),
             shared: shared.clone(),
         };
-        let conn = zbus::block_on(async {
-            let conn = zbus::connection::Builder::session()
+        let conn = zbus::block_on(
+            zbus::connection::Builder::session()
                 .serve_at(ROOT_PATH, iface)
-                .build()
-                .await?;
-            // Explicit DO_NOT_QUEUE: the builder's default flags queue a
-            // second daemon behind the first instead of failing.
-            let reply = conn
-                .request_name_with_flags(BUS_NAME, RequestNameFlags::DO_NOT_QUEUE)
-                .await?;
-            match reply {
-                RequestNameReply::PrimaryOwner | RequestNameReply::AlreadyOwner => Ok(conn),
-                _ => Err(zbus::Error::NameTaken),
-            }
-        })?;
-        Ok(Self {
+                .build(),
+        )?;
+        let mut server = Self {
             conn,
             dispatch,
             shared,
             published: Shared::default(),
             generation: 0,
-        })
+        };
+        server.publish(initial)?;
+        zbus::block_on(async {
+            // Explicit DO_NOT_QUEUE: the builder's default flags queue a
+            // second daemon behind the first instead of failing.
+            let reply = server
+                .conn
+                .request_name_with_flags(BUS_NAME, RequestNameFlags::DO_NOT_QUEUE)
+                .await?;
+            match reply {
+                RequestNameReply::PrimaryOwner | RequestNameReply::AlreadyOwner => Ok(()),
+                _ => Err(zbus::Error::NameTaken),
+            }
+        })?;
+        Ok(server)
     }
 
     fn emitter(&self, path: &str) -> zbus::Result<SignalEmitter<'static>> {

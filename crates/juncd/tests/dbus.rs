@@ -45,6 +45,14 @@ fn tmp(tag: &str) -> PathBuf {
     dir
 }
 
+/// Kills a process we did not spawn.
+struct KillPid(u32);
+impl Drop for KillPid {
+    fn drop(&mut self) {
+        let _ = Command::new("kill").arg(self.0.to_string()).status();
+    }
+}
+
 /// A private session bus, or `None` when `dbus-daemon` is not installed.
 fn private_bus() -> Option<(Kill, String)> {
     let mut child = Command::new("dbus-daemon")
@@ -447,4 +455,101 @@ fn introspection_xml_is_up_to_date() {
         "{} is out of date; run JUNC_BLESS=1 cargo test -p juncd --test dbus introspection",
         file.display()
     );
+}
+
+/// The shipped activation file starts juncd on the first call (the CLI or
+/// GUI never has to start it).
+#[test]
+fn the_activation_file_starts_juncd_on_demand() {
+    let dir = tmp("activate");
+    std::fs::write(dir.join("junctions.toml"), CONFIG).expect("config");
+    let services = dir.join("services");
+    std::fs::create_dir_all(&services).expect("dir");
+    let shipped = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packaging/dbus/io.github.ejsergeev.Junc1.service"),
+    )
+    .expect("activation file");
+    assert!(shipped.contains("Exec=/usr/bin/juncd\n"), "{shipped}");
+    let exec = format!(
+        "Exec={} --config {} --state-dir {}\n",
+        env!("CARGO_BIN_EXE_juncd"),
+        dir.join("junctions.toml").display(),
+        dir.display()
+    );
+    std::fs::write(
+        services.join("io.github.ejsergeev.Junc1.service"),
+        shipped.replace("Exec=/usr/bin/juncd\n", &exec),
+    )
+    .expect("write");
+    let conf = dir.join("bus.conf");
+    std::fs::write(
+        &conf,
+        format!(
+            r#"<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <type>session</type>
+  <listen>unix:dir={}</listen>
+  <servicedir>{}</servicedir>
+  <policy context="default">
+    <allow send_destination="*" eavesdrop="true"/>
+    <allow eavesdrop="true"/>
+    <allow own="*"/>
+  </policy>
+</busconfig>
+"#,
+            dir.display(),
+            services.display()
+        ),
+    )
+    .expect("bus config");
+    let Ok(mut child) = Command::new("dbus-daemon")
+        .arg(format!("--config-file={}", conf.display()))
+        .args(["--nofork", "--nopidfile", "--print-address=1"])
+        // Activated services inherit this: no PipeWire for the daemon.
+        .env("PIPEWIRE_RUNTIME_DIR", dir.join("run"))
+        .stdout(Stdio::piped())
+        // ...and these: keep them off the test's output.
+        .stderr(Stdio::null())
+        .spawn()
+    else {
+        eprintln!("skipped: no dbus-daemon");
+        return;
+    };
+    let mut line = String::new();
+    BufReader::new(child.stdout.take().expect("stdout"))
+        .read_line(&mut line)
+        .expect("address");
+    let _bus = Kill(child);
+    let address = line.trim().to_owned();
+
+    zbus::block_on(async {
+        let conn = zbus::connection::Builder::address(address.as_str())
+            .build()
+            .await
+            .expect("connect");
+        // No daemon yet; the call itself starts it.
+        let d = DaemonProxy::builder(&conn)
+            .cache_properties(CacheProperties::No)
+            .build()
+            .await
+            .expect("proxy");
+        let t = Instant::now();
+        let revision = d.revision().await.expect("activated");
+        eprintln!("activation answered after {:?}", t.elapsed());
+        // The activated daemon is the bus's child, not ours: stop it
+        // whatever the assertions below say.
+        let dbus = zbus::fdo::DBusProxy::new(&conn).await.expect("dbus");
+        let name = zbus::names::BusName::try_from(junc_ipc::BUS_NAME).expect("name");
+        let pid = dbus
+            .get_connection_unix_process_id(name)
+            .await
+            .expect("pid");
+        let _stop = KillPid(pid);
+        // The first call already sees the config, not an empty daemon.
+        assert_eq!(revision, 1);
+        assert_eq!(d.junctions().await.expect("junctions").len(), 1);
+    });
+    let _ = std::fs::remove_dir_all(&dir);
 }

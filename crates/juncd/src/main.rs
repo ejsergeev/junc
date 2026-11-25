@@ -236,6 +236,29 @@ fn plan_json(old: &Config, new: &Config, p: &Plan, graph: Option<&Graph>) -> Str
     json(&junc_ipc::plan::view(old, new, p, graph))
 }
 
+/// What D-Bus clients see: properties and Junction views.
+fn shared_of(
+    phase: &str,
+    store: &Store,
+    statuses: &[EntityStatus],
+    graph: Option<&Graph>,
+) -> Shared {
+    Shared {
+        state: phase.to_owned(),
+        revision: store.revision(),
+        config_error: store.error().map_or_else(String::new, |d| {
+            json(&d.iter().map(view::Diag::from).collect::<Vec<_>>())
+        }),
+        junctions: store
+            .config()
+            .junction
+            .iter()
+            .map(|j| view::junction(j, statuses, graph))
+            .collect(),
+        capture_apps: view::capture_apps(statuses, graph),
+    }
+}
+
 impl Daemon {
     /// Reconciles and publishes; returns the plan that ran, if any.
     fn reconcile(&mut self, backend: &PwBackend) -> Option<Plan> {
@@ -292,22 +315,7 @@ impl Daemon {
     }
 
     fn shared(&self) -> Shared {
-        let graph = self.graph.as_ref();
-        Shared {
-            state: self.phase.to_owned(),
-            revision: self.store.revision(),
-            config_error: self.store.error().map_or_else(String::new, |d| {
-                json(&d.iter().map(view::Diag::from).collect::<Vec<_>>())
-            }),
-            junctions: self
-                .store
-                .config()
-                .junction
-                .iter()
-                .map(|j| view::junction(j, &self.statuses, graph))
-                .collect(),
-            capture_apps: view::capture_apps(&self.statuses, graph),
-        }
+        shared_of(self.phase, &self.store, &self.statuses, self.graph.as_ref())
     }
 
     fn publish(&mut self) {
@@ -593,7 +601,8 @@ fn main() -> ExitCode {
             // If the main loop is gone, dropping `reply` fails the call.
             let _ = tx.send(Msg::Request(req, reply));
         });
-        match Server::start(dispatch) {
+        let initial = shared_of("starting", &store, &[], None);
+        match Server::start(dispatch, initial) {
             Ok(s) => Some(s),
             Err(e) => {
                 log(&format!(
