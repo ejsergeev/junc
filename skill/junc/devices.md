@@ -50,9 +50,19 @@ speaker protection.
 
 ## Bluetooth headsets
 
-A headset's microphone only exists in its call profile (HFP/HSP), which
-lowers playback quality; in high-quality playback (A2DP) there is no mic.
-Tell the user this before using a Bluetooth mic.
+A headset's microphone works only in its call profile (HFP/HSP), which
+lowers playback quality. In high-quality playback (A2DP) the mic is still
+listed (`bluez_input.<address>`), and recording from it makes the system
+switch the headset to the call profile.
+
+Candidates and `devices` carry `bluetooth`: `profile`, `mode`
+(`playback` or `call`), `call_codec` and `call_quality` (`narrowband`,
+`wideband`, `super-wideband`). When `switches_to_call` is true, tell the
+user before adding the mic: their music or call audio in the headset
+drops to call quality while the Junction uses it. Offer another mic if
+they have one. `junc input add` repeats the warning (`"warning":
+"bluetooth_call_profile"` in JSON). JUNC never switches the headset's
+profile itself.
 
 ## Apple Silicon (Asahi Linux)
 
