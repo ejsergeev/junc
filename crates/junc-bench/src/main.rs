@@ -30,7 +30,8 @@ struct Results {
 fn usage() -> ExitCode {
     eprintln!(
         "usage: junc-bench run [--out FILE] [--quick]\n       \
-         junc-bench compare RESULTS --baseline FILE --thresholds FILE [--inject metric=factor]…"
+         junc-bench compare RESULTS --baseline FILE --thresholds FILE [--inject metric=factor]…\n       \
+         junc-bench relink APP JUNCTION INPUT [N]"
     );
     ExitCode::from(2)
 }
@@ -141,11 +142,27 @@ fn compare_cmd(args: &[String]) -> Result<bool, String> {
     Ok(verdicts.iter().all(|v| v.ok))
 }
 
+/// `junc-bench relink APP JUNCTION INPUT [N]`: re-link times against the
+/// juncd already running in this session (the owner's laptop).
+fn relink_cmd(args: &[String]) -> Result<bool, String> {
+    let [app, junction, input, rest @ ..] = args else {
+        return Err("usage: junc-bench relink APP JUNCTION INPUT [N]".into());
+    };
+    let n = rest
+        .first()
+        .map_or(Ok(30), |s| s.parse())
+        .map_err(|_| "N must be a number")?;
+    let (p50, p95, max) = run::relink_only(app, junction, input, n)?;
+    println!("re-link over {n} app restarts: p50 {p50:.1} ms, p95 {p95:.1} ms, max {max:.1} ms");
+    Ok(p95 < 100.0)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
         Some("run") => run_cmd(&args[1..]),
         Some("compare") => compare_cmd(&args[1..]),
+        Some("relink") => relink_cmd(&args[1..]),
         _ => return usage(),
     };
     match result {

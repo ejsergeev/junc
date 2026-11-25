@@ -340,6 +340,75 @@ fn bit_exact(dir: &Path) -> Result<f64, String> {
     Ok(if exact { 1.0 } else { 0.0 })
 }
 
+/// Starts and stops a playing app `n` times; each time, the milliseconds
+/// from the app's node appearing to the Junction's two links from it.
+fn churn(
+    rx: &Receiver<Event>,
+    g: &mut Graph,
+    app: &str,
+    junction: &str,
+    input: &str,
+    n: usize,
+) -> Result<Vec<f64>, String> {
+    let serials = |g: &Graph| -> Vec<u32> {
+        g.nodes
+            .values()
+            .filter(|n| n.name() == app)
+            .filter_map(|n| n.props.number("object.serial"))
+            .collect()
+    };
+    let prefix = format!("in/{input}/");
+    let mut out = Vec::new();
+    for i in 0..n {
+        let old = serials(g);
+        let proc = pw_cat(
+            &["-p"],
+            &format!("{{ node.name={app} application.name={app} }}"),
+            Path::new("/dev/zero"),
+        )?;
+        let seen = wait_for(rx, g, Duration::from_secs(5), |g| {
+            serials(g).iter().any(|s| !old.contains(s))
+        })
+        .ok_or(format!("restart {i}: app never appeared"))?;
+        let linked = wait_for(rx, g, Duration::from_secs(2), |g| {
+            refs(g, junction)
+                .iter()
+                .filter(|r| r.starts_with(&prefix))
+                .count()
+                == 2
+        })
+        .ok_or(format!("restart {i}: not re-linked within 2 s"))?;
+        out.push(ms(linked - seen));
+        drop(proc);
+    }
+    Ok(out)
+}
+
+/// Re-link times of an already running juncd (the owner's laptop, A19):
+/// `junction`'s Input `input` must match the app `app`. Returns
+/// (p50, p95, max) in ms.
+pub fn relink_only(
+    app: &str,
+    junction: &str,
+    input: &str,
+    n: usize,
+) -> Result<(f64, f64, f64), String> {
+    let (tx, rx) = channel();
+    let _observer = PwBackend::spawn(move |e| {
+        let _ = tx.send(e);
+    })
+    .map_err(|e| e.to_string())?;
+    let mut g = Graph::default();
+    wait_for(&rx, &mut g, Duration::from_secs(5), |g| !g.nodes.is_empty())
+        .ok_or("no PipeWire graph")?;
+    let mut v = churn(&rx, &mut g, app, junction, input, n)?;
+    Ok((
+        percentile(&mut v, 0.5),
+        percentile(&mut v, 0.95),
+        percentile(&mut v, 1.0),
+    ))
+}
+
 /// Runs everything and returns the metrics.
 pub fn run(o: &Opts) -> Result<Metrics, String> {
     let mut m = Metrics::new();
@@ -455,36 +524,7 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
     routed_again.ok_or("not routed after the CLI calls")?;
 
     // Re-link: an app that restarts over and over.
-    let serials = |g: &Graph| -> Vec<u32> {
-        g.nodes
-            .values()
-            .filter(|n| n.name() == "bench-app")
-            .filter_map(|n| n.props.number("object.serial"))
-            .collect()
-    };
-    let mut relink = Vec::new();
-    for i in 0..o.churn {
-        let old = serials(&g);
-        let app = pw_cat(
-            &["-p"],
-            "{ node.name=bench-app application.name=bench-app }",
-            Path::new("/dev/zero"),
-        )?;
-        let seen = wait_for(&rx, &mut g, Duration::from_secs(5), |g| {
-            serials(g).iter().any(|s| !old.contains(s))
-        })
-        .ok_or(format!("restart {i}: app never appeared"))?;
-        let linked = wait_for(&rx, &mut g, Duration::from_secs(2), |g| {
-            refs(g, "b9")
-                .iter()
-                .filter(|r| r.starts_with("in/app/"))
-                .count()
-                == 2
-        })
-        .ok_or(format!("restart {i}: not re-linked within 2 s"))?;
-        relink.push(ms(linked - seen));
-        drop(app);
-    }
+    let mut relink = churn(&rx, &mut g, "bench-app", "b9", "app", o.churn)?;
     m.insert("relink_p95_ms".into(), percentile(&mut relink, 0.95));
 
     // Recovery: PipeWire restarts under the daemon.
