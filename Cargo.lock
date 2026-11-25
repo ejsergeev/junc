@@ -2643,8 +2643,11 @@ dependencies = [
 name = "junc-gui"
 version = "0.1.0"
 dependencies = [
+ "futures-util",
  "i-slint-backend-testing",
  "inotify",
+ "junc-ipc",
+ "serde_json",
  "slint",
  "slint-build",
  "toml",

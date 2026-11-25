@@ -66,3 +66,19 @@ pub fn apply(window: &AppWindow, t: &theme::Tokens) {
         g.set_font_base(t.font_size as f32);
     }
 }
+
+/// Shows a snapshot: the daemon's state and the sidebar rows.
+pub fn show(window: &AppWindow, s: &crate::state::Snapshot) {
+    let rows: Vec<JunctionItem> = s
+        .junctions
+        .iter()
+        .map(|r| JunctionItem {
+            id: r.id.as_str().into(),
+            name: r.name.as_str().into(),
+            enabled: r.enabled,
+            status: r.status.as_str().into(),
+        })
+        .collect();
+    window.set_junctions(slint::ModelRc::new(slint::VecModel::from(rows)));
+    window.set_daemon_state(s.daemon.as_str().into());
+}

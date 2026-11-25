@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 //! JUNC graphical interface (Slint): starts the window, follows the
-//! Omarchy theme live. The logic is in the library.
+//! Omarchy theme and juncd live. The logic is in the library.
 
 #![forbid(unsafe_code)]
 
-use junc_gui::{theme, theme_service, ui};
+use junc_gui::{daemon, state, theme, theme_service, ui};
 use slint::ComponentHandle;
 
 fn main() -> Result<(), slint::PlatformError> {
@@ -26,5 +26,16 @@ fn main() -> Result<(), slint::PlatformError> {
             });
         });
     }
+    let weak = window.as_weak();
+    // Without a session bus the window shows juncd as unreachable.
+    let _ = daemon::follow(None, move |d| {
+        let snapshot = state::snapshot(d.as_ref());
+        let weak = weak.clone();
+        let _ = slint::invoke_from_event_loop(move || {
+            if let Some(w) = weak.upgrade() {
+                ui::show(&w, &snapshot);
+            }
+        });
+    });
     window.run()
 }
