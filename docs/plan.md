@@ -129,12 +129,13 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
 - [ ] **A2** [auto] Spikes S1–S5 and S8 (`architecture.md` §12), each
   ending in a note and, if needed, a design change. Req: F1, F7, F11, F17,
   F20. Acceptance: every spike has a recorded pass or chosen fallback.
-- [ ] **A3** [auto] `junc-core` model + config: TOML load/save with
+- [x] **A3** [auto] `junc-core` model + config: TOML load/save with
   `toml_edit`, schema v1 types, JSON Schema generation (generated file in
   its own commit), validator with file/line/column diagnostics and
   suggestions, migration framework with a v0→v1 dummy fixture. Req: F22,
   F25. Acceptance: unit tests over valid/invalid fixtures; schema freshness
   check in CI.
+  Done 2026-11-25: model, loader with file/line/column diagnostics and hints, migrations (v0→v1 keeps comments), JSON Schema with ranges and id pattern, 20 invalid + 3 valid fixtures; every code tested.
 - [ ] **A4** [auto] Graph model + identity matcher (apps by binary/name/role,
   devices by `node.name` with fallbacks, monitors, Junctions). Req: F2, F10.
   Acceptance: matcher tests over recorded `pw-dump` fixtures incl. browsers
