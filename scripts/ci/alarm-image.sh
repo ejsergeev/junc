@@ -16,7 +16,8 @@ gpg --batch --status-fd 1 --verify "$work/rootfs.tar.gz.sig" "$work/rootfs.tar.g
 docker import "$work/rootfs.tar.gz" junc-ci-alarm:base
 docker build -t junc-ci-alarm - <<'DOCKERFILE'
 FROM junc-ci-alarm:base
-RUN pacman-key --init && pacman-key --populate archlinuxarm \
- && sed -i 's/^CheckSpace/#CheckSpace/' /etc/pacman.conf \
+# pacman 7's Landlock sandbox cannot be applied inside docker build.
+RUN sed -i -e 's/^CheckSpace/#CheckSpace/' -e '/^\[options\]/a DisableSandbox' /etc/pacman.conf \
+ && pacman-key --init && pacman-key --populate archlinuxarm \
  && pacman -Syu --noconfirm --needed base-devel
 DOCKERFILE
