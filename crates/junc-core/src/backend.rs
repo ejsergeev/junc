@@ -67,6 +67,9 @@ impl NodeSpec {
             ("monitor.channel-volumes", "true".to_owned()),
             ("node.autoconnect", "false".to_owned()),
             ("node.dont-reconnect", "true".to_owned()),
+            // The config owns every volume; WirePlumber would otherwise
+            // restore its own saved one over it when the node appears.
+            ("state.restore-props", "false".to_owned()),
             ("object.linger", "true".to_owned()),
             ("junc.managed", "true".to_owned()),
             ("junc.schema", "1".to_owned()),
