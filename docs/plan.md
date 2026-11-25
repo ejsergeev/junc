@@ -84,15 +84,16 @@ Tasks:
   `powertop --csv` for real wakeups. Acceptance: results in
   `docs/hardware-matrix.md`; any target missed becomes a risk below.
   Done 2026-11-25 except `powertop` (needs root; ctx-switch counts used instead): all daemon targets met in the isolated instance and the live session; live re-link p95 89 ms is close to the limit (see risks). Results in `docs/hardware-matrix.md`.
-- [ ] **0.4** [auto] Slint prototype under Hyprland: `interaction_test.sh` with
+- [x] **0.4** [auto] Slint prototype under Hyprland: `interaction_test.sh` with
   `wtype`/`ydotool`, AT-SPI dump, `perf.sh` with femtovg on the Apple GPU
   (Mesa asahi) and software renderer, cold start, CPU hidden (minimized /
   other workspace). Acceptance: numbers recorded; femtovg PSS < 80 MB or a
   renderer decision logged.
-  Partly done 2026-11-25: femtovg 88 ms cold start, 62 MB PSS, but 6.4 % CPU with meters (target 2 %, see risks); AT-SPI tree on Wayland matches the VM. Left: keyboard walk with `wtype` and focus screenshots, with the owner at the screen.
-- [ ] **0.5** [owner listens, auto drives] `orca_test.sh` under Hyprland; owner
+  Done 2026-11-25: femtovg 88 ms cold start, 62 MB PSS, but 6.4 % CPU with meters (target 2 %, see risks); AT-SPI tree on Wayland matches the VM; keyboard walk with `wtype` matches the VM (PageUp no-op, unnamed search field, invisible slider focus). Results in `bench/validation/results-m1-a11y/`.
+- [x] **0.5** [owner listens, auto drives] `orca_test.sh` under Hyprland; owner
   confirms Orca speaks switch/slider/popover. Acceptance: speech log stored,
   owner's yes/no logged.
+  Done 2026-11-25: Orca spoke every control; owner: buttons clear, switches hard to understand ("toggle button pressed"), too fast because key presses cut phrases off. → `JSwitch` on/off description is required; Orca runs use ≥ 3 s between keys.
 - [x] **0.6** [owner sudo once, auto drives] Load `snd-dummy` and `snd-aloop`
   (`pcm_substreams`, `channels` up to 32), check they appear in PipeWire with
   ACP profiles including `pro-audio`; record `pw-dump` as fixtures. Layer 4
@@ -100,17 +101,18 @@ Tasks:
   `dummy_hcd`). Acceptance: `docs/hardware-matrix.md` lists each layer as
   available/skipped with evidence.
   Done 2026-11-25: snd-dummy and snd-aloop work; Loopback offers pro-audio with 32-channel nodes; fixtures `45bed80`. Unloading needs WirePlumber stopped, so hot-plug tests switch profiles instead.
-- [ ] **0.7** [owner plugs in] Native Instruments Komplete Audio 2 (USB),
+- [x] **0.7** [owner plugs in] Native Instruments Komplete Audio 2 (USB),
   Google Pixel Buds 2a and Apple AirPods (Bluetooth), each once, Bluetooth
   in both A2DP and headset (HFP) mode. [auto] capture `pw-dump` of each as
   layer-1 fixtures (personal data such as MAC addresses stripped).
   Acceptance: fixtures committed.
+  Done 2026-11-25: Komplete Audio 2 (stereo and pro-audio, both 2 ch), AirPods (A2DP AAC, HFP mSBC), Pixel Buds 2a (A2DP AAC, HFP LC3-SWB) captured as fixtures (`3b18706`), anonymised.
 - [x] **0.8** [auto] Capture the Asahi audio topology (`pw-dump` of the DSP
   chain) as a layer-1 fixture. Acceptance: fixture committed.
   Done 2026-11-25: `1f6cb71`; raw speaker and mic-array nodes are hidden from normal clients.
-- [ ] **0.9** [auto] Update `architecture.md` and the risks below with what
+- [x] **0.9** [auto] Update `architecture.md` and the risks below with what
   step 0 found. Acceptance: `docs:` commit; owner reads it before alpha.
-  Partly done 2026-11-25: hardware matrix and risks updated; finish after 0.4, 0.5 and 0.7.
+  Done 2026-11-25: hardware matrix complete; architecture updated (Pro Audio counts from ALSA for USB, Bluetooth virtual headset mic, Asahi speakers hidden, profile-based hot-plug, Orca pacing, meter repaints) in `f7ce832`.
 
 ---
 
