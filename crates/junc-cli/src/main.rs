@@ -11,6 +11,7 @@
 #![forbid(unsafe_code)]
 
 mod client;
+mod doctor;
 mod edit;
 mod human;
 
@@ -20,7 +21,8 @@ use edit::{End, Result, Source, usage};
 use junc_ipc::ErrorBody;
 use junc_l10n::{tr, trf};
 use serde_json::{Value, json};
-use std::io::{IsTerminal, Write};
+use std::io::{IsTerminal, Read, Write};
+use std::path::PathBuf;
 use std::process::ExitCode;
 
 #[derive(Debug, Parser)]
@@ -138,6 +140,39 @@ enum Cmd {
     /// Add or remove Listen outputs.
     #[command(subcommand)]
     Listen(ListenCmd),
+    /// Everything an agent needs in one JSON document.
+    Describe,
+    /// Print the JSON Schema of junctions.toml.
+    Schema {
+        /// Config schema version.
+        #[arg(long = "version", default_value_t = 1)]
+        schema_version: u32,
+    },
+    /// Find, check or edit the config file.
+    #[command(subcommand)]
+    Config(ConfigCmd),
+    /// Apply a whole config file (`-` reads stdin).
+    Apply {
+        file: PathBuf,
+        /// Show what would change; change nothing.
+        #[arg(long)]
+        dry_run: bool,
+        /// Refuse if the config changed since this revision.
+        #[arg(long, value_name = "N")]
+        expect_revision: Option<u64>,
+    },
+    /// Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock and juncd.
+    Doctor,
+}
+
+#[derive(Debug, Subcommand)]
+enum ConfigCmd {
+    /// Print where the config file is.
+    Path,
+    /// Check a config file without applying it (default: the one in use).
+    Validate { file: Option<PathBuf> },
+    /// Open the config in $VISUAL or $EDITOR, then check it.
+    Edit,
 }
 
 #[derive(Debug, Subcommand)]
@@ -287,9 +322,150 @@ fn confirm(question: &str) -> bool {
         && matches!(answer.trim(), "y" | "Y" | "yes" | "Yes")
 }
 
+/// The config file juncd uses, or the default location.
+fn config_path(c: Option<&Client>) -> PathBuf {
+    if let Some(d) = c.and_then(|c| c.describe().ok()) {
+        return PathBuf::from(d.config_file);
+    }
+    std::env::var_os("XDG_CONFIG_HOME")
+        .map(PathBuf::from)
+        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
+        .unwrap_or_default()
+        .join("junc/junctions.toml")
+}
+
+fn read_input(file: &std::path::Path) -> Result<String> {
+    let mut text = String::new();
+    let r = if file.as_os_str() == "-" {
+        std::io::stdin().read_to_string(&mut text).map(|_| ())
+    } else {
+        std::fs::read_to_string(file).map(|t| text = t)
+    };
+    r.map(|()| text).map_err(|e| {
+        ErrorBody::new(
+            "E_USAGE",
+            trf("cannot read {f}: {e}", &[("f", &file.display()), ("e", &e)]),
+            Some("Check the path."),
+        )
+    })
+}
+
+fn validate(file: &std::path::Path) -> Result<Done> {
+    let name = file.display().to_string();
+    let text = read_input(file)?;
+    match junc_core::config::load(&text, &name) {
+        Ok(l) => {
+            let warnings: Vec<junc_ipc::view::Diag> =
+                l.warnings.iter().map(junc_ipc::view::Diag::from).collect();
+            let mut out = trf("{file}: valid", &[("file", &name)]);
+            for w in &warnings {
+                out.push('\n');
+                out.push_str(&human::diag(w));
+            }
+            Ok(Done {
+                revision: None,
+                data: json!({ "file": name, "valid": true, "warnings": warnings }),
+                text: out,
+            })
+        }
+        Err(d) => Err(ErrorBody::from_diagnostics(&d)),
+    }
+}
+
+/// Commands that work without juncd.
+fn offline(cmd: &Cmd) -> Option<Result<Done>> {
+    Some(match cmd {
+        Cmd::Schema { schema_version: 1 } => {
+            let text = junc_core::schema::json_schema();
+            let data = serde_json::from_str(&text).unwrap_or(Value::Null);
+            Ok(Done {
+                revision: None,
+                data,
+                text,
+            })
+        }
+        Cmd::Schema { schema_version } => Err(usage(
+            trf(
+                "There is no config schema version {v}.",
+                &[("v", &schema_version)],
+            ),
+            "This build knows schema version 1.",
+        )),
+        Cmd::Config(ConfigCmd::Validate { file: Some(f) }) => validate(f),
+        Cmd::Doctor => {
+            let client = Client::connect().ok();
+            let checks = doctor::checks(client.as_ref());
+            let text = human::doctor(&checks);
+            Ok(Done {
+                revision: None,
+                data: json!({ "checks": checks }),
+                text,
+            })
+        }
+        _ => return None,
+    })
+}
+
 fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
+    if let Some(result) = offline(&cmd) {
+        return result;
+    }
+    if let Cmd::Config(sub) = cmd {
+        // Use juncd's path when it runs; otherwise the default one.
+        let client = Client::connect().ok();
+        let path = config_path(client.as_ref());
+        return match sub {
+            ConfigCmd::Path => Ok(Done {
+                revision: None,
+                data: json!({ "path": path }),
+                text: path.display().to_string(),
+            }),
+            ConfigCmd::Validate { .. } => validate(&path),
+            ConfigCmd::Edit => {
+                let editor = std::env::var("VISUAL")
+                    .or_else(|_| std::env::var("EDITOR"))
+                    .unwrap_or_else(|_| "nano".into());
+                let status = std::process::Command::new(&editor).arg(&path).status();
+                if !status.is_ok_and(|s| s.success()) {
+                    return Err(ErrorBody::new(
+                        "E_EDITOR",
+                        trf("{editor} did not finish cleanly", &[("editor", &editor)]),
+                        Some("Set $EDITOR to your editor."),
+                    ));
+                }
+                validate(&path)
+            }
+        };
+    }
     let c = Client::connect()?;
     match cmd {
+        Cmd::Describe => {
+            let d = c.describe()?;
+            let text = serde_json::to_string_pretty(&d).unwrap_or_default();
+            Ok(done(d.revision, json!(d), text))
+        }
+        Cmd::Apply {
+            file,
+            dry_run,
+            expect_revision,
+        } => {
+            let text = read_input(&file)?;
+            if dry_run {
+                let (_, rev) = c.get_config()?;
+                let plan = c.plan(&text)?;
+                let out = human::plan(&plan, true);
+                Ok(done(rev, json!({ "applied": false, "plan": plan }), out))
+            } else {
+                let (rev, plan) = c.apply(&text, expect_revision.unwrap_or(0))?;
+                let plan: Value = serde_json::from_str(&plan).unwrap_or(Value::Null);
+                let parsed = serde_json::from_value(plan.clone()).ok();
+                let out = parsed.map_or_else(String::new, |p| human::plan(&p, false));
+                Ok(done(rev, json!({ "applied": true, "plan": plan }), out))
+            }
+        }
+        Cmd::Schema { .. } | Cmd::Doctor | Cmd::Config(_) => {
+            unreachable!("handled above")
+        }
         Cmd::List => {
             let d = c.describe()?;
             let text = human::list(&d);

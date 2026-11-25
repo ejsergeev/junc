@@ -81,6 +81,18 @@ impl Client {
         zbus::block_on(self.daemon.apply(text, expected)).map_err(|e| failed(&e))
     }
 
+    /// Dry run of a config text against the live graph.
+    pub fn plan(&self, text: &str) -> Result<junc_ipc::plan::PlanView> {
+        let json = zbus::block_on(self.daemon.plan(text)).map_err(|e| failed(&e))?;
+        serde_json::from_str(&json).map_err(|e| {
+            ErrorBody::new(
+                "E_INTERNAL",
+                format!("unexpected answer from juncd: {e}"),
+                Some("Are junc and juncd the same version?"),
+            )
+        })
+    }
+
     pub fn create_junction(&self, name: &str) -> Result<(String, u64)> {
         let (path, rev) =
             zbus::block_on(self.daemon.create_junction(name)).map_err(|e| failed(&e))?;

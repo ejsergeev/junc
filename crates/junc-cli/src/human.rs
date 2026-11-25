@@ -251,3 +251,72 @@ pub fn error(e: &ErrorBody) -> String {
     }
     out
 }
+
+/// One diagnostic: where, what, how to fix.
+pub fn diag(d: &junc_ipc::view::Diag) -> String {
+    let at = d
+        .location
+        .as_ref()
+        .map(|l| format!("{}:{}:{}: ", l.file, l.line, l.column))
+        .unwrap_or_default();
+    let mut out = format!("{at}{}: {} [{}]", d.severity, d.message, d.code);
+    if let Some(h) = &d.hint {
+        out.push_str("\n  ");
+        out.push_str(&trf("hint: {h}", &[("h", h)]));
+    }
+    out
+}
+
+/// A plan from `apply`.
+pub fn plan(p: &junc_ipc::plan::PlanView, dry_run: bool) -> String {
+    let mut out = if dry_run {
+        tr("Dry run; nothing was changed. Applying would:").into_owned()
+    } else {
+        tr("Applied:").into_owned()
+    };
+    for s in &p.summary {
+        let _ = write!(out, "\n  • {s}");
+    }
+    if !p.actions.is_empty() {
+        out.push('\n');
+        out.push_str(&trn(
+            "{n} graph action in the first step",
+            "{n} graph actions in the first step",
+            p.actions.len() as u64,
+            &[],
+        ));
+        if !p.complete {
+            out.push_str(&tr("; links follow once the new nodes exist"));
+        }
+        out.push('.');
+    }
+    out
+}
+
+/// `junc doctor`.
+pub fn doctor(checks: &[crate::doctor::Check]) -> String {
+    use crate::doctor::Status;
+    let rows: Vec<Vec<String>> = checks
+        .iter()
+        .map(|c| {
+            let mark = match c.status {
+                Status::Ok => "✓",
+                Status::Warn => "!",
+                Status::Missing | Status::Down => "✗",
+            };
+            vec![format!("{mark} {}", c.id), c.detail.clone()]
+        })
+        .collect();
+    let table = table(&rows);
+    let mut out = String::new();
+    for (line, c) in table.lines().zip(checks) {
+        out.push_str(line);
+        out.push('\n');
+        if let Some(f) = &c.fix
+            && c.status != Status::Ok
+        {
+            let _ = writeln!(out, "    {}", trf("fix: {f}", &[("f", f)]));
+        }
+    }
+    out
+}

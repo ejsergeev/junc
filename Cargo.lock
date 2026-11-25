@@ -506,6 +506,7 @@ dependencies = [
  "junc-core",
  "junc-ipc",
  "junc-l10n",
+ "serde",
  "serde_json",
  "toml",
  "zbus",
