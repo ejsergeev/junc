@@ -153,3 +153,26 @@ fn stale_revisions_conflict() {
     assert_eq!(err[0].code, CONFLICT);
     assert_eq!(s.config().junction[1].name, "OBS Mix");
 }
+
+#[test]
+fn replacing_the_file_keeps_the_given_text_and_checks_the_revision() {
+    let mut s = store();
+    let edited = FILE.replace("name = \"OBS Mix\"", "name = \"OBS\" # shorter");
+    assert_eq!(s.replace(Some(1), &edited), Ok(2));
+    assert_eq!(s.good_text(), edited);
+    assert_eq!(s.config().junction[1].name, "OBS");
+    assert_eq!(s.reload(&edited), Reload::Unchanged);
+
+    // Comment-only replacement: same config, same revision.
+    assert_eq!(s.replace(None, &format!("# hi\n{edited}")), Ok(2));
+
+    assert_eq!(
+        s.replace(Some(1), FILE).expect_err("stale")[0].code,
+        CONFLICT
+    );
+    let bad = s
+        .replace(None, "schema = 1\nfoo = 2\n")
+        .expect_err("invalid");
+    assert_eq!(bad[0].code, "E_CONFIG_UNKNOWN_KEY");
+    assert_eq!(s.config().junction[1].name, "OBS");
+}

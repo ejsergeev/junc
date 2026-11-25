@@ -142,20 +142,7 @@ impl Store {
         expected: Option<u64>,
         new: Config,
     ) -> Result<(String, u64), Vec<Diagnostic>> {
-        if let Some(rev) = expected
-            && rev != self.revision
-        {
-            return Err(vec![
-                Diagnostic::error(
-                    CONFLICT,
-                    format!(
-                        "config changed since revision {rev} (now {})",
-                        self.revision
-                    ),
-                )
-                .with_hint("Read the config again (junc describe) and redo the change."),
-            ]);
-        }
+        self.check(expected)?;
         let old = to_value(&self.config)?;
         let target = to_value(&new)?;
         let mut doc = self.document.clone();
@@ -176,6 +163,39 @@ impl Store {
         self.error = None;
         self.revision += 1;
         Ok((text, self.revision))
+    }
+
+    /// Replaces the whole file with `text` (an agent or the CLI applying an
+    /// edited copy). The text is written as given, comments included. The
+    /// revision grows only when the config changes.
+    pub fn replace(&mut self, expected: Option<u64>, text: &str) -> Result<u64, Vec<Diagnostic>> {
+        self.check(expected)?;
+        let loaded = config::load(text, &self.file)?;
+        if loaded.config != self.config {
+            self.revision += 1;
+        }
+        self.config = loaded.config;
+        self.document = loaded.document;
+        self.good_text = text.to_owned();
+        self.last_seen = hash(text);
+        self.error = None;
+        Ok(self.revision)
+    }
+
+    fn check(&self, expected: Option<u64>) -> Result<(), Vec<Diagnostic>> {
+        match expected {
+            Some(rev) if rev != self.revision => Err(vec![
+                Diagnostic::error(
+                    CONFLICT,
+                    format!(
+                        "config changed since revision {rev} (now {})",
+                        self.revision
+                    ),
+                )
+                .with_hint("Read the config again (junc describe) and redo the change."),
+            ]),
+            _ => Ok(()),
+        }
     }
 }
 
