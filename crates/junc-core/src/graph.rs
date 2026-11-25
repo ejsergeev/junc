@@ -173,6 +173,9 @@ pub struct Port {
     pub node: u32,
     /// Direction.
     pub direction: Direction,
+    /// Position among the node's ports of this direction (`port.id`), which
+    /// is the channel order.
+    pub index: u32,
     /// `audio.channel` (FL, FR, AUX0, MONO…).
     pub channel: Option<String>,
     /// A monitor port of a sink.
@@ -288,11 +291,21 @@ impl Graph {
         it.next().is_none().then_some(first)
     }
 
-    /// Ports of a node in one direction, ordered by id.
+    /// Ports of a node in one direction, in channel order (`port.id`).
     pub fn ports_of(&self, node: u32, direction: Direction) -> impl Iterator<Item = &Port> {
-        self.ports
+        let mut ports: Vec<&Port> = self
+            .ports
             .values()
-            .filter(move |p| p.node == node && p.direction == direction)
+            .filter(|p| p.node == node && p.direction == direction)
+            .collect();
+        ports.sort_by_key(|p| (p.index, p.id));
+        ports.into_iter()
+    }
+
+    /// Port of `node` for 1-based channel `ch` in a direction.
+    pub fn channel_port(&self, node: u32, direction: Direction, ch: u8) -> Option<&Port> {
+        self.ports_of(node, direction)
+            .nth(usize::from(ch).checked_sub(1)?)
     }
 
     /// Device of a node.
@@ -337,6 +350,7 @@ impl Graph {
                             id,
                             node,
                             direction,
+                            index: props.number("port.id").unwrap_or(0),
                             channel: props.get("audio.channel").map(str::to_owned),
                             monitor: props.flag("port.monitor"),
                             name: props.get("port.name").unwrap_or("").to_owned(),
