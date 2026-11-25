@@ -276,12 +276,11 @@ A performance gate runs on every pull request.
 | Stage | Scope | State |
 | --- | --- | --- |
 | **Alpha** | `juncd`, CLI, agent skill, systemd and D-Bus integration | ✅ `v0.1.0-alpha` |
-| **Beta** | Volumes ✅, Exclusive, Pro Audio and Bluetooth handling, import of existing setups, presets and templates, desktop app and tray, Omarchy bar plugin, signed pacman repository | 🚧 in progress |
+| **Beta** | Volumes ✅, Exclusive ✅, Pro Audio and Bluetooth handling, import of existing setups, presets and templates, desktop app and tray, Omarchy bar plugin, signed pacman repository | 🚧 in progress |
 | **v1** | Translations, 24 h soak, accessibility pass, user manual, stable channel | planned |
 
 Known limitations right now:
 - No GUI yet.
-- `exclusive` is stored but not yet applied.
 - Messages are English only.
 
 The full plan, including known issues, is in [`docs/plan.md`](docs/plan.md).
