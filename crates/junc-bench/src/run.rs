@@ -359,12 +359,30 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
         ("pss_anon_kb", "Pss_Anon"),
         ("pss_file_kb", "Pss_File"),
         ("pss_shmem_kb", "Pss_Shmem"),
+        ("anon_huge_kb", "AnonHugePages"),
     ] {
         if let Some(v) = rollup_kb(pid, field) {
             m.insert(metric.into(), v);
         }
     }
     log(&format!("largest mappings: {}", top_mappings(pid)));
+    let read = |p: &str| {
+        std::fs::read_to_string(p)
+            .unwrap_or_default()
+            .trim()
+            .to_owned()
+    };
+    let threads = std::fs::read_dir(format!("/proc/{pid}/task")).map_or(0, Iterator::count);
+    let page = Command::new("getconf")
+        .arg("PAGESIZE")
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_owned())
+        .unwrap_or_default();
+    log(&format!(
+        "memory context: {threads} threads, page size {page}, THP {}, cpus {}",
+        read("/sys/kernel/mm/transparent_hugepage/enabled"),
+        std::thread::available_parallelism().map_or(0, std::num::NonZero::get)
+    ));
     let before = switches(pid);
     std::thread::sleep(Duration::from_secs(o.idle_secs));
     #[allow(clippy::cast_precision_loss)]
