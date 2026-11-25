@@ -454,22 +454,31 @@ D-Bus property with change signals, consumed by the bar plugin and the tray
 ## 4. D-Bus API v1
 
 Session bus only. Well-known name `io.github.ejsergeev.Junc1`; the trailing
-`1` is the major API version. Generated reference: `docs/dbus.md` (from the
-zbus interface definitions, checked in CI).
+`1` is the major API version. Reference with examples: `docs/dbus.md`;
+introspection XML generated from the running daemon:
+`docs/dbus/io.github.ejsergeev.Junc1.xml` (a test fails when it is stale).
+
+**Decision (A10): structured values are JSON strings, not `a{sv}`.** The
+Junction view, `Describe`, diagnostics, plans and notice bodies are JSON with
+the same shapes `junc … --json` prints (`junc-ipc::view`). One schema serves
+agents, the CLI and the GUI; `a{sv}` nesting for inputs with matchers and
+statuses would be a second, harder-to-read encoding of the same data. Simple
+values (`Revision`, `Enabled`, `Junctions`) stay native D-Bus types so
+`busctl` and property bindings work without parsing.
 
 ### 4.1 Objects
 
 | Path | Interfaces |
 | --- | --- |
-| `/io/github/ejsergeev/Junc1` | `io.github.ejsergeev.Junc1.Daemon`, `org.freedesktop.DBus.Properties`, `org.freedesktop.DBus.ObjectManager` |
-| `/io/github/ejsergeev/Junc1/junction/<id>` | `io.github.ejsergeev.Junc1.Junction` |
+| `/io/github/ejsergeev/Junc1` | `io.github.ejsergeev.Junc1.Daemon`, `org.freedesktop.DBus.Properties` |
+| `/io/github/ejsergeev/Junc1/junction/<id>` | `io.github.ejsergeev.Junc1.Junction`, `org.freedesktop.DBus.Properties` |
 
-`<id>` is the Junction id with characters outside `[A-Za-z0-9_]` encoded as
-`_xx` (hex). Inputs, Bus channels, Listen outputs and Links are not separate
-objects; they are structured properties of the Junction (keeps the object
-count and signal traffic small).
+`<id>` is the Junction id with characters outside `[A-Za-z0-9]` encoded as
+`_xx` (hex): `podcast-mix` → `podcast_2dmix`. Inputs, Listen outputs and
+Links are not separate objects; they are part of the Junction's `View`
+(keeps the object count and signal traffic small).
 
-### 4.2 `Daemon` interface
+### 4.2 `Daemon` interface (v1.0)
 
 Properties (all emit `PropertiesChanged`):
 
@@ -478,78 +487,69 @@ Properties (all emit `PropertiesChanged`):
 | `ApiVersion` | `(uu)` | (major, minor). Minor grows with additive changes. |
 | `DaemonVersion` | `s` | Package version. |
 | `State` | `s` | `starting`, `connected`, `waiting_for_pipewire` |
-| `PipeWire` | `a{sv}` | version, quantum, rate, allowed rates |
 | `Revision` | `t` | Current config revision. |
-| `ConfigStatus` | `a{sv}` | `valid` (b), `path` (s), `diagnostics` (JSON string) |
+| `ConfigError` | `s` | JSON diagnostics of an invalid file on disk; `""` when valid (the last good config stays in use). |
 | `Junctions` | `ao` | Ordered as in the config. |
 | `CaptureApps` | `as` | §3.11 |
-| `Defaults` | `a{sv}` | Current default sink/source and which Junction (if any) owns them. |
 
 Methods:
 
 | Method | Signature | Notes |
 | --- | --- | --- |
-| `Describe` | `() → s` | JSON snapshot: Junctions with live status, candidates, devices, defaults (same JSON as `junc describe --json`). |
-| `ListCandidates` | `(s kind) → s` | `kind` ∈ `inputs`, `outputs`, `apps`; JSON grouped as the picker shows them (Running apps, Hardware inputs, System audio, Junctions). |
-| `GetConfig` | `() → (s toml, t revision)` | |
+| `Describe` | `() → s` | JSON snapshot: Junctions with live status, candidates, defaults (same JSON as `junc describe --json`). |
+| `GetConfig` | `() → (s toml, t revision)` | The last good file text. |
 | `Validate` | `(s toml) → s` | JSON diagnostics; never changes anything. |
-| `Plan` | `(s toml) → s` | Dry run: JSON list of graph changes and a plain-language summary. |
-| `Apply` | `(s toml, t expected_revision) → (t revision, s plan)` | Validates, writes `junctions.toml`, reconciles. `expected_revision = 0` skips the check. |
-| `CreateJunction` | `(s name, s kind, a{sv} options) → o` | `kind` ∈ `junction`, `cable`; options: `template`, `slots` (a{ss}), `channels`. |
-| `ImportPreset` | `(s toml, a{ss} slots) → o` | F22/F24. |
-| `ScanImportable` | `() → s` | F13: null-sink / pw-loopback setups found in the graph. |
-| `Import` | `(as ids, a{ss} as_kind) → ao` | F13. |
-| `Doctor` | `() → s` | JSON checks (F19). |
-| `BugReport` | `() → s` | Text bundle (F19), personal paths replaced with `~`. |
-| `ResolveNotice` | `(s notice_id, s action) → ()` | e.g. `restore`, `leave`, `undo`. |
+| `Plan` | `(s toml) → s` | Dry run: graph changes and resulting statuses as JSON. |
+| `Apply` | `(s toml, t expected_revision) → (t revision, s plan)` | Validates, writes the text as given (comments kept), reconciles. `expected_revision = 0` skips the check. |
+| `CreateJunction` | `(s name) → (o, t revision)` | Id from the name (`slugify`, made unique). Cables need their apps up front: use `Apply`. |
+| `ResolveLink` | `(s junction, s ref, s action) → t` | Answer to `link_overridden`: `restore` or `leave` (writes `suppressed`). |
 
 Signals:
 
 | Signal | Args | Meaning |
 | --- | --- | --- |
 | `GraphChanged` | `(t generation)` | Live status changed (cheap; clients re-read what they show). |
-| `Notice` | `(s id, s kind, a{sv} data)` | `link_overridden`, `default_restored`, `config_error`, `device_offline`, `profile_changed`, `updated`. |
+| `Notice` | `(s kind, s json)` | `link_overridden`, `default_restored`, `default_taken_over`, `config_error`. |
 
-### 4.3 `Junction` interface
+Planned additive methods (minor versions, with the features that need them):
+`ListCandidates`, `ImportPreset`, `ScanImportable`/`Import` (F13), `Doctor`
+and `BugReport` (F19), `Defaults` and `PipeWire` properties, ObjectManager.
 
-Properties: `Id` s, `Name` s, `Kind` s, `Enabled` b, `Volume` u (percent),
-`Default` s (`none|input|output`), `Status` s (`ok|degraded|off`),
-`NodeName` s, `Channels` u, `Rate` u,
-`Inputs` `aa{sv}` (id, label, kind, match, enabled, volume, exclusive, status,
-node ids for meters, channel count, profile, badge), `Bus` `aa{sv}`,
-`Listens` `aa{sv}`, `Links` `aa{sv}` (id, from, to, state, suppressed).
+### 4.3 `Junction` interface (v1.0)
 
-Methods (each returns the new config revision `t`):
-`Rename(s)`, `SetEnabled(b)`, `SetVolume(u)`, `SetDefault(s)`,
-`Duplicate() → o`, `Delete()`,
-`AddInput(a{sv} match) → s`, `RemoveInput(s)`, `SetInput(s id, a{sv} changes)`,
-`AddBusChannels(u count, s layout)` (`stereo|mono`), `RemoveBusChannels(u first, u count)`,
-`Link(s from, s to)`, `Unlink(s link_id)`,
-`AddListen(a{sv} target) → s`, `RemoveListen(s)`, `SetListen(s id, a{sv} changes)`,
-`UseAllChannels(s input_id)` (Pro Audio, F15),
-`ExportPreset(as include) → s` (TOML text).
+Properties: `Id` s, `Name` s, `Enabled` b, `View` s (JSON: kind, volume,
+default, channels, node name, status, inputs with matchers, statuses and
+matched nodes, listens).
+
+Methods, each returning the new config revision `t`: `Rename(s)`,
+`SetEnabled(b)`, `SetVolume(u percent)`, `SetDefault(s none|input|output)`,
+`Delete(b confirm)`. Edits are merged into the file so the user's comments
+and layout stay. Anything else (inputs, links, listens, bus channels) goes
+through `GetConfig` + `Apply` in v1.0; per-entry methods (`AddInput`,
+`Link`, `AddListen`, `Duplicate`, `ExportPreset`, …) arrive as minor
+versions when the GUI needs them.
 
 ### 4.4 Errors
 
 All errors are `io.github.ejsergeev.Junc1.Error.<Name>`; the message is JSON
-`{"code","message","hint","location"?}` so CLI and GUI can show actionable
-text and agents can parse it:
+`{"code","message","hint"?,"diagnostics"?}` (`junc_ipc::ErrorBody`) so CLI
+and GUI can show actionable text and agents can parse it. The D-Bus name is
+the coarse class; `code` is the stable detail (`E_CONFIG_CYCLE`,
+`E_CONFIG_RANGE`, …):
 
 | Name | When |
 | --- | --- |
-| `NotFound` | Unknown Junction, input, link, device. |
-| `InvalidConfig` | Validation failed; `location` = file/line/column. |
-| `Conflict` | `expected_revision` is stale. |
-| `Cycle` | Nesting would create a loop. |
-| `LimitExceeded` | > 64 Bus channels, etc. |
-| `PipeWireUnavailable` | Daemon is `waiting_for_pipewire`. |
-| `Unsupported` | e.g. Pro Audio on a device without that profile. |
-| `NeedsConfirmation` | Destructive call without `confirm = true` option. |
+| `NotFound` | Unknown Junction or overridden link (`E_NOT_FOUND`). |
+| `InvalidConfig` | Validation failed (`E_CONFIG_*`, incl. cycles and ranges); `diagnostics` carry file/line/column. |
+| `Conflict` | `expected_revision` is stale (`E_CONFIG_CONFLICT`). |
+| `PipeWireUnavailable` | The call needs the graph and the daemon is waiting for PipeWire. |
+| `NeedsConfirmation` | `Delete(false)`. |
+| `Failed` | Anything else (`E_WRITE_FAILED`, `E_INTERNAL`). |
 
 ### 4.5 Versioning and access
 
 - Additive changes (new methods, properties, enum values) bump
-  `ApiVersion.minor`. Clients ignore unknown keys in `a{sv}` and JSON.
+  `ApiVersion.minor`. Clients ignore unknown JSON keys.
 - Breaking changes ship as `Junc2` side by side for at least one minor
   release. Changes are announced in release notes (PRD).
 - Session bus only; no system bus name, no polkit. The default session bus
