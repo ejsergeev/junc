@@ -459,6 +459,7 @@ fn on_global(
                     props,
                     profiles: Vec::new(),
                     active_profile: None,
+                    usb_channels: None,
                 },
             );
         }

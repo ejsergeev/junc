@@ -45,7 +45,7 @@ pub fn resolve(m: &Match, usage: Use, graph: &Graph) -> Vec<u32> {
         return Vec::new();
     }
     if let Some(device) = &m.device {
-        return resolve_device(device, graph);
+        return resolve_device(device, m.profile.as_deref(), graph);
     }
     if let Some(sink) = &m.monitor {
         return pick(&|n| n.kind() == NodeKind::Sink && n.name() == sink);
@@ -90,7 +90,33 @@ fn app_matches(m: &Match, n: &Node) -> bool {
 /// Hardware input by stable `node.name`; if no node has that name, a unique
 /// source with that description (names can change when a driver changes,
 /// descriptions usually do not).
-fn resolve_device(device: &str, graph: &Graph) -> Vec<u32> {
+fn resolve_device(device: &str, profile: Option<&str>, graph: &Graph) -> Vec<u32> {
+    // With a profile (F15) the Input waits until its card runs that profile,
+    // then takes the card's widest capture node: switching profiles renames
+    // the nodes (`….analog-stereo` → `….pro-input-0`).
+    if let Some(profile) = profile
+        && let Some(card) = crate::proaudio::card(graph, device)
+    {
+        if card.active_profile.as_deref() != Some(profile) {
+            return Vec::new();
+        }
+        if let Some(n) = graph
+            .nodes
+            .values()
+            .find(|n| n.name() == device && n.props.number("device.id") == Some(card.id))
+        {
+            return vec![n.id];
+        }
+        return crate::proaudio::card_sources(graph, card)
+            .max_by_key(|n| {
+                (
+                    n.props.number("audio.channels").unwrap_or(0),
+                    std::cmp::Reverse(n.name()),
+                )
+            })
+            .map(|n| vec![n.id])
+            .unwrap_or_default();
+    }
     let sources = || {
         graph
             .nodes

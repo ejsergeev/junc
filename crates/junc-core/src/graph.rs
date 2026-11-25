@@ -232,6 +232,9 @@ pub struct Device {
     pub profiles: Vec<Profile>,
     /// Active profile name.
     pub active_profile: Option<String>,
+    /// Channel counts ALSA reports for a USB card, whatever the profile
+    /// (F15); `None` for other cards or when unknown.
+    pub usb_channels: Option<crate::proaudio::UsbChannels>,
 }
 
 impl Device {
@@ -245,9 +248,24 @@ impl Device {
         self.props.get("device.api") == Some("bluez5")
     }
 
-    /// Has a `pro-audio` profile that is not the active one.
+    /// Its profiles come from ALSA UCM (`HiFi`, …) rather than ACP's
+    /// generated `output:…+input:…` ones. UCM sets up the card's amplifiers
+    /// and DSP (the Asahi built-in speakers); Pro Audio would bypass that.
+    pub fn uses_ucm(&self) -> bool {
+        let mut others = self
+            .profiles
+            .iter()
+            .map(|p| p.name.as_str())
+            .filter(|n| *n != "off" && *n != "pro-audio")
+            .peekable();
+        others.peek().is_some() && others.all(|n| !n.contains(':'))
+    }
+
+    /// Has a `pro-audio` profile that is not the active one, and is not a
+    /// UCM card (see [`Self::uses_ucm`]).
     pub fn can_switch_to_pro_audio(&self) -> bool {
-        self.active_profile.as_deref() != Some("pro-audio")
+        !self.uses_ucm()
+            && self.active_profile.as_deref() != Some("pro-audio")
             && self
                 .profiles
                 .iter()
@@ -407,6 +425,7 @@ impl Graph {
                             props,
                             profiles,
                             active_profile,
+                            usb_channels: None,
                         },
                     );
                 }
