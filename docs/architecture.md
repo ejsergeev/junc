@@ -364,6 +364,14 @@ Disconnected ──socket appears / poll──▶ Connecting ──ok──▶ S
   nodes WirePlumber exposes as `Audio/Sink`, skipping `node.hidden`/internal
   filter-chain stream nodes.
 
+As built (A19 fix): JUNC also remembers the default **in use** when it
+differs from the configured one (the configured device was unavailable and
+WirePlumber had picked another). If, after restoring the configured value,
+WirePlumber still uses a Junction (it picks the newest available device in
+its history), JUNC makes the device that was in use the default instead.
+Found on the owner's laptop: configured headset jack unplugged, built-in
+mic in use.
+
 ### 3.8 Pro Audio profile switching (F15)
 
 - For each ALSA device the backend reads `EnumProfile`/`Profile` params.
