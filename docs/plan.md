@@ -225,9 +225,19 @@ owner walkthrough with the real USB interface. Packages in `junc-testing`.
 
 Daemon features first (they gate GUI screens):
 
-- [ ] **B1** [auto] Gain nodes: per-Input and per-Listen volume, on/off,
+- [x] **B1** [auto] Gain nodes: per-Input and per-Listen volume, on/off,
   master volume; Listen routing of all or selected Bus channels. Req: F6,
   F7, F8. Acceptance: layer-2 tests; bit-exact at unity (or S4 fallback).
+  Done 2026-11-25: the reconciler sets `channelVolumes` (cubic, 100 % = 1.0)
+  on the Junction source, the Input and the Listen gain nodes when it first
+  sees a node and when the config changes, never fighting another mixer.
+  JUNC nodes carry `state.restore-props = false`: without it WirePlumber
+  restored its saved 1.0 over JUNC's value right after the node appeared.
+  On/off and Listen links came with the alpha planner. Layer-2 tests:
+  Input 50 % → 0.125, × master 50 % → 0.015625, × Listen 70 % → 0.005359
+  (within 2 %); Listen `links = [[1, 1]]` plays Bus channel 1 only; an
+  Input switched off is silent and back at unity when on. Bit-exact at
+  unity is unchanged (the existing null tests run through the gain nodes).
 - [ ] **B2** [auto] Exclusive via `target.object` metadata. Req: F11.
   Acceptance: layer-2 test with WirePlumber: app leaves speakers while
   captured, returns when turned off.

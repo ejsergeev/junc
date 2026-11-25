@@ -184,7 +184,15 @@ junc.role          = junction | input-gain | listen-gain | link
 junc.ref           = <stable id: input id, listen id, or link id "in:spotify/1->bus/1">
 node.autoconnect   = false          (nodes)
 node.dont-reconnect = true          (nodes)
+state.restore-props = false         (nodes)
 ```
+
+`state.restore-props = false` keeps WirePlumber from restoring a volume it
+saved for the node name over the one JUNC sets: the config is the only
+place JUNC volumes live. JUNC sets a node's `channelVolumes` (cubic, 100 % =
+1.0, so unity stays bit-exact) when it first sees the node and whenever the
+config changes it; a change made in another mixer is not fought, only
+replaced on the next change or when the node is recreated.
 
 Gain nodes are as wide as the Bus: an Input's channels link straight into
 the gain-node channels of the Bus channels they feed (a mono mic links its one
