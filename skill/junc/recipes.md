@@ -128,6 +128,29 @@ id = "desktop"
 match = { monitor = "alsa_output.pci-0000_00_1f.3.analog-stereo" }
 ```
 
+## Move an existing setup into JUNC
+
+Users often already have null sinks (`pactl load-module module-null-sink`,
+or a PipeWire config fragment) or `pw-loopback` scripts. List them:
+
+```sh
+junc import scan --json
+```
+
+Each item has an `id`, where it came from (`origin`), what feeds it
+(`inputs`), where it plays (`listens`), which apps record from it
+(`recorded_by`) and `suggested`: `cable` when it is one app into another,
+otherwise `junction`. Show the user the list and ask which to import, then:
+
+```sh
+junc import discord_mix mylb
+junc import cab_sink --as cable
+```
+
+JUNC does not remove the old setup: both run side by side until the user
+unloads the module or stops the script. Say so, and that apps recording
+from the old sink must be switched to the new Junction.
+
 ## Quick changes without a config edit
 
 These apply at once; say what will happen first.
