@@ -217,9 +217,15 @@ stream has no place in the config). When the Cable is deleted, turned off
 or no longer matches the app, JUNC clears only the values it wrote; a
 stream the user sent to a Junction themselves is left alone.
 
-**Nesting** (F2): a Junction may be an Input of another. The planner builds a
-directed graph of Junctions and rejects a config with a cycle
-(`E_CYCLE`, F2 risk "feedback loops") before touching PipeWire.
+**Nesting** (F2): a Junction may be an Input of another
+(`match = { junction = "<id>" }`): the inner Junction's source feeds the
+outer one's gain node like any device. Config validation builds the
+directed graph of Junctions and rejects a loop (`E_CONFIG_CYCLE`, F2 risk
+"feedback loops", reported from the first Junction of the loop in file
+order) before anything reaches the store or PipeWire, whether the change
+comes from the CLI, `Apply` or a hand edit. As built (A14): depth 1–4
+converges in at most three reconcile rounds and is bit-exact through four
+levels on the isolated PipeWire.
 
 ### 3.3 Graph model and identity matching
 
