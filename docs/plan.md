@@ -126,9 +126,10 @@ checks green in CI (x86_64 + aarch64) and on the owner's laptop.
   dependency-rule check, CI on x86_64 and aarch64 Arch containers.
   Req: — . Acceptance: empty binaries build and CI is green on both arches.
   Done 2026-11-25: PR #1; CI green on x86_64 and aarch64 (run 45591546618). The aarch64 image needed pacman's sandbox off and several mirrors with retries.
-- [ ] **A2** [auto] Spikes S1–S5 and S8 (`architecture.md` §12), each
+- [x] **A2** [auto] Spikes S1–S5 and S8 (`architecture.md` §12), each
   ending in a note and, if needed, a design change. Req: F1, F7, F11, F17,
   F20. Acceptance: every spike has a recorded pass or chosen fallback.
+  Done 2026-11-25: S2–S5, S8 pass; S1 took the two-node fallback (owner: always source + sink, like Loopback). Results in architecture §12.1; scripts in `bench/spikes/`.
 - [x] **A3** [auto] `junc-core` model + config: TOML load/save with
   `toml_edit`, schema v1 types, JSON Schema generation (generated file in
   its own commit), validator with file/line/column diagnostics and
