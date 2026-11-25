@@ -83,6 +83,7 @@ impl PwBackend {
     pub fn apply(&self, actions: Vec<Action>) {
         let _ = self.tx.send(Command::Apply(actions));
     }
+
 }
 
 impl Drop for PwBackend {

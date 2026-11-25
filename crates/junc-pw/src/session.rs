@@ -25,19 +25,45 @@ enum Outcome {
 
 /// A bound proxy and its listeners; dropping it unbinds.
 struct Bound {
-    _proxy: Box<dyn ProxyT>,
+    _proxy: Option<Box<dyn ProxyT>>,
     _listeners: Vec<Box<dyn Listener>>,
+}
+
+/// A create request in flight: creation is asynchronous, so a snapshot taken
+/// before the object's global appears would make the planner ask again.
+struct Created {
+    _proxy: Box<dyn ProxyT>,
+    _listener: pw::proxy::ProxyListener,
+    /// Global id once the server bound it.
+    global: Rc<std::cell::Cell<Option<u32>>>,
+    /// Failed, removed, or its global already went away.
+    done: Rc<std::cell::Cell<bool>>,
+}
+
+impl Created {
+    fn pending(&self, g: &Graph) -> bool {
+        !self.done.get()
+            && self
+                .global
+                .get()
+                .is_none_or(|id| !g.nodes.contains_key(&id) && !g.links.contains_key(&id))
+    }
 }
 
 struct State {
     graph: Graph,
     bound: HashMap<u32, Bound>,
-    /// Proxies of objects we created, kept until the next sync completes.
-    created: Vec<Box<dyn ProxyT>>,
+    /// Objects we asked the server to create and have not seen yet.
+    created: Vec<Created>,
     sync: Option<pw::spa::utils::result::AsyncSeq>,
     /// Bound proxies whose first info (with the full props) has not arrived:
     /// a snapshot without it would show JUNC's own objects as untagged.
     awaiting_info: std::collections::HashSet<u32>,
+    /// The `default` metadata, to set default devices (F16).
+    default_md: Option<(u32, pw::metadata::Metadata)>,
+    /// Round trip issued right after binding the metadata: its properties
+    /// all arrive before it completes.
+    md_sync: Option<pw::spa::utils::result::AsyncSeq>,
     outcome: Outcome,
 }
 
@@ -98,12 +124,14 @@ fn serve(
         created: Vec::new(),
         sync: None,
         awaiting_info: std::collections::HashSet::new(),
+        default_md: None,
+        md_sync: None,
         outcome: Outcome::Running,
     }));
 
     let _core_listener = {
         let (st, ml, ev) = (state.clone(), mainloop.downgrade(), on_event.clone());
-        let (st2, ev2) = (state.clone(), on_event.clone());
+        let (st2, ev2, core_done) = (state.clone(), on_event.clone(), core.downgrade());
         core.add_listener_local()
             .done(move |id, seq| {
                 if debug() {
@@ -117,6 +145,21 @@ fn serve(
                 }
                 let snapshot = {
                     let mut s = st2.borrow_mut();
+                    if s.md_sync == Some(seq) {
+                        s.md_sync = None;
+                        if let Some((mid, _)) = &s.default_md {
+                            let mid = *mid;
+                            s.awaiting_info.remove(&mid);
+                        }
+                        // A snapshot held for it can go out now.
+                        if s.sync.is_none() {
+                            drop(s);
+                            if let Some(core) = core_done.upgrade() {
+                                request_sync(&st2, &core);
+                            }
+                        }
+                        return;
+                    }
                     if s.sync != Some(seq) {
                         return;
                     }
@@ -124,6 +167,11 @@ fn serve(
                     if !s.awaiting_info.is_empty() {
                         // Not complete yet; the info listener requests the
                         // next sync once the props are in.
+                        return;
+                    }
+                    if s.created.iter().any(|c| c.pending(&s.graph)) {
+                        // Wait for our new objects; their bound/global
+                        // events request the next sync.
                         return;
                     }
                     s.created.clear();
@@ -144,13 +192,28 @@ fn serve(
                 ev2(Event::Graph(Box::new(snapshot)));
             })
             .error(move |id, _seq, res, msg| {
-                if id == pw::core::PW_ID_CORE {
+                // Only a broken pipe means the connection is gone; other core
+                // errors (e.g. "no global" when destroying an object that just
+                // went away) are about a single request.
+                if id == pw::core::PW_ID_CORE && res == -libc::EPIPE {
                     st.borrow_mut().outcome = Outcome::Lost;
                     if let Some(ml) = ml.upgrade() {
                         ml.quit();
                     }
                 } else {
                     // An object we asked for could not be made (bad port, …).
+                    // ENOENT: it, or a port it needed, is already gone;
+                    // EEXIST: the link exists. Both settle on the next plan.
+                    // EINVAL "unknown port": the app stream it linked just left.
+                    if res == -libc::ENOENT
+                        || res == -libc::EEXIST
+                        || (res == -libc::EINVAL && msg.contains("unknown"))
+                    {
+                        if debug() {
+                            eprintln!("junc-pw: benign error id={id}: {msg}");
+                        }
+                        return;
+                    }
                     ev(Event::ActionFailed {
                         action: format!("object {id}"),
                         error: format!("{msg} ({res})"),
@@ -187,7 +250,15 @@ fn serve(
                 g.links.remove(&id);
                 g.devices.remove(&id);
                 s.bound.remove(&id);
+                for c in &s.created {
+                    if c.global.get() == Some(id) {
+                        c.done.set(true);
+                    }
+                }
                 s.awaiting_info.remove(&id);
+                if s.default_md.as_ref().is_some_and(|(mid, _)| *mid == id) {
+                    s.default_md = None;
+                }
                 drop(s);
                 if let Some(core) = core_rm.upgrade() {
                     request_sync(&st_rm, &core);
@@ -231,6 +302,7 @@ fn serve(
     let outcome = state.borrow().outcome;
     // Proxies must go before the core they belong to.
     state.borrow_mut().bound.clear();
+    state.borrow_mut().default_md = None;
     state.borrow_mut().created.clear();
     (attached.deattach(), outcome)
 }
@@ -298,7 +370,7 @@ fn on_global(
                 st.borrow_mut().bound.insert(
                     id,
                     Bound {
-                        _proxy: Box::new(node),
+                        _proxy: Some(Box::new(node)),
                         _listeners: vec![Box::new(l)],
                     },
                 );
@@ -367,7 +439,7 @@ fn on_global(
                 st.borrow_mut().bound.insert(
                     id,
                     Bound {
-                        _proxy: Box::new(link),
+                        _proxy: Some(Box::new(link)),
                         _listeners: vec![Box::new(l)],
                     },
                 );
@@ -399,10 +471,15 @@ fn on_global(
                         0
                     })
                     .register();
-                st.borrow_mut().bound.insert(
+                let mut s = st.borrow_mut();
+                s.default_md = Some((id, md));
+                // Defaults read before the properties arrive would look unset.
+                s.awaiting_info.insert(id);
+                s.md_sync = core.sync(0).ok();
+                s.bound.insert(
                     id,
                     Bound {
-                        _proxy: Box::new(md),
+                        _proxy: None,
                         _listeners: vec![Box::new(l)],
                     },
                 );
@@ -433,6 +510,44 @@ fn set_default(g: &mut Graph, key: Option<&str>, value: Option<&str>) {
     }
 }
 
+/// Keeps a created object's proxy and follows it until its global shows up.
+fn track(st: &Shared, core: &pw::core::CoreRc, proxy: Box<dyn ProxyT>) {
+    let global = Rc::new(std::cell::Cell::new(None));
+    let done = Rc::new(std::cell::Cell::new(false));
+    let wake = |st: &Shared, core: &pw::core::CoreWeak| {
+        if let Some(core) = core.upgrade() {
+            request_sync(st, &core);
+        }
+    };
+    let listener = {
+        let (g, d1, d2) = (global.clone(), done.clone(), done.clone());
+        let (st1, st2, st3) = (st.clone(), st.clone(), st.clone());
+        let (c1, c2, c3) = (core.downgrade(), core.downgrade(), core.downgrade());
+        proxy
+            .upcast_ref()
+            .add_listener_local()
+            .bound(move |id| {
+                g.set(Some(id));
+                wake(&st1, &c1);
+            })
+            .removed(move || {
+                d1.set(true);
+                wake(&st2, &c2);
+            })
+            .error(move |_seq, _res, _msg| {
+                d2.set(true);
+                wake(&st3, &c3);
+            })
+            .register()
+    };
+    st.borrow_mut().created.push(Created {
+        _proxy: proxy,
+        _listener: listener,
+        global,
+        done,
+    });
+}
+
 fn apply(
     st: &Shared,
     core: &pw::core::CoreRc,
@@ -445,14 +560,14 @@ fn apply(
             let node: pw::node::Node = core
                 .create_object("adapter", &props)
                 .map_err(|e| e.to_string())?;
-            st.borrow_mut().created.push(Box::new(node));
+            track(st, core, Box::new(node));
         }
         Action::CreateLink(spec) => {
             let props: pw::properties::PropertiesBox = spec.props().iter().collect();
             let link: pw::link::Link = core
                 .create_object("link-factory", &props)
                 .map_err(|e| e.to_string())?;
-            st.borrow_mut().created.push(Box::new(link));
+            track(st, core, Box::new(link));
         }
         Action::DestroyNode { node: id } | Action::DestroyLink { link: id } => {
             // Defence in depth for F17: the planner never asks for this, but
