@@ -427,6 +427,18 @@ then removes its own link to the speakers and leaves JUNC's link in place
 metadata key and WirePlumber restores its default routing. JUNC still never
 destroys a foreign link itself.
 
+Cables and Exclusive share one mechanism (`plan::stream_targets`): JUNC sets
+the key once the gain node (or the Cable) exists, clears it only on streams
+whose value is still the one JUNC wrote, and treats a value someone else
+writes as an override (held, `LinkOverridden` notice, reference
+`exclusive/target/<object.serial>`). A stream has one target: if two
+Junctions capture the same app exclusively, the first in the config wins and
+the other still receives it through its own link. Exclusive is valid on app
+Inputs only; the config rejects it on device, monitor and Junction Inputs.
+A restarted daemon does not remember what it wrote, so it adopts streams
+already at a target it wants and streams sent to any JUNC Input gain node
+(gain nodes are not listed as devices, so only JUNC sends streams there).
+
 ### 3.11 Capture indicator data (F23)
 
 The daemon computes `CaptureApps`: the set of app streams (`Stream/Output/Audio`
