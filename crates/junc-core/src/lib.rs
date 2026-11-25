@@ -12,6 +12,7 @@ pub mod config;
 pub mod defaults;
 pub mod diag;
 pub mod graph;
+pub mod import;
 pub mod matcher;
 pub mod migrate;
 pub mod model;
