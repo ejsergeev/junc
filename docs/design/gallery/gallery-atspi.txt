@@ -1,0 +1,132 @@
+application name='junc-gui' states=[]
+  frame name='JUNC components' states=[focusable,enabled,sensitive,showing,visible]
+    button name='Delete' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    toggle button name='Show Listen' states=[focusable,pressed,enabled,sensitive,showing,visible] actions=click
+    button name='Add input' desc='Ctrl+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Disabled' states=[focusable,showing,visible] actions=click
+    button name='Add input' desc='Ctrl+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    toggle button name='Zoom Mic' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+    toggle button name='OBS Mix' desc='off' states=[enabled,sensitive,showing,visible] actions=click
+    toggle button name='Disabled' desc='off' states=[showing,visible] actions=click
+    slider name='Zoom Mic volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..100] step=1
+    slider name='Boost' states=[focusable,enabled,sensitive,showing,visible] value=120 [0..150] step=1
+    label name='Default input' states=[enabled,sensitive,showing,visible]
+    label name='Pro Audio' states=[enabled,sensitive,showing,visible]
+    label name='device-specific' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Ctrl+N' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Esc' states=[enabled,sensitive,showing,visible]
+    panel name='Spotify' states=[enabled,sensitive,showing,visible]
+      label name='Exclusive' states=[enabled,sensitive,showing,visible]
+      toggle button name='Spotify' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Ch 1   L' states=[enabled,sensitive,showing,visible]
+      label name='Ch 2   R' states=[enabled,sensitive,showing,visible]
+      toggle button name='Options' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      slider name='Spotify volume' states=[focusable,enabled,sensitive,showing,visible] value=70 [0..150] step=1
+    panel name='USB Microphone' desc='Offline' states=[enabled,sensitive,showing,visible]
+      label name='Offline' states=[enabled,sensitive,showing,visible]
+      toggle button name='USB Microphone' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Ch 1' states=[enabled,sensitive,showing,visible]
+      label name='Waiting for device…' states=[enabled,sensitive,showing,visible]
+    panel name='Firefox' desc='Not running' states=[enabled,sensitive,showing,visible]
+      label name='Not running' states=[enabled,sensitive,showing,visible]
+      toggle button name='Firefox' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Ch 1   L' states=[enabled,sensitive,showing,visible]
+      label name='Waiting for Firefox…' states=[enabled,sensitive,showing,visible]
+    panel name='Soundux' desc='off' states=[enabled,sensitive,showing,visible]
+      toggle button name='Soundux' desc='off' states=[enabled,sensitive,showing,visible] actions=click
+      label name='Ch 1   L' states=[enabled,sensitive,showing,visible]
+      toggle button name='Options' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      slider name='Soundux volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='Ch 1 free' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Ch 2 linked' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Ch 3 offline' desc='offline' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Ch 4 valid' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Ch 5 snap' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    list item name='In 9–16' desc='8 ch' states=[focusable,enabled,sensitive,showing,visible]
+      label name='\U000f0142' states=[enabled,sensitive,showing,visible]
+      label name='In 9–16' states=[enabled,sensitive,showing,visible]
+      label name='8 ch' states=[enabled,sensitive,showing,visible]
+    list item name='In 1–2' desc='2 of 2 linked' states=[focusable,enabled,sensitive,showing,visible]
+      label name='\U000f0140' states=[enabled,sensitive,showing,visible]
+      label name='In 1–2' states=[enabled,sensitive,showing,visible]
+      label name='2 of 2 linked' states=[enabled,sensitive,showing,visible]
+      label name='In 1' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='In 2' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+    panel name='Add input' states=[enabled,sensitive,showing,visible]
+      entry name='Search apps and devices' states=[focusable,enabled,sensitive,editable,showing,visible]
+      label name='Apps' states=[enabled,sensitive,showing,visible]
+      list item name='Spotify' desc='added' states=[focusable,selected,showing,visible] actions=click
+      list item name='Firefox' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      label name='Devices' states=[enabled,sensitive,showing,visible]
+      list item name='USB Microphone' desc='2 ch' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+    list box name='New' states=[enabled,sensitive,showing,visible]
+      list item name='Junction' desc='A virtual mic and speaker' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+        unknown name='' states=[enabled,sensitive,showing,visible]
+          label name='Ctrl+Shift+J' states=[enabled,sensitive,showing,visible]
+      list item name='Cable' desc='One app straight into another' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+        unknown name='' states=[enabled,sensitive,showing,visible]
+          label name='Ctrl+Shift+K' states=[enabled,sensitive,showing,visible]
+      list item name='From template…' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Import preset…' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+    panel name='Add Bus channels' states=[enabled,sensitive,showing,visible]
+      radio button name='Stereo pair' states=[checkable,checked,enabled,sensitive,showing,visible] actions=click
+      radio button name='Mono' states=[checkable,enabled,sensitive,showing,visible] actions=click
+      radio button name='Two pairs' states=[checkable,enabled,sensitive,showing,visible] actions=click
+    entry name='Junction name' states=[focusable,enabled,sensitive,editable,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Enter' states=[enabled,sensitive,showing,visible]
+    label name='save' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Esc' states=[enabled,sensitive,showing,visible]
+    label name='cancel' states=[enabled,sensitive,showing,visible]
+    panel name='Delete “Virtual Mic for Zoom”?' states=[enabled,sensitive,showing,visible]
+      label name='Delete “Virtual Mic for Zoom”?' states=[enabled,sensitive,showing,visible]
+      label name='· Its routing stops' states=[enabled,sensitive,showing,visible]
+      label name='· Apps using it fall back to the default mic' states=[enabled,sensitive,showing,visible]
+      button name='Cancel' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      button name='Delete' desc='Ctrl+Enter' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Add input' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+        label name='Ctrl+N' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Add' states=[enabled,sensitive,showing,visible]
+    label name='Empty state' states=[enabled,sensitive,showing,visible]
+    panel name='No inputs yet' states=[enabled,sensitive,showing,visible]
+      label name='No inputs yet' states=[enabled,sensitive,showing,visible]
+      label name='Add an app, a mic or another Junction.' states=[enabled,sensitive,showing,visible]
+      button name='Add input' desc='Ctrl+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Checklist rows' states=[enabled,sensitive,showing,visible]
+    list item name='PipeWire' desc='ok: Audio server · running' states=[focusable,enabled,sensitive,showing,visible]
+    list item name='WirePlumber' desc='waiting: Session manager · starting' states=[focusable,enabled,sensitive,showing,visible]
+    list item name='Sample rate' desc='mismatch: HDMI Output runs at 44.1 kHz' states=[focusable,enabled,sensitive,showing,visible]
+      label name='pw-metadata -n settings 0 clock.allowed-rates "[ 44100 48000 ]"' states=[enabled,sensitive,showing,visible]
+      button name='Copy' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Banners' states=[enabled,sensitive,showing,visible]
+    label name='JUNC was updated to 0.2.0.' states=[enabled,sensitive,showing,visible]
+      button name='Dismiss' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='USB Microphone is offline; its links wait for it.' states=[enabled,sensitive,showing,visible]
+      button name='Use default' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='The config file has an error at line 12.' states=[enabled,sensitive,showing,visible]
+      button name='Open file' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      button name='Details' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Toast' states=[enabled,sensitive,showing,visible]
+    label name='Default input restored.' states=[enabled,sensitive,showing,visible]
+      button name='Undo' desc='Ctrl+Z' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      button name='Dismiss' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Language' states=[enabled,sensitive,showing,visible]
+    label name='Follow Omarchy (Setup > Language)' states=[enabled,sensitive,showing,visible]
+    label name='Current: Deutsch' states=[enabled,sensitive,showing,visible]
+    toggle button name='Follow Omarchy (Setup > Language)' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+    label name='Language' states=[enabled,sensitive,showing,visible]
+    button name='Deutsch  \U000f0140' states=[focusable,showing,visible] actions=click
