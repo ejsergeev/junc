@@ -11,22 +11,32 @@ export component JTooltip inherits Rectangle {
     in property <string> text;
     in property <string> shortcut;
     in property <bool> compact;
+    // A second, smaller line (the link a tooltip is about).
+    in property <string> detail;
     background: Tokens.surface-window.with-alpha(0.97);
     border-width: Tokens.border;
     border-color: Tokens.text-default;
     accessible-role: none;
-    HorizontalLayout {
+    VerticalLayout {
         padding-left: root.compact ? 6px : Tokens.space-control-pad-x;
         padding-right: self.padding-left;
         padding-top: root.compact ? 2px : Tokens.space-control-pad-y;
         padding-bottom: self.padding-top;
-        spacing: Tokens.space-row-gap;
-        Text {
-            text: root.text;
-            color: Tokens.text-strong;
-            font-size: root.compact ? Tokens.type-body-small : Tokens.type-body;
-            vertical-alignment: center;
+        spacing: Tokens.space-label-gap;
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: root.text;
+                color: Tokens.text-strong;
+                font-size: root.compact ? Tokens.type-body-small : Tokens.type-body;
+                vertical-alignment: center;
+            }
+            if root.shortcut != "": JKbd { text: root.shortcut; }
         }
-        if root.shortcut != "": JKbd { text: root.shortcut; }
+        if root.detail != "": Text {
+            text: root.detail;
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+        }
     }
 }

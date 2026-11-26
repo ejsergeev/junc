@@ -25,6 +25,11 @@ export component JCard inherits Rectangle {
     in property <string> app;
     in property <bool> exclusive;
     in property <bool> footer: true;
+    // Bus cards: no switch, a tag ("stereo") in its place.
+    in property <bool> switchable: true;
+    in property <string> tag;
+    // Listen cards: a speaker glyph instead of the Options disclosure.
+    in property <bool> options: true;
     in-out property <int> volume: 100;
     in property <int> volume-max: 150;
     in-out property <bool> options-open;
@@ -42,10 +47,11 @@ export component JCard inherits Rectangle {
         : root.state == "offline" ? @tr("Offline")
         : root.state == "not-running" ? @tr("Not running") : "";
 
-    touch := TouchArea { }
+    // A click focuses the card, so Space toggles it next.
+    touch := TouchArea { clicked => { focus.focus(); } }
     focus := FocusScope {
         key-pressed(e) => {
-            if e.text == " " {
+            if e.text == " " && root.switchable {
                 root.on = !root.on;
                 root.toggled(root.on);
                 return accept;
@@ -104,7 +110,13 @@ export component JCard inherits Rectangle {
                     font-size: Tokens.type-body-small;
                     vertical-alignment: center;
                 }
-                JSwitch {
+                if root.tag != "": Text {
+                    text: root.tag;
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-body-small;
+                    vertical-alignment: center;
+                }
+                if root.switchable: JSwitch {
                     y: (parent.height - self.height) / 2;
                     label: root.title;
                     checked <=> root.on;
@@ -120,12 +132,19 @@ export component JCard inherits Rectangle {
         }
         if root.footer: Rectangle {
             height: Tokens.size-control;
+            opacity: root.on ? 1 : 0.45;
             border-width: 0;
             HorizontalLayout {
                 padding-left: 10px * Tokens.scale;
                 padding-right: 10px * Tokens.scale;
                 spacing: Tokens.space-row-gap;
-                if root.state == "ok": JButton {
+                if root.state == "ok" && !root.options: Text {
+                    text: "\u{f057e}";
+                    color: Tokens.text-subtle;
+                    vertical-alignment: center;
+                    accessible-role: none;
+                }
+                if root.state == "ok" && root.options: JButton {
                     icon: root.options-open ? "\u{f0140}" : "\u{f0142}";
                     text: @tr("Options");
                     checkable: true;
