@@ -20,19 +20,27 @@ REAL_XDG=$XDG_RUNTIME_DIR
 source "$(dirname "$0")/lib.sh"
 hypr() { XDG_RUNTIME_DIR=$REAL_XDG hyprctl "$@"; }
 OUT=JUNC-S7
-NODE=junc.virtual_mic_for_zoom
+# Every node the default scenario meters (B16: the sidebar and all three
+# columns), so the visible figure is the whole Main screen's.
+NODES="junc.virtual_mic_for_zoom junc.firefox_to_obs
+  junc.virtual_mic_for_zoom.in.spotify junc.virtual_mic_for_zoom.in.soundux
+  junc.virtual_mic_for_zoom.in.mic junc.virtual_mic_for_zoom.listen.builtin
+  junc.virtual_mic_for_zoom.listen.hdmi"
 gui=""
+srcs=()
 cleanup() {
   set +e
   [ -n "$gui" ] && kill "$gui" 2>/dev/null
-  [ -n "${src:-}" ] && kill "$src" 2>/dev/null
+  [ ${#srcs[@]} -gt 0 ] && kill "${srcs[@]}" 2>/dev/null
   hypr output remove "$OUT" >/dev/null 2>&1 || true
   spike_down
 }
 trap cleanup EXIT
 spike_up
-pw-cat -p --raw --format s16 --channels 2 --rate 48000 -P "{ node.name=$NODE }" /dev/urandom \
-  >/dev/null 2>&1 & src=$!
+for n in $NODES; do
+  pw-cat -p --raw --format s16 --channels 2 --rate 48000 -P "{ node.name=$n }" /dev/urandom \
+    >/dev/null 2>&1 & srcs+=($!)
+done
 hypr -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null ||
   hypr output create headless "$OUT" >/dev/null
 sleep 0.5
@@ -81,8 +89,8 @@ hide_show() {
 }
 
 launch ""
-sleep 1; a=$(ticks); sleep 5; b=$(ticks)
-echo "s7: visible, metering: $((b - a)) ticks in 5 s ($(awk -v t=$((b - a)) 'BEGIN { printf "%.1f", t / 5 }') % of a core)"
+sleep 1; a=$(ticks); sleep 10; b=$(ticks)
+echo "s7: visible, metering every column: $((b - a)) ticks in 10 s ($(awk -v t=$((b - a)) 'BEGIN { printf "%.1f", t / 10 }') % of a core)"
 hide_show "other workspace" 77
 hide_show "minimized" special:junc-s7-minimized
 dsp "hl.dsp.window.close({ window = \"address:$(addr)\" })"
