@@ -571,3 +571,4 @@ decisions log once the owner answers.
 | 2026-11-25 | Cables deliver through `target.object` and WirePlumber's linking instead of JUNC links into the target app (spike S11) | developer |
 | 2026-11-25 | cargo-deny raises "unmaintained" for JUNC's direct dependencies only; vulnerabilities and yanked crates fail anywhere. Slint 1.19.1 brings unmaintained chrono, pin-utils, ttf-parser, zvariant and zbus_names | owner |
 | 2026-11-25 | D-Bus carries structured values (Junction view, `Describe`, diagnostics, plans, notices) as JSON strings with the `--json` shapes instead of `a{sv}`; API v1.0 ships the calls the CLI needs, the rest arrive as minor versions | developer |
+| 2026-11-26 | The bench measures juncd's PSS with transparent huge pages disabled for juncd (runner THP moved the same binary between 5.8 and 7.5 MB); the gate's limits stay | owner |

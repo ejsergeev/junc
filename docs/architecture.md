@@ -1853,6 +1853,11 @@ architecture. How each daemon metric is taken:
   runs with one glibc malloc arena (unit `Environment=`): on Arch Linux
   ARM each extra arena of its helper threads was backed by a 2 MB
   transparent huge page, 9.8–11.5 MB PSS instead of ~5.5 MB.
+  junc-bench starts juncd with transparent huge pages disabled
+  (`PR_SET_THP_DISABLE`, inherited across exec): the same binary's heap
+  got 2 or 4 MB of huge pages depending on the aarch64 runner, 5.8 or
+  7.3–7.5 MB PSS, and failed the gate on runs that changed nothing in
+  juncd. The shipped unit is unchanged.
 - Idle wakeups: context switches of all juncd threads over 10 s idle.
 - CLI: `junc enable|disable`, process start to exit, p95 of 20.
 - Re-link: 30 app restarts, appearance → links back, p95.
