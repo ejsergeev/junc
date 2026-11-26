@@ -12,7 +12,25 @@ session_stop() { kill "${session_pids[@]}" 2>/dev/null || true; rm -rf "$session
 trap session_stop EXIT
 D=:${JUNC_XVFB_DISPLAY:-97}
 Xvfb "$D" -screen 0 1800x1300x24 -nolisten tcp >"$session_tmp/xvfb.log" 2>&1 & session_pids+=($!)
-DBUS_SESSION_BUS_ADDRESS=$(dbus-daemon --session --fork --print-address=1 --print-pid=2 2>"$session_tmp/dbus.pid")
+# A session bus with no service directories: nothing is activated on it.
+# With the standard ones, something in the session asked for the desktop
+# portal, the bus started the user's xdg-desktop-portal-hyprland, and that
+# crashed on exit once the bus went away.
+cat >"$session_tmp/bus.conf" <<EOF
+<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <type>session</type>
+  <listen>unix:dir=$session_tmp</listen>
+  <auth>EXTERNAL</auth>
+  <policy context="default">
+    <allow send_destination="*" eavesdrop="true"/>
+    <allow eavesdrop="true"/>
+    <allow own="*"/>
+  </policy>
+</busconfig>
+EOF
+DBUS_SESSION_BUS_ADDRESS=$(dbus-daemon --config-file="$session_tmp/bus.conf" --fork --print-address=1 --print-pid=2 2>"$session_tmp/dbus.pid")
 session_pids+=("$(cat "$session_tmp/dbus.pid")")
 export DBUS_SESSION_BUS_ADDRESS DISPLAY=$D XDG_RUNTIME_DIR=$session_tmp
 unset WAYLAND_DISPLAY
