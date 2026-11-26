@@ -1,10 +1,119 @@
 application name='junc-gui' states=[]
   frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
     label name='Junctions' states=[enabled,sensitive,showing,visible]
-    label name='Virtual Mic for Zoom' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Rename' desc='F2' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Default' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='junc.virtual_mic_for_zoom · 4 ch' states=[enabled,sensitive,showing,visible]
+    button name='Add input' desc='Ctrl+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Add Bus channels' desc='Ctrl+Shift+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Add Listen output' desc='Ctrl+M' states=[focusable,enabled,sensitive,showing,visible] actions=click
     unknown name='' states=[enabled,sensitive,showing,visible]
-    label name='Firefox → OBS' states=[enabled,sensitive,showing,visible]
     unknown name='' states=[enabled,sensitive,showing,visible]
-    label name='Inputs' states=[enabled,sensitive,showing,visible]
-    label name='Bus' states=[enabled,sensitive,showing,visible]
-    label name='Listen' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+    panel name='Spotify' states=[enabled,sensitive,showing,visible]
+      label name='Exclusive' states=[enabled,sensitive,showing,visible]
+      toggle button name='Spotify' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      toggle button name='Options' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      slider name='Spotify volume' states=[focusable,enabled,sensitive,showing,visible] value=70 [0..150] step=1
+    panel name='Soundux' states=[enabled,sensitive,showing,visible]
+      toggle button name='Soundux' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      toggle button name='Options' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      slider name='Soundux volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    panel name='USB Microphone' states=[enabled,sensitive,showing,visible]
+      toggle button name='USB Microphone' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      toggle button name='Options' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      slider name='USB Microphone volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    panel name='Ch 1–2' states=[enabled,sensitive,showing,visible]
+      label name='stereo' states=[enabled,sensitive,showing,visible]
+      label name='Ch 1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Ch 2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+    panel name='Ch 3–4' states=[enabled,sensitive,showing,visible]
+      label name='stereo' states=[enabled,sensitive,showing,visible]
+      label name='Ch 3 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Ch 4 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+    panel name='Built-in Audio Analog Stereo' states=[enabled,sensitive,showing,visible]
+      toggle button name='Built-in Audio Analog Stereo' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Built-in Audio Analog Stereo volume' states=[focusable,enabled,sensitive,showing,visible] value=80 [0..150] step=1
+    panel name='HDMI Output' states=[enabled,sensitive,showing,visible]
+      toggle button name='HDMI Output' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='HDMI Output volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='Spotify channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Spotify channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Soundux channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Soundux channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='USB Microphone channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='USB Microphone channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 1 in' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 1 out' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 2 in' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 2 out' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 3 in' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 3 out' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 4 in' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 4 out' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Built-in Audio Analog Stereo channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Built-in Audio Analog Stereo channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='HDMI Output channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='HDMI Output channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Delete' desc='Ctrl+Delete' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Tab' states=[enabled,sensitive,showing,visible]
+    label name='move' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Space' states=[enabled,sensitive,showing,visible]
+    label name='toggle' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Enter' states=[enabled,sensitive,showing,visible]
+    label name='link' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Del' states=[enabled,sensitive,showing,visible]
+    label name='unlink' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='F2' states=[enabled,sensitive,showing,visible]
+    label name='rename' states=[enabled,sensitive,showing,visible]
+    toggle button name='Show Listen' states=[focusable,pressed,enabled,sensitive,showing,visible] actions=click
