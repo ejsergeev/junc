@@ -20,6 +20,7 @@ junc-core = { workspace = true, optional = true }
 futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
 inotify = "0.11"
 junc-ipc.workspace = true
+junc-pw = { workspace = true, features = ["meter"] }
 serde_json = "1.0.154"
 serde = { version = "1.0.229", features = ["derive"], optional = true }
 png = { version = "0.18.1", optional = true }
