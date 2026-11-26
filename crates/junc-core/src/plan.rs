@@ -85,7 +85,8 @@ pub fn sink_node_name(junction: &str) -> String {
     format!("{}.sink", junction_node_name(junction))
 }
 
-pub(crate) fn gain_node_name(junction: &str, input: &str) -> String {
+/// `node.name` of an Input's gain node.
+pub fn gain_node_name(junction: &str, input: &str) -> String {
     format!(
         "{}.in.{}",
         junction_node_name(junction),
@@ -93,7 +94,8 @@ pub(crate) fn gain_node_name(junction: &str, input: &str) -> String {
     )
 }
 
-pub(crate) fn listen_node_name(junction: &str, listen: &str) -> String {
+/// `node.name` of a Listen output's gain node.
+pub fn listen_node_name(junction: &str, listen: &str) -> String {
     format!(
         "{}.listen.{}",
         junction_node_name(junction),
