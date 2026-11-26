@@ -1157,6 +1157,32 @@ hints), `CableView`, `Onboarding` (check, templates, slots), `Checks`
 (doctor/service down), `Settings`, `EmptyNone`; overlays: pickers, menus,
 dialogs (delete, import, export, bug report), banner, toast.
 
+As built (B16): `ui/app.slint` is the window (sidebar rows: name and switch,
+what feeds the Junction, a 4 px meter, master volume) and
+`ui/screens/main.slint` the Main screen (header, column headings, the
+canvas in a `Flickable`, bottom bar). One global, `View` (`ui/view.slint`),
+carries everything Rust gives the window and every callback back. In Rust:
+`main_view.rs` turns `Describe` into a language-free model (cards, Bus
+groups, links with their `owner` and config pair; titles from the Input's
+new optional `name`, else the matched or matching node, else the match;
+a waiting Input keeps dashed links on the default stereo mapping; an Input
+that is off draws none); `layout.rs` places it (below); `ui.rs` makes the
+Slint models; `app.rs` is the controller (selection, layout, hovered link,
+callbacks → `actions::Command`); `edits.rs` holds the pure config edits
+(on/off, volume, unlink as "pairs in use less these") that `actions::Dbus`
+applies with `GetConfig` → `Apply(revision)`, retried on a conflict, on its
+own thread; Junction on/off, master volume and delete use their own
+methods. Volumes are sent once a slider rests 250 ms. Meters are numbered
+slots (a node's channel, or its loudest channel for a sidebar row) in
+level models the window owns, so an unfed meter reads silence. Show
+Listen hides the Listen column (the docs left it open; the design shows
+it pressed everywhere). Delete asks with `JConfirm`; Rename, Default, the
+add buttons, New and Settings are drawn and come alive with their boards
+(B17–B22). Not built yet from §7.4: Ctrl+1…9, arrow keys between cards and
+columns (B18 with link keyboard), Del on a hovered link without focus;
+Tab follows the tree: sidebar, header, cards column by column, ports,
+bottom bar.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1166,6 +1192,14 @@ commands). Rationale: link curves need port coordinates from three columns,
 which is simpler and faster to compute once in Rust than with Slint bindings,
 and the same function mirrors geometry for RTL later (`x′ = width − x`).
 Meters and hover never change layout (Spec "never").
+
+As built (B16): `layout.rs` uses the Spec sizes (card header 33, rows 28 +
+4, padding 10, footer 28, 16 between cards, gutters 120 down to 72, cards
+at least 200); below 780 px Listen stacks under the Bus without ports or
+links and its rows read "L ← Ch 1" (design Narrow); the window hides the
+footer hints in a tile under 1100 px. The link under the pointer is the
+nearest within 5 px of the curve (Slint paths take no pointer events);
+its tooltip names it ("USB Microphone 1 (L) → Ch 1").
 
 Interaction: drag from a port draws a live link and snaps to valid targets
 (design `linkDrag`); keyboard: Enter on a port, ↑↓ moves a target ring over
@@ -1465,6 +1499,22 @@ As built (B11), in `junc-l10n`:
 - The CLI sets the language before every command except with `--json`,
   whose text stays English; doctor's ms and kHz use ICU4X.
 
+As built (B16), the GUI: `cargo xtask i18n extract` also writes
+`po/gui/junc-gui.pot` from the `@tr` of `crates/junc-gui/ui/` (gallery
+excepted) with its own Slint literal reader, no `slint-tr-extractor`; the
+messages have no context (the UI is compiled with
+`DefaultTranslationContext::None`, so "Delete" is translated once);
+`check` checks `po/gui/<lang>.po` like the CLI's. `build.rs` bundles them
+plus an `en_XA` catalog made from the template with `junc_l10n::pseudo`.
+`ui::set_language` selects the junc-l10n language (Omarchy's file,
+followed by `watch::spawn`) right after a window is created: at that
+moment Slint otherwise picks a catalog from the system locale by language
+alone, and `en_US` matched `en_XA`. Lists of names use "、" in Japanese
+and Chinese. First GUI catalogs: `de`, `ja`, machine-drafted with the
+design's boards 33 and 34 as the term reference. Snapshots render
+Japanese with a subset of Noto Sans CJK JP (OFL) registered as the
+fallback for Japanese scripts.
+
 ---
 
 ## 9. Agent skill
@@ -1696,6 +1746,18 @@ installs Xvfb, at-spi2-core, python-gobject, a font and the X11 libraries
 winit loads). Scenarios so far: `default` (board 1) and `gallery`; the
 other boards, languages and Weston come with the screens that show them.
 
+- **Main screen** (B16): boards 1–6 are scenarios `default`, `flexoki`,
+  `narrow`, `sourceOff`, `offline`, `wireHover`. Fixtures describe their
+  graph inline (`[[node]]`), may start from another (`base`) and turn
+  Inputs `off`, `unplug` nodes or `hover` a link; the mock IPC applies the
+  window's requests to the fixture's config and settles it again, so a
+  scenario can be driven. Snapshots settle first (frames and timers), so
+  the canvas has its real width. `tests/snapshots.rs` compares all six in
+  en, en_XA, de and ja (24 goldens); `tests/main_screen.rs` drives the
+  default scenario from the keyboard, pointer and switches (Space, Del on a
+  port, a click on a link, Show Listen) and switches the language live;
+  `check.sh` compares the AT-SPI trees of all six.
+
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
   session with a node playing under the Junction's name and a stand-in
@@ -1809,7 +1871,7 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 | S4 | **Pass.** pw-cat → gain node → Junction → recorder is bit-exact at 100 % and exactly ×0.5 at 50 % (144 k frames, max error 0). | No direct-link fallback needed. |
 | S5 | **Pass.** With a JUNC link stream→gain in place, setting `target.object` on the stream to its gain node makes WirePlumber drop its link to the default sink and keep JUNC's; clearing the key restores the default-sink link. | Exclusive targets the Input's gain node (not the Junction). |
 | S6 | **Pass** (B11, Slint 1.19.1, testing backend). `.po` catalogs bundled with `with_bundled_translations`; `select_bundled_translation` switches en → de → ru → bn → en in one process and every `@tr` and accessible label follows; an unbundled language is refused and the UI keeps its own. `@tr("{0} input connected" \| "{0} inputs connected" % inputs, inputs-text)` picks the form from the int and shows ICU4X's text (`1.234`, `২১`). `bench/spikes/s6/`. | GUI as designed. Its catalogs carry `msgctxt` = component name (Slint looks messages up that way); element lookups in GUI tests need Slint debug info. |
-| S7 | **Pass on Hyprland through its IPC** (B15, 2026-11-26, Hyprland 0.56.2, owner's M1; `bench/spikes/s7-visibility.sh`, window on a temporary headless monitor, isolated PipeWire). Meters stop 14–29 ms after the window goes to another workspace or a hidden special workspace (how Omarchy minimizes) and 10–16 ms after it is closed; 0 CPU ticks in 3 s while hidden; back 13–19 ms after it returns. Visible with two sidebar meters: ~1 % of a core (debug build, default renderer). With the IPC out of reach nothing stops the meters: Hyprland keeps drawing hidden windows at `misc:render_unfocused_fps` (15), so frames never starve. | Hyprland IPC is the signal on Omarchy; frame starvation stays as the fallback for other compositors, checked by unit tests only so far. Hyprland 0.56 dispatchers are Lua (`hl.dsp.*`). |
+| S7 | **Pass on Hyprland through its IPC** (B15, 2026-11-26, Hyprland 0.56.2, owner's M1; `bench/spikes/s7-visibility.sh`, window on a temporary headless monitor, isolated PipeWire). Meters stop 14–29 ms after the window goes to another workspace or a hidden special workspace (how Omarchy minimizes) and 10–16 ms after it is closed; 0 CPU ticks in 3 s while hidden; back 13–19 ms after it returns. Visible with two sidebar meters: ~1 % of a core (debug build, default renderer); B16, every column metered (19 meters, seven playing nodes), release build: 0.6 % of a core on a 1920×1080 headless monitor. With the IPC out of reach nothing stops the meters: Hyprland keeps drawing hidden windows at `misc:render_unfocused_fps` (15), so frames never starve. | Hyprland IPC is the signal on Omarchy; frame starvation stays as the fallback for other compositors, checked by unit tests only so far. Hyprland 0.56 dispatchers are Lua (`hl.dsp.*`). |
 | S8 | **Pass by construction.** In the live session the speaker (node 62) and mic-array (node 56) ALSA nodes are inaccessible (`no global`), only their links are visible. | The planner only ever targets nodes it can see; test kept on the Asahi fixture. |
 
 | S9 | Registry globals carry only part of the properties. Nodes: no `junc.*` tags, no `application.process.binary`, no `audio.channels`. Links: no `junc.*` tags. Ports: everything needed (`port.id`, `audio.channel`, direction, `node.id`). | `junc-pw` binds every audio node and every link to read their full info props (cheap client-side proxies, no objects created); ports are read from globals. |

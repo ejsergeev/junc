@@ -414,8 +414,19 @@ GUI foundation:
 Screens, in design-canvas order (each: scenario fixture, golden in en/en_XA/
 de/ja, AT-SPI dump, keyboard test):
 
-- [ ] **B16** [auto] Main, Flexoki, Narrow; source off, offline, link hover.
+- [x] **B16** [auto] Main, Flexoki, Narrow; source off, offline, link hover.
   Req: F4, F7, F8, F10.
+  Done 2026-11-26 (architecture §7.2, §7.3, §8, §11.3, as built): the
+  sidebar and the Main screen with per-channel meters, links and their
+  hover tooltip; switches and Space toggle, sliders set volumes, a click on
+  a link or Del on a port unlinks, through the same config edits as the
+  CLI; Show Listen; the Input's optional `name` (schema). The GUI's own
+  catalogs (de, ja machine-drafted) and en_XA, switched live with
+  Omarchy's language; Slint's own locale pick (`en_US` → `en_XA`) is
+  overridden. Boards 1–6 as scenarios with 24 goldens (en, en_XA, de, ja),
+  AT-SPI goldens and a keyboard/pointer test. Every column metered: 0.6 %
+  of a core visible (release, owner's M1, headless monitor), 0 hidden.
+  Left for B18: Ctrl+1…9 and arrow keys between cards.
 - [ ] **B17** [auto] Add Input picker; onboarding check + templates (+
   Flexoki); empty none / empty Junction (+ Flexoki). Req: F2, F24, UX
   onboarding.
@@ -506,7 +517,7 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | The real USB interface has 2 channels | F15 (Pro Audio, more channels) never runs on real multichannel hardware before release | snd-aloop multichannel cards in layer 3; ask early adopters with 8+ channel interfaces via the testing channel; compatibility table. |
 | Pi 4 targets cannot be measured (no Pi) | "< 2 % CPU on Pi 4" unverifiable | Best-effort (owner, 2026-11-25); measure on the M1 and in CI aarch64. |
 | Bluetooth on Asahi | AirPods / Pixel Buds HFP mic may behave differently from x86 BlueZ setups | F18 logic is tested on recorded fixtures (layer 1); real devices only confirm detection and the warning. |
-| GUI CPU with meters: 6.4 % of a core on the M1 with femtovg (target < 2 %), ~20 wakeups per meter tick from full-window repaints and Wayland round trips | Battery drain while JUNC is open; fails the PRD GUI target | B15 done: 0 % while hidden; visible with the two sidebar meters ~1 % (debug build). B16 brings the column meters: measure there, then repaint only meter regions (skia or software partial rendering) or lower the rate when unfocused if needed; B26 gates it. |
+| GUI CPU with meters: 6.4 % of a core on the M1 with femtovg (target < 2 %), ~20 wakeups per meter tick from full-window repaints and Wayland round trips | Battery drain while JUNC is open; fails the PRD GUI target | B15 done: 0 % while hidden. B16 measured the whole Main screen metered: 0.6 % of a core (release, headless monitor), under the 2 % target; B26 gates it on the owner's own screen. |
 | Re-link in the live session: p95 89 ms with the prototype (target < 100 ms); A19 measured 81/90/101 ms with the real juncd | Target missed on busier desktops | Profile in a busy session (B29): how much is the observer's own batching, how much juncd's bind/sync gating; a lighter observer for the measurement. |
 | Audio/Duplex visibility differs across pulse/JACK/apps | Junctions missing from some apps' device lists | Spike S1 with real apps (Zoom/Discord/OBS in Chromium, Firefox); two-node fallback. |
 | Gain-stage bit-exactness | "bit-exact" metric fails | Spike S4; direct link at 100 % fallback. |
