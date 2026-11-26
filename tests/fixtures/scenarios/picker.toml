@@ -1,0 +1,24 @@
+# GUI scenario: design board 7, "Add Input picker" — "+" on Inputs or
+# Ctrl+N: running apps, hardware inputs, system audio and the other
+# Junctions; what the Junction takes already says "added".
+board = 7
+title = "Add Input picker"
+base = "default"
+picker = true
+
+[[node]]
+name = "discord"
+class = "Stream/Output/Audio"
+app = "Discord"
+binary = "discord"
+
+[[node]]
+name = "obs.playback"
+class = "Stream/Output/Audio"
+app = "OBS"
+binary = "obs"
+
+[[node]]
+name = "alsa_input.platform-builtin.analog-stereo"
+class = "Audio/Source"
+description = "Built-in Audio Analog Stereo"

@@ -1,0 +1,27 @@
+# GUI scenario: design board 8, "Onboarding · system check" — the first
+# launch with a missing dependency: pipewire-pulse is not installed, so
+# Continue waits for a Re-check.
+board = 8
+title = "Onboarding · system check"
+theme = "dark"
+size = [1440, 900]
+daemon = "connected"
+config = "schema = 1\n"
+onboarding = "check"
+
+[[check]]
+id = "pipewire"
+status = "ok"
+
+[[check]]
+id = "wireplumber"
+status = "ok"
+
+[[check]]
+id = "pipewire-pulse"
+status = "missing"
+fix = "sudo pacman -S pipewire-pulse"
+
+[[check]]
+id = "jack"
+status = "ok"

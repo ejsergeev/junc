@@ -1,0 +1,6 @@
+# GUI scenario: design board 28, "Onboarding · Flexoki" — board 8 in the
+# light theme.
+board = 28
+title = "Onboarding · Flexoki"
+base = "onboardCheck"
+theme = "light"

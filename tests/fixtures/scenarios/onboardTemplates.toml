@@ -1,0 +1,6 @@
+# GUI scenario: design board 9, "Onboarding · templates" — the checks
+# passed and Continue was pressed: pick a starting point.
+board = 9
+title = "Onboarding · templates"
+base = "onboardCheck"
+onboarding = "templates"

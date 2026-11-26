@@ -1,0 +1,60 @@
+# GUI scenario: design board 11, "Empty · new Junction" — New → Junction
+# or the template "Start empty": no Inputs and no Listen outputs yet, the
+# Bus at its default two channels.
+board = 11
+title = "Empty · new Junction"
+base = "default"
+select = "new-junction"
+config = """
+schema = 1
+
+[[junction]]
+id = "virtual-mic-for-zoom"
+name = "Virtual Mic for Zoom"
+default = "input"
+volume = 50
+bus = { channels = 4 }
+
+[[junction.input]]
+id = "spotify"
+match = { binary = "spotify" }
+volume = 70
+exclusive = true
+
+[[junction.input]]
+id = "soundux"
+match = { binary = "soundux" }
+links = [[1, 3], [2, 4]]
+
+[[junction.input]]
+id = "mic"
+match = { device = "alsa_input.usb-Generic_USB_Microphone-00.analog-stereo" }
+name = "USB Microphone"
+
+[[junction.listen]]
+id = "builtin"
+target = "default"
+volume = 80
+links = [[1, 1], [2, 2]]
+
+[[junction.listen]]
+id = "hdmi"
+target = "alsa_output.platform-hdmi.hdmi-stereo"
+links = [[1, 1], [2, 2], [3, 1], [4, 2]]
+
+[[junction]]
+id = "firefox-to-obs"
+name = "Firefox → OBS"
+kind = "cable"
+
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+
+[junction.cable]
+to = { binary = "obs" }
+
+[[junction]]
+id = "new-junction"
+name = "New Junction"
+"""

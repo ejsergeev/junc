@@ -1,0 +1,8 @@
+# GUI scenario: design board 10, "Empty · no Junctions" — onboarding is
+# done and the config has no Junctions or Cables.
+board = 10
+title = "Empty · no Junctions"
+theme = "dark"
+size = [1440, 900]
+daemon = "connected"
+config = "schema = 1\n"
