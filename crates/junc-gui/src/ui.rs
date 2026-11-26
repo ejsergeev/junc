@@ -82,8 +82,33 @@ pub fn show(window: &AppWindow, s: &crate::state::Snapshot) {
             name: r.name.as_str().into(),
             enabled: r.enabled,
             status: r.status.as_str().into(),
+            node: r.node.as_str().into(),
+            level: crate::meters::FLOOR,
         })
         .collect();
     window.set_junctions(slint::ModelRc::new(slint::VecModel::from(rows)));
     window.set_daemon_state(s.daemon.as_str().into());
+}
+
+/// Sets each sidebar meter from `levels` (dBFS by node); rows not listed
+/// fall to silence. Returns whether anything shown changed (a repaint).
+pub fn set_levels(window: &AppWindow, levels: &std::collections::HashMap<String, f32>) -> bool {
+    use slint::Model;
+    let rows = window.get_junctions();
+    let mut changed = false;
+    for i in 0..rows.row_count() {
+        let Some(mut row) = rows.row_data(i) else {
+            continue;
+        };
+        let level = levels
+            .get(row.node.as_str())
+            .copied()
+            .unwrap_or(crate::meters::FLOOR);
+        if (row.level - level).abs() > f32::EPSILON {
+            row.level = level;
+            rows.set_row_data(i, row);
+            changed = true;
+        }
+    }
+    changed
 }

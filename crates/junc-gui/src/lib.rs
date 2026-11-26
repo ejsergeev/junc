@@ -9,6 +9,8 @@
 #![deny(unsafe_code)]
 
 pub mod daemon;
+pub mod meter_service;
+pub mod meters;
 #[cfg(feature = "scenarios")]
 pub mod scenario;
 #[cfg(feature = "scenarios")]

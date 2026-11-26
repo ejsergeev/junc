@@ -6,6 +6,7 @@
 // below them under that.
 
 import { Tokens } from "tokens.slint";
+import { JMeter } from "components/meter.slint";
 export { Tokens }
 export { GalleryWindow } from "gallery.slint";
 
@@ -15,6 +16,10 @@ export struct JunctionItem {
     enabled: bool,
     // "active", "waiting", "off", "unknown"
     status: string,
+    // PipeWire node.name of its source: what the meter listens to.
+    node: string,
+    // Meter bar in dBFS (-60 is silence).
+    level: float,
 }
 
 component ColumnTitle inherits Text {
@@ -51,6 +56,15 @@ export component AppWindow inherits Window {
     // "connected", "starting", "waiting_for_pipewire", or "down" when juncd
     // is not reachable.
     in property <string> daemon-state: "down";
+    // Meters run (~7 Hz, Spec) only while the window is seen and something
+    // is metered; stopped, the timer wakes nobody (architecture §7.6).
+    in property <bool> meters-running;
+    callback meter-tick();
+    Timer {
+        interval: 143ms;
+        running: root.meters-running;
+        triggered => { root.meter-tick(); }
+    }
 
     out property <length> sidebar-width: root.width < 1100px ? 240px : 300px;
     out property <length> main-width: root.width - root.sidebar-width;
@@ -74,16 +88,27 @@ export component AppWindow inherits Window {
                     color: Tokens.text-strong;
                     font-size: Tokens.type-heading;
                 }
-                for j in root.junctions: Rectangle {
-                    height: Tokens.size-control;
+                for j in root.junctions: VerticalLayout {
+                    Rectangle {
+                        height: Tokens.size-control;
+                        HorizontalLayout {
+                            padding-left: Tokens.space-row-pad-x;
+                            spacing: Tokens.space-row-gap;
+                            Text {
+                                text: j.name;
+                                vertical-alignment: center;
+                                color: j.enabled ? Tokens.text-default : Tokens.text-subtle;
+                                accessible-label: j.name;
+                            }
+                        }
+                    }
+                    // The sidebar meter: 4px, bar only (design Main).
                     HorizontalLayout {
                         padding-left: Tokens.space-row-pad-x;
-                        spacing: Tokens.space-row-gap;
-                        Text {
-                            text: j.name;
-                            vertical-alignment: center;
-                            color: j.enabled ? Tokens.text-default : Tokens.text-subtle;
-                            accessible-label: j.name;
+                        padding-right: Tokens.space-row-pad-x;
+                        JMeter {
+                            height: 4px;
+                            level: j.level;
                         }
                     }
                 }

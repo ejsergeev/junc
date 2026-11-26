@@ -66,15 +66,31 @@ fn the_window_retints_resizes_and_lists_junctions() {
             name: "Zoom Mic".into(),
             enabled: true,
             status: "active".into(),
+            node: "junc.zoom".into(),
+            level: -60.0,
         },
         JunctionItem {
             id: "obs".into(),
             name: "OBS Mix".into(),
             enabled: false,
             status: "off".into(),
+            node: "junc.obs".into(),
+            level: -60.0,
         },
     ]);
     w.set_junctions(ModelRc::new(items));
     w.set_daemon_state("connected".into());
     assert!(labelled(&w, "Zoom Mic") && labelled(&w, "OBS Mix"));
+
+    // Meters: by node; a node not metered falls to silence; no change, no
+    // repaint.
+    let levels: std::collections::HashMap<String, f32> = [("junc.zoom".to_owned(), -12.0)].into();
+    assert!(ui::set_levels(&w, &levels), "changed");
+    assert!(!ui::set_levels(&w, &levels), "same levels, no repaint");
+    let rows = w.get_junctions();
+    use slint::Model;
+    let level = |i| rows.row_data(i).map(|r: JunctionItem| r.level);
+    assert_eq!((level(0), level(1)), (Some(-12.0), Some(-60.0)));
+    assert!(ui::set_levels(&w, &std::collections::HashMap::new()));
+    assert_eq!(level(0), Some(-60.0));
 }

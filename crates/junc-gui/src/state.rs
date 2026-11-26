@@ -14,6 +14,8 @@ pub struct Row {
     pub enabled: bool,
     /// `active`, `waiting`, `off`, `unknown`.
     pub status: String,
+    /// `node.name` of its source, what its meter listens to.
+    pub node: String,
 }
 
 /// Everything the window shows.
@@ -34,6 +36,17 @@ fn status(j: &JunctionView) -> String {
         .unwrap_or_else(|| "unknown".to_owned())
 }
 
+impl Snapshot {
+    /// The nodes to meter: the source of each Junction that is on.
+    pub fn metered(&self) -> Vec<String> {
+        self.junctions
+            .iter()
+            .filter(|r| r.enabled && !r.node.is_empty())
+            .map(|r| r.node.clone())
+            .collect()
+    }
+}
+
 /// The snapshot for juncd's answer, or for juncd being away.
 pub fn snapshot(d: Option<&Describe>) -> Snapshot {
     let Some(d) = d else {
@@ -52,6 +65,7 @@ pub fn snapshot(d: Option<&Describe>) -> Snapshot {
                 name: j.name.clone(),
                 enabled: j.enabled,
                 status: status(j),
+                node: j.node.clone(),
             })
             .collect(),
     }
@@ -74,8 +88,18 @@ mod tests {
         assert_eq!(s.daemon, d.state);
         let ids: Vec<&str> = s.junctions.iter().map(|r| r.id.as_str()).collect();
         assert_eq!(ids, ["virtual-mic-for-zoom", "firefox-to-obs"]);
+        assert_eq!(
+            s.metered(),
+            [d.junctions[0].node.clone(), d.junctions[1].node.clone()]
+        );
         d.junctions[0].enabled = false;
-        assert_eq!(snapshot(Some(&d)).junctions[0].status, "off");
+        let off = snapshot(Some(&d));
+        assert_eq!(off.junctions[0].status, "off");
+        assert_eq!(
+            off.metered(),
+            [d.junctions[1].node.clone()],
+            "only Junctions that are on"
+        );
         let down = snapshot(None);
         assert_eq!((down.daemon.as_str(), down.junctions.len()), ("down", 0));
     }

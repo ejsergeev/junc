@@ -5,7 +5,7 @@
 
 #![forbid(unsafe_code)]
 
-use junc_gui::{daemon, state, theme, theme_service, ui};
+use junc_gui::{daemon, meter_service, state, theme, theme_service, ui};
 use slint::ComponentHandle;
 
 fn main() -> Result<(), slint::PlatformError> {
@@ -31,10 +31,16 @@ fn main() -> Result<(), slint::PlatformError> {
             });
         });
     }
+    // Without PipeWire the window shows no levels.
+    let meters = meter_service::start(&window);
+    let gate = meters.as_ref().map(meter_service::MeterService::gate);
     let weak = window.as_weak();
     // Without a session bus the window shows juncd as unreachable.
     let _ = daemon::follow(None, move |d| {
         let snapshot = state::snapshot(d.as_ref());
+        if let Some(g) = &gate {
+            g.set_nodes(snapshot.metered());
+        }
         let weak = weak.clone();
         let _ = slint::invoke_from_event_loop(move || {
             if let Some(w) = weak.upgrade() {
@@ -42,7 +48,9 @@ fn main() -> Result<(), slint::PlatformError> {
             }
         });
     });
-    window.run()
+    let run = window.run();
+    drop(meters);
+    run
 }
 
 /// The value after `flag`.
@@ -52,11 +60,13 @@ fn arg<'a>(args: &'a [String], flag: &str) -> Option<&'a str> {
     args.get(i + 1).map(String::as_str)
 }
 
-/// `--scenario NAME [--theme light|dark] [--size WxH] [--snapshot OUT.png]`
-/// (architecture §7.5, §11.3): the window fed by a scenario fixture
-/// through the mock IPC, or the component gallery (`gallery`). With
+/// `--scenario NAME [--theme light|dark] [--size WxH] [--snapshot OUT.png]
+/// [--meters]` (architecture §7.5, §11.3): the window fed by a scenario
+/// fixture through the mock IPC, or the component gallery (`gallery`). With
 /// `--snapshot` it renders once offscreen with the bundled font and
 /// writes a PNG; otherwise it opens a normal window (AT-SPI checks).
+/// `--meters` meters the scenario's Junctions on the PipeWire it finds (the
+/// hidden-window gate); snapshots never do.
 #[cfg(feature = "scenarios")]
 fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
     use junc_gui::{scenario, snapshot};
@@ -82,26 +92,31 @@ fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
         snapshot::FAMILY.clone_into(&mut tokens.font_family);
     }
     // Keep the window alive until rendered or closed.
-    let (gallery, app);
+    let (mut gallery, mut app, mut meters) = (None, None, None);
     if name == "gallery" {
         let w = ui::GalleryWindow::new()?;
         ui::apply_to(&w.global::<ui::Tokens>(), &tokens);
         w.show()?;
         gallery = Some(w);
-        app = None;
     } else {
         let w = ui::AppWindow::new()?;
         ui::apply(&w, &tokens);
-        ui::show(&w, &state::snapshot(describe.as_ref()));
+        let snapshot = state::snapshot(describe.as_ref());
+        ui::show(&w, &snapshot);
+        if shot.is_none() && args.iter().any(|a| a == "--meters") {
+            meters = meter_service::start(&w);
+            if let Some(m) = &meters {
+                m.set_nodes(snapshot.metered());
+            }
+        }
         w.show()?;
         app = Some(w);
-        gallery = None;
     }
     match (offscreen, shot) {
         (Some(window), Some(path)) => {
             let rgb = snapshot::render(&window, size.0, size.1);
             snapshot::write_png(&path, size.0, size.1, &rgb).map_err(fail)?;
-            drop((gallery, app));
+            drop((gallery, app, meters));
             Ok(())
         }
         _ => {
@@ -109,7 +124,9 @@ fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
                 w.window()
                     .set_size(slint::LogicalSize::new(size.0 as f32, size.1 as f32));
             }
-            slint::run_event_loop()
+            let run = slint::run_event_loop();
+            drop(meters);
+            run
         }
     }
 }
