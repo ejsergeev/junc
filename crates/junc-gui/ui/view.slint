@@ -3,6 +3,29 @@
 // app.rs). One global keeps the plumbing in one place.
 
 import { CardItem, PortItem, LinkItem } from "screens/main.slint";
+import { PickerItem } from "components/picker.slint";
+
+// One row of the onboarding system check (checks.rs).
+export struct CheckItem {
+    // doctor's id: "pipewire", "wireplumber", "pipewire-pulse", "jack".
+    id: string,
+    // "ok", "mismatch", "missing", "down".
+    state: string,
+    fix: string,
+}
+
+// Words Rust needs in the UI language (it has no translations of its own).
+export global Words {
+    public pure function new-junction() -> string { @tr("New Junction") }
+    // TRANSLATORS: picker group captions (design board 7).
+    public pure function running-apps() -> string { @tr("Running apps") }
+    public pure function hardware-inputs() -> string { @tr("Hardware inputs") }
+    public pure function system-audio() -> string { @tr("System audio") }
+    public pure function junctions() -> string { @tr("Junctions") }
+    // TRANSLATORS: system audio in the picker: what an output plays.
+    public pure function monitor-of(output: string) -> string { @tr("Monitor of {0}", output) }
+    public pure function cable() -> string { @tr("Cable") }
+}
 
 export struct JunctionItem {
     id: string,
@@ -62,6 +85,21 @@ export global View {
     in-out property <int> tip-bus;
     in-out property <bool> tip-listen;
     in-out property <bool> show-listen: true;
+    // Onboarding (boards 8, 9): 0 none, 1 the system check, 2 templates.
+    in-out property <int> onboarding;
+    in-out property <[CheckItem]> checks;
+    // Doctor is running.
+    in-out property <bool> checking;
+    in-out property <bool> checks-passed;
+    // The Add Input picker (board 7).
+    in-out property <bool> empty-inputs;
+    in-out property <bool> empty-listens;
+    in-out property <length> empty-listens-y;
+    in-out property <length> empty-h;
+    in-out property <bool> picker-open;
+    in-out property <[PickerItem]> picker-items;
+    in-out property <string> picker-search;
+    in-out property <int> picker-cursor;
     // Meters, by index.
     in-out property <[float]> levels;
     in-out property <[float]> peaks;
@@ -78,4 +116,17 @@ export global View {
     callback link-clicked();
     callback port-remove(int, int, int, int);
     callback delete-junction();
+    callback recheck();
+    callback copy(string);
+    // Step 1 → 2, and back.
+    callback onboarding-continue();
+    callback onboarding-back();
+    // A starting point by template id (templates/<id>.toml).
+    callback template-chosen(string);
+    // Board 10: New Junction.
+    callback new-junction();
+    callback open-picker();
+    callback picker-search-edited(string);
+    callback picker-picked(int);
+    callback picker-closed();
 }

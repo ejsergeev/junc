@@ -2,20 +2,24 @@
 
 //! The window's controller (architecture §7.1): keeps juncd's latest
 //! `Describe`, the selected Junction, its Main model and layout, the link
-//! under the pointer, and turns the window's callbacks into [`Command`]s.
-//! Everything runs on the GUI thread.
+//! under the pointer, onboarding and the Add Input picker, and turns the
+//! window's callbacks into [`Command`]s. Everything runs on the GUI thread.
 
 use crate::actions::{Actions, Command};
+use crate::checks;
 use crate::edits::{Edit, Part};
 use crate::layout::{self, Layout, Point};
 use crate::main_view::{self, End, Main};
 use crate::meter_service::{Levels, MeterService};
+use crate::onboarding::{self, Step};
+use crate::picker::{self, Entry};
 use crate::state::{self, Snapshot};
-use crate::ui::{self, AppWindow, View};
+use crate::ui::{self, AppWindow, View, Words};
 use junc_ipc::view::Describe;
 use slint::{ComponentHandle, ModelRc, VecModel};
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::Duration;
 
@@ -40,6 +44,17 @@ pub struct App {
     /// Volumes waiting for their slider to rest, by what they change.
     pending: Rc<RefCell<BTreeMap<String, Command>>>,
     timer: slint::Timer,
+    /// Onboarding's step on screen, if any.
+    onboarding: Option<Step>,
+    /// Where onboarding is remembered as done; `None` never onboards
+    /// (scenarios set the step themselves).
+    state_file: Option<PathBuf>,
+    /// The system check's last answer.
+    checks: Vec<checks::Row>,
+    /// The Junction ids before a New Junction, to select the new one.
+    creating: Option<Vec<String>>,
+    /// The picker's rows and those the search shows, when it is open.
+    picker: Option<(Vec<Entry>, Vec<usize>)>,
 }
 
 impl std::fmt::Debug for App {
@@ -76,6 +91,11 @@ pub fn install(
         hovered: None,
         pending: Rc::default(),
         timer: slint::Timer::default(),
+        onboarding: None,
+        state_file: None,
+        checks: Vec::new(),
+        creating: None,
+        picker: None,
     }));
     // Runs `f` on the controller unless it is busy (a callback raised while
     // it updates the window, such as a relayout when the canvas appears).
@@ -171,6 +191,52 @@ pub fn install(
         });
     }
     {
+        let c = call.clone();
+        view.on_recheck(move || c(&App::recheck));
+    }
+    {
+        let c = call.clone();
+        view.on_copy(move |t| c(&|a| a.actions.send(Command::Copy(t.to_string()))));
+    }
+    {
+        let c = call.clone();
+        view.on_onboarding_continue(move || {
+            c(&|a| {
+                if checks::passed(&a.checks) {
+                    a.set_step(Some(Step::Templates));
+                }
+            });
+        });
+    }
+    {
+        let c = call.clone();
+        view.on_onboarding_back(move || c(&|a| a.set_step(Some(Step::Check))));
+    }
+    {
+        let c = call.clone();
+        view.on_template_chosen(move |id| c(&|a| a.template(id.as_str())));
+    }
+    {
+        let c = call.clone();
+        view.on_new_junction(move || c(&App::new_junction));
+    }
+    {
+        let c = call.clone();
+        view.on_open_picker(move || c(&App::open_picker));
+    }
+    {
+        let c = call.clone();
+        view.on_picker_search_edited(move |t| c(&|a| a.search(t.as_str())));
+    }
+    {
+        let c = call.clone();
+        view.on_picker_picked(move |i| c(&|a| a.pick(i)));
+    }
+    {
+        let c = call.clone();
+        view.on_picker_closed(move || c(&App::close_picker));
+    }
+    {
         let c = call;
         view.on_delete_junction(move || {
             c(&|a| {
@@ -194,10 +260,171 @@ impl App {
             .iter()
             .map(|r| r.id.as_str())
             .collect();
+        // A New Junction selects itself once juncd shows it.
+        if let Some(before) = &self.creating
+            && let Some(new) = ids.iter().find(|id| !before.iter().any(|b| b == *id))
+        {
+            self.selected = Some((*new).to_owned());
+            self.creating = None;
+        }
         if self.selected.as_deref().is_none_or(|s| !ids.contains(&s)) {
             self.selected = ids.first().map(|s| (*s).to_owned());
         }
+        if let Some(file) = &self.state_file {
+            let done = onboarding::done(file);
+            let needed = onboarding::needed(done, self.describe.as_ref());
+            if self.onboarding.is_none() && needed {
+                self.set_step(Some(Step::Check));
+            } else if self.onboarding.is_some() && !needed {
+                // Set up meanwhile (the CLI, an agent): nothing to onboard.
+                self.finish_onboarding();
+            }
+        }
         self.refresh();
+    }
+
+    /// Onboards on a first launch, remembering it in `file`
+    /// ([`onboarding::state_file`]); decided with juncd's next snapshot.
+    pub fn onboard_with(&mut self, file: PathBuf) {
+        self.state_file = Some(file);
+    }
+
+    /// Shows onboarding at `step` (scenarios), or no onboarding.
+    pub fn set_step(&mut self, step: Option<Step>) {
+        let first = self.onboarding.is_none() && step == Some(Step::Check);
+        self.onboarding = step;
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_onboarding(match step {
+                None => 0,
+                Some(Step::Check) => 1,
+                Some(Step::Templates) => 2,
+            });
+        }
+        if first {
+            self.recheck();
+        }
+    }
+
+    /// The onboarding step on screen.
+    pub fn step(&self) -> Option<Step> {
+        self.onboarding
+    }
+
+    fn finish_onboarding(&mut self) {
+        if let Some(file) = &self.state_file
+            && let Err(e) = onboarding::mark_done(file)
+        {
+            eprintln!("junc-gui: {}: {e}", file.display());
+        }
+        self.set_step(None);
+    }
+
+    fn recheck(&mut self) {
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_checking(true);
+        }
+        self.actions.send(Command::Check);
+    }
+
+    /// The system check's answer.
+    pub fn set_checks(&mut self, rows: Vec<checks::Row>) {
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_checking(false);
+            view.set_checks_passed(checks::passed(&rows));
+            view.set_checks(ModelRc::new(VecModel::from(ui::checks(&rows))));
+        }
+        self.checks = rows;
+    }
+
+    /// A starting point from onboarding. "Start empty" is a New Junction;
+    /// templates with slots ask for them first (board 49, B22).
+    fn template(&mut self, id: &str) {
+        if id == "start-empty" {
+            self.new_junction();
+            self.finish_onboarding();
+        }
+    }
+
+    fn new_junction(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let name = w.global::<Words>().invoke_new_junction().to_string();
+        self.creating = Some(
+            self.sidebar
+                .junctions
+                .iter()
+                .map(|r| r.id.clone())
+                .collect(),
+        );
+        self.actions.send(Command::Create { name });
+    }
+
+    /// Opens the Add Input picker on the selected Junction.
+    pub fn open_picker(&mut self) {
+        if self.main.is_none() {
+            return;
+        }
+        self.picker = Some((Vec::new(), Vec::new()));
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_picker_search("".into());
+            view.set_picker_cursor(0);
+        }
+        self.load_picker();
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_picker_open(true);
+        }
+    }
+
+    /// The picker's rows from the latest snapshot, filtered by the search.
+    fn load_picker(&mut self) {
+        let (Some(d), Some(id), Some(w)) = (&self.describe, &self.selected, self.window.upgrade())
+        else {
+            return;
+        };
+        let view = w.global::<View>();
+        let entries = picker::entries(d, id);
+        let shown = picker::filter(&entries, view.get_picker_search().as_str());
+        let items = ui::picker(&w.global::<Words>(), &entries, &shown);
+        view.set_picker_items(ModelRc::new(VecModel::from(items)));
+        self.picker = Some((entries, shown));
+    }
+
+    fn search(&mut self, _text: &str) {
+        self.load_picker();
+    }
+
+    fn pick(&mut self, i: i32) {
+        let (Some((entries, shown)), Some(m)) = (&self.picker, &self.main) else {
+            return;
+        };
+        let Some(e) = usize::try_from(i)
+            .ok()
+            .and_then(|i| shown.get(i))
+            .and_then(|&i| entries.get(i))
+        else {
+            return;
+        };
+        if e.added {
+            return;
+        }
+        self.actions.send(Command::Edit {
+            junction: m.id.clone(),
+            edit: Edit::AddInput {
+                matcher: Box::new(e.matcher.clone()),
+                label: e.label.clone(),
+            },
+        });
+        self.close_picker();
+    }
+
+    fn close_picker(&mut self) {
+        self.picker = None;
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_picker_open(false);
+        }
     }
 
     /// The selected Junction.
@@ -205,7 +432,8 @@ impl App {
         self.selected.as_deref()
     }
 
-    fn select(&mut self, id: &str) {
+    /// Selects Junction `id`.
+    pub fn select(&mut self, id: &str) {
         if self.selected.as_deref() != Some(id) {
             self.selected = Some(id.to_owned());
             self.hovered = None;
@@ -262,6 +490,10 @@ impl App {
         view.set_col_w(l.columns[0].1);
         view.set_canvas_height(l.height);
         view.set_listen_heading_y(l.listen_heading.unwrap_or(0.0));
+        view.set_empty_inputs(l.empty_inputs.is_some());
+        view.set_empty_listens(l.empty_listens.is_some());
+        view.set_empty_listens_y(l.empty_listens.map_or(0.0, |r| r.y));
+        view.set_empty_h(l.empty_inputs.or(l.empty_listens).map_or(0.0, |r| r.h));
         view.set_cards(ModelRc::new(VecModel::from(c.cards)));
         view.set_ports(ModelRc::new(VecModel::from(c.ports)));
         view.set_links(ModelRc::new(VecModel::from(c.links)));
@@ -306,7 +538,16 @@ impl App {
                 view.set_listen_count(i32::try_from(m.listens.len()).unwrap_or(0));
                 view.set_selected(m.id.as_str().into());
             }
-            None => view.set_selected("".into()),
+            None => {
+                view.set_selected("".into());
+                if self.picker.is_some() {
+                    self.picker = None;
+                    view.set_picker_open(false);
+                }
+            }
+        }
+        if self.picker.is_some() && self.main.is_some() {
+            self.load_picker();
         }
         if self
             .hovered
@@ -448,6 +689,14 @@ pub fn update_current(describe: Option<Describe>) {
     let app = CURRENT.with(|c| c.borrow().clone());
     if let Some(a) = app {
         a.borrow_mut().update(describe);
+    }
+}
+
+/// Gives the current controller the system check's answer (GUI thread).
+pub fn checks_current(rows: Vec<checks::Row>) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().set_checks(rows);
     }
 }
 

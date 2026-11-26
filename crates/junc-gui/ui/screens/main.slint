@@ -14,6 +14,8 @@ import { JButton, JIconButton } from "../components/button.slint";
 import { JTooltip } from "../components/tooltip.slint";
 import { JKbd } from "../components/kbd.slint";
 import { JConfirm } from "../components/confirm.slint";
+import { JEmptyState } from "../components/empty-state.slint";
+import { JPicker, PickerItem } from "../components/picker.slint";
 
 export struct ChannelItem {
     number: int,
@@ -128,6 +130,7 @@ component ColumnHeading inherits Rectangle {
     in property <string> count;
     in property <string> add-tip;
     in property <string> add-key;
+    callback add();
     height: 44px * Tokens.scale;
     VerticalLayout {
         x: 0;
@@ -153,6 +156,7 @@ component ColumnHeading inherits Rectangle {
         icon: "\u{f0415}";
         tooltip: root.add-tip;
         shortcut: root.add-key;
+        clicked => { root.add(); }
     }
 }
 
@@ -199,6 +203,16 @@ export component MainScreen inherits Rectangle {
     // What layout.rs lays out: the canvas less its side padding.
     out property <length> canvas-width: canvas.width - 2 * root.pad;
     in-out property <bool> confirming;
+    // Empty columns (board 11): their boxes' tops and height.
+    in property <bool> empty-inputs;
+    in property <bool> empty-listens;
+    in property <length> empty-listens-y;
+    in property <length> empty-h;
+    // The Add Input picker (board 7).
+    in property <bool> picker-open;
+    in property <[PickerItem]> picker-items;
+    in-out property <string> picker-search;
+    in-out property <int> picker-cursor;
 
     callback card-toggled(int, int, bool);
     callback card-volume(int, int, int);
@@ -207,6 +221,10 @@ export component MainScreen inherits Rectangle {
     callback link-clicked();
     callback port-remove(int, int, int, int);
     callback delete-junction();
+    callback open-picker();
+    callback picker-search-edited(string);
+    callback picker-picked(int);
+    callback picker-closed();
 
     background: Tokens.surface-window;
     property <length> pad: Tokens.space-panel-pad;
@@ -218,11 +236,12 @@ export component MainScreen inherits Rectangle {
             ? @tr("{0}, {1}", root.apps-count, root.devices-count)
             : root.apps > 0 ? root.apps-count
             : root.devices > 0 ? root.devices-count
-            : @tr("No inputs yet"))
+            : @tr("None yet"))
         + (root.off > 0 ? " · " + @tr("{0} off", root.off) : "")
         + (root.offline > 0 ? " · " + @tr("{0} offline", root.offline) : "");
     property <string> bus-count: @tr("{n} Channel" | "{n} Channels" % root.bus-channels);
-    property <string> listen-heading: @tr("{n} Device" | "{n} Devices" % root.listen-count)
+    property <string> listen-heading: (root.listen-count == 0 ? @tr("None")
+            : @tr("{n} Device" | "{n} Devices" % root.listen-count))
         + (root.stacked ? " · " + @tr("stacked") : "");
 
     VerticalLayout {
@@ -248,7 +267,8 @@ export component MainScreen inherits Rectangle {
                     tooltip: @tr("Rename");
                     shortcut: "F2";
                 }
-                JButton {
+                // Board 11 has no Default menu until something feeds it.
+                if root.apps + root.devices > 0: JButton {
                     y: (parent.height - self.height) / 2;
                     text: @tr("Default");
                     icon: "\u{f0140}";
@@ -276,6 +296,7 @@ export component MainScreen inherits Rectangle {
                 count: root.inputs-count;
                 add-tip: @tr("Add input");
                 add-key: "Ctrl+N";
+                add => { root.open-picker(); }
             }
             ColumnHeading {
                 x: root.pad + root.col-x1;
@@ -331,6 +352,29 @@ export component MainScreen inherits Rectangle {
                 count: root.listen-heading;
                 add-tip: @tr("Add Listen output");
                 add-key: "Ctrl+M";
+            }
+            if root.empty-inputs: JEmptyState {
+                x: root.pad + root.col-x0;
+                y: 0;
+                width: root.col-w;
+                // Long languages wrap: never cut the button off.
+                height: max(root.empty-h, self.preferred-height);
+                title: @tr("No inputs yet");
+                text: @tr("Pick an app, a mic or system audio.");
+                action: @tr("Add input");
+                shortcut: "Ctrl+N";
+                activated => { root.open-picker(); }
+            }
+            if root.empty-listens: JEmptyState {
+                x: root.pad + root.col-x2;
+                y: root.empty-listens-y;
+                width: root.col-w;
+                // Long languages wrap: never cut the button off.
+                height: max(root.empty-h, self.preferred-height);
+                title: @tr("Not listening");
+                text: @tr("Hear this Junction on an output.");
+                action: @tr("Add listen output");
+                shortcut: "Ctrl+M";
             }
             for c in root.cards: JCard {
                 x: root.pad + c.x;
@@ -444,7 +488,8 @@ export component MainScreen inherits Rectangle {
                         }
                     }
                 }
-                JButton {
+                // Nothing to show or hide without Listen outputs (board 11).
+                if root.listen-count > 0: JButton {
                     y: (parent.height - self.height) / 2;
                     text: @tr("Show Listen");
                     icon: "\u{f06d0}";
@@ -452,6 +497,27 @@ export component MainScreen inherits Rectangle {
                     checked <=> root.show-listen;
                 }
             }
+        }
+    }
+
+    // The Add Input picker over the Inputs column (board 7).
+    if root.picker-open: Rectangle {
+        TouchArea { clicked => { root.picker-closed(); } }
+        picker := JPicker {
+            x: root.pad + root.col-x0;
+            y: (62px + 56px) * Tokens.scale;
+            height: self.preferred-height;
+            title: @tr("Add input");
+            placeholder: @tr("Search apps, inputs, system audio");
+            search-icon: "\u{f0349}";
+            hints: true;
+            items: root.picker-items;
+            search <=> root.picker-search;
+            cursor <=> root.picker-cursor;
+            init => { self.open(); }
+            search-edited(t) => { root.picker-search-edited(t); }
+            picked(i) => { root.picker-picked(i); }
+            closed => { root.picker-closed(); }
         }
     }
 

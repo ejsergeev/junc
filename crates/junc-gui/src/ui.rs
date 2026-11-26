@@ -6,6 +6,7 @@
 use crate::layout::{Layout, Rect, row_centre};
 use crate::main_view::{self, Card, CardState, End, Icon, Main};
 use crate::meter_service::Slot;
+use crate::picker::{Entry, Group};
 use crate::state::Row;
 use crate::theme::{self, Color};
 use slint::{ModelRc, VecModel};
@@ -117,6 +118,57 @@ pub fn glyph(icon: Icon) -> &'static str {
         Icon::Junction => "\u{f062d}",
         Icon::Speaker => "\u{f04c3}",
     }
+}
+
+/// The onboarding check rows.
+pub fn checks(rows: &[crate::checks::Row]) -> Vec<CheckItem> {
+    rows.iter()
+        .map(|r| CheckItem {
+            id: r.id.as_str().into(),
+            state: r.state.into(),
+            fix: r.fix.as_str().into(),
+        })
+        .collect()
+}
+
+/// The picker rows `shown` (indexes into `entries`) in the UI language:
+/// each group's caption on its first row, monitors as "Monitor of …".
+pub fn picker(words: &Words<'_>, entries: &[Entry], shown: &[usize]) -> Vec<PickerItem> {
+    let mut last = None;
+    shown
+        .iter()
+        .filter_map(|&i| entries.get(i))
+        .map(|e| {
+            let group = if last == Some(e.group) {
+                String::new()
+            } else {
+                last = Some(e.group);
+                match e.group {
+                    Group::Apps => words.invoke_running_apps(),
+                    Group::Hardware => words.invoke_hardware_inputs(),
+                    Group::System => words.invoke_system_audio(),
+                    Group::Junctions => words.invoke_junctions(),
+                }
+                .to_uppercase()
+            };
+            let text = if e.group == Group::System {
+                words.invoke_monitor_of(e.label.as_str().into())
+            } else {
+                e.label.as_str().into()
+            };
+            PickerItem {
+                group: group.into(),
+                text,
+                detail: if e.cable {
+                    words.invoke_cable()
+                } else {
+                    "".into()
+                },
+                added: e.added,
+                icon: glyph(e.icon).into(),
+            }
+        })
+        .collect()
 }
 
 /// The sidebar rows; row `i`'s meter is level `i`.

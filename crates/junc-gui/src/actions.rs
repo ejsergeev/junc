@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! What the window asks juncd to do (architecture §7.1: every action is a
-//! D-Bus call). Calls run on their own thread so the window never waits
-//! for juncd; their effect comes back as the next `Describe`.
+//! What the window asks juncd (and the desktop) to do (architecture §7.1:
+//! every config change is a D-Bus call). Calls run on their own thread so
+//! the window never waits for juncd; their effect comes back as the next
+//! `Describe`, or for the system check through [`crate::app::checks_current`].
 
 use crate::edits::{self, Edit};
 use junc_core::store::{CONFLICT, Store};
@@ -20,6 +21,12 @@ pub enum Command {
     Delete { path: String },
     /// A config change to one Junction (`GetConfig` → `Apply`).
     Edit { junction: String, edit: Edit },
+    /// A new empty Junction (`Daemon.CreateJunction`).
+    Create { name: String },
+    /// Run the onboarding system check (`junc doctor --json`).
+    Check,
+    /// Put text on the clipboard (`wl-copy`).
+    Copy(String),
 }
 
 /// Where the window sends requests: juncd, or a scenario's mock.
@@ -49,6 +56,9 @@ impl Dbus {
                 });
                 let Ok(conn) = conn else { return };
                 for command in rx {
+                    if local(&command) {
+                        continue;
+                    }
                     if let Err(e) = zbus::block_on(run(&conn, &command)) {
                         eprintln!("junc-gui: {command:?} failed: {e}");
                     }
@@ -61,6 +71,39 @@ impl Dbus {
 impl Actions for Dbus {
     fn send(&self, command: Command) {
         let _ = self.tx.send(command);
+    }
+}
+
+/// Runs what needs no D-Bus; returns whether it did.
+fn local(command: &Command) -> bool {
+    match command {
+        Command::Check => {
+            // Doctor asks pacman and PipeWire: never hold up D-Bus calls.
+            let _ = std::thread::Builder::new()
+                .name("junc-doctor".into())
+                .spawn(|| {
+                    let rows = crate::checks::run().unwrap_or_else(|e| {
+                        eprintln!("junc-gui: {e}");
+                        Vec::new()
+                    });
+                    let _ = slint::invoke_from_event_loop(move || {
+                        crate::app::checks_current(rows);
+                    });
+                });
+            true
+        }
+        Command::Copy(text) => {
+            let copied = std::process::Command::new("wl-copy")
+                .arg("--")
+                .arg(text)
+                .status()
+                .is_ok_and(|s| s.success());
+            if !copied {
+                eprintln!("junc-gui: wl-copy is not available to copy {text:?}");
+            }
+            true
+        }
+        _ => false,
     }
 }
 
@@ -102,6 +145,17 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
                 .await
                 .map_err(text)?;
         }
+        Command::Create { name } => {
+            DaemonProxy::builder(conn)
+                .cache_properties(zbus::proxy::CacheProperties::No)
+                .build()
+                .await
+                .map_err(text)?
+                .create_junction(name)
+                .await
+                .map_err(text)?;
+        }
+        Command::Check | Command::Copy(_) => {}
         Command::Edit { junction: id, edit } => {
             let daemon = DaemonProxy::builder(conn)
                 .cache_properties(zbus::proxy::CacheProperties::No)

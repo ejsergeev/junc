@@ -1,0 +1,323 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Onboarding (design boards 8, 9, 28): step 1 checks that PipeWire and the
+// pieces JUNC needs are installed and running (junc doctor, checks.rs);
+// step 2 picks a starting point from the built-in templates (F24). The
+// whole window, no sidebar. R re-checks, Enter continues; on step 2 the
+// arrows choose, Enter creates, Esc goes back.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "../components/button.slint";
+import { JCheckRow } from "../components/check-row.slint";
+import { JKbd } from "../components/kbd.slint";
+import { JLogo } from "../components/logo.slint";
+import { CheckItem } from "../view.slint";
+
+// What a check is, in the UI language.
+component CheckWords {
+    in property <string> id;
+    out property <string> name: root.id == "jack" ? "pipewire-jack"
+        : root.id == "pipewire" ? "PipeWire"
+        : root.id == "wireplumber" ? "WirePlumber" : root.id;
+    out property <string> role: root.id == "pipewire" ? @tr("Audio server")
+        : root.id == "wireplumber" ? @tr("Session manager")
+        : root.id == "pipewire-pulse" ? @tr("PulseAudio apps can see Junctions")
+        : @tr("JACK apps can see Junctions");
+    // Services also say that they run.
+    out property <bool> service: root.id == "pipewire" || root.id == "wireplumber";
+}
+
+export component OnboardingCheck inherits Rectangle {
+    in property <[CheckItem]> checks;
+    in property <bool> checking;
+    in property <bool> passed;
+    callback recheck();
+    callback continue();
+    callback copy(string);
+    background: Tokens.surface-window;
+    forward-focus: keys;
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if (e.text == "r" || e.text == "R") && !e.modifiers.control && !root.checking {
+                root.recheck();
+                return accept;
+            }
+            if e.text == "\n" && root.passed {
+                root.continue();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: max(24px, (parent.height - self.preferred-height) / 2.6);
+        width: min(680px * Tokens.scale, parent.width - 48px);
+        height: self.preferred-height;
+        spacing: 12px * Tokens.scale;
+        Text {
+            text: @tr("Step {0} of {1}", 1, 2) + " · " + @tr("System check");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-caption;
+        }
+        HorizontalLayout {
+            spacing: 14px * Tokens.scale;
+            alignment: start;
+            JLogo { size: 32px * Tokens.scale; }
+            Text {
+                text: @tr("Welcome to JUNC");
+                color: Tokens.text-strong;
+                font-size: Tokens.type-display;
+                vertical-alignment: center;
+                accessible-role: AccessibleRole.text;
+            }
+        }
+        Text {
+            text: @tr("JUNC builds on PipeWire. Checking that the pieces it needs are installed and running.");
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            height: list.preferred-height;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            background: Tokens.surface-card;
+            accessible-role: AccessibleRole.list;
+            accessible-label: @tr("System check");
+            list := VerticalLayout {
+                padding: Tokens.border;
+                for c[i] in root.checks: VerticalLayout {
+                    if i > 0: Rectangle {
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
+                    words := CheckWords { id: c.id; }
+                    JCheckRow {
+                        name: words.name;
+                        name-width: 180px * Tokens.scale;
+                        detail: words.service && c.state == "ok" ? words.role + " · " + @tr("running") : words.role;
+                        state: c.state;
+                        code: c.state == "ok" ? "" : c.fix;
+                        copy(t) => { root.copy(t); }
+                    }
+                }
+                if root.checks.length == 0: Text {
+                    height: 44px * Tokens.scale;
+                    text: root.checking ? @tr("Checking…") : @tr("junc doctor did not answer.");
+                    color: Tokens.text-subtle;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+        HorizontalLayout {
+            padding-top: 6px * Tokens.scale;
+            spacing: Tokens.space-row-gap;
+            JButton {
+                text: @tr("Re-check");
+                icon: "\u{f0450}";
+                shortcut: "R";
+                show-key: true;
+                primary: !root.passed;
+                enabled: !root.checking;
+                clicked => { root.recheck(); }
+            }
+            JButton {
+                text: @tr("Continue");
+                icon: "\u{f0142}";
+                shortcut: "Enter";
+                show-key: true;
+                primary: root.passed;
+                enabled: root.passed;
+                clicked => { root.continue(); }
+            }
+            Text {
+                horizontal-stretch: 1;
+                text: root.checking ? @tr("Checking…") : root.passed ? "" : @tr("Install the missing package, then Re-check");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+        }
+    }
+}
+
+// A starting point (one built-in template).
+struct Template {
+    id: string,
+    icon: string,
+    title: string,
+    text: string,
+    example: string,
+}
+
+component TemplateCard inherits Rectangle {
+    in property <Template> item;
+    in property <bool> current;
+    callback chosen();
+    callback activated();
+    background: root.current || touch.has-hover ? Tokens.control-hover-fill : Tokens.surface-card;
+    border-width: Tokens.border;
+    border-color: root.current ? Tokens.accent : Tokens.line-divider;
+    accessible-role: list-item;
+    accessible-label: root.item.title;
+    accessible-description: root.item.text;
+    accessible-item-selectable: true;
+    accessible-item-selected: root.current;
+    accessible-action-default => { root.chosen(); root.activated(); }
+    touch := TouchArea {
+        clicked => { root.chosen(); }
+        double-clicked => { root.chosen(); root.activated(); }
+    }
+    HorizontalLayout {
+        padding: 18px * Tokens.scale;
+        spacing: 14px * Tokens.scale;
+        alignment: start;
+        Rectangle {
+            width: 40px * Tokens.scale;
+            height: 40px * Tokens.scale;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            Text {
+                text: root.item.icon;
+                font-size: Tokens.type-heading;
+                color: root.current ? Tokens.accent : Tokens.text-default;
+                accessible-role: none;
+            }
+        }
+        VerticalLayout {
+            spacing: 6px * Tokens.scale;
+            alignment: start;
+            horizontal-stretch: 1;
+            Text {
+                text: root.item.title;
+                font-size: Tokens.type-title;
+                color: root.current ? Tokens.accent : Tokens.text-strong;
+                accessible-role: none;
+            }
+            Text {
+                text: root.item.text;
+                color: Tokens.text-default;
+                wrap: word-wrap;
+                accessible-role: none;
+            }
+            Text {
+                text: root.item.example;
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                wrap: word-wrap;
+                accessible-role: none;
+            }
+        }
+    }
+}
+
+export component OnboardingTemplates inherits Rectangle {
+    in-out property <int> cursor: 1;
+    callback back();
+    callback chosen(string);
+    background: Tokens.surface-window;
+    forward-focus: keys;
+
+    // The built-in templates (templates/*.toml), worded for this screen.
+    property <[Template]> templates: [
+        { id: "cable", icon: "\u{f0054}", title: @tr("Cable"),
+          text: @tr("Send one app's sound straight into another app."),
+          example: @tr("e.g. {0}", "Firefox → OBS") },
+        { id: "mic-plus-app", icon: "\u{f036c}", title: @tr("Mic + App"),
+          text: @tr("Your mic and one app mixed into one input."),
+          example: @tr("e.g. {0}", "USB Microphone + Spotify") },
+        { id: "combine-inputs", icon: "\u{f00f8}", title: @tr("Combine Inputs"),
+          text: @tr("Two or more hardware inputs as one device."),
+          example: @tr("e.g. {0}", "USB Microphone + Built-in Audio") },
+        { id: "separate-tracks", icon: "\u{f066a}", title: @tr("Separate tracks"),
+          text: @tr("Mic and one app on separate Bus channels, for editing later."),
+          example: @tr("e.g. {0}", "USB Microphone → Ch 1–2, OBS → Ch 3–4") },
+        { id: "stream-mix", icon: "\u{f0430}", title: @tr("Stream mix"),
+          text: @tr("Mic, game and voice chat mixed into one input for streaming."),
+          example: @tr("e.g. {0}", "USB Microphone + Steam game + Discord") },
+        { id: "start-empty", icon: "\u{f0415}", title: @tr("Start empty"),
+          text: @tr("A blank Junction. Add inputs yourself."),
+          example: @tr("Bus Ch 1–2, nothing linked") },
+    ];
+
+    function create() { root.chosen(root.templates[root.cursor].id); }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.LeftArrow { root.cursor = max(0, root.cursor - 1); return accept; }
+            if e.text == Key.RightArrow { root.cursor = min(root.templates.length - 1, root.cursor + 1); return accept; }
+            if e.text == Key.UpArrow { root.cursor = root.cursor >= 2 ? root.cursor - 2 : root.cursor; return accept; }
+            if e.text == Key.DownArrow { root.cursor = root.cursor + 2 < root.templates.length ? root.cursor + 2 : root.cursor; return accept; }
+            if e.text == "\n" { root.create(); return accept; }
+            if e.text == Key.Escape { root.back(); return accept; }
+            reject
+        }
+    }
+
+    VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: max(24px, (parent.height - self.preferred-height) / 2.6);
+        width: min(680px * Tokens.scale, parent.width - 48px);
+        height: self.preferred-height;
+        spacing: 12px * Tokens.scale;
+        Text {
+            text: @tr("Step {0} of {1}", 2, 2) + " · " + @tr("Start");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-caption;
+        }
+        Text {
+            text: @tr("Pick a starting point");
+            color: Tokens.text-strong;
+            font-size: Tokens.type-display;
+            accessible-role: AccessibleRole.text;
+        }
+        Text {
+            text: @tr("Everything is editable afterwards. Your audio stack checked out.");
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        GridLayout {
+            spacing: 14px * Tokens.scale;
+            accessible-role: AccessibleRole.list;
+            accessible-label: @tr("Pick a starting point");
+            for t[i] in root.templates: TemplateCard {
+                row: i / 2;
+                col: mod(i, 2);
+                min-height: 132px * Tokens.scale;
+                item: t;
+                current: i == root.cursor;
+                chosen => { root.cursor = i; keys.focus(); }
+                activated => { root.create(); }
+            }
+        }
+        HorizontalLayout {
+            padding-top: 6px * Tokens.scale;
+            spacing: Tokens.space-row-gap;
+            JButton {
+                text: @tr("Back");
+                shortcut: "Esc";
+                show-key: true;
+                clicked => { root.back(); }
+            }
+            Text {
+                horizontal-stretch: 1;
+                text: "↑ ↓ ← → " + @tr("choose");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+            JButton {
+                text: @tr("Create {0}", root.templates[root.cursor].title);
+                shortcut: "Enter";
+                show-key: true;
+                primary: true;
+                clicked => { root.create(); }
+            }
+        }
+    }
+}

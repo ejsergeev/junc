@@ -1,0 +1,70 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// No Junctions yet (design board 10): what a Junction is, New Junction
+// and New Cable with their shortcuts, and Import existing setups (F13).
+// New Cable and Import come alive with their boards (B19).
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "../components/button.slint";
+import { JLogo } from "../components/logo.slint";
+
+export component EmptyNone inherits Rectangle {
+    callback new-junction();
+    background: Tokens.surface-window;
+    forward-focus: first;
+    VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.preferred-height) / 2;
+        width: min(parent.width - 48px, max(self.preferred-width, 640px * Tokens.scale));
+        height: self.preferred-height;
+        spacing: 14px * Tokens.scale;
+        HorizontalLayout {
+            alignment: center;
+            JLogo { size: 24px * Tokens.scale; }
+        }
+        Text {
+            text: @tr("No Junctions yet");
+            color: Tokens.text-strong;
+            font-size: Tokens.type-display;
+            horizontal-alignment: center;
+            accessible-role: AccessibleRole.text;
+        }
+        Text {
+            text: @tr("A Junction mixes apps and inputs into one virtual mic that any app can pick.");
+            color: Tokens.text-default;
+            horizontal-alignment: center;
+            wrap: word-wrap;
+        }
+        HorizontalLayout {
+            alignment: center;
+            spacing: Tokens.space-row-gap;
+            first := JButton {
+                text: @tr("New Junction");
+                icon: "\u{f0415}";
+                shortcut: "Ctrl+Shift+J";
+                show-key: true;
+                primary: true;
+                clicked => { root.new-junction(); }
+            }
+            JButton {
+                text: @tr("New Cable");
+                icon: "\u{f0415}";
+                shortcut: "Ctrl+Shift+K";
+                show-key: true;
+            }
+        }
+        Text {
+            text: @tr("A Cable sends one app straight into another.");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+            horizontal-alignment: center;
+        }
+        HorizontalLayout {
+            alignment: center;
+            JButton {
+                text: @tr("Import existing setups…");
+                icon: "\u{f01da}";
+                flat: true;
+            }
+        }
+    }
+}

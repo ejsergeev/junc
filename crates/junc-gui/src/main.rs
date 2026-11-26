@@ -6,7 +6,7 @@
 #![forbid(unsafe_code)]
 
 use junc_gui::actions::{Actions, Command, Dbus};
-use junc_gui::{app, daemon, meter_service, theme, theme_service, ui};
+use junc_gui::{app, daemon, meter_service, onboarding, theme, theme_service, ui};
 use slint::ComponentHandle;
 use std::rc::Rc;
 
@@ -50,6 +50,9 @@ fn main() -> Result<(), slint::PlatformError> {
         Err(_) => Rc::new(Nowhere),
     };
     let controller = app::install(&window, actions, meters.clone(), levels);
+    if let Some(file) = onboarding::state_file() {
+        controller.borrow_mut().onboard_with(file);
+    }
     app::set_current(&controller);
     // Without a session bus the window shows juncd as unreachable.
     let _ = daemon::follow(None, move |d| {

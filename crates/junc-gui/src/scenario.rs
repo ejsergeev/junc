@@ -8,7 +8,9 @@
 
 use crate::actions::{Actions, Command};
 use crate::app::App;
+use crate::checks;
 use crate::edits;
+use crate::onboarding::Step;
 use junc_core::backend::{Backend, MockBackend};
 use junc_core::graph::{Graph, Props};
 use junc_core::model::Config;
@@ -25,8 +27,9 @@ struct Fixture {
     #[allow(dead_code)] // documents the design board
     board: u32,
     title: String,
-    /// Another scenario this one starts from: its config, nodes and
-    /// default output, unless given here.
+    /// Another scenario this one starts from (bases nest): its config,
+    /// default output and so on unless given here, and its nodes before
+    /// these.
     #[serde(default)]
     base: Option<String>,
     /// Inputs to turn off, as `"<junction>/<input>"`.
@@ -58,6 +61,28 @@ struct Fixture {
     /// Show Listen off.
     #[serde(default)]
     hide_listen: bool,
+    /// The Junction to select (else the first).
+    #[serde(default)]
+    select: Option<String>,
+    /// Onboarding's step: `check` or `templates`.
+    #[serde(default)]
+    onboarding: Option<String>,
+    /// What `junc doctor --json` answers: its checks.
+    #[serde(default)]
+    check: Vec<CheckFixture>,
+    /// The Add Input picker open on the selected Junction.
+    #[serde(default)]
+    picker: bool,
+}
+
+/// One doctor check (`junc doctor --json`).
+#[derive(Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+struct CheckFixture {
+    id: String,
+    status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    fix: Option<String>,
 }
 
 /// A node of the mocked graph.
@@ -114,6 +139,11 @@ pub struct Scenario {
     /// The link under the pointer (see the fixture's `hover`).
     pub hover: Option<String>,
     pub hide_listen: bool,
+    pub select: Option<String>,
+    pub onboarding: Option<Step>,
+    pub picker: bool,
+    /// What the mock answers to the system check.
+    checks: Vec<checks::Row>,
     /// What the mock IPC settles again after each change.
     config: Option<Config>,
     graph: Graph,
@@ -130,26 +160,37 @@ pub fn fixtures() -> PathBuf {
         )
 }
 
-/// Loads `tests/fixtures/scenarios/<name>.toml`.
-pub fn load(name: &str) -> Result<Scenario, String> {
-    let dir = fixtures();
+/// Reads fixture `name`, with what its `base` (and the base's base) gives.
+fn read(dir: &std::path::Path, name: &str, depth: u8) -> Result<Fixture, String> {
     let path = dir.join("scenarios").join(format!("{name}.toml"));
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let mut f: Fixture = toml::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
     if let Some(base) = f.base.take() {
-        let p = dir.join("scenarios").join(format!("{base}.toml"));
-        let text = std::fs::read_to_string(&p).map_err(|e| format!("{}: {e}", p.display()))?;
-        let b: Fixture = toml::from_str(&text).map_err(|e| format!("{}: {e}", p.display()))?;
+        if depth > 4 {
+            return Err(format!("{name}: bases nest too deep"));
+        }
+        let b = read(dir, &base, depth + 1)?;
         f.config = f.config.or(b.config);
         f.graph = f.graph.or(b.graph);
         f.default_output = f.default_output.or(b.default_output);
         f.theme = f.theme.or(b.theme);
         f.size = f.size.or(b.size);
         f.daemon = f.daemon.or(b.daemon);
-        if f.node.is_empty() {
-            f.node = b.node;
+        f.select = f.select.or(b.select);
+        f.onboarding = f.onboarding.or(b.onboarding);
+        if f.check.is_empty() {
+            f.check = b.check;
         }
+        // The base's nodes, then this one's.
+        f.node = b.node.into_iter().chain(f.node).collect();
     }
+    Ok(f)
+}
+
+/// Loads `tests/fixtures/scenarios/<name>.toml`.
+pub fn load(name: &str) -> Result<Scenario, String> {
+    let dir = fixtures();
+    let mut f = read(&dir, name, 0)?;
     f.node.retain(|n| !f.unplug.contains(&n.name));
     let state = f.daemon.unwrap_or_else(|| "connected".to_owned());
     let mut graph = match &f.graph {
@@ -203,6 +244,18 @@ pub fn load(name: &str) -> Result<Scenario, String> {
             input.enabled = false;
         }
     }
+    let onboarding = match f.onboarding.as_deref() {
+        None => None,
+        Some("check") => Some(Step::Check),
+        Some("templates") => Some(Step::Templates),
+        Some(o) => {
+            return Err(format!(
+                "{name}: onboarding {o:?} is not check or templates"
+            ));
+        }
+    };
+    let doctor = serde_json::to_string(&f.check).map_err(|e| e.to_string())?;
+    let checks = checks::parse(&doctor)?;
     Ok(Scenario {
         name: name.to_owned(),
         title: f.title,
@@ -211,6 +264,10 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         describe: config.as_ref().map(|c| settle(c, graph.clone(), &state)),
         hover: f.hover,
         hide_listen: f.hide_listen,
+        select: f.select,
+        onboarding,
+        picker: f.picker,
+        checks,
         config,
         graph,
         state,
@@ -231,6 +288,11 @@ struct MockState {
     app: Weak<RefCell<App>>,
     /// The answer to the last request, until [`Mock::flush`] shows it.
     pending: Option<Describe>,
+    checks: Vec<checks::Row>,
+    /// The system check was asked for and not answered yet.
+    checking: bool,
+    /// What the window last put on the clipboard.
+    copied: Option<String>,
 }
 
 impl std::fmt::Debug for Mock {
@@ -248,6 +310,9 @@ impl Mock {
                 state: s.state.clone(),
                 app: Weak::new(),
                 pending: None,
+                checks: s.checks.clone(),
+                checking: false,
+                copied: None,
             })),
         }
     }
@@ -260,13 +325,27 @@ impl Mock {
     /// Shows the answer to the last request (requests come while the
     /// controller is busy, so answers wait for this or a zero timer).
     pub fn flush(&self) {
-        let (app, d) = {
+        let (app, d, checks) = {
             let mut s = self.inner.borrow_mut();
-            (s.app.upgrade(), s.pending.take())
+            let checks = std::mem::take(&mut s.checking).then(|| s.checks.clone());
+            (s.app.upgrade(), s.pending.take(), checks)
         };
-        if let (Some(a), Some(d)) = (app, d) {
+        if let (Some(a), Some(d)) = (&app, d) {
             a.borrow_mut().update(Some(d));
         }
+        if let (Some(a), Some(rows)) = (&app, checks) {
+            a.borrow_mut().set_checks(rows);
+        }
+    }
+
+    /// What the window last copied.
+    pub fn copied(&self) -> Option<String> {
+        self.inner.borrow().copied.clone()
+    }
+
+    /// Changes what the system check answers (a fixed system re-checked).
+    pub fn set_checks(&self, rows: Vec<checks::Row>) {
+        self.inner.borrow_mut().checks = rows;
     }
 
     /// The config as the mock holds it now.
@@ -280,36 +359,69 @@ impl Actions for Mock {
         {
             let mut guard = self.inner.borrow_mut();
             let s = &mut *guard;
-            let Some(c) = s.config.as_mut() else { return };
-            let find = |c: &mut Config, path: &str| {
-                let id = junc_ipc::junction_id(path)?;
-                c.junction.iter().position(|j| j.id == id)
-            };
             match &command {
-                Command::Enabled { path, on } => {
-                    if let Some(i) = find(c, path) {
-                        c.junction[i].enabled = *on;
-                    }
-                }
-                Command::Volume { path, percent } => {
-                    if let Some(i) = find(c, path) {
-                        c.junction[i].volume = *percent;
-                    }
-                }
-                Command::Delete { path } => {
-                    if let Some(i) = find(c, path) {
-                        c.junction.remove(i);
-                    }
-                }
-                Command::Edit { junction, edit } => {
-                    edits::apply(c, junction, edit);
-                }
+                Command::Check => s.checking = true,
+                Command::Copy(text) => s.copied = Some(text.clone()),
+                _ => {}
             }
-            let d = settle(c, s.graph.clone(), &s.state);
-            s.pending = Some(d);
+            if let Some(c) = s.config.as_mut() {
+                Self::change(c, &command);
+                s.pending = Some(settle(c, s.graph.clone(), &s.state));
+            }
         }
         let m = self.clone();
         slint::Timer::single_shot(std::time::Duration::ZERO, move || m.flush());
+    }
+}
+
+impl Mock {
+    /// Applies a request to the mock's config, as juncd would.
+    fn change(c: &mut Config, command: &Command) {
+        let find = |c: &mut Config, path: &str| {
+            let id = junc_ipc::junction_id(path)?;
+            c.junction.iter().position(|j| j.id == id)
+        };
+        match command {
+            Command::Enabled { path, on } => {
+                if let Some(i) = find(c, path) {
+                    c.junction[i].enabled = *on;
+                }
+            }
+            Command::Volume { path, percent } => {
+                if let Some(i) = find(c, path) {
+                    c.junction[i].volume = *percent;
+                }
+            }
+            Command::Delete { path } => {
+                if let Some(i) = find(c, path) {
+                    c.junction.remove(i);
+                }
+            }
+            Command::Edit { junction, edit } => {
+                edits::apply(c, junction, edit);
+            }
+            Command::Create { name } => {
+                // As juncd's CreateJunction: an id from the name, unique.
+                let base = junc_core::config::slugify(name);
+                let id = (1..)
+                    .map(|n| {
+                        if n == 1 {
+                            base.clone()
+                        } else {
+                            format!("{base}-{n}")
+                        }
+                    })
+                    .find(|id| c.junction.iter().all(|j| &j.id != id))
+                    .unwrap_or(base);
+                let mut t = toml::Table::new();
+                t.insert("id".into(), id.into());
+                t.insert("name".into(), name.clone().into());
+                if let Ok(j) = toml::Value::Table(t).try_into() {
+                    c.junction.push(j);
+                }
+            }
+            Command::Check | Command::Copy(_) => {}
+        }
     }
 }
 
@@ -368,6 +480,17 @@ pub fn open(
         .global::<crate::ui::View>()
         .set_show_listen(!s.hide_listen);
     app.borrow_mut().update(s.describe.clone());
+    if let Some(id) = &s.select {
+        app.borrow_mut().select(id);
+    }
+    if s.onboarding.is_some() {
+        app.borrow_mut().set_step(s.onboarding);
+        // The check answers at once in a fixture.
+        mock.flush();
+    }
+    if s.picker {
+        app.borrow_mut().open_picker();
+    }
     (app, mock)
 }
 
