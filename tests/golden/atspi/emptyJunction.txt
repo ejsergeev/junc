@@ -1,0 +1,57 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    list item name='New Junction' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='New Junction' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='No inputs yet' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='New Junction volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Rename' desc='F2' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='junc.new_junction · 2 ch' states=[enabled,sensitive,showing,visible]
+    button name='Add input' desc='Ctrl+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Add Bus channels' desc='Ctrl+Shift+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Add Listen output' desc='Ctrl+M' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    panel name='No inputs yet' states=[enabled,sensitive,showing,visible]
+      label name='No inputs yet' states=[enabled,sensitive,showing,visible]
+      label name='Pick an app, a mic or system audio.' states=[enabled,sensitive,showing,visible]
+      button name='Add input' desc='Ctrl+N' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    panel name='Not listening' states=[enabled,sensitive,showing,visible]
+      label name='Not listening' states=[enabled,sensitive,showing,visible]
+      label name='Hear this Junction on an output.' states=[enabled,sensitive,showing,visible]
+      button name='Add listen output' desc='Ctrl+M' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    panel name='Ch 1–2' states=[enabled,sensitive,showing,visible]
+      label name='stereo' states=[enabled,sensitive,showing,visible]
+      label name='Ch 1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Ch 2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+    button name='Bus channel 1 in' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Bus channel 2 in' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Delete' desc='Ctrl+Delete' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Tab' states=[enabled,sensitive,showing,visible]
+    label name='move' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Space' states=[enabled,sensitive,showing,visible]
+    label name='toggle' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Enter' states=[enabled,sensitive,showing,visible]
+    label name='link' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Del' states=[enabled,sensitive,showing,visible]
+    label name='unlink' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='F2' states=[enabled,sensitive,showing,visible]
+    label name='rename' states=[enabled,sensitive,showing,visible]

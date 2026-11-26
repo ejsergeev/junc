@@ -1,0 +1,15 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Step 1 of 2 · System check' states=[enabled,sensitive,showing,visible]
+    label name='Welcome to JUNC' states=[enabled,sensitive,showing,visible]
+    label name='JUNC builds on PipeWire. Checking that the pieces it needs are installed and running.' states=[enabled,sensitive,showing,visible]
+    list box name='System check' states=[enabled,sensitive,showing,visible]
+      list item name='PipeWire' desc='ok: Audio server · running' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='WirePlumber' desc='ok: Session manager · running' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='pipewire-pulse' desc='missing: PulseAudio apps can see Junctions' states=[focusable,enabled,sensitive,showing,visible]
+        label name='sudo pacman -S pipewire-pulse' states=[enabled,sensitive,showing,visible]
+        button name='Copy' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      list item name='pipewire-jack' desc='ok: JACK apps can see Junctions' states=[focusable,enabled,sensitive,showing,visible]
+    button name='Re-check' desc='R' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Continue' desc='Enter' states=[focusable,showing,visible] actions=click
+    label name='Install the missing package, then Re-check' states=[enabled,sensitive,showing,visible]

@@ -1,0 +1,15 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Step 2 of 2 · Start' states=[enabled,sensitive,showing,visible]
+    label name='Pick a starting point' states=[enabled,sensitive,showing,visible]
+    label name='Everything is editable afterwards. Your audio stack checked out.' states=[enabled,sensitive,showing,visible]
+    list box name='Pick a starting point' states=[enabled,sensitive,showing,visible]
+      list item name='Cable' desc="Send one app's sound straight into another app." states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Mic + App' desc='Your mic and one app mixed into one input.' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      list item name='Combine Inputs' desc='Two or more hardware inputs as one device.' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Separate tracks' desc='Mic and one app on separate Bus channels, for editing later.' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Stream mix' desc='Mic, game and voice chat mixed into one input for streaming.' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Start empty' desc='A blank Junction. Add inputs yourself.' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+    button name='Back' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='↑ ↓ ← → choose' states=[enabled,sensitive,showing,visible]
+    button name='Create Mic + App' desc='Enter' states=[focusable,enabled,sensitive,showing,visible] actions=click

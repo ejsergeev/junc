@@ -1,0 +1,12 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='No Junctions or Cables yet.' states=[enabled,sensitive,showing,visible]
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='No Junctions yet' states=[enabled,sensitive,showing,visible]
+    label name='A Junction mixes apps and inputs into one virtual mic that any app can pick.' states=[enabled,sensitive,showing,visible]
+    button name='New Junction' desc='Ctrl+Shift+J' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='New Cable' desc='Ctrl+Shift+K' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='A Cable sends one app straight into another.' states=[enabled,sensitive,showing,visible]
+    button name='Import existing setups…' states=[focusable,enabled,sensitive,showing,visible] actions=click
