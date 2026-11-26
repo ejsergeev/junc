@@ -6,7 +6,7 @@
 //! text: the window formats counts and channel labels through its own
 //! translations, so this is tested without a window and in any language.
 
-use junc_core::model::DefaultRole;
+use junc_core::model::{DefaultRole, Match};
 use junc_core::plan::{default_map, gain_node_name, listen_node_name};
 use junc_ipc::view::{Describe, InputView, JunctionView, ListenView, State};
 
@@ -172,7 +172,11 @@ const MEDIA: &[&str] = &[
 ];
 
 fn input_icon(i: &InputView) -> Icon {
-    let m = &i.matcher;
+    match_icon(&i.matcher)
+}
+
+/// The icon of what `m` takes audio from.
+pub fn match_icon(m: &Match) -> Icon {
     if m.device.is_some() {
         Icon::Mic
     } else if m.monitor.is_some() {

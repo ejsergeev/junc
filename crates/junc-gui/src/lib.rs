@@ -16,6 +16,7 @@ pub mod layout;
 pub mod main_view;
 pub mod meter_service;
 pub mod meters;
+pub mod picker;
 #[cfg(feature = "scenarios")]
 pub mod scenario;
 #[cfg(feature = "scenarios")]
