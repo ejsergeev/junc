@@ -11,6 +11,14 @@
 //! - `build [DIR]` compiles `po/cli/<lang>.po` into
 //!   `DIR/<lang>/LC_MESSAGES/junc.mo` (default `target/locale`), with
 //!   junc-l10n's own writer, so no gettext tools are needed for it.
+//!
+//! The GUI's messages are the `@tr(…)` of `crates/junc-gui/ui/` (the
+//! component gallery's demo text excepted): `extract` also writes
+//! `po/gui/junc-gui.pot` with its own reader of Slint string literals, and
+//! `check` checks `po/gui/<lang>.po` the same way. They have no msgctxt:
+//! the GUI is built without Slint's default context, so a message such as
+//! "Delete" is translated once. Slint bundles them into the binary
+//! (`crates/junc-gui/build.rs`).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -19,6 +27,144 @@ use std::process::Command;
 /// Where the CLI's catalogs are.
 pub fn po_dir(root: &Path) -> PathBuf {
     root.join("po/cli")
+}
+
+/// Where the GUI's catalogs are.
+pub fn gui_dir(root: &Path) -> PathBuf {
+    root.join("po/gui")
+}
+
+/// Reads a Slint string literal at the start of `s` (after `"`): its value
+/// and the rest after the closing quote.
+fn slint_string(s: &str) -> Option<(String, &str)> {
+    let mut out = String::new();
+    let mut chars = s.char_indices();
+    while let Some((i, c)) = chars.next() {
+        match c {
+            '"' => return Some((out, &s[i + 1..])),
+            '\\' => match chars.next()?.1 {
+                'n' => out.push('\n'),
+                't' => out.push('\t'),
+                'u' => {
+                    // \u{XXXX}
+                    let rest = &s[i + 2..];
+                    let end = rest.find('}')?;
+                    let code = u32::from_str_radix(rest.get(1..end)?, 16).ok()?;
+                    out.push(char::from_u32(code)?);
+                    for _ in 0..=end {
+                        chars.next();
+                    }
+                }
+                other => out.push(other),
+            },
+            c => out.push(c),
+        }
+    }
+    None
+}
+
+/// The `@tr` messages of one Slint source: `(msgid, plural, line)`.
+pub fn slint_messages(text: &str) -> Result<Vec<(String, Option<String>, usize)>, String> {
+    let mut out = Vec::new();
+    let mut rest = text;
+    while let Some(at) = rest.find("@tr(") {
+        let line = text[..text.len() - rest.len() + at].matches('\n').count() + 1;
+        let after = rest[at + 4..].trim_start();
+        let lit = after
+            .strip_prefix('"')
+            .ok_or_else(|| format!("line {line}: @tr without a string literal"))?;
+        let (msgid, tail) =
+            slint_string(lit).ok_or_else(|| format!("line {line}: unterminated string"))?;
+        let tail = tail.trim_start();
+        if tail.starts_with("=>") {
+            return Err(format!("line {line}: @tr contexts are not used in JUNC"));
+        }
+        let mut plural = None;
+        let mut tail = tail;
+        if let Some(p) = tail.strip_prefix('|') {
+            let p = p
+                .trim_start()
+                .strip_prefix('"')
+                .ok_or_else(|| format!("line {line}: plural without a string literal"))?;
+            let (text, t) =
+                slint_string(p).ok_or_else(|| format!("line {line}: unterminated string"))?;
+            plural = Some(text);
+            tail = t;
+        }
+        out.push((msgid, plural, line));
+        rest = tail;
+    }
+    Ok(out)
+}
+
+/// A PO string: quoted, escaped, on one line.
+fn po_string(s: &str) -> String {
+    let mut out = String::from('"');
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\t' => out.push_str("\\t"),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// The GUI's template: every `@tr` under `crates/junc-gui/ui/` but the
+/// gallery, by file, each message once (with every file it is in).
+pub fn extract_gui(root: &Path) -> Result<String, String> {
+    let ls = Command::new("git")
+        .args(["ls-files", "crates/junc-gui/ui"])
+        .current_dir(root)
+        .output()
+        .map_err(|e| format!("git: {e}"))?;
+    let files: Vec<String> = String::from_utf8_lossy(&ls.stdout)
+        .lines()
+        .filter(|f| f.ends_with(".slint") && !f.ends_with("/gallery.slint"))
+        .map(str::to_owned)
+        .collect();
+    // msgid → (plural, files), in order of first appearance.
+    let mut order: Vec<String> = Vec::new();
+    let mut seen: BTreeMap<String, (Option<String>, Vec<String>)> = BTreeMap::new();
+    for f in &files {
+        let text = std::fs::read_to_string(root.join(f)).map_err(|e| format!("{f}: {e}"))?;
+        for (id, plural, _) in slint_messages(&text).map_err(|e| format!("{f}: {e}"))? {
+            let entry = seen.entry(id.clone()).or_insert_with(|| {
+                order.push(id.clone());
+                (plural.clone(), Vec::new())
+            });
+            if entry.0 != plural {
+                return Err(format!("{f}: {id:?} has two plural forms"));
+            }
+            if !entry.1.contains(f) {
+                entry.1.push(f.clone());
+            }
+        }
+    }
+    let mut out = String::from(
+        "# The GUI's messages, from cargo xtask i18n extract. Do not edit.\n\
+         msgid \"\"\n\
+         msgstr \"\"\n\
+         \"Project-Id-Version: junc-gui\\n\"\n\
+         \"Content-Type: text/plain; charset=UTF-8\\n\"\n",
+    );
+    for id in &order {
+        let (plural, files) = &seen[id];
+        out.push('\n');
+        out.push_str(&format!("#: {}\n", files.join(" ")));
+        out.push_str(&format!("msgid {}\n", po_string(id)));
+        match plural {
+            Some(p) => {
+                out.push_str(&format!("msgid_plural {}\n", po_string(p)));
+                out.push_str("msgstr[0] \"\"\nmsgstr[1] \"\"\n");
+            }
+            None => out.push_str("msgstr \"\"\n"),
+        }
+    }
+    Ok(out)
 }
 
 /// One message of a catalog.
@@ -311,6 +457,41 @@ pub fn check(root: &Path) -> Vec<String> {
             Err(e) => out.push(format!("{name}: {e}")),
         }
     }
+    out.extend(check_gui(root));
+    out
+}
+
+/// The GUI's template and catalogs (no external tools needed).
+fn check_gui(root: &Path) -> Vec<String> {
+    let dir = gui_dir(root);
+    let pot = dir.join("junc-gui.pot");
+    let Ok(text) = std::fs::read_to_string(&pot) else {
+        return vec![format!(
+            "{} is missing: run cargo xtask i18n extract",
+            pot.display()
+        )];
+    };
+    let mut out = Vec::new();
+    match extract_gui(root) {
+        Ok(fresh) if fresh != text => {
+            out.push("po/gui/junc-gui.pot is stale: run cargo xtask i18n extract".to_owned());
+        }
+        Ok(_) => {}
+        Err(e) => out.push(e),
+    }
+    let template = match parse(&text) {
+        Ok(t) => t,
+        Err(e) => return vec![format!("junc-gui.pot: {e}")],
+    };
+    for (name, path) in catalogs(&dir) {
+        match std::fs::read_to_string(&path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| parse(&t))
+        {
+            Ok(po) => out.extend(check_catalog(&format!("gui/{name}"), &po, &template)),
+            Err(e) => out.push(format!("gui/{name}: {e}")),
+        }
+    }
     out
 }
 
@@ -398,6 +579,20 @@ msgstr[1] "{n} Eingänge"
 #~ msgid "Old"
 #~ msgstr "Alt"
 "#;
+
+    #[test]
+    fn slint_messages_are_found_with_plurals_and_escapes() {
+        let ui = r#"Text { text: @tr("Delete “{0}”?", root.title); }
+x: @tr("{n} App" | "{n} Apps" % root.apps) + @tr("Say \"hi\"\n");
+icon: "\u{f0415}";"#;
+        let m = slint_messages(ui).expect("parse");
+        assert_eq!(m.len(), 3);
+        assert_eq!(m[0], ("Delete “{0}”?".to_owned(), None, 1));
+        assert_eq!(m[1].1.as_deref(), Some("{n} Apps"));
+        assert_eq!(m[2].0, "Say \"hi\"\n");
+        assert_eq!(po_string(&m[2].0), r#""Say \"hi\"\n""#);
+        assert!(slint_messages(r#"@tr("ctx" => "x")"#).is_err());
+    }
 
     #[test]
     fn catalogs_parse_with_continuations_and_plurals() {

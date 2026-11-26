@@ -84,6 +84,15 @@ fn i18n_task() -> ExitCode {
                     .and_then(|()| std::fs::write(&path, t))
                     .map_err(|e| format!("{}: {e}", path.display()))
             }) {
+                Ok(()) => println!("wrote {}", path.display()),
+                Err(e) => return fail(e),
+            }
+            let path = i18n::gui_dir(&root).join("junc-gui.pot");
+            match i18n::extract_gui(&root).and_then(|t| {
+                std::fs::create_dir_all(i18n::gui_dir(&root))
+                    .and_then(|()| std::fs::write(&path, t))
+                    .map_err(|e| format!("{}: {e}", path.display()))
+            }) {
                 Ok(()) => {
                     println!("wrote {}", path.display());
                     ExitCode::SUCCESS
