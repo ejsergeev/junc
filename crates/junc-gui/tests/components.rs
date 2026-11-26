@@ -36,6 +36,8 @@ fn one(w: &GalleryWindow, label: &str) -> ElementHandle {
 fn controls_work_from_the_keyboard_and_describe_themselves() {
     i_slint_backend_testing::init_no_event_loop();
     let w = GalleryWindow::new().expect("gallery");
+    // English whatever the machine's locale (ui::set_language).
+    junc_gui::ui::set_language("en");
     w.show().expect("show");
 
     // Switch: labelled, "on"/"off" described (validation fix), Space toggles.
@@ -96,6 +98,8 @@ fn controls_work_from_the_keyboard_and_describe_themselves() {
 fn cards_ports_and_channel_groups_describe_their_state() {
     i_slint_backend_testing::init_no_event_loop();
     let w = GalleryWindow::new().expect("gallery");
+    // English whatever the machine's locale (ui::set_language).
+    junc_gui::ui::set_language("en");
     w.show().expect("show");
 
     // Cards are labelled groups; a state other than "on and present" is
@@ -148,6 +152,8 @@ fn item(w: &GalleryWindow, label: &str) -> ElementHandle {
 fn popovers_and_dialogs_follow_the_keyboard_rules() {
     i_slint_backend_testing::init_no_event_loop();
     let w = GalleryWindow::new().expect("gallery");
+    // English whatever the machine's locale (ui::set_language).
+    junc_gui::ui::set_language("en");
     w.show().expect("show");
 
     // Picker: a labelled root, a labelled search field, rows that say
@@ -203,6 +209,8 @@ fn popovers_and_dialogs_follow_the_keyboard_rules() {
 fn status_components_announce_themselves() {
     i_slint_backend_testing::init_no_event_loop();
     let w = GalleryWindow::new().expect("gallery");
+    // English whatever the machine's locale (ui::set_language).
+    junc_gui::ui::set_language("en");
     w.show().expect("show");
     use i_slint_backend_testing::AccessibleLiveness;
 

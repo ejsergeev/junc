@@ -450,3 +450,13 @@ pub fn update_current(describe: Option<Describe>) {
         a.borrow_mut().update(describe);
     }
 }
+
+/// Shows the current controller again, after a language change.
+pub fn refresh_current() {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app
+        && let Ok(mut a) = a.try_borrow_mut()
+    {
+        a.refresh();
+    }
+}

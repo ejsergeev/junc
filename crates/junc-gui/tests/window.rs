@@ -19,6 +19,8 @@ fn labelled(w: &AppWindow, label: &str) -> bool {
 fn the_window_retints_and_resizes() {
     i_slint_backend_testing::init_no_event_loop();
     let w = AppWindow::new().expect("window");
+    // English whatever the machine's locale (ui::set_language).
+    ui::set_language("en");
 
     // Retint in place: one window, two themes.
     let tk = theme::fallback(false);

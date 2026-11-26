@@ -77,6 +77,36 @@ pub fn apply_to(g: &Tokens<'_>, t: &theme::Tokens) {
     }
 }
 
+thread_local! {
+    static LANGUAGE: std::cell::RefCell<String> = std::cell::RefCell::new("en".to_owned());
+}
+
+/// Shows the UI in `code` (a junc-l10n language code): Slint switches every
+/// `@tr` in place; lists joined here follow. Unknown codes show English.
+///
+/// Call it after creating the first window, always: before that Slint has
+/// no translations to select, and at that moment it picks one from the
+/// system locale by language alone, so `en_US` would get the `en_XA`
+/// pseudo-locale. JUNC's language comes from Omarchy (junc-l10n) instead.
+pub fn set_language(code: &str) {
+    let lang = if slint::select_bundled_translation(code).is_ok() {
+        code
+    } else {
+        let _ = slint::select_bundled_translation("en");
+        "en"
+    };
+    LANGUAGE.with(|l| lang.clone_into(&mut l.borrow_mut()));
+}
+
+/// How names are listed in the UI language: "a, b" or "a、b".
+fn list(names: &[String]) -> String {
+    let cjk = LANGUAGE.with(|l| {
+        let l = l.borrow();
+        l.starts_with("ja") || l.starts_with("zh")
+    });
+    names.join(if cjk { "、" } else { ", " })
+}
+
 /// The Nerd Font glyph of a card or sidebar icon.
 pub fn glyph(icon: Icon) -> &'static str {
     match icon {
@@ -107,7 +137,7 @@ pub fn sidebar(rows: &[Row], selected: Option<&str>) -> Vec<JunctionItem> {
                 .collect::<Vec<_>>()
                 .join(" ")
                 .into(),
-            inputs: r.inputs.join(", ").into(),
+            inputs: list(&r.inputs).into(),
             offline: i32::try_from(r.offline).unwrap_or(i32::MAX),
             volume: i32::from(r.volume),
             selected: selected == Some(r.id.as_str()),

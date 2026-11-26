@@ -2648,6 +2648,7 @@ dependencies = [
  "inotify",
  "junc-core",
  "junc-ipc",
+ "junc-l10n",
  "junc-pw",
  "png",
  "serde",

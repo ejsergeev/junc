@@ -3,7 +3,7 @@
 //! The Main screen against the default scenario's mock IPC, on Slint's
 //! testing backend (no display): what it shows to assistive technology,
 //! and that the keyboard, the pointer and the switches change the config
-//! the way juncd would be asked to (F4, F8).
+//! the way juncd would be asked to (F4, F8), in any UI language.
 
 use i_slint_backend_testing::{AccessibleRole, ElementHandle, mock_elapsed_time};
 use junc_gui::layout::Point;
@@ -61,6 +61,8 @@ fn the_main_screen_routes_from_keyboard_pointer_and_switches() {
     i_slint_backend_testing::init_no_event_loop();
     let s = scenario::load("default").expect("scenario");
     let w = AppWindow::new().expect("window");
+    // English whatever the machine's locale (ui::set_language).
+    ui::set_language("en");
     ui::apply(&w, &theme::fallback(false));
     w.window().set_size(LogicalSize::new(1440.0, 900.0));
     let (app, mock) = scenario::open(&s, &w, None, Levels::default());
@@ -147,5 +149,32 @@ fn the_main_screen_routes_from_keyboard_pointer_and_switches() {
         ElementHandle::find_by_accessible_label(&w, "HDMI Output")
             .next()
             .is_none()
+    );
+
+    // The language switches in place (architecture §8; Omarchy's language
+    // file is followed by the same call): labels assistive technology
+    // reads change with it, and English comes back.
+    listen.invoke_accessible_default_action();
+    ui::set_language("de");
+    settle();
+    assert!(
+        ElementHandle::find_by_accessible_label(&w, "Abhören einblenden")
+            .next()
+            .is_some()
+    );
+    ui::set_language("ja");
+    settle();
+    assert!(
+        ElementHandle::find_by_accessible_label(&w, "試聴を表示")
+            .next()
+            .is_some()
+    );
+    ui::set_language("ar");
+    settle();
+    assert!(
+        ElementHandle::find_by_accessible_label(&w, "Show Listen")
+            .next()
+            .is_some(),
+        "a language without a catalog shows English"
     );
 }

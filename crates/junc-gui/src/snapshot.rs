@@ -15,6 +15,9 @@ use std::rc::Rc;
 pub const FONT: &[u8] = include_bytes!("../fonts/JetBrainsMonoNerdFont-JuncSubset.ttf");
 /// Its family name, for the `Tokens.font-family` token.
 pub const FAMILY: &str = "JetBrainsMono Nerd Font";
+/// Japanese, which the snapshot font lacks: a subset of Noto Sans CJK JP
+/// with what the ja catalog uses, the fallback for Japanese scripts.
+pub const CJK: &[u8] = include_bytes!("../fonts/NotoSansCJKjp-JuncSubset.otf");
 
 struct Offscreen(Rc<MinimalSoftwareWindow>);
 
@@ -35,6 +38,17 @@ pub fn install(width: u32, height: u32) -> Result<Rc<MinimalSoftwareWindow>, Pla
         fontique::Blob::new(std::sync::Arc::new(FONT.to_vec())),
         None,
     );
+    let cjk = fonts.register_fonts(fontique::Blob::new(std::sync::Arc::new(CJK.to_vec())), None);
+    for script in [*b"Hira", *b"Kana", *b"Hani", *b"Jpan", *b"Zyyy"] {
+        fonts.append_fallbacks(
+            (fontique::Script::from_bytes(script), "ja"),
+            cjk.iter().map(|(family, _)| *family),
+        );
+        fonts.append_fallbacks(
+            fontique::FallbackKey::new(fontique::Script::from_bytes(script), None),
+            cjk.iter().map(|(family, _)| *family),
+        );
+    }
     for generic in [
         fontique::GenericFamily::SansSerif,
         fontique::GenericFamily::Monospace,

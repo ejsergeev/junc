@@ -99,7 +99,8 @@ component ChannelRow inherits Rectangle {
     HorizontalLayout {
         spacing: Tokens.space-row-gap;
         if !root.stacked-listen: ChannelLabel {
-            width: root.bus ? 64px * Tokens.scale : 40px * Tokens.scale;
+            // Bus labels grow with the language ("Kanal 1 (L)").
+            width: max(root.bus ? 64px * Tokens.scale : 40px * Tokens.scale, self.preferred-width);
             number: root.ch.number;
             position: root.ch.position;
             bus: root.bus;
@@ -210,10 +211,14 @@ export component MainScreen inherits Rectangle {
     background: Tokens.surface-window;
     property <length> pad: Tokens.space-panel-pad;
     // What a column heading says.
-    property <string> inputs-count: (root.apps > 0 ? @tr("{n} App" | "{n} Apps" % root.apps) : "")
-        + (root.apps > 0 && root.devices > 0 ? ", " : "")
-        + (root.devices > 0 ? @tr("{n} Device" | "{n} Devices" % root.devices) : "")
-        + (root.apps + root.devices == 0 ? @tr("No inputs yet") : "")
+    property <string> apps-count: @tr("{n} App" | "{n} Apps" % root.apps);
+    property <string> devices-count: @tr("{n} Device" | "{n} Devices" % root.devices);
+    property <string> inputs-count: (root.apps > 0 && root.devices > 0
+            // TRANSLATORS: two counts in a row, "2 Apps, 1 Device".
+            ? @tr("{0}, {1}", root.apps-count, root.devices-count)
+            : root.apps > 0 ? root.apps-count
+            : root.devices > 0 ? root.devices-count
+            : @tr("No inputs yet"))
         + (root.off > 0 ? " · " + @tr("{0} off", root.off) : "")
         + (root.offline > 0 ? " · " + @tr("{0} offline", root.offline) : "");
     property <string> bus-count: @tr("{n} Channel" | "{n} Channels" % root.bus-channels);

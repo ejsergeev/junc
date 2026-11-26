@@ -33,6 +33,15 @@ fn main() -> Result<(), slint::PlatformError> {
             });
         });
     }
+    // The Omarchy language, followed live (architecture §8).
+    let sources = junc_l10n::Sources::from_env(None);
+    ui::set_language(&junc_l10n::resolve(&sources));
+    let _ = junc_l10n::watch::spawn(sources, |lang| {
+        let _ = slint::invoke_from_event_loop(move || {
+            ui::set_language(&lang);
+            app::refresh_current();
+        });
+    });
     let levels = meter_service::Levels::default();
     // Without PipeWire the window shows no levels.
     let meters = meter_service::start(&window, &levels).map(Rc::new);
@@ -65,8 +74,8 @@ fn arg<'a>(args: &'a [String], flag: &str) -> Option<&'a str> {
     args.get(i + 1).map(String::as_str)
 }
 
-/// `--scenario NAME [--theme light|dark] [--size WxH] [--snapshot OUT.png]
-/// [--meters]` (architecture §7.5, §11.3): the window fed by a scenario
+/// `--scenario NAME [--theme light|dark] [--size WxH] [--lang L]
+/// [--snapshot OUT.png] [--meters]` (architecture §7.5, §11.3): the window fed by a scenario
 /// fixture through the mock IPC, or the component gallery (`gallery`). With
 /// `--snapshot` it renders once offscreen with the bundled font and
 /// writes a PNG; otherwise it opens a normal window (AT-SPI checks).
@@ -96,6 +105,7 @@ fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
         Some(_) => Some(snapshot::install(size.0, size.1)?),
         None => None,
     };
+    let lang = arg(args, "--lang").unwrap_or("en");
     let mut tokens = theme::fallback(light);
     if offscreen.is_some() {
         snapshot::FAMILY.clone_into(&mut tokens.font_family);
@@ -104,6 +114,7 @@ fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
     let (mut gallery, mut window, mut controller, mut meters) = (None, None, None, None);
     if let Some(s) = &loaded {
         let w = ui::AppWindow::new()?;
+        ui::set_language(lang);
         ui::apply(&w, &tokens);
         let levels = meter_service::Levels::default();
         if shot.is_none() && args.iter().any(|a| a == "--meters") {
@@ -129,6 +140,7 @@ fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
         window = Some(w);
     } else {
         let w = ui::GalleryWindow::new()?;
+        ui::set_language(lang);
         ui::apply_to(&w.global::<ui::Tokens>(), &tokens);
         w.show()?;
         gallery = Some(w);
