@@ -397,9 +397,19 @@ GUI foundation:
   python-gobject, a font and winit's X11 libraries. One CI run saw
   `enable_stays_fast` at p95 271 ms on aarch64 (gate 250 ms); it passed on
   the next runs.
-- [ ] **B15** [auto] Meter pipeline + VisibilityService; spike S7. Req: F7,
+- [x] **B15** [auto] Meter pipeline + VisibilityService; spike S7. Req: F7,
   performance. Acceptance: CPU hidden 0 % gate in CI; on the owner laptop
   meters stop within 1 s when minimized or on another workspace.
+  Done 2026-11-26 (architecture §7.6, as built): `junc_pw::meter`, one
+  passive capture stream with a port per channel, disconnected entirely
+  while paused; a gate from closing, Hyprland IPC and frame starvation; the
+  sidebar meter per Junction on a ~7 Hz Slint timer that stops while
+  hidden. CI gate (§11.3): a stand-in Hyprland moves the window away, the
+  meter stream is gone within 1 s and the GUI takes 0 CPU ticks in 3 s.
+  S7 on the owner's M1 (window on a temporary headless monitor, isolated
+  PipeWire): meters stop 14–29 ms after another workspace or minimizing,
+  0 CPU while hidden; frame starvation cannot see hidden windows on
+  Hyprland (it draws them at 15 fps), the IPC does.
 
 Screens, in design-canvas order (each: scenario fixture, golden in en/en_XA/
 de/ja, AT-SPI dump, keyboard test):
@@ -496,7 +506,7 @@ no open P0 bugs; owner listening test and release sign-off. Full F1–F25.
 | The real USB interface has 2 channels | F15 (Pro Audio, more channels) never runs on real multichannel hardware before release | snd-aloop multichannel cards in layer 3; ask early adopters with 8+ channel interfaces via the testing channel; compatibility table. |
 | Pi 4 targets cannot be measured (no Pi) | "< 2 % CPU on Pi 4" unverifiable | Best-effort (owner, 2026-11-25); measure on the M1 and in CI aarch64. |
 | Bluetooth on Asahi | AirPods / Pixel Buds HFP mic may behave differently from x86 BlueZ setups | F18 logic is tested on recorded fixtures (layer 1); real devices only confirm detection and the warning. |
-| GUI CPU with meters: 6.4 % of a core on the M1 with femtovg (target < 2 %), ~20 wakeups per meter tick from full-window repaints and Wayland round trips | Battery drain while JUNC is open; fails the PRD GUI target | B15: pause when hidden, repaint only meter regions (skia or software partial rendering), lower rate when unfocused; measure early in beta, before building all screens on one renderer. |
+| GUI CPU with meters: 6.4 % of a core on the M1 with femtovg (target < 2 %), ~20 wakeups per meter tick from full-window repaints and Wayland round trips | Battery drain while JUNC is open; fails the PRD GUI target | B15 done: 0 % while hidden; visible with the two sidebar meters ~1 % (debug build). B16 brings the column meters: measure there, then repaint only meter regions (skia or software partial rendering) or lower the rate when unfocused if needed; B26 gates it. |
 | Re-link in the live session: p95 89 ms with the prototype (target < 100 ms); A19 measured 81/90/101 ms with the real juncd | Target missed on busier desktops | Profile in a busy session (B29): how much is the observer's own batching, how much juncd's bind/sync gating; a lighter observer for the measurement. |
 | Audio/Duplex visibility differs across pulse/JACK/apps | Junctions missing from some apps' device lists | Spike S1 with real apps (Zoom/Discord/OBS in Chromium, Firefox); two-node fallback. |
 | Gain-stage bit-exactness | "bit-exact" metric fails | Spike S4; direct link at 100 % fallback. |

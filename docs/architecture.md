@@ -62,7 +62,7 @@ junc/
 ├── crates/
 │   ├── junc-core/                platform-agnostic: model, config, planner
 │   ├── junc-ipc/                 D-Bus contract: zbus proxies, DTOs, error codes
-│   ├── junc-pw/                  PipeWire backend (pipewire-rs), meter filter
+│   ├── junc-pw/                  PipeWire backend (pipewire-rs), GUI meters
 │   ├── junc-l10n/                language resolution, catalogs, ICU4X numbers
 │   ├── juncd/                    daemon binary
 │   ├── junc/                     CLI binary  (crate name junc-cli, bin "junc")
@@ -1071,7 +1071,7 @@ junc-gui
 ├─ AppState (Rust) ── models ──▶ Slint UI (ui/app.slint)
 ├─ ThemeService  (Omarchy colors.toml + shell.toml → Tokens global)
 ├─ L10nService   (Omarchy language file → select_bundled_translation, ICU4X numbers)
-├─ MeterService  (junc-pw meter filter, only while visible)
+├─ MeterService  (junc-pw meter stream, only while visible)
 ├─ VisibilityService (window shown/minimized/occluded)
 └─ Tray (ksni StatusNotifierItem + DBusMenu)
 ```
@@ -1273,6 +1273,35 @@ samples. To keep the daemon at 0 wakeups and the audio path untouched:
   count = 0 while hidden).
 - Reduced motion does not stop meters (they are information), but the peak
   tick does not animate.
+
+As built (B15): pipewire-rs 0.10 has no `pw_filter` binding, so
+`junc_pw::meter` uses one capture **stream** `junc-gui.meter` instead, with
+one AUX input port per metered channel (≤ 64): still one RT callback per
+cycle, no unsafe code. Its thread links the output ports of each watched
+node (`Meter::watch(node names)`; a sink's outputs are its monitor ports)
+with passive, non-lingering links tagged `junc.role = meter`; the stream is
+`node.passive`, not autoconnected, and WirePlumber links nothing to it. The
+callback keeps per-channel peaks in atomics (`fetch_max` on the `f32`
+bits); `Meter::read()` takes them per node. Watching nothing disconnects
+from PipeWire entirely: stream, links and callback are gone and the thread
+blocks on a condition variable (live test: gone ~30 ms after the pause, 0
+callbacks and 0 thread CPU while paused). In the GUI (`visibility.rs`,
+`meter_service.rs`, `meters.rs`) a `Gate` combines three signals, any of
+which hides: closed; Hyprland (events on `.socket2.sock`, then `j/clients`
+and `j/monitors`: the window's workspace must be a monitor's active or
+shown special workspace and no other window fullscreen on it — Hyprland's
+per-client `visible` stays true on other workspaces); starvation (a frame
+asked for and not presented within 500 ms, from Slint's rendering notifier,
+femtovg only). The gate pauses the meter itself from whichever thread
+notices. The ~7 Hz `Timer` lives in `app.slint` and runs only while the
+gate says running; bars jump up and fall at 24 dB/s, the peak tick holds
+1.5 s, values round to 0.5 dB so that changes a bar cannot show cause no
+repaint. On a pause the bars drop to silence and one frame stays asked
+for, so a false starvation resumes at once. Spike S7 (§12.1): on Hyprland
+the IPC is what works; Hyprland draws hidden windows at
+`misc:render_unfocused_fps` (15), so starvation never fires there and is
+the fallback for other compositors only. So far the sidebar shows one
+meter per Junction (its source); the column meters come with B16.
 
 ### 7.7 Live theme reload
 
@@ -1666,6 +1695,14 @@ installs Xvfb, at-spi2-core, python-gobject, a font and the X11 libraries
 winit loads). Scenarios so far: `default` (board 1) and `gallery`; the
 other boards, languages and Weston come with the screens that show them.
 
+- **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
+  `with-pipewire.sh` runs `--scenario default --meters` in the private
+  session with a node playing under the Junction's name and a stand-in
+  Hyprland (`scripts/gui/fake_hyprland.py`) that moves the window to
+  another workspace: the meter stream and its links must be gone within
+  1 s, the GUI process must take 0 clock ticks in 3 s, and the meters must
+  return within 1 s. CI runs it after the layer-2 suite on both arches.
+
 - **Orca**: `orca_test.sh` speech log on the owner laptop under Hyprland,
   keyboard via `wtype` with a focus guard (`interaction_test_wayland.sh`,
   `orca_test_wayland.sh`); at least 3 s between key presses so phrases are
@@ -1692,7 +1729,7 @@ and fails on regression beyond noise (thresholds in `bench/thresholds.toml`):
 | GUI cold start | < 300 ms to first frame with live state | owner (GPU); CI tracked, not gated |
 | GUI PSS | < 80 MB | owner; CI tracked |
 | GUI CPU with meters | < 2 % of one core at ~7 Hz | owner laptop (M1); the Pi 4 target is best-effort, no Pi available |
-| GUI CPU hidden | 0 %; meter callbacks = 0 | CI gate + owner |
+| GUI CPU hidden | 0 %; meter callbacks = 0 | CI gate (`hidden-check.sh`, §11.3) + owner (S7) |
 | Frame time while dragging links | p95 < 16 ms | owner |
 
 As built (A17): `crates/junc-bench` drives the real juncd (release build,
@@ -1771,6 +1808,7 @@ Scripts: `bench/spikes/`. All ran in an isolated instance on the owner's M1.
 | S4 | **Pass.** pw-cat → gain node → Junction → recorder is bit-exact at 100 % and exactly ×0.5 at 50 % (144 k frames, max error 0). | No direct-link fallback needed. |
 | S5 | **Pass.** With a JUNC link stream→gain in place, setting `target.object` on the stream to its gain node makes WirePlumber drop its link to the default sink and keep JUNC's; clearing the key restores the default-sink link. | Exclusive targets the Input's gain node (not the Junction). |
 | S6 | **Pass** (B11, Slint 1.19.1, testing backend). `.po` catalogs bundled with `with_bundled_translations`; `select_bundled_translation` switches en → de → ru → bn → en in one process and every `@tr` and accessible label follows; an unbundled language is refused and the UI keeps its own. `@tr("{0} input connected" \| "{0} inputs connected" % inputs, inputs-text)` picks the form from the int and shows ICU4X's text (`1.234`, `২১`). `bench/spikes/s6/`. | GUI as designed. Its catalogs carry `msgctxt` = component name (Slint looks messages up that way); element lookups in GUI tests need Slint debug info. |
+| S7 | **Pass on Hyprland through its IPC** (B15, 2026-11-26, Hyprland 0.56.2, owner's M1; `bench/spikes/s7-visibility.sh`, window on a temporary headless monitor, isolated PipeWire). Meters stop 14–29 ms after the window goes to another workspace or a hidden special workspace (how Omarchy minimizes) and 10–16 ms after it is closed; 0 CPU ticks in 3 s while hidden; back 13–19 ms after it returns. Visible with two sidebar meters: ~1 % of a core (debug build, default renderer). With the IPC out of reach nothing stops the meters: Hyprland keeps drawing hidden windows at `misc:render_unfocused_fps` (15), so frames never starve. | Hyprland IPC is the signal on Omarchy; frame starvation stays as the fallback for other compositors, checked by unit tests only so far. Hyprland 0.56 dispatchers are Lua (`hl.dsp.*`). |
 | S8 | **Pass by construction.** In the live session the speaker (node 62) and mic-array (node 56) ALSA nodes are inaccessible (`no global`), only their links are visible. | The planner only ever targets nodes it can see; test kept on the Asahi fixture. |
 
 | S9 | Registry globals carry only part of the properties. Nodes: no `junc.*` tags, no `application.process.binary`, no `audio.channels`. Links: no `junc.*` tags. Ports: everything needed (`port.id`, `audio.channel`, direction, `node.id`). | `junc-pw` binds every audio node and every link to read their full info props (cheap client-side proxies, no objects created); ports are read from globals. |
