@@ -1,11 +1,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Sourced by the GUI checks: a private headless session (Xvfb, its own
 # session bus, the AT-SPI bus and registry), never the user's desktop.
-# Sets DISPLAY, DBUS_SESSION_BUS_ADDRESS, XDG_RUNTIME_DIR and `session_tmp`;
+# Sets DISPLAY, DBUS_SESSION_BUS_ADDRESS, XDG_RUNTIME_DIR, XDG_CONFIG_HOME
+# (what its services write, such as dconf, stays in it) and `session_tmp`;
 # everything it starts stops on exit.
 mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}"
 session_tmp=$(mktemp -d "${XDG_CACHE_HOME:-$HOME/.cache}/junc-gui-session.XXXXXX")
 session_pids=()
+export XDG_CONFIG_HOME=$session_tmp/config
 session_stop() { kill "${session_pids[@]}" 2>/dev/null || true; rm -rf "$session_tmp"; }
 trap session_stop EXIT
 D=:${JUNC_XVFB_DISPLAY:-97}
