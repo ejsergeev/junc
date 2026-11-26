@@ -436,6 +436,16 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
     wait_for(&rx, &mut g, Duration::from_secs(5), |g| !g.nodes.is_empty())
         .ok_or("no PipeWire graph (run under scripts/ci/with-pipewire.sh)")?;
 
+    // No transparent huge pages for what this process starts from here on
+    // (the flag is inherited across fork and exec): whether a runner backs
+    // juncd's heap with 2 or 4 MB of huge pages moved its PSS by ~1.7 MB
+    // between runs of the same binary. The gate measures juncd, not the
+    // runner's THP; juncd as shipped is unchanged (owner decision
+    // 2026-11-26).
+    if let Err(e) = rustix::thread::disable_transparent_huge_pages(true) {
+        log(&format!("cannot disable transparent huge pages: {e}"));
+    }
+
     // Restore: process start to every Junction routed. juncd runs with the
     // environment its systemd unit gives it, as shipped.
     let unit_env = unit_environment(&o.unit);
