@@ -105,6 +105,10 @@ pub struct Layout {
     pub listens: Vec<Rect>,
     /// Top of the Listen heading when stacked.
     pub listen_heading: Option<f32>,
+    /// The empty states of a column without cards (design board 11): as
+    /// tall as the first Bus card, so the columns share their edges.
+    pub empty_inputs: Option<Rect>,
+    pub empty_listens: Option<Rect>,
     /// One per link of the model, in its order; `None` when it is not
     /// drawn (Listen links while stacked).
     pub curves: Vec<Option<Curve>>,
@@ -176,6 +180,21 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
             .filter(|_| listen)
             .map(|c| card_height(c.channels.len(), true)),
     );
+    let empty_h = bus.first().map_or_else(|| card_height(2, false), |r| r.h);
+    let empty_inputs = inputs.is_empty().then_some(Rect {
+        x: columns[0].0,
+        y: 0.0,
+        w,
+        h: empty_h,
+    });
+    let empty_listens = (listen && listens.is_empty()).then_some(Rect {
+        x: columns[2].0,
+        y: listen_top,
+        w,
+        h: empty_h,
+    });
+    let in_bottom = empty_inputs.map_or(in_bottom, |r| r.y + r.h);
+    let listen_bottom = empty_listens.map_or(listen_bottom, |r| r.y + r.h);
 
     let row_of = |rects: &[Rect], card: usize, ch: u8| -> Option<f32> {
         rects
@@ -228,6 +247,8 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
         bus,
         listens,
         listen_heading: stacked.then_some(bus_bottom + CARD_GAP),
+        empty_inputs,
+        empty_listens,
         curves,
         height: in_bottom.max(bus_bottom).max(listen_bottom),
     }
@@ -310,6 +331,28 @@ mod tests {
         for (link, c) in m.links.iter().zip(&l.curves) {
             assert_eq!(c.is_none(), matches!(link.to, End::Listen { .. }));
         }
+    }
+
+    #[test]
+    fn empty_columns_get_a_box_as_tall_as_the_first_bus_card() {
+        let full = layout(&board(), 1092.0, true);
+        assert!(full.empty_inputs.is_none() && full.empty_listens.is_none());
+        let mut m = board();
+        m.inputs.clear();
+        m.listens.clear();
+        m.links.clear();
+        let l = layout(&m, 1092.0, true);
+        let (i, o) = (
+            l.empty_inputs.expect("inputs"),
+            l.empty_listens.expect("listens"),
+        );
+        assert_eq!((i.y, i.h, o.h), (0.0, l.bus[0].h, l.bus[0].h));
+        assert_eq!(o.x, l.columns[2].0);
+        assert!(layout(&m, 1092.0, false).empty_listens.is_none());
+        let stacked = layout(&m, 600.0, true);
+        let heading = stacked.listen_heading.expect("heading");
+        assert!(stacked.empty_listens.expect("listens").y > heading);
+        assert!(stacked.height >= stacked.empty_listens.expect("listens").y);
     }
 
     #[test]
