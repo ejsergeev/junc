@@ -8,7 +8,9 @@
 // JUNC's own code has none.
 #![deny(unsafe_code)]
 
+pub mod actions;
 pub mod daemon;
+pub mod edits;
 pub mod layout;
 pub mod main_view;
 pub mod meter_service;
