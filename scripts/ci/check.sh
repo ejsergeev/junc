@@ -8,6 +8,7 @@ step "toolchain"; rustc --version; cargo --version
 step "fmt";       cargo fmt --all --check
 step "clippy";    cargo clippy --workspace --all-targets --locked -- -D warnings
 step "test";      cargo test --workspace --locked
+step "meter";     cargo clippy -p junc-pw --features meter --all-targets --locked -- -D warnings
 step "gui";       cargo clippy -p junc-gui --features scenarios --all-targets --locked -- -D warnings
 cargo test -p junc-gui --features scenarios --locked
 cargo build -p junc-gui --features scenarios --locked

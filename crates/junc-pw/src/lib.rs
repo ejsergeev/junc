@@ -13,6 +13,8 @@
 //! reconnects; objects JUNC created linger in the server and are adopted
 //! again by the planner (§3.6).
 
+#[cfg(feature = "meter")]
+pub mod meter;
 mod session;
 mod socket;
 

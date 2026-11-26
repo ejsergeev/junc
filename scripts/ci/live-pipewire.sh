@@ -6,5 +6,6 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 exec scripts/ci/with-pipewire.sh env JUNC_LIVE_PIPEWIRE=1 \
-  cargo test -p junc-pw -p juncd -p junc-cli --test live --test dbus --test cli --locked "$@" \
+  cargo test -p junc-pw -p juncd -p junc-cli --features junc-pw/meter \
+  --test live --test dbus --test cli --test meter --locked "$@" \
   -- --nocapture --test-threads=1
