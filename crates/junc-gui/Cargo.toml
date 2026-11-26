@@ -41,3 +41,7 @@ scenarios = ["dep:serde", "dep:png", "slint/unstable-fontique-012"]
 [[test]]
 name = "snapshots"
 required-features = ["scenarios"]
+
+[[test]]
+name = "main_screen"
+required-features = ["scenarios"]

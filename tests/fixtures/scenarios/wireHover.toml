@@ -1,0 +1,6 @@
+# GUI scenario: design board 6, "Link hover" — the pointer over the link
+# from USB Microphone 1 (L) to Bus Ch 1.
+board = 6
+title = "Link hover"
+base = "default"
+hover = "mic 1->1"

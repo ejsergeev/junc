@@ -1,0 +1,6 @@
+# GUI scenario: design board 2, "Main · Flexoki Light" — board 1 in the
+# light theme.
+board = 2
+title = "Main · Flexoki Light"
+base = "default"
+theme = "light"

@@ -202,10 +202,19 @@ fn input_title(d: &Describe, i: &InputView) -> String {
     {
         return v.name.clone();
     }
+    // The node it matched, else one it would match (an Input that is off
+    // matches nothing, but its app may well be there).
+    let would = |c: &&junc_ipc::view::Candidate| {
+        m.binary.is_some() && c.binary == m.binary
+            || m.app.is_some() && c.app == m.app
+            || m.device.as_ref() == Some(&c.node)
+            || m.node.as_ref() == Some(&c.node)
+    };
     if let Some(c) = i
         .matched
         .first()
         .and_then(|n| d.candidates.iter().find(|c| &c.node == n))
+        .or_else(|| d.candidates.iter().find(would))
     {
         if let Some(app) = c.app.as_ref().filter(|a| !a.is_empty()) {
             return app.clone();

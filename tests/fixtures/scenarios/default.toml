@@ -1,12 +1,12 @@
 # GUI scenario (architecture §7.5): design board 1, "Main · Tokyo Night".
 # The mock IPC runs this config against the graph until it settles, as
-# juncd would, and shows the result.
+# juncd would, and shows the result. The graph is the nodes below.
 board = 1
 title = "Main · Tokyo Night"
 theme = "dark"
 size = [1440, 900]
 daemon = "connected"
-graph = "apps-browser-two-streams.json"
+default_output = "alsa_output.platform-builtin.analog-stereo"
 config = """
 schema = 1
 
@@ -14,19 +14,35 @@ schema = 1
 id = "virtual-mic-for-zoom"
 name = "Virtual Mic for Zoom"
 default = "input"
+volume = 50
 bus = { channels = 4 }
 
 [[junction.input]]
 id = "spotify"
 match = { binary = "spotify" }
+volume = 70
+exclusive = true
+
+[[junction.input]]
+id = "soundux"
+match = { binary = "soundux" }
+links = [[1, 3], [2, 4]]
 
 [[junction.input]]
 id = "mic"
-match = { device = "fake.hwin" }
+match = { device = "alsa_input.usb-Generic_USB_Microphone-00.analog-stereo" }
+name = "USB Microphone"
 
 [[junction.listen]]
-id = "hp"
+id = "builtin"
 target = "default"
+volume = 80
+links = [[1, 1], [2, 2]]
+
+[[junction.listen]]
+id = "hdmi"
+target = "alsa_output.platform-hdmi.hdmi-stereo"
+links = [[1, 1], [2, 2], [3, 1], [4, 2]]
 
 [[junction]]
 id = "firefox-to-obs"
@@ -38,5 +54,44 @@ id = "firefox"
 match = { binary = "firefox" }
 
 [junction.cable]
-to = { binary = "Discord" }
+to = { binary = "obs" }
 """
+
+[[node]]
+name = "spotify"
+class = "Stream/Output/Audio"
+app = "Spotify"
+binary = "spotify"
+
+[[node]]
+name = "soundux"
+class = "Stream/Output/Audio"
+app = "Soundux"
+binary = "soundux"
+
+[[node]]
+name = "alsa_input.usb-Generic_USB_Microphone-00.analog-stereo"
+class = "Audio/Source"
+description = "USB Microphone"
+
+[[node]]
+name = "alsa_output.platform-builtin.analog-stereo"
+class = "Audio/Sink"
+description = "Built-in Audio Analog Stereo"
+
+[[node]]
+name = "alsa_output.platform-hdmi.hdmi-stereo"
+class = "Audio/Sink"
+description = "HDMI Output"
+
+[[node]]
+name = "firefox"
+class = "Stream/Output/Audio"
+app = "Firefox"
+binary = "firefox"
+
+[[node]]
+name = "obs"
+class = "Stream/Input/Audio"
+app = "OBS"
+binary = "obs"

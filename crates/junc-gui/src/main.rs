@@ -5,8 +5,10 @@
 
 #![forbid(unsafe_code)]
 
-use junc_gui::{daemon, meter_service, state, theme, theme_service, ui};
+use junc_gui::actions::{Actions, Command, Dbus};
+use junc_gui::{app, daemon, meter_service, theme, theme_service, ui};
 use slint::ComponentHandle;
+use std::rc::Rc;
 
 fn main() -> Result<(), slint::PlatformError> {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -31,26 +33,29 @@ fn main() -> Result<(), slint::PlatformError> {
             });
         });
     }
+    let levels = meter_service::Levels::default();
     // Without PipeWire the window shows no levels.
-    let meters = meter_service::start(&window);
-    let gate = meters.as_ref().map(meter_service::MeterService::gate);
-    let weak = window.as_weak();
+    let meters = meter_service::start(&window, &levels).map(Rc::new);
+    let actions: Rc<dyn Actions> = match Dbus::spawn(None) {
+        Ok(d) => Rc::new(d),
+        Err(_) => Rc::new(Nowhere),
+    };
+    let controller = app::install(&window, actions, meters.clone(), levels);
+    app::set_current(&controller);
     // Without a session bus the window shows juncd as unreachable.
     let _ = daemon::follow(None, move |d| {
-        let snapshot = state::snapshot(d.as_ref());
-        if let Some(g) = &gate {
-            g.set_nodes(snapshot.metered());
-        }
-        let weak = weak.clone();
-        let _ = slint::invoke_from_event_loop(move || {
-            if let Some(w) = weak.upgrade() {
-                ui::show(&w, &snapshot);
-            }
-        });
+        let _ = slint::invoke_from_event_loop(move || app::update_current(d));
     });
     let run = window.run();
-    drop(meters);
+    drop((controller, meters));
     run
+}
+
+/// Where requests go when there is no session bus to send them on.
+struct Nowhere;
+
+impl Actions for Nowhere {
+    fn send(&self, _: Command) {}
 }
 
 /// The value after `flag`.
@@ -71,12 +76,16 @@ fn arg<'a>(args: &'a [String], flag: &str) -> Option<&'a str> {
 fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
     use junc_gui::{scenario, snapshot};
     let fail = |e: String| slint::PlatformError::Other(e);
-    let (theme_name, size, describe) = if name == "gallery" {
-        ("dark".to_owned(), (1640, 1013), None)
+    let loaded = if name == "gallery" {
+        None
     } else {
-        let s = scenario::load(name).map_err(fail)?;
-        (s.theme, s.size, s.describe)
+        Some(scenario::load(name).map_err(fail)?)
     };
+    let (theme_name, size) = loaded
+        .as_ref()
+        .map_or(("dark".to_owned(), (1640, 1013)), |s| {
+            (s.theme.clone(), s.size)
+        });
     let size = arg(args, "--size")
         .and_then(|v| v.split_once('x'))
         .and_then(|(w, h)| Some((w.parse().ok()?, h.parse().ok()?)))
@@ -92,40 +101,52 @@ fn scenario(name: &str, args: &[String]) -> Result<(), slint::PlatformError> {
         snapshot::FAMILY.clone_into(&mut tokens.font_family);
     }
     // Keep the window alive until rendered or closed.
-    let (mut gallery, mut app, mut meters) = (None, None, None);
-    if name == "gallery" {
+    let (mut gallery, mut window, mut controller, mut meters) = (None, None, None, None);
+    if let Some(s) = &loaded {
+        let w = ui::AppWindow::new()?;
+        ui::apply(&w, &tokens);
+        let levels = meter_service::Levels::default();
+        if shot.is_none() && args.iter().any(|a| a == "--meters") {
+            meters = meter_service::start(&w, &levels).map(Rc::new);
+        }
+        let (app, mock) = scenario::open(s, &w, meters.clone(), levels);
+        w.show()?;
+        if let Some(o) = &offscreen {
+            snapshot::settle(o, size.0, size.1);
+            if !scenario::hover(s, &app) {
+                return Err(fail(format!("{name}: hover {:?} is not a link", s.hover)));
+            }
+        } else {
+            // A real window lays out on the event loop; hover after it.
+            let (s, a) = (s.clone(), Rc::downgrade(&app));
+            slint::Timer::single_shot(std::time::Duration::from_millis(300), move || {
+                if let Some(a) = a.upgrade() {
+                    scenario::hover(&s, &a);
+                }
+            });
+        }
+        controller = Some((app, mock));
+        window = Some(w);
+    } else {
         let w = ui::GalleryWindow::new()?;
         ui::apply_to(&w.global::<ui::Tokens>(), &tokens);
         w.show()?;
         gallery = Some(w);
-    } else {
-        let w = ui::AppWindow::new()?;
-        ui::apply(&w, &tokens);
-        let snapshot = state::snapshot(describe.as_ref());
-        ui::show(&w, &snapshot);
-        if shot.is_none() && args.iter().any(|a| a == "--meters") {
-            meters = meter_service::start(&w);
-            if let Some(m) = &meters {
-                m.set_nodes(snapshot.metered());
-            }
-        }
-        w.show()?;
-        app = Some(w);
     }
     match (offscreen, shot) {
         (Some(window), Some(path)) => {
             let rgb = snapshot::render(&window, size.0, size.1);
             snapshot::write_png(&path, size.0, size.1, &rgb).map_err(fail)?;
-            drop((gallery, app, meters));
+            drop((gallery, window, controller, meters));
             Ok(())
         }
         _ => {
-            if let Some(w) = &app {
+            if let Some(w) = &window {
                 w.window()
                     .set_size(slint::LogicalSize::new(size.0 as f32, size.1 as f32));
             }
             let run = slint::run_event_loop();
-            drop(meters);
+            drop((controller, meters));
             run
         }
     }

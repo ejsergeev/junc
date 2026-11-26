@@ -1,43 +1,102 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The window skeleton (B12): sidebar with the Junction list and the main
-// pane with its three columns. Sizes follow docs/architecture.md §7.1:
-// sidebar 300 px (240 px when the tile is narrower than 1100 px); Inputs,
-// Bus and Listen side by side from 780 px of main pane, Listen stacked
-// below them under that.
+// The window (design boards 1–6): the sidebar with the Junctions and the
+// Main screen of the selected one. Sizes follow docs/architecture.md §7.1:
+// sidebar 300 px (240 px when the tile is narrower than 1100 px).
 
 import { Tokens } from "tokens.slint";
+import { View, JunctionItem } from "view.slint";
+import { MainScreen, CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
 import { JMeter } from "components/meter.slint";
-export { Tokens }
+import { JSwitch } from "components/switch.slint";
+import { JSlider } from "components/slider.slint";
+import { JButton, JIconButton } from "components/button.slint";
+export { Tokens, View, JunctionItem, CardItem, PortItem, LinkItem, ChannelItem }
 export { GalleryWindow } from "gallery.slint";
 
-export struct JunctionItem {
-    id: string,
-    name: string,
-    enabled: bool,
-    // "active", "waiting", "off", "unknown"
-    status: string,
-    // PipeWire node.name of its source: what the meter listens to.
-    node: string,
-    // Meter bar in dBFS (-60 is silence).
-    level: float,
-}
-
-component ColumnTitle inherits Text {
-    color: Tokens.text-strong;
-    font-size: Tokens.type-heading;
-    font-family: Tokens.font-family;
-}
-
-component Column inherits Rectangle {
-    in property <string> title;
-    background: Tokens.surface-window;
+// One Junction in the sidebar: name and switch; what feeds it; its meter
+// (4 px, bar only); its master volume.
+component SidebarRow inherits Rectangle {
+    in property <JunctionItem> item;
+    in property <[float]> levels;
+    callback select();
+    callback toggled(bool);
+    callback volume(int);
+    height: 102px * Tokens.scale;
+    background: root.item.selected ? Tokens.selection : touch.has-hover ? Tokens.control-hover-fill : transparent;
+    accessible-role: list-item;
+    accessible-label: root.item.name;
+    accessible-item-selectable: true;
+    accessible-item-selected: root.item.selected;
+    accessible-action-default => { root.select(); }
+    touch := TouchArea { clicked => { root.select(); } }
+    if root.item.selected: Rectangle {
+        x: 0;
+        width: 3px;
+        background: Tokens.accent;
+    }
     VerticalLayout {
-        spacing: Tokens.space-panel-gap;
-        ColumnTitle { text: root.title; }
-        Rectangle {
-            border-width: Tokens.border;
-            border-color: Tokens.line-divider;
-            background: Tokens.surface-card;
+        padding-left: Tokens.space-panel-pad;
+        padding-right: Tokens.space-panel-pad;
+        padding-top: 10px * Tokens.scale;
+        padding-bottom: 8px * Tokens.scale;
+        spacing: 4px * Tokens.scale;
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: root.item.name;
+                font-size: Tokens.type-title;
+                color: root.item.enabled ? Tokens.text-strong : Tokens.text-subtle;
+                vertical-alignment: center;
+                overflow: elide;
+                horizontal-stretch: 1;
+                accessible-role: none;
+            }
+            JSwitch {
+                label: root.item.name;
+                checked: root.item.enabled;
+                toggled(v) => { root.toggled(v); }
+            }
+        }
+        HorizontalLayout {
+            spacing: 6px;
+            Text {
+                text: root.item.cable ? "\u{f0054}" : root.item.icons;
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                accessible-role: none;
+            }
+            Text {
+                text: root.item.cable ? @tr("Cable") : root.item.inputs != "" ? root.item.inputs : @tr("No inputs yet");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            if root.item.offline > 0: Text {
+                text: "· " + @tr("{0} offline", root.item.offline);
+                color: Tokens.status-urgent;
+                font-size: Tokens.type-body-small;
+            }
+        }
+        JMeter {
+            height: 4px;
+            level: root.item.meter >= 0 && root.item.enabled ? root.levels[root.item.meter] : -60;
+        }
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: "\u{f057e}";
+                color: Tokens.text-subtle;
+                vertical-alignment: center;
+                accessible-role: none;
+            }
+            JSlider {
+                horizontal-stretch: 1;
+                label: @tr("{0} volume", root.item.name);
+                maximum: 150;
+                value: root.item.volume;
+                changed(v) => { root.volume(v); }
+            }
         }
     }
 }
@@ -52,10 +111,6 @@ export component AppWindow inherits Window {
     default-font-family: Tokens.font-family;
     default-font-size: Tokens.type-body;
 
-    in property <[JunctionItem]> junctions;
-    // "connected", "starting", "waiting_for_pipewire", or "down" when juncd
-    // is not reachable.
-    in property <string> daemon-state: "down";
     // Meters run (~7 Hz, Spec) only while the window is seen and something
     // is metered; stopped, the timer wakes nobody (architecture §7.6).
     in property <bool> meters-running;
@@ -67,80 +122,139 @@ export component AppWindow inherits Window {
     }
 
     out property <length> sidebar-width: root.width < 1100px ? 240px : 300px;
-    out property <length> main-width: root.width - root.sidebar-width;
-    out property <bool> stacked: root.main-width - 2 * Tokens.space-panel-pad < 780px;
 
-    // Placed explicitly so the window's size never comes from its content
-    // (the size-dependent properties above would loop otherwise).
+    // Placed explicitly so the window's size never comes from its content.
     HorizontalLayout {
         x: 0;
         y: 0;
         width: root.width;
         height: root.height;
-        sidebar := Rectangle {
+        Rectangle {
             width: root.sidebar-width;
             background: Tokens.surface-sidebar;
             VerticalLayout {
-                padding: Tokens.space-panel-pad;
-                spacing: Tokens.space-row-gap;
-                Text {
-                    text: @tr("Junctions");
-                    color: Tokens.text-strong;
-                    font-size: Tokens.type-heading;
+                // Heading: Junctions and their count, Settings.
+                Rectangle {
+                    height: 62px * Tokens.scale;
+                    HorizontalLayout {
+                        padding-left: Tokens.space-panel-pad;
+                        padding-right: Tokens.space-panel-pad;
+                        padding-top: 16px * Tokens.scale;
+                        spacing: 6px;
+                        Text {
+                            text: @tr("Junctions");
+                            color: Tokens.text-strong;
+                            font-size: Tokens.type-heading;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: View.junctions.length;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-caption;
+                            vertical-alignment: center;
+                            accessible-role: none;
+                        }
+                        Rectangle { horizontal-stretch: 1; }
+                        JIconButton {
+                            y: (parent.height - self.height) / 2;
+                            icon: "\u{f08bb}";
+                            tooltip: @tr("Settings");
+                            shortcut: "Ctrl+,";
+                        }
+                    }
                 }
-                for j in root.junctions: VerticalLayout {
-                    Rectangle {
-                        height: Tokens.size-control;
-                        HorizontalLayout {
-                            padding-left: Tokens.space-row-pad-x;
-                            spacing: Tokens.space-row-gap;
+                Flickable {
+                    VerticalLayout {
+                        width: root.sidebar-width;
+                        alignment: start;
+                        for j in View.junctions: SidebarRow {
+                            item: j;
+                            levels: View.levels;
+                            select => { View.select(j.id); }
+                            toggled(v) => { View.junction-toggled(j.id, v); }
+                            volume(v) => { View.junction-volume(j.id, v); }
+                        }
+                        if View.junctions.length == 0: HorizontalLayout {
+                            padding-left: Tokens.space-panel-pad;
+                            padding-right: Tokens.space-panel-pad;
                             Text {
-                                text: j.name;
-                                vertical-alignment: center;
-                                color: j.enabled ? Tokens.text-default : Tokens.text-subtle;
-                                accessible-label: j.name;
+                                width: root.sidebar-width - 2 * Tokens.space-panel-pad;
+                                text: View.daemon-state == "down" ? @tr("juncd is not running") : @tr("No Junctions yet");
+                                color: Tokens.text-subtle;
+                                wrap: word-wrap;
                             }
                         }
                     }
-                    // The sidebar meter: 4px, bar only (design Main).
+                }
+                // New Junction or Cable.
+                Rectangle {
+                    height: 45px * Tokens.scale;
+                    Rectangle {
+                        y: 0;
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
                     HorizontalLayout {
-                        padding-left: Tokens.space-row-pad-x;
-                        padding-right: Tokens.space-row-pad-x;
-                        JMeter {
-                            height: 4px;
-                            level: j.level;
+                        padding-left: Tokens.space-panel-pad;
+                        alignment: start;
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            text: @tr("New");
+                            icon: "\u{f0415}";
                         }
                     }
                 }
-                if root.junctions.length == 0: Text {
-                    text: root.daemon-state == "down" ? @tr("juncd is not running") : @tr("No Junctions yet");
-                    color: Tokens.text-subtle;
-                    wrap: word-wrap;
-                }
-                Rectangle { }
             }
         }
         Rectangle {
+            width: 1px;
+            background: Tokens.line-divider;
+        }
+        if View.selected != "": MainScreen {
+            title: View.title;
+            node: View.node;
+            bus-channels: View.bus-channels;
+            cable: View.cable;
+            apps: View.apps;
+            devices: View.devices;
+            off: View.off;
+            offline: View.offline;
+            listen-count: View.listen-count;
+            stacked: View.stacked;
+            cards: View.cards;
+            ports: View.ports;
+            links: View.links;
+            canvas-height: View.canvas-height;
+            col-x0: View.col-x0;
+            col-x1: View.col-x1;
+            col-x2: View.col-x2;
+            col-w: View.col-w;
+            listen-heading-y: View.listen-heading-y;
+            levels: View.levels;
+            peaks: View.peaks;
+            tip-visible: View.tip-visible;
+            tip-x: View.tip-x;
+            tip-y: View.tip-y;
+            tip-owner: View.tip-owner;
+            tip-ch: View.tip-ch;
+            tip-pos: View.tip-pos;
+            tip-bus: View.tip-bus;
+            tip-listen: View.tip-listen;
+            show-listen <=> View.show-listen;
+            narrow: root.width < 1100px;
+            changed canvas-width => { View.relayout(self.canvas-width); }
+            changed show-listen => { View.relayout(self.canvas-width); }
+            init => { View.relayout(self.canvas-width); }
+            card-toggled(c, i, v) => { View.card-toggled(c, i, v); }
+            card-volume(c, i, v) => { View.card-volume(c, i, v); }
+            pointer-moved(x, y) => { View.pointer-moved(x, y); }
+            pointer-left => { View.pointer-left(); }
+            link-clicked => { View.link-clicked(); }
+            port-remove(c, i, ch, side) => { View.port-remove(c, i, ch, side); }
+            delete-junction => { View.delete-junction(); }
+        }
+        if View.selected == "": Rectangle {
             background: Tokens.surface-window;
-            VerticalLayout {
-                padding: Tokens.space-panel-pad;
-                spacing: Tokens.space-panel-gap;
-                if !root.stacked: HorizontalLayout {
-                    spacing: Tokens.space-panel-gap;
-                    Column { title: @tr("Inputs"); }
-                    Column { title: @tr("Bus"); }
-                    Column { title: @tr("Listen"); }
-                }
-                if root.stacked: VerticalLayout {
-                    spacing: Tokens.space-panel-gap;
-                    HorizontalLayout {
-                        spacing: Tokens.space-panel-gap;
-                        Column { title: @tr("Inputs"); }
-                        Column { title: @tr("Bus"); }
-                    }
-                    Column { title: @tr("Listen"); }
-                }
-            }
         }
     }
 }

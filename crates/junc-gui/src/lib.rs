@@ -9,6 +9,7 @@
 #![deny(unsafe_code)]
 
 pub mod actions;
+pub mod app;
 pub mod daemon;
 pub mod edits;
 pub mod layout;

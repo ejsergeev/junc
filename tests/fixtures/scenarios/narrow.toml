@@ -1,0 +1,6 @@
+# GUI scenario: design board 3, "Narrow tile 900×600" — board 1 in a tile
+# narrower than 1100 px: a 240 px sidebar, Listen under the Bus.
+board = 3
+title = "Narrow tile 900×600"
+base = "default"
+size = [900, 600]

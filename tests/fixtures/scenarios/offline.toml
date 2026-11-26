@@ -1,0 +1,6 @@
+# GUI scenario: design board 5, "USB Microphone offline" — a hardware Input
+# unplugged: the card waits for its device, its links are dashed.
+board = 5
+title = "USB Microphone offline"
+base = "default"
+unplug = ["alsa_input.usb-Generic_USB_Microphone-00.analog-stereo"]

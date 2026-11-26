@@ -137,14 +137,15 @@ fn stack(x: f32, w: f32, top: f32, heights: impl Iterator<Item = f32>) -> (Vec<R
     (out, bottom)
 }
 
-/// Lays out `m` on a canvas `width` wide.
-pub fn layout(m: &Main, width: f32) -> Layout {
-    let stacked = width < STACK_BELOW;
-    let cols = if stacked { 2.0 } else { 3.0 };
+/// Lays out `m` on a canvas `width` wide; without `listen` (Show Listen
+/// off) the Listen column is left out and Inputs and Bus share the width.
+pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
+    let stacked = listen && width < STACK_BELOW;
+    let cols = if stacked || !listen { 2.0 } else { 3.0 };
     let gutter = ((width - cols * CARD_MIN) / (cols - 1.0)).clamp(GUTTER_MIN, GUTTER);
     let w = ((width - (cols - 1.0) * gutter) / cols).max(0.0);
     let x = |i: f32| i * (w + gutter);
-    let columns = if stacked {
+    let columns = if stacked || !listen {
         [(x(0.0), w), (x(1.0), w), (x(1.0), w)]
     } else {
         [(x(0.0), w), (x(1.0), w), (x(2.0), w)]
@@ -172,6 +173,7 @@ pub fn layout(m: &Main, width: f32) -> Layout {
         listen_top,
         m.listens
             .iter()
+            .filter(|_| listen)
             .map(|c| card_height(c.channels.len(), true)),
     );
 
@@ -210,7 +212,7 @@ pub fn layout(m: &Main, width: f32) -> Layout {
         .links
         .iter()
         .map(|l| {
-            if stacked && matches!(l.to, End::Listen { .. }) {
+            if (stacked || !listen) && matches!(l.to, End::Listen { .. }) {
                 return None;
             }
             Some(Curve {
@@ -265,7 +267,7 @@ mod tests {
     fn cards_and_ports_sit_where_the_design_puts_them() {
         // Design board 1: a 1092 px canvas (1440 window − 300 sidebar − 2 ×
         // 18 padding − 12 frame): three 284 px columns, 120 px gutters.
-        let l = layout(&board(), 1092.0);
+        let l = layout(&board(), 1092.0, true);
         assert!(!l.stacked);
         assert_eq!(l.columns[1], (404.0, 284.0));
         let spotify = l.inputs[0];
@@ -286,7 +288,7 @@ mod tests {
 
     #[test]
     fn narrow_canvases_stack_listen_without_links() {
-        let l = layout(&board(), 600.0);
+        let l = layout(&board(), 600.0, true);
         assert!(l.stacked);
         assert_eq!(l.columns[1], l.columns[2], "Listen under the Bus");
         let heading = l.listen_heading.expect("heading");
@@ -300,8 +302,19 @@ mod tests {
     }
 
     #[test]
+    fn without_listen_two_columns_share_the_width() {
+        let l = layout(&board(), 1092.0, false);
+        assert!(!l.stacked && l.listens.is_empty());
+        assert!(l.columns[0].1 > 400.0, "{:?}", l.columns);
+        let m = board();
+        for (link, c) in m.links.iter().zip(&l.curves) {
+            assert_eq!(c.is_none(), matches!(link.to, End::Listen { .. }));
+        }
+    }
+
+    #[test]
     fn the_pointer_finds_the_nearest_link() {
-        let l = layout(&board(), 1092.0);
+        let l = layout(&board(), 1092.0, true);
         let c = l.curves[0].expect("curve");
         let mid = c.at(0.5);
         assert_eq!(l.hit(mid), Some(0));

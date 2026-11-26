@@ -1,0 +1,472 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The Main screen (design boards 1–6): the selected Junction's header,
+// the routing canvas (Inputs → Bus → Listen) and the bottom bar. Card,
+// port and link positions come from Rust (layout.rs, architecture §7.3);
+// this file only draws them and words counts and channel labels in the
+// UI language.
+
+import { Tokens } from "../tokens.slint";
+import { JCard } from "../components/card.slint";
+import { JPort } from "../components/port.slint";
+import { JLink } from "../components/link.slint";
+import { JMeter } from "../components/meter.slint";
+import { JButton, JIconButton } from "../components/button.slint";
+import { JTooltip } from "../components/tooltip.slint";
+import { JKbd } from "../components/kbd.slint";
+import { JConfirm } from "../components/confirm.slint";
+
+export struct ChannelItem {
+    number: int,
+    // "L", "R" or "".
+    position: string,
+    // Index into the level and peak models; -1 for none.
+    meter: int,
+    // Stacked Listen rows: the Bus channel that feeds them (0: none).
+    source: int,
+}
+
+export struct CardItem {
+    // 0 Inputs, 1 Bus, 2 Listen.
+    column: int,
+    index: int,
+    id: string,
+    title: string,
+    // A Nerd Font glyph.
+    icon: string,
+    on: bool,
+    // "ok", "offline", "not-running"
+    state: string,
+    exclusive: bool,
+    volume: int,
+    // Bus: the group's first channel and whether it is a pair.
+    first: int,
+    stereo: bool,
+    x: length,
+    y: length,
+    w: length,
+    h: length,
+    channels: [ChannelItem],
+}
+
+export struct PortItem {
+    x: length,
+    y: length,
+    // "free", "linked", "offline"
+    state: string,
+    column: int,
+    card: int,
+    ch: int,
+    // 0: the port takes audio in (left edge), 1: gives it out (right edge).
+    side: int,
+    // The card's title (Inputs, Listen).
+    owner: string,
+}
+
+export struct LinkItem {
+    x: length,
+    y: length,
+    w: length,
+    h: length,
+    x1: length,
+    y1: length,
+    x2: length,
+    y2: length,
+    offline: bool,
+    hovered: bool,
+}
+
+// "1 (L)", "Ch 3 (R)", "2".
+component ChannelLabel inherits Text {
+    in property <int> number;
+    in property <string> position;
+    in property <bool> bus;
+    text: root.bus
+        ? (root.position == "" ? @tr("Ch {0}", root.number) : @tr("Ch {0} ({1})", root.number, root.position))
+        : (root.position == "" ? root.number : @tr("{0} ({1})", root.number, root.position));
+    color: Tokens.text-subtle;
+    font-size: Tokens.type-body-small;
+    vertical-alignment: center;
+}
+
+component ChannelRow inherits Rectangle {
+    in property <ChannelItem> ch;
+    in property <bool> bus;
+    in property <bool> stacked-listen;
+    in property <bool> live: true;
+    in property <[float]> levels;
+    in property <[float]> peaks;
+    height: 28px * Tokens.scale;
+    HorizontalLayout {
+        spacing: Tokens.space-row-gap;
+        if !root.stacked-listen: ChannelLabel {
+            width: root.bus ? 64px * Tokens.scale : 40px * Tokens.scale;
+            number: root.ch.number;
+            position: root.ch.position;
+            bus: root.bus;
+        }
+        if root.stacked-listen: Text {
+            width: 64px * Tokens.scale;
+            text: @tr("{0} ← Ch {1}", root.ch.position != "" ? root.ch.position : root.ch.number, root.ch.source);
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+            vertical-alignment: center;
+        }
+        Rectangle {
+            JMeter {
+                y: (parent.height - self.height) / 2;
+                width: parent.width;
+                level: root.live && root.ch.meter >= 0 ? root.levels[root.ch.meter] : -60;
+                peak: root.live && root.ch.meter >= 0 ? root.peaks[root.ch.meter] : -60;
+            }
+        }
+    }
+}
+
+component ColumnHeading inherits Rectangle {
+    in property <string> title;
+    in property <string> count;
+    in property <string> add-tip;
+    in property <string> add-key;
+    height: 44px * Tokens.scale;
+    VerticalLayout {
+        x: 0;
+        width: root.width - 36px * Tokens.scale;
+        spacing: 2px;
+        Text {
+            text: root.title;
+            color: Tokens.text-strong;
+            font-size: Tokens.type-heading;
+            accessible-role: none;
+        }
+        Text {
+            text: root.count;
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-caption;
+            overflow: elide;
+            accessible-role: none;
+        }
+    }
+    JIconButton {
+        x: root.width - self.width;
+        y: 2px;
+        icon: "\u{f0415}";
+        tooltip: root.add-tip;
+        shortcut: root.add-key;
+    }
+}
+
+export component MainScreen inherits Rectangle {
+    // The Junction.
+    in property <string> title;
+    in property <string> node;
+    in property <int> bus-channels;
+    in property <bool> cable;
+    // Input counts.
+    in property <int> apps;
+    in property <int> devices;
+    in property <int> off;
+    in property <int> offline;
+    in property <int> listen-count;
+    // From layout.rs.
+    in property <bool> stacked;
+    in property <[CardItem]> cards;
+    in property <[PortItem]> ports;
+    in property <[LinkItem]> links;
+    in property <length> canvas-height;
+    in property <length> col-x0;
+    in property <length> col-x1;
+    in property <length> col-x2;
+    in property <length> col-w;
+    in property <length> listen-heading-y;
+    // Meters, by index (ChannelItem.meter).
+    in property <[float]> levels;
+    in property <[float]> peaks;
+    // The link under the pointer.
+    in property <bool> tip-visible;
+    in property <length> tip-x;
+    in property <length> tip-y;
+    in property <string> tip-owner;
+    in property <int> tip-ch;
+    in property <string> tip-pos;
+    in property <int> tip-bus;
+    in property <bool> tip-listen;
+    // Show the Listen column (bottom bar).
+    in-out property <bool> show-listen: true;
+    // A tile narrower than 1100 px (the window says so, not this screen's
+    // own width, which comes from its content).
+    in property <bool> narrow;
+    // What layout.rs lays out: the canvas less its side padding.
+    out property <length> canvas-width: canvas.width - 2 * root.pad;
+    in-out property <bool> confirming;
+
+    callback card-toggled(int, int, bool);
+    callback card-volume(int, int, int);
+    callback pointer-moved(length, length);
+    callback pointer-left();
+    callback link-clicked();
+    callback port-remove(int, int, int, int);
+    callback delete-junction();
+
+    background: Tokens.surface-window;
+    property <length> pad: Tokens.space-panel-pad;
+    // What a column heading says.
+    property <string> inputs-count: (root.apps > 0 ? @tr("{n} App" | "{n} Apps" % root.apps) : "")
+        + (root.apps > 0 && root.devices > 0 ? ", " : "")
+        + (root.devices > 0 ? @tr("{n} Device" | "{n} Devices" % root.devices) : "")
+        + (root.apps + root.devices == 0 ? @tr("No inputs yet") : "")
+        + (root.off > 0 ? " · " + @tr("{0} off", root.off) : "")
+        + (root.offline > 0 ? " · " + @tr("{0} offline", root.offline) : "");
+    property <string> bus-count: @tr("{n} Channel" | "{n} Channels" % root.bus-channels);
+    property <string> listen-heading: @tr("{n} Device" | "{n} Devices" % root.listen-count)
+        + (root.stacked ? " · " + @tr("stacked") : "");
+
+    VerticalLayout {
+        // Header: name, rename, default role; node and channels.
+        Rectangle {
+            height: 62px * Tokens.scale;
+            HorizontalLayout {
+                padding-left: root.pad;
+                padding-right: root.pad;
+                padding-top: 16px * Tokens.scale;
+                spacing: Tokens.space-row-gap;
+                Text {
+                    text: root.title;
+                    color: Tokens.text-strong;
+                    font-size: Tokens.type-display;
+                    vertical-alignment: center;
+                    overflow: elide;
+                    accessible-role: none;
+                }
+                JIconButton {
+                    y: (parent.height - self.height) / 2;
+                    icon: "\u{f03eb}";
+                    tooltip: @tr("Rename");
+                    shortcut: "F2";
+                }
+                JButton {
+                    y: (parent.height - self.height) / 2;
+                    text: @tr("Default");
+                    icon: "\u{f0140}";
+                }
+                Text {
+                    text: root.node + " · " + @tr("{0} ch", root.bus-channels);
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-caption;
+                    vertical-alignment: center;
+                    horizontal-alignment: right;
+                    overflow: elide;
+                    min-width: 0;
+                    horizontal-stretch: 1;
+                }
+            }
+        }
+        // Column headings (Listen's moves into the canvas when stacked).
+        Rectangle {
+            height: 56px * Tokens.scale;
+            ColumnHeading {
+                x: root.pad + root.col-x0;
+                y: 12px * Tokens.scale;
+                width: root.col-w;
+                title: @tr("Inputs");
+                count: root.inputs-count;
+                add-tip: @tr("Add input");
+                add-key: "Ctrl+N";
+            }
+            ColumnHeading {
+                x: root.pad + root.col-x1;
+                y: 12px * Tokens.scale;
+                width: root.col-w;
+                title: @tr("Bus");
+                count: root.bus-count;
+                add-tip: @tr("Add Bus channels");
+                add-key: "Ctrl+Shift+N";
+            }
+            if !root.stacked && root.show-listen: ColumnHeading {
+                x: root.pad + root.col-x2;
+                y: 12px * Tokens.scale;
+                width: root.col-w;
+                title: @tr("Listen");
+                count: root.listen-heading;
+                add-tip: @tr("Add Listen output");
+                add-key: "Ctrl+M";
+            }
+        }
+        // The routing canvas.
+        canvas := Flickable {
+            content-height: max(self.height, root.canvas-height + root.pad);
+            content-width: self.width;
+            hover := TouchArea {
+                width: canvas.content-width;
+                height: canvas.content-height;
+                moved => {
+                    root.pointer-moved(self.mouse-x - root.pad, self.mouse-y);
+                }
+                changed has-hover => {
+                    if !self.has-hover { root.pointer-left(); }
+                }
+                clicked => { root.link-clicked(); }
+            }
+            for l in root.links: JLink {
+                x: root.pad + l.x;
+                y: l.y;
+                width: l.w;
+                height: l.h;
+                x1: l.x1;
+                y1: l.y1;
+                x2: l.x2;
+                y2: l.y2;
+                offline: l.offline;
+                hovered: l.hovered;
+            }
+            if root.stacked && root.show-listen: ColumnHeading {
+                x: root.pad + root.col-x2;
+                y: root.listen-heading-y;
+                width: root.col-w;
+                title: @tr("Listen");
+                count: root.listen-heading;
+                add-tip: @tr("Add Listen output");
+                add-key: "Ctrl+M";
+            }
+            for c in root.cards: JCard {
+                x: root.pad + c.x;
+                y: c.y;
+                width: c.w;
+                height: c.h;
+                title: c.column == 1
+                    ? (c.stereo ? @tr("Ch {0}–{1}", c.first, c.first + 1) : @tr("Ch {0}", c.first))
+                    : c.title;
+                on: c.on;
+                state: c.state;
+                exclusive: c.exclusive;
+                volume: c.volume;
+                footer: c.column != 1;
+                switchable: c.column != 1;
+                tag: c.column == 1 ? (c.stereo ? @tr("stereo") : @tr("mono")) : "";
+                options: c.column == 0;
+                app: c.title;
+                toggled(v) => { root.card-toggled(c.column, c.index, v); }
+                volume-changed(v) => { root.card-volume(c.column, c.index, v); }
+                HorizontalLayout {
+                    spacing: 10px * Tokens.scale;
+                    if c.column == 0: Rectangle {
+                        width: 40px * Tokens.scale;
+                        height: 40px * Tokens.scale;
+                        y: (parent.height - self.height) / 2;
+                        border-width: Tokens.border;
+                        border-color: c.state == "offline" ? Tokens.status-urgent : Tokens.line-divider;
+                        Text {
+                            text: c.icon;
+                            font-size: Tokens.type-heading;
+                            color: c.state == "offline" ? Tokens.status-urgent : Tokens.text-default;
+                            accessible-role: none;
+                        }
+                    }
+                    VerticalLayout {
+                        spacing: 4px * Tokens.scale;
+                        alignment: start;
+                        for ch in c.channels: ChannelRow {
+                            ch: ch;
+                            bus: c.column == 1;
+                            stacked-listen: c.column == 2 && root.stacked;
+                            live: c.on && c.state == "ok";
+                            levels: root.levels;
+                            peaks: root.peaks;
+                        }
+                    }
+                }
+            }
+            for p in root.ports: JPort {
+                x: root.pad + p.x - self.width / 2;
+                y: p.y - self.height / 2;
+                state: p.state;
+                label: p.column == 1
+                    ? (p.side == 0 ? @tr("Bus channel {0} in", p.ch) : @tr("Bus channel {0} out", p.ch))
+                    : @tr("{0} channel {1}", p.owner, p.ch);
+                remove => { root.port-remove(p.column, p.card, p.ch, p.side); }
+            }
+            if root.tip-visible: JTooltip {
+                width: self.preferred-width;
+                height: self.preferred-height;
+                x: root.pad + min(root.tip-x + 12px, canvas.content-width - self.width - root.pad);
+                y: root.tip-y + 16px;
+                text: @tr("Click to unlink");
+                shortcut: "Del";
+                property <string> ch: root.tip-pos == "" ? root.tip-ch : @tr("{0} ({1})", root.tip-ch, root.tip-pos);
+                detail: root.tip-listen
+                    ? @tr("Ch {0} → {1} {2}", root.tip-bus, root.tip-owner, self.ch)
+                    : @tr("{0} {1} → Ch {2}", root.tip-owner, self.ch, root.tip-bus);
+            }
+        }
+        // Bottom bar: delete, keyboard hints, Show Listen.
+        Rectangle {
+            height: 45px * Tokens.scale;
+            Rectangle {
+                y: 0;
+                height: Tokens.border;
+                background: Tokens.line-divider;
+            }
+            HorizontalLayout {
+                padding-left: root.pad;
+                padding-right: root.pad;
+                spacing: Tokens.space-row-gap;
+                alignment: space-between;
+                JButton {
+                    y: (parent.height - self.height) / 2;
+                    text: @tr("Delete");
+                    icon: "\u{f0a7a}";
+                    shortcut: "Ctrl+Delete";
+                    clicked => { root.confirming = true; }
+                }
+                // The design's Narrow board has no room for the hints.
+                if !root.narrow: HorizontalLayout {
+                    spacing: 6px;
+                    alignment: center;
+                    for hint in [
+                        { key: "Tab", text: @tr("move") },
+                        { key: "Space", text: @tr("toggle") },
+                        { key: "Enter", text: @tr("link") },
+                        { key: "Del", text: @tr("unlink") },
+                        { key: "F2", text: @tr("rename") },
+                    ]: HorizontalLayout {
+                        spacing: 4px;
+                        padding-right: 10px;
+                        JKbd { y: (parent.height - self.height) / 2; text: hint.key; }
+                        Text {
+                            text: hint.text;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+                JButton {
+                    y: (parent.height - self.height) / 2;
+                    text: @tr("Show Listen");
+                    icon: "\u{f06d0}";
+                    checkable: true;
+                    checked <=> root.show-listen;
+                }
+            }
+        }
+    }
+
+    // Delete confirmation (the Delete board comes with B19; the dialog is
+    // the library's).
+    if root.confirming: Rectangle {
+        background: Tokens.surface-desktop.with-alpha(0.6);
+        TouchArea { }
+        dialog := JConfirm {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 3;
+            title: @tr("Delete “{0}”?", root.title);
+            consequences: [@tr("Apps recording from it lose this input."), @tr("Its Inputs and Listen outputs go with it.")];
+            confirm-text: @tr("Delete");
+            init => { self.open(); }
+            confirmed => {
+                root.confirming = false;
+                root.delete-junction();
+            }
+            cancelled => { root.confirming = false; }
+        }
+    }
+}

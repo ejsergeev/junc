@@ -51,6 +51,17 @@ pub fn install(width: u32, height: u32) -> Result<Rc<MinimalSoftwareWindow>, Pla
 }
 
 /// Renders the window's current content as RGB bytes, row by row.
+/// Lets the window settle before a snapshot: a few frames and timer runs,
+/// so that callbacks deferred to the event loop (the canvas reporting its
+/// width, the mock IPC answering, the hovered link) have run.
+pub fn settle(window: &MinimalSoftwareWindow, width: u32, height: u32) {
+    for _ in 0..5 {
+        let _ = render(window, width, height);
+        slint::platform::update_timers_and_animations();
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+}
+
 pub fn render(window: &MinimalSoftwareWindow, width: u32, height: u32) -> Vec<u8> {
     let (w, h) = (width as usize, height as usize);
     let mut pixels = vec![Rgb8Pixel::new(0, 0, 0); w * h];

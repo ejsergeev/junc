@@ -1,0 +1,81 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// What Rust gives the window and what the window asks Rust to do (ui.rs,
+// app.rs). One global keeps the plumbing in one place.
+
+import { CardItem, PortItem, LinkItem } from "screens/main.slint";
+
+export struct JunctionItem {
+    id: string,
+    name: string,
+    enabled: bool,
+    // "active", "waiting", "off", "unknown"
+    status: string,
+    // PipeWire node.name of its source.
+    node: string,
+    cable: bool,
+    // Glyphs of its Inputs' kinds and their names, for the second line.
+    icons: string,
+    inputs: string,
+    // Inputs waiting for their device.
+    offline: int,
+    volume: int,
+    selected: bool,
+    // Index into the level models; -1 for none.
+    meter: int,
+}
+
+export global View {
+    // Sidebar.
+    in-out property <[JunctionItem]> junctions;
+    // "connected", "starting", "waiting_for_pipewire", or "down" when juncd
+    // is not reachable.
+    in-out property <string> daemon-state: "down";
+    // Main screen of the selected Junction ("" when none).
+    in-out property <string> selected;
+    in-out property <string> title;
+    in-out property <string> node;
+    in-out property <int> bus-channels;
+    in-out property <bool> cable;
+    in-out property <int> apps;
+    in-out property <int> devices;
+    in-out property <int> off;
+    in-out property <int> offline;
+    in-out property <int> listen-count;
+    in-out property <bool> stacked;
+    in-out property <[CardItem]> cards;
+    in-out property <[PortItem]> ports;
+    in-out property <[LinkItem]> links;
+    in-out property <length> canvas-height;
+    in-out property <length> col-x0;
+    in-out property <length> col-x1;
+    in-out property <length> col-x2;
+    in-out property <length> col-w;
+    in-out property <length> listen-heading-y;
+    in-out property <bool> tip-visible;
+    in-out property <length> tip-x;
+    in-out property <length> tip-y;
+    // The link under the pointer: the card at its far end, that card's
+    // channel and the Bus channel; tip-listen when it feeds a Listen card.
+    in-out property <string> tip-owner;
+    in-out property <int> tip-ch;
+    in-out property <string> tip-pos;
+    in-out property <int> tip-bus;
+    in-out property <bool> tip-listen;
+    in-out property <bool> show-listen: true;
+    // Meters, by index.
+    in-out property <[float]> levels;
+    in-out property <[float]> peaks;
+
+    callback select(string);
+    callback junction-toggled(string, bool);
+    callback junction-volume(string, int);
+    // The canvas got a new width: lay it out again.
+    callback relayout(length);
+    callback card-toggled(int, int, bool);
+    callback card-volume(int, int, int);
+    callback pointer-moved(length, length);
+    callback pointer-left();
+    callback link-clicked();
+    callback port-remove(int, int, int, int);
+    callback delete-junction();
+}

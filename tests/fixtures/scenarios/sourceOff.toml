@@ -1,0 +1,6 @@
+# GUI scenario: design board 4, "Soundux toggled off" — Space on an Input
+# card: its card dims, its links go, the Bus channels it fed are free.
+board = 4
+title = "Soundux toggled off"
+base = "default"
+off = ["virtual-mic-for-zoom/soundux"]
