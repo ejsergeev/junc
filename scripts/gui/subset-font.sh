@@ -11,8 +11,9 @@ cd "$(dirname "$0")/../.."
 src=${JUNC_FONT_SOURCE:-/usr/share/fonts/TTF/JetBrainsMonoNerdFont-Regular.ttf}
 out=crates/junc-gui/fonts/JetBrainsMonoNerdFont-JuncSubset.ttf
 pyft=${PYFTSUBSET:-pyftsubset}
-# Icons used in ui/, plus the Spec's speaker and HDMI glyphs.
-icons=$(grep -rohE '\\u\{f[0-9a-f]{4,5}\}' crates/junc-gui/ui | sed -E 's/\\u\{(.*)\}/U+\1/' | sort -u | tr '\n' ',')
+# Icons used in ui/ and src/ (card glyphs come from Rust), plus the
+# Spec's speaker and HDMI glyphs.
+icons=$(grep -rohE '\\u\{f[0-9a-f]{4,5}\}' crates/junc-gui/ui crates/junc-gui/src | sed -E 's/\\u\{(.*)\}/U+\1/' | sort -u | tr '\n' ',')
 "$pyft" "$src" --output-file="$out" --layout-features='*' --no-hinting \
   --unicodes="U+0020-007E,U+00A0-017F,U+2010-2027,U+2030-205E,U+2190-21FF,U+2212,U+2260-2265,U+25A0-25FF,U+27E6-27E7,${icons}U+F04C3,U+F087F"
 ls -l "$out"
