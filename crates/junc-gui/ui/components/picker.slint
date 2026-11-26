@@ -6,7 +6,8 @@
 // adds, Esc closes. The owner filters the rows as the search text changes.
 // A11y fixes from the validation: the root is exposed as a labelled group
 // (Slint has no dialog role; the best available), the search field is
-// labelled, focus stays inside until it closes.
+// labelled, focus stays inside until it closes. With `hints` a footer
+// under a divider names the keys (board 7).
 
 import { Tokens } from "../tokens.slint";
 import { ControlState } from "state.slint";
@@ -17,12 +18,19 @@ export struct PickerItem {
     text: string,
     detail: string,
     added: bool,
+    // A Nerd Font glyph before the text; "" for none.
+    icon: string,
 }
 
 export component JPicker inherits Rectangle {
     in property <string> title;
     in property <string> placeholder;
     in property <[PickerItem]> items;
+    // A Nerd Font glyph in the search field; "" for none.
+    in property <string> search-icon;
+    // The footer naming ↑↓, Enter and Esc.
+    in property <bool> hints;
+    in property <string> pick-word: @tr("add");
     in-out property <string> search;
     in-out property <int> cursor: 0;
     callback picked(int);
@@ -54,9 +62,19 @@ export component JPicker inherits Rectangle {
             background: Tokens.control-focus-fill;
             border-width: Tokens.border;
             border-color: Tokens.control-focus-border;
-            field := TextInput {
+            if root.search-icon != "": Text {
                 x: Tokens.space-control-pad-x;
-                width: parent.width - 2 * Tokens.space-control-pad-x;
+                width: 16px * Tokens.scale;
+                height: parent.height;
+                vertical-alignment: center;
+                text: root.search-icon;
+                color: Tokens.text-subtle;
+                accessible-role: none;
+            }
+            property <length> text-x: Tokens.space-control-pad-x + (root.search-icon != "" ? 22px * Tokens.scale : 0);
+            field := TextInput {
+                x: parent.text-x;
+                width: parent.width - parent.text-x - Tokens.space-control-pad-x;
                 height: parent.height;
                 vertical-alignment: center;
                 text <=> root.search;
@@ -79,7 +97,10 @@ export component JPicker inherits Rectangle {
                 }
             }
             if root.search == "": Text {
-                x: Tokens.space-control-pad-x;
+                x: parent.text-x;
+                width: parent.width - parent.text-x - Tokens.space-control-pad-x;
+                horizontal-alignment: left;
+                overflow: elide;
                 height: parent.height;
                 vertical-alignment: center;
                 text: root.placeholder;
@@ -87,13 +108,15 @@ export component JPicker inherits Rectangle {
                 accessible-role: none;
             }
         }
+        // Rows touch (28 px apart); a group's caption sits above its first.
+        VerticalLayout {
         for item[i] in root.items: VerticalLayout {
             if item.group != "": Text {
                 text: item.group;
                 font-size: Tokens.type-caption;
                 color: Tokens.text-subtle;
-                height: 18px;
-                vertical-alignment: bottom;
+                height: (i == 0 ? 18px : 30px) * Tokens.scale;
+                vertical-alignment: center;
             }
             Rectangle {
                 height: Tokens.size-control;
@@ -118,6 +141,12 @@ export component JPicker inherits Rectangle {
                     padding-left: Tokens.space-row-pad-x;
                     padding-right: Tokens.space-row-pad-x;
                     spacing: Tokens.space-row-gap;
+                    if item.icon != "": Text {
+                        text: item.icon;
+                        vertical-alignment: center;
+                        color: item.added ? Tokens.text-subtle : i == root.cursor ? Tokens.accent : Tokens.text-default;
+                        accessible-role: none;
+                    }
                     Text {
                         text: item.text;
                         vertical-alignment: center;
@@ -132,6 +161,38 @@ export component JPicker inherits Rectangle {
                         color: Tokens.text-subtle;
                         font-size: Tokens.type-body-small;
                         accessible-role: none;
+                    }
+                }
+            }
+        }
+        }
+        if root.hints: VerticalLayout {
+            spacing: Tokens.space-row-gap;
+            Rectangle {
+                height: Tokens.border;
+                background: Tokens.line-divider;
+            }
+            HorizontalLayout {
+                spacing: 6px;
+                alignment: start;
+                for hint in [
+                    { key: "↑↓", text: @tr("move") },
+                    { key: "Enter", text: root.pick-word },
+                    { key: "Esc", text: @tr("close") },
+                ]: HorizontalLayout {
+                    spacing: 4px;
+                    padding-right: 6px;
+                    Text {
+                        text: hint.key;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: hint.text;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                        vertical-alignment: center;
                     }
                 }
             }

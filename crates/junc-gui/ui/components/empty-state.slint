@@ -30,6 +30,7 @@ export component JEmptyState inherits JDashedBox {
         Text {
             text: root.text;
             color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
             horizontal-alignment: center;
             wrap: word-wrap;
         }
@@ -38,6 +39,7 @@ export component JEmptyState inherits JDashedBox {
             button := JButton {
                 text: root.action;
                 shortcut: root.shortcut;
+                show-key: true;
                 primary: true;
                 clicked => { root.activated(); }
             }

@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The JUNC mark (design boards 8, 10; app icon board 50): an accent
+// square with a signal stepping down through it. Decorative: plain
+// rectangles, so it adds nothing to the accessible tree.
+
+import { Tokens } from "../tokens.slint";
+
+export component JLogo inherits Rectangle {
+    in property <length> size: 24px;
+    property <length> line: max(1px, root.size / 16);
+    width: root.size;
+    height: root.size;
+    border-width: root.line * 1.5;
+    border-color: Tokens.accent;
+    // The step: in at the top left, down the middle, out at the bottom
+    // right, a small square at each end.
+    Rectangle {
+        x: root.size * 0.22;
+        y: root.size * 0.25;
+        width: root.size * 0.3;
+        height: root.line * 1.5;
+        background: Tokens.accent;
+    }
+    Rectangle {
+        x: root.size * 0.46;
+        y: root.size * 0.25;
+        width: root.line * 1.5;
+        height: root.size * 0.48;
+        background: Tokens.accent;
+    }
+    Rectangle {
+        x: root.size * 0.46;
+        y: root.size * 0.68;
+        width: root.size * 0.32;
+        height: root.line * 1.5;
+        background: Tokens.accent;
+    }
+    Rectangle {
+        x: root.size * 0.18;
+        y: root.size * 0.2;
+        width: root.size * 0.14;
+        height: root.size * 0.14;
+        background: Tokens.accent;
+    }
+    Rectangle {
+        x: root.size * 0.66;
+        y: root.size * 0.63;
+        width: root.size * 0.14;
+        height: root.size * 0.14;
+        background: Tokens.accent;
+    }
+}

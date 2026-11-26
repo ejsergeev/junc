@@ -11,16 +11,18 @@ import { JButton } from "button.slint";
 export component JCheckRow inherits Rectangle {
     in property <string> name;
     in property <string> detail;
-    // "ok", "waiting", "missing", "mismatch"
+    // "ok", "waiting", "missing", "mismatch", "down" (installed, not running)
     in property <string> state: "ok";
+    in property <length> name-width: 140px;
     in property <string> code;
     callback copy(string);
 
     property <brush> ink: root.state == "ok" ? Tokens.status-ok
-        : root.state == "missing" ? Tokens.status-urgent : Tokens.status-warn;
+        : root.state == "missing" || root.state == "down" ? Tokens.status-urgent : Tokens.status-warn;
     property <string> word: root.state == "ok" ? @tr("ok")
         : root.state == "waiting" ? @tr("waiting")
-        : root.state == "missing" ? @tr("missing") : @tr("mismatch");
+        : root.state == "missing" ? @tr("missing")
+        : root.state == "down" ? @tr("not running") : @tr("mismatch");
     background: Tokens.surface-card;
     accessible-role: list-item;
     accessible-label: root.name;
@@ -36,9 +38,9 @@ export component JCheckRow inherits Rectangle {
                 height: 18px;
                 border-width: Tokens.border;
                 border-color: root.state == "ok" ? Tokens.meter-safe
-                    : root.state == "missing" ? Tokens.meter-clip : Tokens.meter-hot;
+                    : root.state == "missing" || root.state == "down" ? Tokens.meter-clip : Tokens.meter-hot;
                 Text {
-                    text: root.state == "ok" ? "\u{f012c}" : root.state == "missing" ? "\u{f0156}" : "!";
+                    text: root.state == "ok" ? "\u{f012c}" : root.state == "missing" || root.state == "down" ? "\u{f0156}" : "!";
                     color: parent.border-color;
                     font-size: Tokens.type-body-small;
                     accessible-role: none;
@@ -46,7 +48,7 @@ export component JCheckRow inherits Rectangle {
             }
             Text {
                 text: root.name;
-                width: 140px;
+                width: root.name-width;
                 color: Tokens.text-strong;
                 vertical-alignment: center;
                 accessible-role: none;

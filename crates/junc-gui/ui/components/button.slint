@@ -22,6 +22,10 @@ export component JButton inherits Rectangle {
     in property <bool> destructive;
     // Destructive confirmations: only Ctrl+Enter (or a click) runs it.
     in property <bool> needs-ctrl;
+    // The shortcut as a key chip after the text (onboarding, empty states).
+    in property <bool> show-key;
+    // A link-like button: no fill or border until hovered or focused.
+    in property <bool> flat;
     // Toggle buttons (Show Listen).
     in property <bool> checkable;
     in-out property <bool> checked;
@@ -36,9 +40,11 @@ export component JButton inherits Rectangle {
     height: Tokens.size-control;
     min-width: row.preferred-width;
     background: root.destructive ? Tokens.status-urgent.with-alpha(0.08)
+        : root.flat && !root.hover && !focus.has-focus ? transparent
         : ControlState.fill(root.hover || root.primary, focus.has-focus, root.pressed, root.checked);
     border-width: Tokens.border;
     border-color: root.destructive ? Tokens.status-urgent.with-alpha(0.4)
+        : root.flat && !root.hover && !focus.has-focus ? transparent
         : ControlState.border(root.hover || root.primary, focus.has-focus, root.checked);
     opacity: root.enabled ? 1 : 0.45;
     transform-scale: root.pressed ? 0.97 : 1;
@@ -112,8 +118,25 @@ export component JButton inherits Rectangle {
                 : root.checked ? Tokens.text-strong : Tokens.text-default;
             accessible-role: none;
         }
+        // A key chip drawn in place (a JKbd would add a node to the
+        // accessible tree; the shortcut is the button's description).
+        if root.show-key && root.shortcut != "": Rectangle {
+            y: (parent.height - self.height) / 2;
+            height: Tokens.type-body-small + 6px;
+            width: key.preferred-width + 8px;
+            border-width: Tokens.border;
+            border-color: Tokens.control-normal-border;
+            key := Text {
+                text: root.shortcut;
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                accessible-role: none;
+            }
+        }
     }
-    if root.show-tip: JTooltip {
+    if root.show-tip && !root.show-key: JTooltip {
         x: 0;
         y: root.height + 4px;
         text: root.tooltip != "" ? root.tooltip : root.text;
