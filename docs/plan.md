@@ -427,9 +427,23 @@ de/ja, AT-SPI dump, keyboard test):
   AT-SPI goldens and a keyboard/pointer test. Every column metered: 0.6 %
   of a core visible (release, owner's M1, headless monitor), 0 hidden.
   Left for B18: Ctrl+1…9 and arrow keys between cards.
-- [ ] **B17** [auto] Add Input picker; onboarding check + templates (+
+- [x] **B17** [auto] Add Input picker; onboarding check + templates (+
   Flexoki); empty none / empty Junction (+ Flexoki). Req: F2, F24, UX
   onboarding.
+  Done 2026-11-26 (architecture §7.2, §11.3, as built): a first launch
+  without Junctions onboards (system check from `junc doctor --json`,
+  then the six starting points), remembered in the GUI's own state file;
+  "Start empty", board 10's New Junction and Ctrl+Shift+J create and
+  select a Junction; an empty Junction shows the empty Inputs and Listen
+  columns; the Add Input picker (Ctrl+N, "+", the empty state) lists
+  running apps, hardware inputs, system audio and the other Junctions
+  (none that would loop), marks what is added and adds an Input through
+  the same config edit as the CLI. Boards 7–11, 28, 29 as scenarios with
+  52 goldens (en, en_XA, de, ja), AT-SPI goldens and a keyboard/pointer
+  test. Left: templates with slots (board 49, B22), New Cable and Import
+  (B19), Add listen output (B18), Start at login after onboarding (F9,
+  with Settings in B19); the picker's "playing" needs node state the
+  graph does not keep.
 - [ ] **B18** [auto] Cable selected, link drag, link keyboard, Input Options
   (+ narrow), add Bus, add Listen, Junction off. Req: F3, F4, F5, F6, F8, F11.
 - [ ] **B19** [auto] Tray (DBusMenu tree test), service down, context menu

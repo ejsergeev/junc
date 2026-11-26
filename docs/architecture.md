@@ -1183,6 +1183,38 @@ columns (B18 with link keyboard), Del on a hovered link without focus;
 Tab follows the tree: sidebar, header, cards column by column, ports,
 bottom bar.
 
+As built (B17): `ui/screens/onboarding.slint` (boards 8, 9, 28) and
+`ui/screens/empty.slint` (board 10) take the window in place of the Main
+screen; the Main screen gained the empty columns of board 11 and the Add
+Input picker of board 7. Onboarding (`onboarding.rs`) shows on a first
+launch while juncd has no Junctions; it is remembered as done in the
+GUI's own `$XDG_STATE_HOME/junc/gui.toml` (never the config), and ends
+by itself when Junctions appear meanwhile (CLI, agent). Step 1 runs
+`junc doctor --json` (the `junc` next to `junc-gui`, else on `PATH`) on a
+thread and shows four of its checks (`checks.rs`: PipeWire, WirePlumber,
+pipewire-pulse, the JACK layer); a missing or stopped one holds Continue,
+a warning does not; R re-checks, Copy puts the fix on the clipboard with
+`wl-copy`. Step 2 lists the six built-in templates, worded in the GUI's
+catalogs (the template files stay the CLI's and agents' text); "Start
+empty" is a New Junction (`Daemon.CreateJunction` with the localized
+name), selected when juncd shows it; templates with slots wait for the
+slots step (board 49, B22). Board 10's New Junction and Ctrl+Shift+J do
+the same; New Cable and Import come with B19, the Listen empty state's
+button with B18. The picker (`picker.rs`) groups `Describe`'s candidates
+as running apps (one row per binary), hardware inputs, system audio
+(sink monitors) and the other Junctions, leaving out those that would
+make a loop; rows the Junction takes already say "added" and cannot be
+picked again; the search filters by name; Enter, a click, Ctrl+N and the
+"+" on Inputs work as the board says. Picking adds an Input through
+`GetConfig` → `Apply` (`Edit::AddInput`, id from the name as `junc input
+add` makes it). Words Rust needs in the UI language (group captions,
+"Monitor of …", the New Junction name) come from the `Words` global's
+functions, so Rust stays without catalogs. Not built: the picker's
+"playing" detail, since the graph keeps no node state. Components gained
+what the boards use: `JButton.show-key` (the shortcut chip inside the
+button) and `flat`, `JPicker` icons, search icon and key hints, a
+`down` state in `JCheckRow`, `JLogo`.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1757,6 +1789,17 @@ other boards, languages and Weston come with the screens that show them.
   default scenario from the keyboard, pointer and switches (Space, Del on a
   port, a click on a link, Show Listen) and switches the language live;
   `check.sh` compares the AT-SPI trees of all six.
+
+- **Onboarding, empty states, picker** (B17): boards 7–11, 28 and 29 are
+  scenarios `picker`, `onboardCheck`, `onboardTemplates`, `emptyNone`,
+  `emptyJunction`, `onboardFlexoki`, `emptyJunctionFlexoki`. Fixtures
+  gained `onboarding` (the step), `[[check]]` (what doctor answers),
+  `picker` (open it) and `select`; bases nest and add their nodes. 52
+  goldens in four languages; `tests/onboarding.rs` drives the check (R,
+  Copy, Enter), the templates (arrows, Esc, Enter on "Start empty"), New
+  Junction (Ctrl+Shift+J) and the picker (Ctrl+N, "+", search, Esc,
+  Enter, added rows refused); `check.sh` compares the AT-SPI trees of the
+  five new screens.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
