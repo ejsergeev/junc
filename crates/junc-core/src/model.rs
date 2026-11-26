@@ -162,6 +162,11 @@ pub struct Input {
     /// never by PipeWire node id).
     #[serde(rename = "match")]
     pub matcher: Match,
+    /// Name shown to people, e.g. the device's description when it was
+    /// added, so an unplugged device still shows as "USB Microphone".
+    /// Omitted = what the matched node calls itself, else the match.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     /// Off keeps the Input and its Links in the config but routes nothing.
     #[serde(default = "yes")]
     pub enabled: bool,

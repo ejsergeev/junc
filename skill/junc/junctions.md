@@ -20,6 +20,7 @@ bus = { channels = 2 }       # 1–64
 [[junction.input]]
 id = "spotify"
 match = { binary = "spotify" }
+name = "Spotify"             # optional: what JUNC shows, also while the source is away
 enabled = true
 volume = 70
 exclusive = false            # true: the app is no longer heard on the speakers (apps only)
@@ -32,8 +33,9 @@ volume = 100
 links = [[1, 1], [2, 2]]     # [Bus channel, output channel]; omit for the default
 ```
 
-Every key but `id`, `name` and `match` has the default shown and can be
-left out.
+Every key but `id`, the Junction's `name` and `match` can be left out;
+the defaults are shown. Without an Input `name`, JUNC shows what the
+source calls itself.
 
 ## Inputs: `match`
 

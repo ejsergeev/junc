@@ -124,6 +124,13 @@
           "description": "Which app stream, device, monitor or Junction this is (by identity,\nnever by PipeWire node id).",
           "$ref": "#/$defs/Match"
         },
+        "name": {
+          "description": "Name shown to people, e.g. the device's description when it was\nadded, so an unplugged device still shows as \"USB Microphone\".\nOmitted = what the matched node calls itself, else the match.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "suppressed": {
           "description": "Links another tool removed that the user chose to leave as is (F17).",
           "type": "array",

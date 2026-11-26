@@ -102,6 +102,9 @@ pub struct InputView {
     /// What it takes audio from.
     #[serde(rename = "match")]
     pub matcher: Match,
+    /// Name from the config, if it gives one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
     /// On or off.
     pub enabled: bool,
     /// Percent.
@@ -380,6 +383,7 @@ pub fn junction(j: &Junction, statuses: &[EntityStatus], graph: Option<&Graph>) 
                 InputView {
                     id: i.id.clone(),
                     matcher: i.matcher.clone(),
+                    name: i.name.clone(),
                     enabled: i.enabled,
                     volume: i.volume,
                     exclusive: i.exclusive,

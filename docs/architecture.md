@@ -901,6 +901,7 @@ links = [[1, 3], [2, 4]]
 [[junction.input]]
 id = "usb-mic"
 match = { device = "alsa_input.usb-Generic_USB_Microphone-00.mono-fallback" }
+name = "USB Microphone"            # optional; shown while the device is unplugged
 links = [[1, 1], [1, 2]]           # mono mic to both sides
 suppressed = [[1, 2]]              # removed by another tool, left as is (F17)
 

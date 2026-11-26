@@ -22,6 +22,7 @@ links = [[1, 3], [2, 4]]
 [[junction.input]]
 id = "gone"
 match = { device = "alsa_input.usb-not-here" }
+name = "USB Microphone"
 [[junction.listen]]
 id = "out"
 target = "alsa_output.platform-snd_aloop.0.analog-stereo"
@@ -76,6 +77,12 @@ fn views_report_statuses_and_links_in_use() {
     assert!(j.inputs[1].custom_links);
 
     assert_eq!(j.inputs[2].status, State::Waiting);
+    assert_eq!(
+        j.inputs[2].name.as_deref(),
+        Some("USB Microphone"),
+        "the config's name, shown while the device is away"
+    );
+    assert_eq!(line.name, None);
     assert!(
         j.inputs[2].links.is_empty(),
         "unknown until the device appears"
