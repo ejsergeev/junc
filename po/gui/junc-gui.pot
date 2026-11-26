@@ -1,0 +1,295 @@
+# The GUI's messages, from cargo xtask i18n extract. Do not edit.
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-gui\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Cable"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "No inputs yet"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} offline"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint
+msgid "{0} volume"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Junctions"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Settings"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "juncd is not running"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "No Junctions yet"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "New"
+msgstr ""
+
+#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
+msgid "Dismiss"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/components/switch.slint
+msgid "off"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint
+msgid "Offline"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint
+msgid "Not running"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint
+msgid "Exclusive"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint
+msgid "Options"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint
+msgid "Waiting for device…"
+msgstr ""
+
+#: crates/junc-gui/ui/components/card.slint
+msgid "Waiting for {0}…"
+msgstr ""
+
+#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} ch"
+msgstr ""
+
+#: crates/junc-gui/ui/components/channel-group.slint
+msgid "{0} of {1} linked"
+msgstr ""
+
+#: crates/junc-gui/ui/components/check-row.slint
+msgid "ok"
+msgstr ""
+
+#: crates/junc-gui/ui/components/check-row.slint
+msgid "waiting"
+msgstr ""
+
+#: crates/junc-gui/ui/components/check-row.slint
+msgid "missing"
+msgstr ""
+
+#: crates/junc-gui/ui/components/check-row.slint
+msgid "mismatch"
+msgstr ""
+
+#: crates/junc-gui/ui/components/check-row.slint
+msgid "Copy"
+msgstr ""
+
+#: crates/junc-gui/ui/components/confirm.slint
+msgid "Cancel"
+msgstr ""
+
+#: crates/junc-gui/ui/components/inline-field.slint
+msgid "save"
+msgstr ""
+
+#: crates/junc-gui/ui/components/inline-field.slint
+msgid "cancel"
+msgstr ""
+
+#: crates/junc-gui/ui/components/language-row.slint
+msgid "Follow Omarchy (Setup > Language)"
+msgstr ""
+
+#: crates/junc-gui/ui/components/language-row.slint
+msgid "Current: {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/components/language-row.slint
+msgid "Language"
+msgstr ""
+
+#: crates/junc-gui/ui/components/picker.slint
+msgid "added"
+msgstr ""
+
+#: crates/junc-gui/ui/components/port.slint
+msgid "linked"
+msgstr ""
+
+#: crates/junc-gui/ui/components/port.slint
+msgid "offline"
+msgstr ""
+
+#: crates/junc-gui/ui/components/switch.slint
+msgid "on"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Ch {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Ch {0} ({1})"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} ({1})"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} ← Ch {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{n} App"
+msgid_plural "{n} Apps"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{n} Device"
+msgid_plural "{n} Devices"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0}, {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} off"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{n} Channel"
+msgid_plural "{n} Channels"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "stacked"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Rename"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Default"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Inputs"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Add input"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Bus"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Add Bus channels"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Listen"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Add Listen output"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Ch {0}–{1}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "stereo"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "mono"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Bus channel {0} in"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Bus channel {0} out"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} channel {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Click to unlink"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Ch {0} → {1} {2}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} {1} → Ch {2}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Delete"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "move"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "toggle"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "link"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "unlink"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "rename"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Show Listen"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Delete “{0}”?"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Apps recording from it lose this input."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Its Inputs and Listen outputs go with it."
+msgstr ""
