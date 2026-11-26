@@ -10,6 +10,7 @@
 
 pub mod actions;
 pub mod app;
+pub mod checks;
 pub mod daemon;
 pub mod edits;
 pub mod layout;
