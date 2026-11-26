@@ -25,7 +25,8 @@ fn golden_dir() -> PathBuf {
     ))
 }
 
-/// The Main screen's boards (design 1–6).
+/// The screens' boards: Main (design 1–6), the Add Input picker,
+/// onboarding and the empty states (7–11, 28, 29).
 const SCENARIOS: &[&str] = &[
     "default",
     "flexoki",
@@ -33,6 +34,13 @@ const SCENARIOS: &[&str] = &[
     "sourceOff",
     "offline",
     "wireHover",
+    "picker",
+    "onboardCheck",
+    "onboardTemplates",
+    "emptyNone",
+    "emptyJunction",
+    "onboardFlexoki",
+    "emptyJunctionFlexoki",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.
@@ -90,7 +98,7 @@ fn compare(scenario: &str, lang: &str) -> Result<(), String> {
 }
 
 #[test]
-fn every_main_screen_board_matches_its_goldens_in_every_language() {
+fn every_screen_board_matches_its_goldens_in_every_language() {
     let failures: Vec<String> = SCENARIOS
         .iter()
         .flat_map(|s| LANGS.iter().map(move |l| (*s, *l)))
