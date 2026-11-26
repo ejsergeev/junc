@@ -7,7 +7,8 @@
 //! Junction-level changes (on/off, master volume, delete) have their own
 //! D-Bus methods and do not come through here.
 
-use junc_core::model::Config;
+use junc_core::config::slugify;
+use junc_core::model::{Config, Input, Match};
 
 /// An Input or a Listen output of a Junction.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,6 +32,8 @@ pub enum Edit {
         remove: Vec<[u8; 2]>,
         in_use: Vec<[u8; 2]>,
     },
+    /// Add an Input taking `matcher`; its id comes from `label`.
+    AddInput { matcher: Box<Match>, label: String },
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
@@ -41,6 +44,11 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
     };
     let part = match edit {
         Edit::Enabled(p, _) | Edit::Volume(p, _) | Edit::Unlink { part: p, .. } => p,
+        Edit::AddInput { matcher, label } => {
+            let id = unique_id(label, j.input.iter().map(|i| i.id.as_str()));
+            j.input.push(new_input(id, (**matcher).clone()));
+            return true;
+        }
     };
     match part {
         Part::Input(id) => {
@@ -53,6 +61,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     i.links = Some(remaining(i.links.as_deref(), in_use, remove));
                 }
+                Edit::AddInput { .. } => {}
             }
         }
         Part::Listen(id) => {
@@ -65,10 +74,45 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     l.links = Some(remaining(l.links.as_deref(), in_use, remove));
                 }
+                Edit::AddInput { .. } => {}
             }
         }
     }
     true
+}
+
+/// An id from `label` that no other Input of the Junction has: the slug,
+/// then `-2`, `-3`, … (as the CLI's `junc input add` makes them).
+fn unique_id<'a>(label: &str, taken: impl Iterator<Item = &'a str> + Clone) -> String {
+    let mut base = slugify(label);
+    base.truncate(56);
+    let base = match base.trim_end_matches('-') {
+        "" => "input".to_owned(),
+        b => b.to_owned(),
+    };
+    (1..)
+        .map(|n| {
+            if n == 1 {
+                base.clone()
+            } else {
+                format!("{base}-{n}")
+            }
+        })
+        .find(|id| taken.clone().all(|t| t != id))
+        .unwrap_or(base)
+}
+
+/// A new Input with the model's defaults (on, 100 %, default links).
+fn new_input(id: String, matcher: Match) -> Input {
+    let mut t = toml::Table::new();
+    t.insert("id".into(), id.into());
+    t.insert(
+        "match".into(),
+        toml::Value::try_from(&matcher).unwrap_or_else(|e| unreachable!("{e}")),
+    );
+    toml::Value::Table(t)
+        .try_into()
+        .unwrap_or_else(|e| unreachable!("a minimal Input always parses: {e}"))
 }
 
 fn remaining(own: Option<&[[u8; 2]]>, in_use: &[[u8; 2]], remove: &[[u8; 2]]) -> Vec<[u8; 2]> {
@@ -161,5 +205,49 @@ target = "default"
             }
         ));
         assert_eq!(c.junction[0].input[1].links, Some(vec![[1, 3]]));
+    }
+
+    #[test]
+    fn added_inputs_get_their_own_id_and_validate() {
+        let mut c = config();
+        let firefox = Match {
+            binary: Some("firefox".into()),
+            ..Match::default()
+        };
+        let mic = Match {
+            device: Some("alsa_input.other".into()),
+            ..Match::default()
+        };
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &Edit::AddInput {
+                matcher: Box::new(firefox),
+                label: "Firefox".into()
+            }
+        ));
+        // "Music" is taken by an Input already… as "music".
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &Edit::AddInput {
+                matcher: Box::new(mic),
+                label: "Music".into()
+            }
+        ));
+        let ids: Vec<&str> = c.junction[0].input.iter().map(|i| i.id.as_str()).collect();
+        assert_eq!(ids, ["mic", "music", "firefox", "music-2"]);
+        assert!(c.junction[0].input[2].enabled);
+        assert_eq!(c.junction[0].input[2].volume, 100);
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
+        assert!(!apply(
+            &mut c,
+            "gone",
+            &Edit::AddInput {
+                matcher: Box::default(),
+                label: "x".into()
+            }
+        ));
     }
 }
