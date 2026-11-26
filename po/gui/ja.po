@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "ケーブル"
 
@@ -29,7 +29,7 @@ msgstr "{0} 件オフライン"
 msgid "{0} volume"
 msgstr "{0} の音量"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/view.slint
 msgid "Junctions"
 msgstr "ジャンクション"
 
@@ -42,8 +42,8 @@ msgid "juncd is not running"
 msgstr "juncd が実行されていません"
 
 #: crates/junc-gui/ui/app.slint
-msgid "No Junctions yet"
-msgstr "ジャンクションはまだありません"
+msgid "No Junctions or Cables yet."
+msgstr "ジャンクションもケーブルもまだありません。"
 
 #: crates/junc-gui/ui/app.slint
 msgid "New"
@@ -102,6 +102,10 @@ msgid "missing"
 msgstr "なし"
 
 #: crates/junc-gui/ui/components/check-row.slint
+msgid "not running"
+msgstr "未実行"
+
+#: crates/junc-gui/ui/components/check-row.slint
 msgid "mismatch"
 msgstr "不一致"
 
@@ -134,8 +138,20 @@ msgid "Language"
 msgstr "言語"
 
 #: crates/junc-gui/ui/components/picker.slint
+msgid "add"
+msgstr "追加"
+
+#: crates/junc-gui/ui/components/picker.slint
 msgid "added"
 msgstr "追加済み"
+
+#: crates/junc-gui/ui/components/picker.slint crates/junc-gui/ui/screens/main.slint
+msgid "move"
+msgstr "移動"
+
+#: crates/junc-gui/ui/components/picker.slint
+msgid "close"
+msgstr "閉じる"
 
 #: crates/junc-gui/ui/components/port.slint
 msgid "linked"
@@ -148,6 +164,30 @@ msgstr "オフライン"
 #: crates/junc-gui/ui/components/switch.slint
 msgid "on"
 msgstr "オン"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "No Junctions yet"
+msgstr "ジャンクションはまだありません"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "A Junction mixes apps and inputs into one virtual mic that any app can pick."
+msgstr "ジャンクションはアプリと入力を、どのアプリでも選べる 1 つの仮想マイクにまとめます。"
+
+#: crates/junc-gui/ui/screens/empty.slint crates/junc-gui/ui/view.slint
+msgid "New Junction"
+msgstr "新しいジャンクション"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "New Cable"
+msgstr "新しいケーブル"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "A Cable sends one app straight into another."
+msgstr "ケーブルはあるアプリの音を別のアプリへ直接送ります。"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "Import existing setups…"
+msgstr "既存の設定を読み込む…"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Ch {0}"
@@ -180,6 +220,10 @@ msgid "{0}, {1}"
 msgstr "{0}・{1}"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "None yet"
+msgstr "まだありません"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "{0} off"
 msgstr "{0} 件オフ"
 
@@ -187,6 +231,10 @@ msgstr "{0} 件オフ"
 msgid "{n} Channel"
 msgid_plural "{n} Channels"
 msgstr[0] "{n} チャンネル"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "None"
+msgstr "なし"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "stacked"
@@ -222,6 +270,22 @@ msgstr "試聴"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Add Listen output"
+msgstr "試聴出力を追加"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Pick an app, a mic or system audio."
+msgstr "アプリ、マイク、システム音声を選びます。"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Not listening"
+msgstr "試聴なし"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Hear this Junction on an output."
+msgstr "このジャンクションを出力で聴きます。"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Add listen output"
 msgstr "試聴出力を追加"
 
 #: crates/junc-gui/ui/screens/main.slint
@@ -265,10 +329,6 @@ msgid "Delete"
 msgstr "削除"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "move"
-msgstr "移動"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "toggle"
 msgstr "切替"
 
@@ -289,6 +349,10 @@ msgid "Show Listen"
 msgstr "試聴を表示"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Search apps, inputs, system audio"
+msgstr "アプリ・入力・システム音声を検索"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Delete “{0}”?"
 msgstr "「{0}」を削除しますか?"
 
@@ -299,3 +363,151 @@ msgstr "ここから録音しているアプリはこの入力を失います。
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Its Inputs and Listen outputs go with it."
 msgstr "入力と試聴出力も一緒に削除されます。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Audio server"
+msgstr "オーディオサーバー"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Session manager"
+msgstr "セッションマネージャー"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "PulseAudio apps can see Junctions"
+msgstr "PulseAudio アプリからジャンクションが見える"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "JACK apps can see Junctions"
+msgstr "JACK アプリからジャンクションが見える"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Step {0} of {1}"
+msgstr "ステップ {0}/{1}"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "System check"
+msgstr "システムチェック"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Welcome to JUNC"
+msgstr "JUNC へようこそ"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "JUNC builds on PipeWire. Checking that the pieces it needs are installed and running."
+msgstr "JUNC は PipeWire の上で動きます。必要な部品がインストールされ動いているか確認しています。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "running"
+msgstr "実行中"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Checking…"
+msgstr "確認中…"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "junc doctor did not answer."
+msgstr "junc doctor から応答がありません。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Re-check"
+msgstr "再チェック"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Continue"
+msgstr "続ける"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Install the missing package, then Re-check"
+msgstr "足りないパッケージを入れてから再チェック"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Send one app's sound straight into another app."
+msgstr "あるアプリの音を別のアプリへ直接送ります。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "e.g. {0}"
+msgstr "例: {0}"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Mic + App"
+msgstr "マイク + アプリ"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Your mic and one app mixed into one input."
+msgstr "マイクと 1 つのアプリを 1 つの入力にまとめます。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Combine Inputs"
+msgstr "入力をまとめる"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Two or more hardware inputs as one device."
+msgstr "複数のハードウェア入力を 1 つのデバイスに。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Separate tracks"
+msgstr "トラックを分ける"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Mic and one app on separate Bus channels, for editing later."
+msgstr "マイクとアプリを別々のバスチャンネルに。後で編集できます。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Stream mix"
+msgstr "配信ミックス"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Mic, game and voice chat mixed into one input for streaming."
+msgstr "マイク、ゲーム、ボイスチャットを配信用の 1 つの入力に。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Start empty"
+msgstr "空から始める"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "A blank Junction. Add inputs yourself."
+msgstr "空のジャンクション。入力は自分で追加します。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Bus Ch 1–2, nothing linked"
+msgstr "バス Ch 1–2、リンクなし"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Start"
+msgstr "開始"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Pick a starting point"
+msgstr "出発点を選ぶ"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Everything is editable afterwards. Your audio stack checked out."
+msgstr "すべて後から変更できます。オーディオ環境は問題ありません。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Back"
+msgstr "戻る"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "choose"
+msgstr "選択"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Create {0}"
+msgstr "{0} を作成"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Running apps"
+msgstr "実行中のアプリ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Hardware inputs"
+msgstr "ハードウェア入力"
+
+#: crates/junc-gui/ui/view.slint
+msgid "System audio"
+msgstr "システム音声"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Monitor of {0}"
+msgstr "{0} のモニター"

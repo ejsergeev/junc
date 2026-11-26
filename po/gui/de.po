@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "Kabel"
 
@@ -29,7 +29,7 @@ msgstr "{0} offline"
 msgid "{0} volume"
 msgstr "Lautstärke {0}"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/view.slint
 msgid "Junctions"
 msgstr "Junctions"
 
@@ -42,8 +42,8 @@ msgid "juncd is not running"
 msgstr "juncd läuft nicht"
 
 #: crates/junc-gui/ui/app.slint
-msgid "No Junctions yet"
-msgstr "Noch keine Junctions"
+msgid "No Junctions or Cables yet."
+msgstr "Noch keine Junctions oder Kabel."
 
 #: crates/junc-gui/ui/app.slint
 msgid "New"
@@ -102,6 +102,10 @@ msgid "missing"
 msgstr "fehlt"
 
 #: crates/junc-gui/ui/components/check-row.slint
+msgid "not running"
+msgstr "läuft nicht"
+
+#: crates/junc-gui/ui/components/check-row.slint
 msgid "mismatch"
 msgstr "passt nicht"
 
@@ -134,8 +138,20 @@ msgid "Language"
 msgstr "Sprache"
 
 #: crates/junc-gui/ui/components/picker.slint
+msgid "add"
+msgstr "hinzufügen"
+
+#: crates/junc-gui/ui/components/picker.slint
 msgid "added"
 msgstr "hinzugefügt"
+
+#: crates/junc-gui/ui/components/picker.slint crates/junc-gui/ui/screens/main.slint
+msgid "move"
+msgstr "bewegen"
+
+#: crates/junc-gui/ui/components/picker.slint
+msgid "close"
+msgstr "schließen"
 
 #: crates/junc-gui/ui/components/port.slint
 msgid "linked"
@@ -148,6 +164,30 @@ msgstr "offline"
 #: crates/junc-gui/ui/components/switch.slint
 msgid "on"
 msgstr "an"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "No Junctions yet"
+msgstr "Noch keine Junctions"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "A Junction mixes apps and inputs into one virtual mic that any app can pick."
+msgstr "Eine Junction mischt Apps und Eingänge zu einem virtuellen Mikrofon, das jede App wählen kann."
+
+#: crates/junc-gui/ui/screens/empty.slint crates/junc-gui/ui/view.slint
+msgid "New Junction"
+msgstr "Neue Junction"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "New Cable"
+msgstr "Neues Kabel"
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "A Cable sends one app straight into another."
+msgstr "Ein Kabel leitet eine App direkt in eine andere."
+
+#: crates/junc-gui/ui/screens/empty.slint
+msgid "Import existing setups…"
+msgstr "Vorhandene Setups importieren…"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Ch {0}"
@@ -182,6 +222,10 @@ msgid "{0}, {1}"
 msgstr "{0}, {1}"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "None yet"
+msgstr "Noch keine"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "{0} off"
 msgstr "{0} aus"
 
@@ -190,6 +234,10 @@ msgid "{n} Channel"
 msgid_plural "{n} Channels"
 msgstr[0] "{n} Kanal"
 msgstr[1] "{n} Kanäle"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "None"
+msgstr "Keine"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "stacked"
@@ -225,6 +273,22 @@ msgstr "Abhören"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Add Listen output"
+msgstr "Abhörausgang hinzufügen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Pick an app, a mic or system audio."
+msgstr "Wähle eine App, ein Mikrofon oder Systemaudio."
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Not listening"
+msgstr "Kein Abhören"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Hear this Junction on an output."
+msgstr "Diese Junction auf einem Ausgang hören."
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Add listen output"
 msgstr "Abhörausgang hinzufügen"
 
 #: crates/junc-gui/ui/screens/main.slint
@@ -268,10 +332,6 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "move"
-msgstr "bewegen"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "toggle"
 msgstr "umschalten"
 
@@ -292,6 +352,10 @@ msgid "Show Listen"
 msgstr "Abhören einblenden"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Search apps, inputs, system audio"
+msgstr "Apps, Eingänge, Systemaudio suchen"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Delete “{0}”?"
 msgstr "„{0}“ löschen?"
 
@@ -302,3 +366,151 @@ msgstr "Apps, die davon aufnehmen, verlieren diesen Eingang."
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Its Inputs and Listen outputs go with it."
 msgstr "Seine Eingänge und Abhörausgänge werden mit entfernt."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Audio server"
+msgstr "Audioserver"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Session manager"
+msgstr "Sitzungsmanager"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "PulseAudio apps can see Junctions"
+msgstr "PulseAudio-Apps sehen Junctions"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "JACK apps can see Junctions"
+msgstr "JACK-Apps sehen Junctions"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Step {0} of {1}"
+msgstr "Schritt {0} von {1}"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "System check"
+msgstr "Systemprüfung"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Welcome to JUNC"
+msgstr "Willkommen bei JUNC"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "JUNC builds on PipeWire. Checking that the pieces it needs are installed and running."
+msgstr "JUNC baut auf PipeWire auf. Prüfe, ob die nötigen Teile installiert sind und laufen."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "running"
+msgstr "läuft"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Checking…"
+msgstr "Prüfe…"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "junc doctor did not answer."
+msgstr "junc doctor hat nicht geantwortet."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Re-check"
+msgstr "Erneut prüfen"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Continue"
+msgstr "Weiter"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Install the missing package, then Re-check"
+msgstr "Fehlendes Paket installieren, dann erneut prüfen"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Send one app's sound straight into another app."
+msgstr "Den Ton einer App direkt in eine andere App leiten."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "e.g. {0}"
+msgstr "z. B. {0}"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Mic + App"
+msgstr "Mikro + App"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Your mic and one app mixed into one input."
+msgstr "Dein Mikrofon und eine App zu einem Eingang gemischt."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Combine Inputs"
+msgstr "Eingänge kombinieren"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Two or more hardware inputs as one device."
+msgstr "Zwei oder mehr Hardware-Eingänge als ein Gerät."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Separate tracks"
+msgstr "Getrennte Spuren"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Mic and one app on separate Bus channels, for editing later."
+msgstr "Mikrofon und eine App auf getrennten Bus-Kanälen, zum späteren Schneiden."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Stream mix"
+msgstr "Stream-Mix"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Mic, game and voice chat mixed into one input for streaming."
+msgstr "Mikrofon, Spiel und Sprachchat zu einem Eingang fürs Streaming gemischt."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Start empty"
+msgstr "Leer beginnen"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "A blank Junction. Add inputs yourself."
+msgstr "Eine leere Junction. Eingänge selbst hinzufügen."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Bus Ch 1–2, nothing linked"
+msgstr "Bus Kanal 1–2, nichts verbunden"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Start"
+msgstr "Start"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Pick a starting point"
+msgstr "Wähle einen Startpunkt"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Everything is editable afterwards. Your audio stack checked out."
+msgstr "Alles lässt sich später ändern. Dein Audio-Stack ist in Ordnung."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Back"
+msgstr "Zurück"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "choose"
+msgstr "wählen"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Create {0}"
+msgstr "{0} erstellen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Running apps"
+msgstr "Laufende Apps"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Hardware inputs"
+msgstr "Hardware-Eingänge"
+
+#: crates/junc-gui/ui/view.slint
+msgid "System audio"
+msgstr "Systemaudio"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Monitor of {0}"
+msgstr "Monitor von {0}"
