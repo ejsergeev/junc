@@ -106,7 +106,7 @@ component ChannelRow inherits Rectangle {
             bus: root.bus;
         }
         if root.stacked-listen: Text {
-            width: 64px * Tokens.scale;
+            width: max(64px * Tokens.scale, self.preferred-width);
             text: @tr("{0} ← Ch {1}", root.ch.position != "" ? root.ch.position : root.ch.number, root.ch.source);
             color: Tokens.text-subtle;
             font-size: Tokens.type-body-small;
