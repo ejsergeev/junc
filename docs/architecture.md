@@ -1225,6 +1225,18 @@ as does its sidebar switch. The sidebar row says "Off · apps see
 silence" in place of its Inputs. `JBanner` gained `action-key` and
 `action-primary`.
 
+As built (B18, Add Listen output): board 17's picker is the Add Input
+picker in a second mode, over the Listen column's right edge; Ctrl+M,
+the "+" on Listen and the empty Listen column's button open it.
+`picker::outputs` lists the default output first ("Default output
+(follows system)", target `default`), then the output devices from
+`Describe`'s sink candidates by name, a screen glyph for HDMI and
+DisplayPort. A row says "added" when a Listen output goes there already,
+by name or, for one that follows the default, to the device it follows.
+Picking adds a Listen output through `GetConfig` → `Apply`
+(`Edit::AddListen`: id from the device's name, default links and
+volume). `JPicker` gained a `note` under its rows.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1812,9 +1824,11 @@ other boards, languages and Weston come with the screens that show them.
   five new screens.
 
 - **Main screen states** (B18): board 18 is scenario `junctionOff`
-  (fixture `off` takes a bare Junction id too). `tests/states.rs` turns
-  it on with Space and with the banner's button, and off again from its
-  switch; `check.sh` compares its AT-SPI tree.
+  (fixture `off` takes a bare Junction id too), board 17 `addListen`
+  (fixture `listen_picker`). `tests/states.rs` turns a Junction on with
+  Space and with the banner's button and off again from its switch, and
+  adds Listen outputs from Ctrl+M, the picker and the empty Listen
+  column; `check.sh` compares their AT-SPI trees.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
