@@ -31,6 +31,22 @@ export global Words {
     // TRANSLATORS: Input Options, what a channel feeds: nothing, or a Bus channel.
     public pure function no-bus() -> string { @tr("None") }
     public pure function bus-channel(n: int) -> string { @tr("Ch {0}", n) }
+    // TRANSLATORS: what deleting a Junction removes (design board 22).
+    public pure function bus-pair(first: int) -> string { @tr("Ch {0}–{1}", first, first + 1) }
+    // TRANSLATORS: joins two items of a list (the last two take list-and).
+    public pure function list-comma(a: string, b: string) -> string { @tr("{0}, {1}", a, b) }
+    // TRANSLATORS: joins the last two items of a list.
+    public pure function list-and(a: string, b: string) -> string { @tr("{0} and {1}", a, b) }
+    public pure function inputs-links(inputs: int, links: int) -> string {
+        @tr("{n} Input" | "{n} Inputs" % inputs) + " · " + @tr("{n} Link" | "{n} Links" % links)
+    }
+    public pure function bus-listens(bus: string, listens: int) -> string {
+        @tr("Bus {0}", bus) + " · " + @tr("{n} Listen output" | "{n} Listen outputs" % listens)
+    }
+    // TRANSLATORS: {0} is a list of names, {n} how many.
+    public pure function keep-playing(names: string, n: int) -> string {
+        @tr("{0} keeps playing as before." | "{0} keep playing as before." % n, names)
+    }
 }
 
 export struct JunctionItem {
@@ -130,6 +146,11 @@ export global View {
     in-out property <bool> adding-bus;
     // The name field in the header (board 26: F2 or the pencil).
     in-out property <bool> renaming;
+    // Deleting the selected Junction (board 22): what goes with it, and
+    // what stays as it was.
+    in-out property <bool> confirming;
+    in-out property <[string]> delete-lines;
+    in-out property <string> delete-note;
     // Input Options (boards 15, 30): card `options-index`, at its card's
     // rectangle on the canvas.
     in-out property <bool> options-open;

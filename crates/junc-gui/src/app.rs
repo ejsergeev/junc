@@ -17,7 +17,7 @@ use crate::picker::{self, Entry, Pick};
 use crate::state::{self, Snapshot};
 use crate::ui::{self, AppWindow, View, Words};
 use junc_ipc::view::Describe;
-use slint::{ComponentHandle, Model, ModelRc, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -530,6 +530,14 @@ impl App {
         }
     }
 
+    /// Board 22: asks before deleting the selected Junction, as
+    /// Ctrl+Delete does.
+    pub fn start_delete(&self) {
+        if let (Some(_), Some(w)) = (&self.selected, self.window.upgrade()) {
+            w.global::<View>().set_confirming(true);
+        }
+    }
+
     pub fn open_add_bus(&self) {
         if let (Some(_), Some(w)) = (&self.main, self.window.upgrade()) {
             w.global::<View>().set_adding_bus(true);
@@ -645,6 +653,7 @@ impl App {
             self.close_options();
             if let Some(w) = self.window.upgrade() {
                 w.global::<View>().set_renaming(false);
+                w.global::<View>().set_confirming(false);
             }
             self.refresh();
         }
@@ -776,7 +785,7 @@ impl App {
             .iter()
             .position(|e| e.pick == Pick::Listen(target.to_owned()))
             .unwrap_or(0);
-        let names: Vec<slint::SharedString> = outputs
+        let names: Vec<SharedString> = outputs
             .iter()
             .map(|e| {
                 if e.label.is_empty() {
@@ -1149,6 +1158,9 @@ impl App {
                 view.set_off(i32::try_from(m.off).unwrap_or(0));
                 view.set_offline(i32::try_from(m.offline).unwrap_or(0));
                 view.set_listen_count(i32::try_from(m.listens.len()).unwrap_or(0));
+                let (lines, note) = removal_words(&w.global::<Words>(), &main_view::removal(m));
+                view.set_delete_lines(ModelRc::new(VecModel::from(lines)));
+                view.set_delete_note(note);
                 view.set_selected(m.id.as_str().into());
                 self.show_cable();
             }
@@ -1327,5 +1339,57 @@ pub fn refresh_current() {
         && let Ok(mut a) = a.try_borrow_mut()
     {
         a.refresh();
+    }
+}
+
+/// Board 22's list of what goes with a Junction, and what stays, in the
+/// UI language.
+fn removal_words(words: &Words, r: &main_view::Removal) -> (Vec<SharedString>, SharedString) {
+    let count = |n: usize| i32::try_from(n).unwrap_or(i32::MAX);
+    let groups: Vec<SharedString> = r
+        .bus
+        .iter()
+        .map(|&(first, stereo)| {
+            if stereo {
+                words.invoke_bus_pair(i32::from(first))
+            } else {
+                words.invoke_bus_channel(i32::from(first))
+            }
+        })
+        .collect();
+    let lines = vec![
+        words.invoke_inputs_links(count(r.inputs), count(r.links)),
+        words.invoke_bus_listens(
+            groups
+                .into_iter()
+                .reduce(|a, b| words.invoke_list_comma(a, b))
+                .unwrap_or_default(),
+            count(r.listens),
+        ),
+    ];
+    let names: Vec<SharedString> = r.names.iter().map(|n| n.as_str().into()).collect();
+    let note = if names.is_empty() {
+        SharedString::new()
+    } else {
+        words.invoke_keep_playing(join(words, &names), count(names.len()))
+    };
+    (lines, note)
+}
+
+/// "a, b and c" in the UI language.
+fn join(words: &Words, items: &[SharedString]) -> SharedString {
+    match items {
+        [] => SharedString::new(),
+        [one] => one.clone(),
+        [rest @ .., before, last] => {
+            let head = rest.iter().fold(None::<SharedString>, |acc, x| {
+                Some(acc.map_or_else(|| x.clone(), |a| words.invoke_list_comma(a, x.clone())))
+            });
+            let before = head.map_or_else(
+                || before.clone(),
+                |h| words.invoke_list_comma(h, before.clone()),
+            );
+            words.invoke_list_and(before, last.clone())
+        }
     }
 }

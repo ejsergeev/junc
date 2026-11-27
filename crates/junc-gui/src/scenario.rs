@@ -84,6 +84,9 @@ struct Fixture {
     /// The header's name field open (board 26).
     #[serde(default)]
     rename: bool,
+    /// The delete confirmation open (board 22).
+    #[serde(default)]
+    delete: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -163,6 +166,7 @@ pub struct Scenario {
     pub listen_picker: bool,
     pub add_bus: bool,
     pub rename: bool,
+    pub delete: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -300,6 +304,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         listen_picker: f.listen_picker,
         add_bus: f.add_bus,
         rename: f.rename,
+        delete: f.delete,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -540,6 +545,9 @@ pub fn open(
     }
     if s.rename {
         app.borrow().start_rename();
+    }
+    if s.delete {
+        app.borrow().start_delete();
     }
     if let Some(i) = s.options {
         app.borrow_mut().toggle_options(i);

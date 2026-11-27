@@ -443,7 +443,11 @@ export component MainScreen inherits Rectangle {
     callback delete-junction();
     // Board 26: the header's name field is open.
     in-out property <bool> renaming;
+    // Board 22: what deleting it removes, and what stays.
+    in property <[string]> delete-lines;
+    in property <string> delete-note;
     callback rename(string);
+    callback confirm-closed();
     callback turn-on();
     callback open-picker();
     callback open-listen-picker();
@@ -875,23 +879,33 @@ export component MainScreen inherits Rectangle {
         }
     }
 
-    // Delete confirmation (the Delete board comes with B19; the dialog is
-    // the library's).
+    // Delete confirmation (board 22): what it means for apps, what goes
+    // with it, what stays.
     if root.confirming: Rectangle {
         background: Tokens.surface-desktop.with-alpha(0.6);
         TouchArea { }
         dialog := JConfirm {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 3;
+            height: self.preferred-height;
+            show-keys: true;
             title: @tr("Delete “{0}”?", root.title);
-            consequences: [@tr("Apps recording from it lose this input."), @tr("Its Inputs and Listen outputs go with it.")];
-            confirm-text: @tr("Delete");
+            lead: @tr("Apps that record from it hear silence until you pick another input there.");
+            // TRANSLATORS: heading of the list of what a deleted Junction takes along.
+            heading: @tr("REMOVED WITH IT");
+            consequences: root.delete-lines;
+            note: root.delete-note;
+            confirm-text: @tr("Delete Junction");
+            confirm-icon: "\u{f0a7a}";
             init => { self.open(); }
             confirmed => {
                 root.confirming = false;
                 root.delete-junction();
             }
-            cancelled => { root.confirming = false; }
+            cancelled => {
+                root.confirming = false;
+                root.confirm-closed();
+            }
         }
     }
 }

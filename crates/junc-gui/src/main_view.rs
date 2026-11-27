@@ -491,6 +491,33 @@ impl Main {
     }
 }
 
+/// What deleting a Junction removes with it (board 22).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Removal {
+    pub inputs: usize,
+    pub links: usize,
+    /// Bus groups: first channel, stereo.
+    pub bus: Vec<(u8, bool)>,
+    pub listens: usize,
+    /// Its Inputs' names: they keep playing as before.
+    pub names: Vec<String>,
+}
+
+/// What deleting `m` removes.
+pub fn removal(m: &Main) -> Removal {
+    Removal {
+        inputs: m.inputs.len(),
+        links: m.links.len(),
+        bus: m
+            .bus
+            .iter()
+            .map(|g| (g.first, g.channels.len() == 2))
+            .collect(),
+        listens: m.listens.len(),
+        names: m.inputs.iter().map(|c| c.title.clone()).collect(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -561,6 +588,15 @@ mod tests {
             ]
         );
         assert!(main(&golden(), "nope").is_none());
+    }
+
+    #[test]
+    fn deleting_removes_its_inputs_links_bus_and_listens() {
+        let m = main(&golden(), "virtual-mic-for-zoom").expect("junction");
+        let r = removal(&m);
+        assert_eq!((r.inputs, r.links, r.listens), (3, m.links.len(), 1));
+        assert_eq!(r.bus, [(1, true), (3, true)]);
+        assert_eq!(r.names[0], "Spotify");
     }
 
     #[test]

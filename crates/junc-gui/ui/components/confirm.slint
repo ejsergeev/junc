@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Confirm dialog (Spec): a panel on surface.window with the popover
-// border, padding 18; title in type.heading, the consequences listed on
-// surface.card, buttons right-aligned. Focus starts on Cancel; the
-// destructive button needs Ctrl+Enter; Esc cancels. The owner draws the
-// 50 % surface.window scrim behind it.
+// border, padding 18; title in type.heading, an optional lead, the
+// consequences listed on surface.card (under a small heading when given,
+// with a subtle note after), buttons right-aligned. Focus starts on
+// Cancel; the destructive button needs Ctrl+Enter; Esc cancels. The owner
+// draws the 50 % surface.window scrim behind it.
 
 import { Tokens } from "../tokens.slint";
 import { JButton } from "button.slint";
@@ -11,12 +12,21 @@ import { JKbd } from "kbd.slint";
 
 export component JConfirm inherits Rectangle {
     in property <string> title;
+    // What it means for apps, above the list (board 22).
+    in property <string> lead;
+    // "Removed with it": the list's heading; without one, lines are dotted.
+    in property <string> heading;
     in property <[string]> consequences;
+    // What stays as it was, under the list.
+    in property <string> note;
     in property <string> confirm-text;
+    in property <string> confirm-icon;
+    // The buttons' keys inside them (board 22).
+    in property <bool> show-keys;
     callback confirmed();
     callback cancelled();
 
-    width: 420px * Tokens.scale;
+    width: (root.heading == "" ? 420px : 480px) * Tokens.scale;
     background: Tokens.surface-window;
     border-width: Tokens.border-popover;
     border-color: Tokens.accent;
@@ -40,14 +50,32 @@ export component JConfirm inherits Rectangle {
                 color: Tokens.text-strong;
                 wrap: word-wrap;
             }
+            if root.lead != "": Text {
+                text: root.lead;
+                color: Tokens.text-default;
+                wrap: word-wrap;
+            }
             Rectangle {
                 background: Tokens.surface-card;
+                border-width: root.heading == "" ? 0 : Tokens.border;
+                border-color: Tokens.line-divider;
                 VerticalLayout {
-                    padding: 10px;
+                    padding: root.heading == "" ? 10px : 14px * Tokens.scale;
                     spacing: Tokens.space-label-gap;
+                    if root.heading != "": Text {
+                        text: root.heading;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-caption;
+                    }
                     for c in root.consequences: Text {
-                        text: "· " + c;
+                        text: (root.heading == "" ? "· " : "") + c;
                         color: Tokens.text-default;
+                        wrap: word-wrap;
+                    }
+                    if root.note != "": Text {
+                        text: root.note;
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-caption;
                         wrap: word-wrap;
                     }
                 }
@@ -58,13 +86,16 @@ export component JConfirm inherits Rectangle {
                 cancel := JButton {
                     text: @tr("Cancel");
                     shortcut: "Esc";
+                    show-key: root.show-keys;
                     clicked => { root.cancelled(); }
                 }
                 JButton {
                     text: root.confirm-text;
+                    icon: root.confirm-icon;
                     destructive: true;
                     needs-ctrl: true;
                     shortcut: "Ctrl+Enter";
+                    show-key: root.show-keys;
                     clicked => { root.confirmed(); }
                 }
             }

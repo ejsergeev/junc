@@ -141,6 +141,7 @@ export component CableScreen inherits Rectangle {
     // Board 26: the header's name field is open.
     in-out property <bool> renaming;
     callback rename(string);
+    callback confirm-closed();
     callback picker-search-edited(string);
     callback picker-picked(int);
     callback picker-closed();
@@ -423,15 +424,21 @@ export component CableScreen inherits Rectangle {
         JConfirm {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 3;
+            height: self.preferred-height;
+            show-keys: true;
             title: @tr("Delete “{0}”?", root.title);
             consequences: [@tr("{0} goes back to its own input.", root.to)];
-            confirm-text: @tr("Delete");
+            confirm-text: @tr("Delete Cable");
+            confirm-icon: "\u{f0a7a}";
             init => { self.open(); }
             confirmed => {
                 root.confirming = false;
                 root.delete-junction();
             }
-            cancelled => { root.confirming = false; }
+            cancelled => {
+                root.confirming = false;
+                root.confirm-closed();
+            }
         }
     }
 }
