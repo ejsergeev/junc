@@ -1,0 +1,119 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Select (Spec: Input Options "Feeds Bus"): a field showing the chosen
+// option with a chevron, in the control states. ↑ ↓ change the choice in
+// place; Space, Enter or a click open the list under the field (it pushes
+// what follows down rather than covering it), where ↑ ↓ move, Enter or a
+// click choose and Esc closes. Choosing raises `changed`; the owner sets
+// `selected` from what it then holds.
+
+import { Tokens } from "../tokens.slint";
+import { ControlState } from "state.slint";
+
+export component JSelect inherits Rectangle {
+    forward-focus: focus;
+    in property <string> label;
+    in property <[string]> options;
+    in property <int> selected;
+    callback changed(int);
+
+    property <bool> hover: touch.has-hover;
+    property <bool> open;
+    property <int> cursor;
+    accessible-role: combobox;
+    accessible-label: root.label;
+    accessible-value: root.selected >= 0 && root.selected < root.options.length ? root.options[root.selected] : "";
+    accessible-expanded: root.open;
+
+    function pick(i: int) {
+        root.open = false;
+        if i >= 0 && i < root.options.length && i != root.selected {
+            root.changed(i);
+        }
+    }
+    function show() {
+        root.cursor = root.selected;
+        root.open = true;
+    }
+
+    focus := FocusScope {
+        key-pressed(e) => {
+            if root.open {
+                if e.text == Key.DownArrow { root.cursor = min(root.cursor + 1, root.options.length - 1); return accept; }
+                if e.text == Key.UpArrow { root.cursor = max(root.cursor - 1, 0); return accept; }
+                if e.text == "\n" || e.text == " " { root.pick(root.cursor); return accept; }
+                if e.text == Key.Escape { root.open = false; return accept; }
+                return reject;
+            }
+            if e.text == Key.DownArrow { root.pick(min(root.selected + 1, root.options.length - 1)); return accept; }
+            if e.text == Key.UpArrow { root.pick(max(root.selected - 1, 0)); return accept; }
+            if e.text == "\n" || e.text == " " { root.show(); return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        Rectangle {
+            height: Tokens.size-control;
+            background: ControlState.fill(root.hover, focus.has-focus, false, false);
+            border-width: Tokens.border;
+            border-color: ControlState.border(root.hover, focus.has-focus, false);
+            touch := TouchArea {
+                mouse-cursor: pointer;
+                clicked => {
+                    focus.focus();
+                    if root.open { root.open = false; } else { root.show(); }
+                }
+            }
+            HorizontalLayout {
+                padding-left: Tokens.space-control-pad-x;
+                padding-right: Tokens.space-control-pad-x;
+                spacing: 8px * Tokens.scale;
+                Text {
+                    text: root.selected >= 0 && root.selected < root.options.length ? root.options[root.selected] : "";
+                    color: focus.has-focus ? Tokens.accent : Tokens.text-default;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                    overflow: elide;
+                    accessible-role: none;
+                }
+                Text {
+                    text: root.open ? "\u{f0143}" : "\u{f0140}";
+                    color: Tokens.text-subtle;
+                    vertical-alignment: center;
+                    accessible-role: none;
+                }
+            }
+        }
+        if root.open: Rectangle {
+            height: list.preferred-height;
+            background: Tokens.surface-window;
+            border-width: Tokens.border-popover;
+            border-color: Tokens.accent;
+            accessible-role: AccessibleRole.list;
+            accessible-label: root.label;
+            list := VerticalLayout {
+                padding: Tokens.border-popover;
+                for o[i] in root.options: Rectangle {
+                    height: Tokens.size-control;
+                    property <bool> on: i == root.cursor;
+                    background: self.on ? Tokens.control-hover-fill : transparent;
+                    accessible-role: list-item;
+                    accessible-label: o;
+                    accessible-item-selectable: true;
+                    accessible-item-selected: i == root.selected;
+                    accessible-action-default => { root.pick(i); }
+                    TouchArea {
+                        clicked => { root.pick(i); }
+                        moved => { root.cursor = i; }
+                    }
+                    Text {
+                        x: Tokens.space-control-pad-x;
+                        text: o;
+                        vertical-alignment: center;
+                        color: parent.on ? Tokens.accent : Tokens.text-default;
+                        accessible-role: none;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -18,6 +18,7 @@ import { JChannelGroup } from "components/channel-group.slint";
 import { JPicker } from "components/picker.slint";
 import { JMenu } from "components/menu.slint";
 import { JRadioGroup } from "components/radio-group.slint";
+import { JSelect } from "components/select.slint";
 import { JInlineField } from "components/inline-field.slint";
 import { JConfirm } from "components/confirm.slint";
 import { JEmptyState } from "components/empty-state.slint";
@@ -199,6 +200,16 @@ export component GalleryWindow inherits Window {
                 label: "Add Bus channels";
                 options: ["Stereo pair", "Mono", "Two pairs"];
                 changed(i) => { root.last-event = "radio " + i; }
+            }
+            VerticalLayout {
+                alignment: start;
+                JSelect {
+                    width: 160px;
+                    label: "Channel 1 feeds";
+                    options: ["None", "Ch 1", "Ch 2"];
+                    selected: 1;
+                    changed(i) => { root.last-event = "select " + i; }
+                }
             }
         }
         Row {
