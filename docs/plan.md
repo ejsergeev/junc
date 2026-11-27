@@ -449,6 +449,7 @@ de/ja, AT-SPI dump, keyboard test):
   Under way, one PR per part. Junction off done 2026-11-27 (architecture
   §7.2, as built): banner with Turn on (Space), dimmed cards, no links.
   Add Listen output done 2026-11-27: the picker of board 17 (Ctrl+M).
+  Add Bus done 2026-11-27: board 16's popover (Ctrl+Shift+N).
 - [ ] **B19** [auto] Tray (DBusMenu tree test), service down, context menu
   (duplicate), delete confirmation, app closed, import, settings, rename,
   new Cable. Req: F1, F5, F9, F10, F13, F21.

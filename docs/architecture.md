@@ -1237,6 +1237,15 @@ Picking adds a Listen output through `GetConfig` → `Apply`
 (`Edit::AddListen`: id from the device's name, default links and
 volume). `JPicker` gained a `note` under its rows.
 
+As built (B18, Add Bus channels): Ctrl+Shift+N and the "+" on Bus open
+board 16's popover, right-aligned to the Bus column: a stereo pair or one
+mono channel after the last (`JRadioGroup` gained a detail per option,
+"Ch 5–6", and marks the chosen row while focused), how many channels apps
+will see, Cancel (Esc) and Add (Enter). Add raises `bus.channels`
+through `GetConfig` → `Apply` (`Edit::AddBus`), never past 64. The Bus
+keeps no grouping of its own: its cards pair channels from the first, so
+a mono channel followed by a pair reads as pairs from the start.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1825,10 +1834,11 @@ other boards, languages and Weston come with the screens that show them.
 
 - **Main screen states** (B18): board 18 is scenario `junctionOff`
   (fixture `off` takes a bare Junction id too), board 17 `addListen`
-  (fixture `listen_picker`). `tests/states.rs` turns a Junction on with
-  Space and with the banner's button and off again from its switch, and
-  adds Listen outputs from Ctrl+M, the picker and the empty Listen
-  column; `check.sh` compares their AT-SPI trees.
+  (fixture `listen_picker`), board 16 `addBus` (fixture `add_bus`).
+  `tests/states.rs` turns a Junction on with Space and with the banner's
+  button and off again from its switch, adds Listen outputs from Ctrl+M,
+  the picker and the empty Listen column, and adds Bus channels (Enter,
+  ↓ for mono, Esc); `check.sh` compares their AT-SPI trees.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
