@@ -57,6 +57,7 @@ const SCENARIOS: &[&str] = &[
     "serviceDown",
     "settings",
     "import",
+    "langPicker",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.

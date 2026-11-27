@@ -1,0 +1,9 @@
+# GUI scenario: design board 31, "Settings · Language picker" — Follow
+# Omarchy off, the Language select open: the language in use, then the 46
+# left-to-right languages by their own names.
+board = 31
+title = "Settings · Language picker"
+base = "default"
+settings = true
+start_at_login = true
+lang_picker = true

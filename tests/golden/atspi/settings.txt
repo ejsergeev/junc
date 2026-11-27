@@ -24,7 +24,7 @@ application name='junc-gui' states=[]
     label name='Follow PipeWire' states=[enabled,sensitive,showing,visible]
     label name='Follow Omarchy (Setup > Language)' states=[enabled,sensitive,showing,visible]
     label name='Current language: English' states=[enabled,sensitive,showing,visible]
-    toggle button name='Follow Omarchy (Setup > Language)' desc='on' states=[pressed,showing,visible] actions=click
+    toggle button name='Follow Omarchy (Setup > Language)' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
     label name='Language' states=[enabled,sensitive,showing,visible]
     label name='Follows Omarchy. Turn off the switch above to pick one.' states=[enabled,sensitive,showing,visible]
     label name='English' states=[enabled,sensitive,showing,visible]

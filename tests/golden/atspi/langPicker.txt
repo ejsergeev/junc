@@ -1,0 +1,75 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Settings' states=[enabled,sensitive,showing,visible]
+    button name='Close' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='General' states=[enabled,sensitive,showing,visible]
+    label name='Start at login' states=[enabled,sensitive,showing,visible]
+    label name='Runs juncd as a systemd user service, so Junctions exist before you open the app.' states=[enabled,sensitive,showing,visible]
+    toggle button name='Start at login' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+    label name='Default sample rate' states=[enabled,sensitive,showing,visible]
+    label name='Used for new Junctions and Cables.' states=[enabled,sensitive,showing,visible]
+    label name='Follow PipeWire' states=[enabled,sensitive,showing,visible]
+    label name='Follow Omarchy (Setup > Language)' states=[enabled,sensitive,showing,visible]
+    label name='Off: JUNC uses the language you pick below.' states=[enabled,sensitive,showing,visible]
+    toggle button name='Follow Omarchy (Setup > Language)' desc='off' states=[enabled,sensitive,showing,visible] actions=click
+    label name='Language' states=[enabled,sensitive,showing,visible]
+    label name='Shown by native name. Missing strings fall back to English.' states=[enabled,sensitive,showing,visible]
+    button name='English' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Appearance' states=[enabled,sensitive,showing,visible]
+    label name='Follow Omarchy theme' states=[enabled,sensitive,showing,visible]
+    label name='Retints with omarchy-theme-set. Off: use the theme JUNC ships with.' states=[enabled,sensitive,showing,visible]
+    toggle button name='Follow Omarchy theme' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+    label name='About' states=[enabled,sensitive,showing,visible]
+    label name='Version' states=[enabled,sensitive,showing,visible]
+    label name='JUNC for Linux' states=[enabled,sensitive,showing,visible]
+    label name='0.1.0' states=[enabled,sensitive,showing,visible]
+    label name='License' states=[enabled,sensitive,showing,visible]
+    label name='Free software under the GNU GPL.' states=[enabled,sensitive,showing,visible]
+    label name='GPL-3.0-or-later' states=[enabled,sensitive,showing,visible]
+    button name='Source code' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Existing setups' states=[enabled,sensitive,showing,visible]
+    label name='Bring in null-sink and pw-loopback setups.' states=[enabled,sensitive,showing,visible]
+    button name='Import…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Diagnostics' states=[enabled,sensitive,showing,visible]
+    label name='Versions, Junction graph and recent logs. No audio, no personal data.' states=[enabled,sensitive,showing,visible]
+    button name='Copy bug report…' states=[focusable,showing,visible] actions=click
+    label name='System check' states=[enabled,sensitive,showing,visible]
+    label name='Same checks as junc doctor.' states=[enabled,sensitive,showing,visible]
+    button name='Run checks' states=[focusable,showing,visible] actions=click
+    label name='Logs' states=[enabled,sensitive,showing,visible]
+    label name='journalctl --user -u juncd' states=[enabled,sensitive,showing,visible]
+    button name='Open logs' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    panel name='Language' states=[enabled,sensitive,showing,visible]
+      entry name='Search languages' states=[focusable,enabled,sensitive,editable,showing,visible]
+      label name='CURRENT' states=[enabled,sensitive,showing,visible]
+      list item name='English' desc='current' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      label name='ALL LANGUAGES' states=[enabled,sensitive,showing,visible]
+      list item name='Български' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='বাংলা' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Català' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Čeština' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Dansk' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Deutsch' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Ελληνικά' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Español (México)' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Eesti' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      label name='46 languages · type to filter · English is the fallback' states=[enabled,sensitive,showing,visible]
+      label name='↑↓' states=[enabled,sensitive,showing,visible]
+      label name='move' states=[enabled,sensitive,showing,visible]
+      label name='Enter' states=[enabled,sensitive,showing,visible]
+      label name='choose' states=[enabled,sensitive,showing,visible]
+      label name='Esc' states=[enabled,sensitive,showing,visible]
+      label name='close' states=[enabled,sensitive,showing,visible]
