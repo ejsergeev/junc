@@ -32,6 +32,13 @@ pub enum Edit {
         remove: Vec<[u8; 2]>,
         in_use: Vec<[u8; 2]>,
     },
+    /// Add a channel pair (boards 13, 14), given the pairs in use now; it
+    /// is no longer one another tool removed.
+    Link {
+        part: Part,
+        pair: [u8; 2],
+        in_use: Vec<[u8; 2]>,
+    },
     /// Add an Input taking `matcher`; its id comes from `label`.
     AddInput { matcher: Box<Match>, label: String },
     /// Add a Listen output to `target` (`default` or an output node.name);
@@ -67,7 +74,10 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
         return false;
     };
     let part = match edit {
-        Edit::Enabled(p, _) | Edit::Volume(p, _) | Edit::Unlink { part: p, .. } => p,
+        Edit::Enabled(p, _)
+        | Edit::Volume(p, _)
+        | Edit::Unlink { part: p, .. }
+        | Edit::Link { part: p, .. } => p,
         Edit::AddInput { matcher, label } => {
             let id = unique_id(label, j.input.iter().map(|i| i.id.as_str()));
             j.input.push(new_input(id, (**matcher).clone()));
@@ -157,6 +167,10 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     i.links = Some(remaining(i.links.as_deref(), in_use, remove));
                 }
+                Edit::Link { pair, in_use, .. } => {
+                    i.links = Some(with(i.links.as_deref(), in_use, *pair));
+                    i.suppressed.retain(|p| p != pair);
+                }
                 _ => {}
             }
         }
@@ -169,6 +183,10 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Volume(_, v) => l.volume = *v,
                 Edit::Unlink { remove, in_use, .. } => {
                     l.links = Some(remaining(l.links.as_deref(), in_use, remove));
+                }
+                Edit::Link { pair, in_use, .. } => {
+                    l.links = Some(with(l.links.as_deref(), in_use, *pair));
+                    l.suppressed.retain(|p| p != pair);
                 }
                 _ => {}
             }
@@ -219,6 +237,15 @@ fn new_listen(id: String, target: &str) -> Listen {
     toml::Value::Table(t)
         .try_into()
         .unwrap_or_else(|e| unreachable!("a minimal Listen always parses: {e}"))
+}
+
+fn with(own: Option<&[[u8; 2]]>, in_use: &[[u8; 2]], pair: [u8; 2]) -> Vec<[u8; 2]> {
+    let mut out = own.unwrap_or(in_use).to_vec();
+    if !out.contains(&pair) {
+        out.push(pair);
+        out.sort_unstable();
+    }
+    out
 }
 
 fn remaining(own: Option<&[[u8; 2]]>, in_use: &[[u8; 2]], remove: &[[u8; 2]]) -> Vec<[u8; 2]> {
@@ -509,6 +536,45 @@ target = "default"
             }
         ));
         assert_eq!(c.junction[0].listen[0].target, "alsa_output.hdmi");
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
+    }
+
+    #[test]
+    fn linking_adds_the_pair_to_the_ones_in_use() {
+        let mut c = config();
+        let link = |part: Part, pair, in_use: Vec<[u8; 2]>| Edit::Link { part, pair, in_use };
+        // music has its own list: 1 → 3, 2 → 4.
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &link(Part::Input("music".into()), [1, 1], vec![])
+        ));
+        assert_eq!(
+            c.junction[0].input[1].links,
+            Some(vec![[1, 1], [1, 3], [2, 4]])
+        );
+        // mic follows the default mapping: it becomes its own list.
+        c.junction[0].input[0].suppressed = vec![[2, 2]];
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &link(Part::Input("mic".into()), [2, 2], vec![[1, 1]])
+        ));
+        assert_eq!(c.junction[0].input[0].links, Some(vec![[1, 1], [2, 2]]));
+        assert!(
+            c.junction[0].input[0].suppressed.is_empty(),
+            "not removed any more"
+        );
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &link(Part::Listen("hp".into()), [3, 1], vec![[1, 1], [2, 2]])
+        ));
+        assert_eq!(
+            c.junction[0].listen[0].links,
+            Some(vec![[1, 1], [2, 2], [3, 1]])
+        );
         let text = toml::to_string(&c).expect("toml");
         junc_core::config::load(&text, "junctions.toml").expect("still valid");
     }
