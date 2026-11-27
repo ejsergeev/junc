@@ -1358,6 +1358,21 @@ WirePlumber rows with doctor's fix to copy, then juncd's own row
 (`xdg-terminal-exec`). juncd itself not running stays as before (the
 sidebar says so); its own board is not in the design.
 
+As built (B19, Settings): Ctrl+, or the sidebar's gear shows Settings in
+the main area (board 25); Esc, Close or a sidebar row leaves it. Start at
+login runs `junc service status|enable|disable --json` on a thread (the
+`junc` next to `junc-gui`, as doctor), greyed until systemd answers; the
+end of onboarding enables it (F9, on by default after onboarding).
+Follow Omarchy theme is kept in the GUI's state file (`follow_theme`
+beside `onboarded`); off, the window takes the built-in theme for the
+portal's colour scheme and ignores theme changes until it is on again.
+About shows the version, the licence with Source code (`xdg-open` on
+the repository), Import… (board 24), and Open logs. Greyed until their
+stage: the default sample rate (juncd has no such setting yet), the
+language rows (B20), Copy bug report… and Run checks (B22). Not built:
+the board's Third-party licenses link, which waits for the package's
+licence file.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
