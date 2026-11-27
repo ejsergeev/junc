@@ -51,6 +51,7 @@ const SCENARIOS: &[&str] = &[
     "linkKeys",
     "rename",
     "deleteConfirm",
+    "contextMenu",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.

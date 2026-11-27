@@ -1,0 +1,6 @@
+# GUI scenario: design board 21, "Context menu · Duplicate" — right-click
+# or the Menu key on a Junction row; the cursor on Duplicate.
+board = 21
+title = "Context menu · Duplicate"
+base = "default"
+menu = 1
