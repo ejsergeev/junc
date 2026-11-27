@@ -19,9 +19,16 @@ use std::rc::Rc;
 type Opened = (AppWindow, Rc<RefCell<junc_gui::app::App>>, Mock);
 
 fn open(name: &str) -> Opened {
+    open_in(name, Some("en"))
+}
+
+/// `name` in `lang`, or in the language already chosen (`None`).
+fn open_in(name: &str, lang: Option<&str>) -> Opened {
     let s = scenario::load(name).expect("scenario");
     let w = AppWindow::new().expect("window");
-    ui::set_language("en");
+    if let Some(lang) = lang {
+        ui::set_language(lang);
+    }
     ui::apply(&w, &theme::fallback(false));
     w.window().set_size(LogicalSize::new(1440.0, 900.0));
     let (app, mock) = scenario::open(&s, &w, None, Levels::default());
@@ -729,4 +736,14 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     assert!(view.get_follow_language());
     assert_eq!(view.get_language_name(), "English");
     assert!(has(&w, "Settings"));
+
+    // Board 32: Omarchy set to Arabic shows English until RTL (PRD).
+    let sources = junc_l10n::Sources {
+        explicit: None,
+        omarchy_file: None,
+        env: vec!["ar_EG.UTF-8".to_owned()],
+    };
+    ui::set_language(&junc_l10n::resolve(&sources));
+    let (w, _app, _mock) = open_in("default", None);
+    assert!(has(&w, "Rename"), "Arabic shows English");
 }
