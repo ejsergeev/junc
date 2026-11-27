@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 22, 26, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 21, 22, 26, 30)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -520,4 +520,44 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     ctrl(&w, "\n");
     settle();
     assert_eq!(count(&mock), 1);
+    drop((w, _app, mock));
+
+    // Board 21: the menu on Duplicate, Enter copies the Junction after it;
+    // the Menu key opens it again, ↓ ↓ Enter turns it off; Esc closes it;
+    // Ctrl+D copies it too.
+    let (w, _app, mock) = open("contextMenu");
+    let view = w.global::<View>();
+    let names = |m: &Mock| -> Vec<String> {
+        m.config()
+            .expect("config")
+            .junction
+            .iter()
+            .map(|j| j.name.clone())
+            .collect()
+    };
+    assert_eq!(view.get_menu_index(), 0);
+    assert!(has(&w, "Export preset…"));
+    key(&w, "\n");
+    settle();
+    assert_eq!(view.get_menu_index(), -1);
+    assert_eq!(
+        names(&mock)[..2],
+        ["Virtual Mic for Zoom", "Virtual Mic for Zoom copy"]
+    );
+    key(&w, Key::Menu);
+    settle();
+    assert_eq!(view.get_menu_index(), 0);
+    key(&w, Key::DownArrow);
+    key(&w, Key::DownArrow);
+    key(&w, "\n");
+    settle();
+    assert!(!on(&mock));
+    key(&w, Key::Menu);
+    settle();
+    key(&w, Key::Escape);
+    settle();
+    assert_eq!(view.get_menu_index(), -1);
+    ctrl(&w, "d");
+    settle();
+    assert_eq!(names(&mock).len(), 4);
 }
