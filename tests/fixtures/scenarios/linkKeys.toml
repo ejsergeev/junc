@@ -1,0 +1,7 @@
+# GUI scenario: design board 14, "Link with the keys" — Enter on Soundux's
+# channel 1, ↑ ↓ to Bus channel 1: Enter connects, Esc cancels.
+board = 14
+title = "Link with the keys"
+base = "default"
+link = "soundux 1 -> 1"
+link_keys = true

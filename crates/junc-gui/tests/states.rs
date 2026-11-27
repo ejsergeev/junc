@@ -343,4 +343,68 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     key(&w, Key::Escape);
     settle();
     assert!(!view.get_picker_open());
+    drop((w, _app, mock));
+
+    // Boards 13, 14: links from Soundux. Drag channel 1 onto Bus 1; then
+    // Enter on channel 2, ↓ to the second target (Bus 2), Enter; Enter,
+    // Esc makes nothing.
+    let (w, _app, mock) = open("default");
+    let view = w.global::<View>();
+    let soundux = |m: &Mock| {
+        m.config().expect("config").junction[0]
+            .input
+            .iter()
+            .find(|i| i.id == "soundux")
+            .and_then(|i| i.links.clone())
+    };
+    let centre = |label: &str| {
+        let e = ElementHandle::find_by_accessible_label(&w, label)
+            .next()
+            .unwrap_or_else(|| panic!("{label}"));
+        let (p, s) = (e.absolute_position(), e.size());
+        LogicalPosition::new(p.x + s.width / 2.0, p.y + s.height / 2.0)
+    };
+    let (from, to) = (centre("Soundux channel 1"), centre("Bus channel 1 in"));
+
+    w.window()
+        .dispatch_event(WindowEvent::PointerMoved { position: from });
+    w.window().dispatch_event(WindowEvent::PointerPressed {
+        position: from,
+        button: PointerEventButton::Left,
+    });
+    for t in [0.3, 0.7, 1.0] {
+        let position =
+            LogicalPosition::new(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t);
+        w.window()
+            .dispatch_event(WindowEvent::PointerMoved { position });
+    }
+    assert_eq!(view.get_linking(), 1);
+    assert!(view.get_tip_visible(), "the tip names the link");
+    w.window().dispatch_event(WindowEvent::PointerReleased {
+        position: to,
+        button: PointerEventButton::Left,
+    });
+    settle();
+    assert_eq!(view.get_linking(), 0);
+    assert_eq!(soundux(&mock), Some(vec![[1, 1], [1, 3], [2, 4]]));
+    // A click focuses a port and links nothing.
+    let port = ElementHandle::find_by_accessible_label(&w, "Soundux channel 2")
+        .next()
+        .expect("Soundux channel 2");
+    click(&w, &port);
+    settle();
+    assert_eq!(view.get_linking(), 0);
+    key(&w, "\n");
+    assert_eq!(view.get_linking(), 2);
+    key(&w, Key::DownArrow);
+    key(&w, "\n");
+    settle();
+    assert_eq!(view.get_linking(), 0);
+    assert_eq!(soundux(&mock), Some(vec![[1, 1], [1, 3], [2, 2], [2, 4]]));
+    key(&w, "\n");
+    assert_eq!(view.get_linking(), 2);
+    key(&w, Key::Escape);
+    settle();
+    assert_eq!(view.get_linking(), 0);
+    assert_eq!(soundux(&mock).map(|l| l.len()), Some(4));
 }

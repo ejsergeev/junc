@@ -10,6 +10,7 @@ use crate::actions::{Actions, Command};
 use crate::app::App;
 use crate::checks;
 use crate::edits;
+use crate::main_view::End;
 use crate::onboarding::Step;
 use junc_core::backend::{Backend, MockBackend};
 use junc_core::graph::{Graph, Props};
@@ -82,6 +83,11 @@ struct Fixture {
     add_bus: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
+    /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
+    /// pointer, or with `link_keys` by the keys (boards 13, 14).
+    link: Option<String>,
+    #[serde(default)]
+    link_keys: bool,
 }
 
 /// One doctor check (`junc doctor --json`).
@@ -154,6 +160,8 @@ pub struct Scenario {
     pub listen_picker: bool,
     pub add_bus: bool,
     pub options: Option<i32>,
+    pub link: Option<String>,
+    pub link_keys: bool,
     /// What the mock answers to the system check.
     checks: Vec<checks::Row>,
     /// What the mock IPC settles again after each change.
@@ -288,6 +296,8 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         listen_picker: f.listen_picker,
         add_bus: f.add_bus,
         options: f.options,
+        link: f.link,
+        link_keys: f.link_keys,
         checks,
         config,
         graph,
@@ -524,9 +534,12 @@ pub fn open(
     (app, mock)
 }
 
-/// Puts the pointer on the scenario's hovered link, once the canvas is laid
-/// out. Returns whether it found it.
+/// Puts the pointer on the scenario's hovered link, or starts the link it
+/// makes, once the canvas is laid out. Returns whether it found it.
 pub fn hover(s: &Scenario, app: &Rc<RefCell<App>>) -> bool {
+    if let Some(spec) = &s.link {
+        return link(spec, s.link_keys, app);
+    }
     let Some(spec) = &s.hover else { return true };
     let Some((owner, pair)) = spec.split_once(' ') else {
         return false;
@@ -555,6 +568,45 @@ pub fn hover(s: &Scenario, app: &Rc<RefCell<App>>) -> bool {
         c.at(0.55)
     };
     app.borrow_mut().hover_at(point);
+    true
+}
+
+/// A link from an Input's channel to a Bus channel, being made: the
+/// pointer on the target, or the target chosen with the keys.
+fn link(spec: &str, keys: bool, app: &Rc<RefCell<App>>) -> bool {
+    let parse = || -> Option<(End, End)> {
+        let (from, bus) = spec.split_once("->")?;
+        let (input, ch) = from.trim().split_once(' ')?;
+        let a = app.borrow();
+        let card = a.main()?.inputs.iter().position(|c| c.id == input)?;
+        Some((
+            End::Input {
+                card,
+                ch: ch.trim().parse().ok()?,
+            },
+            End::BusIn {
+                ch: bus.trim().parse().ok()?,
+            },
+        ))
+    };
+    let Some((from, to)) = parse() else {
+        return false;
+    };
+    let at = {
+        let a = app.borrow();
+        let (Some(m), Some(l)) = (a.main(), a.layout()) else {
+            return false;
+        };
+        crate::linking::at(m, l, to)
+    };
+    let Some(at) = at else { return false };
+    let mut a = app.borrow_mut();
+    a.link_start(from, keys);
+    if keys {
+        a.link_target(to);
+    } else {
+        a.link_drag(at);
+    }
     true
 }
 

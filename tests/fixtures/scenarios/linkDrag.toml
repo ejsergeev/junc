@@ -1,0 +1,7 @@
+# GUI scenario: design board 13, "Link drag" — dragging from Soundux's
+# channel 1: the Bus inputs it may link to are marked, the one under the
+# pointer snaps, a tip says what the link would be.
+board = 13
+title = "Link drag"
+base = "default"
+link = "soundux 1 -> 1"
