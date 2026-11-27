@@ -21,6 +21,10 @@ msgstr "オフ · アプリには無音"
 msgid "Cable"
 msgstr "ケーブル"
 
+#: crates/junc-gui/ui/app.slint
+msgid "not set up"
+msgstr "未設定"
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
 msgid "No inputs yet"
 msgstr "入力はまだありません"
@@ -84,6 +88,18 @@ msgstr "プリセットを読み込む…"
 #: crates/junc-gui/ui/app.slint
 msgid "Delete…"
 msgstr "削除…"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Junction"
+msgstr "ジャンクション"
+
+#: crates/junc-gui/ui/app.slint
+msgid "A virtual mic and speaker"
+msgstr "仮想マイクと仮想スピーカー"
+
+#: crates/junc-gui/ui/app.slint
+msgid "One app straight into another"
+msgstr "あるアプリの音を別のアプリへ直接"
 
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
@@ -214,6 +230,10 @@ msgid "From"
 msgstr "送り元"
 
 #: crates/junc-gui/ui/screens/cable.slint
+msgid "Choose an app"
+msgstr "アプリを選択"
+
+#: crates/junc-gui/ui/screens/cable.slint
 msgid "App · playing"
 msgstr "アプリ · 再生中"
 
@@ -228,6 +248,22 @@ msgstr "送り先"
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "App · hears this Cable as its input"
 msgstr "アプリ · このケーブルを入力として受け取ります"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "No app yet"
+msgstr "アプリ未選択"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "The app whose sound goes in."
+msgstr "音を送り込むアプリ。"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Choose app"
+msgstr "アプリを選択"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Pick the app that should hear it."
+msgstr "それを聞くアプリを選んでください。"
 
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "output"
@@ -286,6 +322,10 @@ msgid "Search apps"
 msgstr "アプリを検索"
 
 #: crates/junc-gui/ui/screens/cable.slint
+msgid "Only apps that are playing or have played this session."
+msgstr "再生中か、このセッションで再生したアプリのみ。"
+
+#: crates/junc-gui/ui/screens/cable.slint
 msgid "pick"
 msgstr "選択"
 
@@ -313,7 +353,7 @@ msgstr "ジャンクションはアプリと入力を、どのアプリでも選
 msgid "New Junction"
 msgstr "新しいジャンクション"
 
-#: crates/junc-gui/ui/screens/empty.slint
+#: crates/junc-gui/ui/screens/empty.slint crates/junc-gui/ui/view.slint
 msgid "New Cable"
 msgstr "新しいケーブル"
 

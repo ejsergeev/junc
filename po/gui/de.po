@@ -21,6 +21,10 @@ msgstr "Aus · Apps hören Stille"
 msgid "Cable"
 msgstr "Kabel"
 
+#: crates/junc-gui/ui/app.slint
+msgid "not set up"
+msgstr "nicht eingerichtet"
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
 msgid "No inputs yet"
 msgstr "Noch keine Eingänge"
@@ -84,6 +88,18 @@ msgstr "Preset importieren…"
 #: crates/junc-gui/ui/app.slint
 msgid "Delete…"
 msgstr "Löschen…"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Junction"
+msgstr "Junction"
+
+#: crates/junc-gui/ui/app.slint
+msgid "A virtual mic and speaker"
+msgstr "Ein virtuelles Mikrofon und ein Lautsprecher"
+
+#: crates/junc-gui/ui/app.slint
+msgid "One app straight into another"
+msgstr "Eine App direkt in eine andere"
 
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
@@ -214,6 +230,10 @@ msgid "From"
 msgstr "Von"
 
 #: crates/junc-gui/ui/screens/cable.slint
+msgid "Choose an app"
+msgstr "Wähle eine App"
+
+#: crates/junc-gui/ui/screens/cable.slint
 msgid "App · playing"
 msgstr "App · spielt"
 
@@ -228,6 +248,22 @@ msgstr "Nach"
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "App · hears this Cable as its input"
 msgstr "App · hört dieses Kabel als Eingang"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "No app yet"
+msgstr "Noch keine App"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "The app whose sound goes in."
+msgstr "Die App, deren Ton hineingeht."
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Choose app"
+msgstr "App wählen"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Pick the app that should hear it."
+msgstr "Wähle die App, die es hören soll."
 
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "output"
@@ -286,6 +322,10 @@ msgid "Search apps"
 msgstr "Apps suchen"
 
 #: crates/junc-gui/ui/screens/cable.slint
+msgid "Only apps that are playing or have played this session."
+msgstr "Nur Apps, die gerade spielen oder in dieser Sitzung gespielt haben."
+
+#: crates/junc-gui/ui/screens/cable.slint
 msgid "pick"
 msgstr "wählen"
 
@@ -299,7 +339,7 @@ msgstr "{0} kehrt zu ihrem eigenen Eingang zurück."
 
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "Delete Cable"
-msgstr "Cable löschen"
+msgstr "Kabel löschen"
 
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
@@ -313,7 +353,7 @@ msgstr "Eine Junction mischt Apps und Eingänge zu einem virtuellen Mikrofon, da
 msgid "New Junction"
 msgstr "Neue Junction"
 
-#: crates/junc-gui/ui/screens/empty.slint
+#: crates/junc-gui/ui/screens/empty.slint crates/junc-gui/ui/view.slint
 msgid "New Cable"
 msgstr "Neues Kabel"
 

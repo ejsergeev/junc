@@ -12,6 +12,10 @@ msgstr ""
 msgid "Cable"
 msgstr ""
 
+#: crates/junc-gui/ui/app.slint
+msgid "not set up"
+msgstr ""
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
 msgid "No inputs yet"
 msgstr ""
@@ -74,6 +78,18 @@ msgstr ""
 
 #: crates/junc-gui/ui/app.slint
 msgid "Delete…"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Junction"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "A virtual mic and speaker"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "One app straight into another"
 msgstr ""
 
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
@@ -205,6 +221,10 @@ msgid "From"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint
+msgid "Choose an app"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/cable.slint
 msgid "App · playing"
 msgstr ""
 
@@ -218,6 +238,22 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "App · hears this Cable as its input"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "No app yet"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "The app whose sound goes in."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Choose app"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Pick the app that should hear it."
 msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint
@@ -277,6 +313,10 @@ msgid "Search apps"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint
+msgid "Only apps that are playing or have played this session."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/cable.slint
 msgid "pick"
 msgstr ""
 
@@ -304,7 +344,7 @@ msgstr ""
 msgid "New Junction"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/empty.slint
+#: crates/junc-gui/ui/screens/empty.slint crates/junc-gui/ui/view.slint
 msgid "New Cable"
 msgstr ""
 
