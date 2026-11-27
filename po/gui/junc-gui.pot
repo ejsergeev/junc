@@ -355,7 +355,15 @@ msgid "Show Listen"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Search output devices"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Search apps, inputs, system audio"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Plug in headphones or a USB device to see it here."
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
@@ -516,4 +524,12 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Monitor of {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Output devices"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default output (follows system)"
 msgstr ""
