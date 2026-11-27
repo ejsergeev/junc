@@ -4,6 +4,10 @@ msgstr ""
 "Project-Id-Version: junc-gui\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: crates/junc-gui/ui/app.slint
+msgid "Off · apps see silence"
+msgstr ""
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr ""
@@ -240,6 +244,14 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Junction is off — apps see silence"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Turn on"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
