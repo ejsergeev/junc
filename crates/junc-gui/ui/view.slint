@@ -137,6 +137,8 @@ export global View {
     // Onboarding (boards 8, 9): 0 none, 1 the system check, 2 templates.
     in-out property <int> onboarding;
     in-out property <[CheckItem]> checks;
+    // Board 20: the audio server's rows of the same check.
+    in-out property <[CheckItem]> service-checks;
     // Doctor is running.
     in-out property <bool> checking;
     in-out property <bool> checks-passed;
@@ -215,6 +217,8 @@ export global View {
     // Board 26: a new name for the selected Junction.
     callback rename(string);
     callback recheck();
+    // Board 20: juncd's journal in a terminal.
+    callback open-logs();
     callback copy(string);
     // Step 1 → 2, and back.
     callback onboarding-continue();

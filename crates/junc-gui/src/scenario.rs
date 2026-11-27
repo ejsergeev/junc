@@ -344,6 +344,8 @@ struct MockState {
     checking: bool,
     /// What the window last put on the clipboard.
     copied: Option<String>,
+    /// The window asked for juncd's journal.
+    logs_opened: bool,
 }
 
 impl std::fmt::Debug for Mock {
@@ -364,6 +366,7 @@ impl Mock {
                 checks: s.checks.clone(),
                 checking: false,
                 copied: None,
+                logs_opened: false,
             })),
         }
     }
@@ -394,6 +397,11 @@ impl Mock {
         self.inner.borrow().copied.clone()
     }
 
+    /// The window asked for juncd's journal (board 20).
+    pub fn logs_opened(&self) -> bool {
+        self.inner.borrow().logs_opened
+    }
+
     /// Changes what the system check answers (a fixed system re-checked).
     pub fn set_checks(&self, rows: Vec<checks::Row>) {
         self.inner.borrow_mut().checks = rows;
@@ -413,6 +421,7 @@ impl Actions for Mock {
             match &command {
                 Command::Check => s.checking = true,
                 Command::Copy(text) => s.copied = Some(text.clone()),
+                Command::OpenLogs => s.logs_opened = true,
                 _ => {}
             }
             if let Some(c) = s.config.as_mut() {
@@ -476,7 +485,7 @@ impl Mock {
                     c.junction.push(j);
                 }
             }
-            Command::Check | Command::Copy(_) => {}
+            Command::Check | Command::Copy(_) | Command::OpenLogs => {}
         }
     }
 }
@@ -538,6 +547,13 @@ pub fn open(
     app.borrow_mut().update(s.describe.clone());
     if let Some(id) = &s.select {
         app.borrow_mut().select(id);
+    }
+    // Board 20: the check juncd's waiting state starts answers at once.
+    if s.describe
+        .as_ref()
+        .is_some_and(|d| d.state == "waiting_for_pipewire")
+    {
+        mock.flush();
     }
     if s.onboarding.is_some() {
         app.borrow_mut().set_step(s.onboarding);

@@ -301,6 +301,8 @@ pub fn install(
     {
         let c = call.clone();
         view.on_recheck(move || c(&App::recheck));
+        let c = call.clone();
+        view.on_open_logs(move || c(&|a| a.actions.send(Command::OpenLogs)));
     }
     {
         let c = call.clone();
@@ -444,6 +446,14 @@ pub fn install(
 impl App {
     /// juncd's new snapshot, or `None` while it is away.
     pub fn update(&mut self, describe: Option<Describe>) {
+        // Board 20: PipeWire went away; doctor says what is wrong.
+        let waiting = |d: &Option<Describe>| {
+            d.as_ref()
+                .is_some_and(|d| d.state == "waiting_for_pipewire")
+        };
+        if waiting(&describe) && !waiting(&self.received) {
+            self.recheck();
+        }
         self.received.clone_from(&describe);
         let describe = describe.map(|mut d| {
             d.junctions.extend(self.draft.iter().map(draft_view));
@@ -530,6 +540,13 @@ impl App {
             view.set_checking(false);
             view.set_checks_passed(checks::passed(&rows));
             view.set_checks(ModelRc::new(VecModel::from(ui::checks(&rows))));
+            // Board 20 shows the audio server and its session manager.
+            let service: Vec<checks::Row> = rows
+                .iter()
+                .filter(|r| r.id == "pipewire" || r.id == "wireplumber")
+                .cloned()
+                .collect();
+            view.set_service_checks(ModelRc::new(VecModel::from(ui::checks(&service))));
         }
         self.checks = rows;
     }

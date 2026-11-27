@@ -1,0 +1,140 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Audio service down (design board 20): juncd runs but PipeWire does not
+// answer (`State = waiting_for_pipewire`). What is wrong, from `junc
+// doctor`, the daemon's own row, Retry (Enter: checks again) and Open logs
+// (L: juncd's journal in a terminal). The config is untouched.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "../components/button.slint";
+import { JCheckRow } from "../components/check-row.slint";
+import { CheckItem } from "../view.slint";
+
+export component ServiceDown inherits Rectangle {
+    in property <[CheckItem]> checks;
+    in property <bool> checking;
+    callback retry();
+    callback open-logs();
+    callback copy(string);
+    background: Tokens.surface-window;
+    forward-focus: keys;
+
+    // PipeWire's state, which WirePlumber's row refers to.
+    property <bool> pipewire-down: root.checks.length > 0 && root.checks[0].id == "pipewire" && root.checks[0].state != "ok";
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == "\n" && !root.checking {
+                root.retry();
+                return accept;
+            }
+            if (e.text == "l" || e.text == "L") && !e.modifiers.control {
+                root.open-logs();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: max(24px, (parent.height - self.preferred-height) / 2.6);
+        width: min(680px * Tokens.scale, parent.width - 48px);
+        height: self.preferred-height;
+        spacing: 12px * Tokens.scale;
+        HorizontalLayout {
+            spacing: 14px * Tokens.scale;
+            alignment: start;
+            Rectangle {
+                width: 40px * Tokens.scale;
+                height: 40px * Tokens.scale;
+                border-width: Tokens.border;
+                border-color: Tokens.status-urgent;
+                Text {
+                    text: "\u{f002a}";
+                    color: Tokens.status-urgent;
+                    font-size: Tokens.type-heading;
+                    accessible-role: none;
+                }
+            }
+            Text {
+                text: @tr("Can't reach the audio service");
+                color: Tokens.text-strong;
+                font-size: Tokens.type-display;
+                vertical-alignment: center;
+                accessible-role: AccessibleRole.text;
+            }
+        }
+        Text {
+            text: @tr("Your Junctions are saved. Nothing is routed until PipeWire answers again.");
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            height: list.preferred-height;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            background: Tokens.surface-card;
+            accessible-role: AccessibleRole.list;
+            accessible-label: @tr("Audio service");
+            list := VerticalLayout {
+                padding: Tokens.border;
+                for c[i] in root.checks: VerticalLayout {
+                    if i > 0: Rectangle {
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
+                    JCheckRow {
+                        name: c.id == "pipewire" ? "PipeWire" : "WirePlumber";
+                        name-width: 180px * Tokens.scale;
+                        detail: c.state == "ok" ? @tr("running")
+                            : c.id == "wireplumber" && root.pipewire-down ? @tr("Stopped with PipeWire")
+                            : @tr("{0} is not running", c.id + ".service");
+                        state: c.state;
+                        code: c.state == "ok" ? "" : c.fix;
+                        copy(t) => { root.copy(t); }
+                    }
+                }
+                Rectangle {
+                    height: Tokens.border;
+                    background: Tokens.line-divider;
+                }
+                // juncd answered: it runs and waits.
+                JCheckRow {
+                    name: @tr("junc daemon");
+                    name-width: 180px * Tokens.scale;
+                    detail: @tr("Running · waiting for PipeWire");
+                    state: "waiting";
+                }
+            }
+        }
+        HorizontalLayout {
+            padding-top: 6px * Tokens.scale;
+            spacing: Tokens.space-row-gap;
+            JButton {
+                text: @tr("Retry");
+                icon: "\u{f0450}";
+                shortcut: "Enter";
+                show-key: true;
+                primary: true;
+                enabled: !root.checking;
+                clicked => { root.retry(); }
+            }
+            JButton {
+                text: @tr("Open logs");
+                icon: "\u{f0219}";
+                shortcut: "L";
+                show-key: true;
+                clicked => { root.open-logs(); }
+            }
+            Text {
+                horizontal-stretch: 1;
+                text: root.checking ? @tr("Checking…") : @tr("Opens {0}", "journalctl --user -u juncd");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                horizontal-alignment: right;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+        }
+    }
+}

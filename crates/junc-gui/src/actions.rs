@@ -29,6 +29,8 @@ pub enum Command {
     Check,
     /// Put text on the clipboard (`wl-copy`).
     Copy(String),
+    /// juncd's journal in a terminal (board 20).
+    OpenLogs,
 }
 
 /// Where the window sends requests: juncd, or a scenario's mock.
@@ -105,6 +107,18 @@ fn local(command: &Command) -> bool {
             }
             true
         }
+        Command::OpenLogs => {
+            // The desktop's terminal (xdg-terminal-exec, as Omarchy's
+            // own menus use); it is not waited for.
+            let opened = std::process::Command::new("xdg-terminal-exec")
+                .args(["journalctl", "--user", "-u", "juncd", "-e"])
+                .spawn()
+                .is_ok();
+            if !opened {
+                eprintln!("junc-gui: xdg-terminal-exec is not available to show juncd's journal");
+            }
+            true
+        }
         _ => false,
     }
 }
@@ -165,7 +179,7 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
                 .await
                 .map_err(text)?;
         }
-        Command::Check | Command::Copy(_) => {}
+        Command::Check | Command::Copy(_) | Command::OpenLogs => {}
         Command::Edit { junction: id, edit } => {
             let daemon = DaemonProxy::builder(conn)
                 .cache_properties(zbus::proxy::CacheProperties::No)

@@ -11,6 +11,7 @@ import { EmptyNone } from "screens/empty.slint";
 import { PickerItem } from "components/picker.slint";
 import { MainScreen, CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
 import { CableScreen } from "screens/cable.slint";
+import { ServiceDown } from "screens/service-down.slint";
 import { JMeter } from "components/meter.slint";
 import { JSwitch } from "components/switch.slint";
 import { JSlider } from "components/slider.slint";
@@ -293,7 +294,48 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+                // Board 20: PipeWire does not answer; nothing is routed.
+                if View.daemon-state == "waiting_for_pipewire": Rectangle {
+                    height: 28px * Tokens.scale;
+                    background: Tokens.status-urgent.with-alpha(0.08);
+                    Rectangle {
+                        y: 0;
+                        height: Tokens.border;
+                        background: Tokens.status-urgent;
+                    }
+                    Rectangle {
+                        y: parent.height - self.height;
+                        height: Tokens.border;
+                        background: Tokens.status-urgent;
+                    }
+                    HorizontalLayout {
+                        padding-left: Tokens.space-panel-pad;
+                        padding-right: Tokens.space-panel-pad;
+                        spacing: 6px;
+                        Rectangle {
+                            width: 6px;
+                            height: 6px;
+                            y: (parent.height - self.height) / 2;
+                            background: Tokens.status-urgent;
+                        }
+                        Text {
+                            text: @tr("Audio service down");
+                            color: Tokens.status-urgent;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                            overflow: elide;
+                        }
+                        Text {
+                            text: @tr("routing paused");
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
                 Flickable {
+                    opacity: View.daemon-state == "waiting_for_pipewire" ? 0.45 : 1;
                     changed content-y => { root.sidebar-y = self.content-y; }
                     VerticalLayout {
                         width: root.sidebar-width;
@@ -344,7 +386,15 @@ export component AppWindow inherits Window {
             width: 1px;
             background: Tokens.line-divider;
         }
-        if View.selected != "" && View.cable: CableScreen {
+        if View.daemon-state == "waiting_for_pipewire": ServiceDown {
+            checks: View.service-checks;
+            checking: View.checking;
+            init => { self.focus(); }
+            retry => { View.recheck(); }
+            open-logs => { View.open-logs(); }
+            copy(t) => { View.copy(t); }
+        }
+        if View.daemon-state != "waiting_for_pipewire" && View.selected != "" && View.cable: CableScreen {
             title: View.title;
             draft: View.cable-draft;
             node: View.node;
@@ -382,7 +432,7 @@ export component AppWindow inherits Window {
             picker-picked(i) => { View.picker-picked(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
         }
-        if View.selected != "" && !View.cable: MainScreen {
+        if View.daemon-state != "waiting_for_pipewire" && View.selected != "" && !View.cable: MainScreen {
             title: View.title;
             node: View.node;
             bus-channels: View.bus-channels;
@@ -479,7 +529,7 @@ export component AppWindow inherits Window {
             picker-picked(i) => { View.picker-picked(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
         }
-        if View.selected == "" && View.daemon-state != "down": EmptyNone {
+        if View.selected == "" && View.daemon-state != "down" && View.daemon-state != "waiting_for_pipewire": EmptyNone {
             new-junction => { View.new-junction(); }
         }
         if View.selected == "" && View.daemon-state == "down": Rectangle {
