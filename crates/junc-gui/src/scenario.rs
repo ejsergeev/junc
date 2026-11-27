@@ -32,7 +32,8 @@ struct Fixture {
     /// these.
     #[serde(default)]
     base: Option<String>,
-    /// Inputs to turn off, as `"<junction>/<input>"`.
+    /// Junctions (`"<junction>"`) and Inputs (`"<junction>/<input>"`) to
+    /// turn off.
     #[serde(default)]
     off: Vec<String>,
     /// Nodes to leave out of the graph (an unplugged device).
@@ -232,14 +233,20 @@ pub fn load(name: &str) -> Result<Scenario, String> {
     let mut config = config;
     if let Some(c) = config.as_mut() {
         for spec in &f.off {
-            let (j, i) = spec
-                .split_once('/')
-                .ok_or_else(|| format!("{name}: off {spec:?} is not <junction>/<input>"))?;
-            let input = c
+            let (j, i) = spec.split_once('/').unwrap_or((spec, ""));
+            let junction = c
                 .junction
                 .iter_mut()
                 .find(|x| x.id == j)
-                .and_then(|x| x.input.iter_mut().find(|x| x.id == i))
+                .ok_or_else(|| format!("{name}: off {spec:?}: no such Junction"))?;
+            if i.is_empty() {
+                junction.enabled = false;
+                continue;
+            }
+            let input = junction
+                .input
+                .iter_mut()
+                .find(|x| x.id == i)
                 .ok_or_else(|| format!("{name}: off {spec:?}: no such Input"))?;
             input.enabled = false;
         }
