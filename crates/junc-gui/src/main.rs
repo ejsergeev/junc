@@ -9,6 +9,8 @@ use junc_gui::actions::{Actions, Command, Dbus};
 use junc_gui::{app, daemon, meter_service, onboarding, theme, theme_service, ui};
 use slint::ComponentHandle;
 use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 fn main() -> Result<(), slint::PlatformError> {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -18,13 +20,23 @@ fn main() -> Result<(), slint::PlatformError> {
     }
     let window = ui::AppWindow::new()?;
     let dir = theme::omarchy_dir();
-    let (tokens, source) =
-        theme_service::current(dir.as_deref(), true, theme_service::portal_prefers_light);
+    // Settings › Follow Omarchy theme (board 25), on unless turned off.
+    let pref = onboarding::state_file()
+        .and_then(|f| onboarding::flag(&f, "follow_theme"))
+        .unwrap_or(true);
+    let follow = Arc::new(AtomicBool::new(pref));
+    let (tokens, _) =
+        theme_service::current(dir.as_deref(), pref, theme_service::portal_prefers_light);
     ui::apply(&window, &tokens);
-    if let theme_service::Source::Omarchy(dir) = source {
+    window.global::<ui::View>().set_follow_theme(pref);
+    if let Some(dir) = dir.clone() {
         let weak = window.as_weak();
+        let follow = follow.clone();
         // Not on Omarchy or no inotify: the theme stays as it started.
         let _ = theme_service::watch(dir, theme_service::portal_prefers_light, move |t| {
+            if !follow.load(Ordering::Relaxed) {
+                return;
+            }
             let weak = weak.clone();
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(w) = weak.upgrade() {
@@ -32,6 +44,17 @@ fn main() -> Result<(), slint::PlatformError> {
                 }
             });
         });
+    }
+    {
+        let weak = window.as_weak();
+        app::set_theme_switch(Box::new(move |on| {
+            follow.store(on, Ordering::Relaxed);
+            let (t, _) =
+                theme_service::current(dir.as_deref(), on, theme_service::portal_prefers_light);
+            if let Some(w) = weak.upgrade() {
+                ui::apply(&w, &t);
+            }
+        }));
     }
     // The Omarchy language, followed live (architecture §8).
     let sources = junc_l10n::Sources::from_env(None);

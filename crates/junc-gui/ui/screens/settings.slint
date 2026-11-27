@@ -1,0 +1,274 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Settings (design board 25): General, Appearance and About in the main
+// area; Ctrl+, or the sidebar's gear opens it, Esc or Close leaves it.
+// Rows that later stages build (the language picker, B20; the bug report
+// and the checks, B22; a default sample rate) show greyed.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "../components/button.slint";
+import { JSwitch } from "../components/switch.slint";
+
+// One row: a title, a line under it, the control at the right.
+component Row inherits Rectangle {
+    in property <string> title;
+    in property <string> detail;
+    in property <bool> first;
+    // Greyed: a later stage builds it.
+    in property <bool> later;
+    min-height: 52px * Tokens.scale;
+    accessible-role: none;
+    if !root.first: Rectangle {
+        y: 0;
+        height: Tokens.border;
+        background: Tokens.line-divider;
+    }
+    HorizontalLayout {
+        padding-left: 14px * Tokens.scale;
+        padding-right: 14px * Tokens.scale;
+        spacing: Tokens.space-row-gap;
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+            horizontal-stretch: 1;
+            Text {
+                text: root.title;
+                color: root.later ? Tokens.text-subtle : Tokens.text-strong;
+            }
+            Text {
+                text: root.detail;
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                overflow: elide;
+            }
+        }
+        @children
+    }
+}
+
+// A greyed select showing its value (nothing to choose yet).
+component Fixed inherits Rectangle {
+    in property <string> text;
+    width: 260px * Tokens.scale;
+    height: Tokens.size-control;
+    border-width: Tokens.border;
+    border-color: Tokens.line-divider;
+    opacity: 0.45;
+    Text {
+        x: Tokens.space-control-pad-x;
+        text: root.text;
+        color: Tokens.text-default;
+        vertical-alignment: center;
+    }
+    Text {
+        x: parent.width - self.width - Tokens.space-control-pad-x;
+        text: "\u{f0140}";
+        color: Tokens.text-subtle;
+        vertical-alignment: center;
+        accessible-role: none;
+    }
+}
+
+// A section heading and its box of rows.
+component Section inherits VerticalLayout {
+    in property <string> title;
+    spacing: 10px * Tokens.scale;
+    Text {
+        text: root.title;
+        color: Tokens.text-strong;
+        font-size: Tokens.type-heading;
+        accessible-role: AccessibleRole.text;
+    }
+    Rectangle {
+        background: Tokens.surface-card;
+        border-width: Tokens.border;
+        border-color: Tokens.line-divider;
+        VerticalLayout {
+            padding: Tokens.border;
+            @children
+        }
+    }
+}
+
+export component SettingsScreen inherits Rectangle {
+    // Start at login: unknown until `junc service status` answers.
+    in property <bool> service-known;
+    in property <bool> start-at-login;
+    in property <bool> follow-theme;
+    in property <string> language;
+    in property <string> version;
+    // Board 24's import is there.
+    in property <bool> can-import;
+    callback start-at-login-changed(bool);
+    callback follow-theme-changed(bool);
+    callback open-source();
+    callback import();
+    callback open-logs();
+    callback close();
+    background: Tokens.surface-window;
+    forward-focus: keys;
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.Escape {
+                root.close();
+                return accept;
+            }
+            reject
+        }
+    }
+
+    property <length> pad: Tokens.space-panel-pad;
+    Flickable {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        VerticalLayout {
+            padding-left: root.pad;
+            padding-right: root.pad;
+            padding-top: 16px * Tokens.scale;
+            padding-bottom: 24px * Tokens.scale;
+            spacing: 24px * Tokens.scale;
+            alignment: start;
+            HorizontalLayout {
+                Text {
+                    text: @tr("Settings");
+                    color: Tokens.text-strong;
+                    font-size: Tokens.type-display;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                    accessible-role: AccessibleRole.text;
+                }
+                JButton {
+                    text: @tr("Close");
+                    shortcut: "Esc";
+                    show-key: true;
+                    clicked => { root.close(); }
+                }
+            }
+            VerticalLayout {
+                spacing: 24px * Tokens.scale;
+                width: min(760px * Tokens.scale, root.width - 2 * root.pad);
+                Section {
+                    title: @tr("General");
+                    Row {
+                        first: true;
+                        title: @tr("Start at login");
+                        detail: @tr("Runs juncd as a systemd user service, so Junctions exist before you open the app.");
+                        JSwitch {
+                            y: (parent.height - self.height) / 2;
+                            label: @tr("Start at login");
+                            enabled: root.service-known;
+                            checked: root.start-at-login;
+                            toggled(v) => { root.start-at-login-changed(v); }
+                        }
+                    }
+                    Row {
+                        later: true;
+                        title: @tr("Default sample rate");
+                        detail: @tr("Used for new Junctions and Cables.");
+                        Fixed { y: (parent.height - self.height) / 2; text: @tr("Follow PipeWire"); }
+                    }
+                    Row {
+                        later: true;
+                        title: @tr("Follow Omarchy (Setup > Language)");
+                        detail: @tr("Current language: {0}", root.language);
+                        JSwitch {
+                            y: (parent.height - self.height) / 2;
+                            label: @tr("Follow Omarchy (Setup > Language)");
+                            enabled: false;
+                            checked: true;
+                        }
+                    }
+                    Row {
+                        later: true;
+                        title: @tr("Language");
+                        detail: @tr("Follows Omarchy. Turn off the switch above to pick one.");
+                        Fixed { y: (parent.height - self.height) / 2; text: root.language; }
+                    }
+                }
+                Section {
+                    title: @tr("Appearance");
+                    Row {
+                        first: true;
+                        title: @tr("Follow Omarchy theme");
+                        detail: @tr("Retints with omarchy-theme-set. Off: use the theme JUNC ships with.");
+                        JSwitch {
+                            y: (parent.height - self.height) / 2;
+                            label: @tr("Follow Omarchy theme");
+                            checked: root.follow-theme;
+                            toggled(v) => { root.follow-theme-changed(v); }
+                        }
+                    }
+                }
+                Section {
+                    title: @tr("About");
+                    Row {
+                        first: true;
+                        title: @tr("Version");
+                        detail: @tr("JUNC for Linux");
+                        Text {
+                            text: root.version;
+                            color: Tokens.text-default;
+                            vertical-alignment: center;
+                        }
+                    }
+                    Row {
+                        title: @tr("License");
+                        detail: @tr("Free software under the GNU GPL.");
+                        Text {
+                            text: "GPL-3.0-or-later";
+                            color: Tokens.text-default;
+                            vertical-alignment: center;
+                        }
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            flat: true;
+                            text: @tr("Source code");
+                            clicked => { root.open-source(); }
+                        }
+                    }
+                    Row {
+                        title: @tr("Existing setups");
+                        detail: @tr("Bring in null-sink and pw-loopback setups.");
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            text: @tr("Import…");
+                            enabled: root.can-import;
+                            clicked => { root.import(); }
+                        }
+                    }
+                    Row {
+                        later: true;
+                        title: @tr("Diagnostics");
+                        detail: @tr("Versions, Junction graph and recent logs. No audio, no personal data.");
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            text: @tr("Copy bug report…");
+                            enabled: false;
+                        }
+                    }
+                    Row {
+                        later: true;
+                        title: @tr("System check");
+                        detail: @tr("Same checks as junc doctor.");
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            text: @tr("Run checks");
+                            enabled: false;
+                        }
+                    }
+                    Row {
+                        title: @tr("Logs");
+                        detail: "journalctl --user -u juncd";
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            text: @tr("Open logs");
+                            clicked => { root.open-logs(); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

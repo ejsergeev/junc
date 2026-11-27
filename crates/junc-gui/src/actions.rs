@@ -31,6 +31,10 @@ pub enum Command {
     Copy(String),
     /// juncd's journal in a terminal (board 20).
     OpenLogs,
+    /// Start at login (F9): `junc service status`, or `enable`/`disable`.
+    Service(Option<bool>),
+    /// A web page in the browser (`xdg-open`).
+    Open(String),
 }
 
 /// Where the window sends requests: juncd, or a scenario's mock.
@@ -107,6 +111,31 @@ fn local(command: &Command) -> bool {
             }
             true
         }
+        Command::Service(on) => {
+            let on = *on;
+            let _ = std::thread::Builder::new()
+                .name("junc-service".into())
+                .spawn(move || {
+                    let enabled = crate::checks::service(on).unwrap_or_else(|e| {
+                        eprintln!("junc-gui: {e}");
+                        None
+                    });
+                    let _ = slint::invoke_from_event_loop(move || {
+                        crate::app::service_current(enabled);
+                    });
+                });
+            true
+        }
+        Command::Open(url) => {
+            if std::process::Command::new("xdg-open")
+                .arg(url)
+                .spawn()
+                .is_err()
+            {
+                eprintln!("junc-gui: xdg-open is not available to open {url}");
+            }
+            true
+        }
         Command::OpenLogs => {
             // The desktop's terminal (xdg-terminal-exec, as Omarchy's
             // own menus use); it is not waited for.
@@ -179,7 +208,11 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
                 .await
                 .map_err(text)?;
         }
-        Command::Check | Command::Copy(_) | Command::OpenLogs => {}
+        Command::Check
+        | Command::Copy(_)
+        | Command::OpenLogs
+        | Command::Service(_)
+        | Command::Open(_) => {}
         Command::Edit { junction: id, edit } => {
             let daemon = DaemonProxy::builder(conn)
                 .cache_properties(zbus::proxy::CacheProperties::No)

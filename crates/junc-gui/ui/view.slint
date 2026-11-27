@@ -18,6 +18,8 @@ export struct CheckItem {
 export global Words {
     public pure function new-junction() -> string { @tr("New Junction") }
     public pure function new-cable() -> string { @tr("New Cable") }
+    // TRANSLATORS: the language Settings shows, in its own name.
+    public pure function language-name() -> string { @tr("English") }
     // TRANSLATORS: picker group captions (design board 7).
     public pure function running-apps() -> string { @tr("Running apps") }
     public pure function hardware-inputs() -> string { @tr("Hardware inputs") }
@@ -137,6 +139,13 @@ export global View {
     // Onboarding (boards 8, 9): 0 none, 1 the system check, 2 templates.
     in-out property <int> onboarding;
     in-out property <[CheckItem]> checks;
+    // Board 25: Settings in the main area; Start at login as systemd
+    // says (unknown until it answers); the theme followed; the version.
+    in-out property <bool> settings-open;
+    in-out property <bool> service-known;
+    in-out property <bool> start-at-login;
+    in-out property <bool> follow-theme: true;
+    in-out property <string> version;
     // Board 20: the audio server's rows of the same check.
     in-out property <[CheckItem]> service-checks;
     // Doctor is running.
@@ -219,6 +228,11 @@ export global View {
     callback recheck();
     // Board 20: juncd's journal in a terminal.
     callback open-logs();
+    // Board 25.
+    callback open-settings();
+    callback start-at-login-changed(bool);
+    callback follow-theme-changed(bool);
+    callback open-source();
     callback copy(string);
     // Step 1 → 2, and back.
     callback onboarding-continue();

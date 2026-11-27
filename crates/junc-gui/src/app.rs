@@ -179,6 +179,7 @@ pub fn install(
     let view = window.global::<View>();
     view.set_levels(ModelRc::from(levels.levels.clone()));
     view.set_peaks(ModelRc::from(levels.peaks.clone()));
+    view.set_version(env!("CARGO_PKG_VERSION").into());
     let width = Rc::new(Cell::new(0.0));
     let app = Rc::new(RefCell::new(App {
         window: window.as_weak(),
@@ -301,6 +302,21 @@ pub fn install(
     {
         let c = call.clone();
         view.on_recheck(move || c(&App::recheck));
+        let c = call.clone();
+        view.on_open_settings(move || c(&App::open_settings));
+        let c = call.clone();
+        view.on_start_at_login_changed(move |on| {
+            c(&|a| a.actions.send(Command::Service(Some(on))));
+        });
+        let c = call.clone();
+        view.on_follow_theme_changed(move |on| c(&|a| a.follow_theme(on)));
+        let c = call.clone();
+        view.on_open_source(move || {
+            c(&|a| {
+                a.actions
+                    .send(Command::Open(env!("CARGO_PKG_REPOSITORY").to_owned()));
+            });
+        });
         let c = call.clone();
         view.on_open_logs(move || c(&|a| a.actions.send(Command::OpenLogs)));
     }
@@ -552,12 +568,54 @@ impl App {
     }
 
     /// A starting point from onboarding. "Start empty" is a New Junction;
-    /// templates with slots ask for them first (board 49, B22).
+    /// templates with slots ask for them first (board 49, B22). Juncd
+    /// starts at login from then on (F9, on by default after onboarding).
     fn template(&mut self, id: &str) {
         if id == "start-empty" {
             self.new_junction();
             self.finish_onboarding();
+            self.actions.send(Command::Service(Some(true)));
         }
+    }
+
+    /// Board 25: Settings in the main area; Start at login is asked
+    /// of systemd.
+    pub fn open_settings(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        self.close_picker();
+        let view = w.global::<View>();
+        view.set_service_known(false);
+        view.set_settings_open(true);
+        self.actions.send(Command::Service(None));
+    }
+
+    /// What systemd says of Start at login (`None`: it could not say).
+    pub fn set_service(&mut self, enabled: Option<bool>) {
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_service_known(enabled.is_some());
+            view.set_start_at_login(enabled.unwrap_or(false));
+        }
+    }
+
+    /// Board 25: follow the Omarchy theme or use the built-in one; kept
+    /// in the GUI's state file.
+    fn follow_theme(&mut self, on: bool) {
+        if let Some(file) = &self.state_file
+            && let Err(e) = onboarding::set_flag(file, "follow_theme", on)
+        {
+            eprintln!("junc-gui: {}: {e}", file.display());
+        }
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_follow_theme(on);
+        }
+        THEME.with(|t| {
+            if let Some(f) = t.borrow().as_ref() {
+                f(on);
+            }
+        });
     }
 
     /// Shows the draft's change at once (nothing goes to juncd).
@@ -846,6 +904,10 @@ impl App {
 
     /// Selects Junction `id`.
     pub fn select(&mut self, id: &str) {
+        // A row leaves Settings (board 25).
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_settings_open(false);
+        }
         if self.selected.as_deref() != Some(id) {
             self.selected = Some(id.to_owned());
             self.hovered = None;
@@ -1529,6 +1591,27 @@ pub fn update_current(describe: Option<Describe>) {
     let app = CURRENT.with(|c| c.borrow().clone());
     if let Some(a) = app {
         a.borrow_mut().update(describe);
+    }
+}
+
+/// What switches the window between the Omarchy and the built-in theme.
+type ThemeSwitch = Box<dyn Fn(bool)>;
+
+thread_local! {
+    /// Set by `main`; scenarios have none.
+    static THEME: RefCell<Option<ThemeSwitch>> = const { RefCell::new(None) };
+}
+
+/// Sets what Follow Omarchy theme calls (GUI thread).
+pub fn set_theme_switch(f: ThemeSwitch) {
+    THEME.with(|t| *t.borrow_mut() = Some(f));
+}
+
+/// Gives the current controller what systemd says of Start at login.
+pub fn service_current(enabled: Option<bool>) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().set_service(enabled);
     }
 }
 

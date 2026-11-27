@@ -93,6 +93,12 @@ struct Fixture {
     /// A New Cable, its From picker open (board 27).
     #[serde(default)]
     new_cable: bool,
+    /// Settings open (board 25).
+    #[serde(default)]
+    settings: bool,
+    /// Whether juncd starts at login, as the mock's systemd says.
+    #[serde(default)]
+    start_at_login: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -175,6 +181,8 @@ pub struct Scenario {
     pub delete: bool,
     pub menu: Option<i32>,
     pub new_cable: bool,
+    pub settings: bool,
+    start_at_login: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -315,6 +323,8 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         delete: f.delete,
         menu: f.menu,
         new_cable: f.new_cable,
+        settings: f.settings,
+        start_at_login: f.start_at_login,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -346,6 +356,10 @@ struct MockState {
     copied: Option<String>,
     /// The window asked for juncd's journal.
     logs_opened: bool,
+    /// Start at login as the mock's systemd has it, and whether it was
+    /// asked.
+    start_at_login: bool,
+    service_asked: bool,
 }
 
 impl std::fmt::Debug for Mock {
@@ -367,6 +381,8 @@ impl Mock {
                 checking: false,
                 copied: None,
                 logs_opened: false,
+                start_at_login: s.start_at_login,
+                service_asked: false,
             })),
         }
     }
@@ -390,11 +406,23 @@ impl Mock {
         if let (Some(a), Some(rows)) = (&app, checks) {
             a.borrow_mut().set_checks(rows);
         }
+        let service = {
+            let mut s = self.inner.borrow_mut();
+            std::mem::take(&mut s.service_asked).then_some(s.start_at_login)
+        };
+        if let (Some(a), Some(on)) = (&app, service) {
+            a.borrow_mut().set_service(Some(on));
+        }
     }
 
     /// What the window last copied.
     pub fn copied(&self) -> Option<String> {
         self.inner.borrow().copied.clone()
+    }
+
+    /// Start at login as the mock's systemd has it (F9).
+    pub fn start_at_login(&self) -> bool {
+        self.inner.borrow().start_at_login
     }
 
     /// The window asked for juncd's journal (board 20).
@@ -422,6 +450,12 @@ impl Actions for Mock {
                 Command::Check => s.checking = true,
                 Command::Copy(text) => s.copied = Some(text.clone()),
                 Command::OpenLogs => s.logs_opened = true,
+                Command::Service(on) => {
+                    if let Some(on) = on {
+                        s.start_at_login = *on;
+                    }
+                    s.service_asked = true;
+                }
                 _ => {}
             }
             if let Some(c) = s.config.as_mut() {
@@ -485,7 +519,11 @@ impl Mock {
                     c.junction.push(j);
                 }
             }
-            Command::Check | Command::Copy(_) | Command::OpenLogs => {}
+            Command::Check
+            | Command::Copy(_)
+            | Command::OpenLogs
+            | Command::Service(_)
+            | Command::Open(_) => {}
         }
     }
 }
@@ -580,6 +618,11 @@ pub fn open(
     }
     if s.new_cable {
         app.borrow_mut().new_cable();
+    }
+    if s.settings {
+        app.borrow_mut().open_settings();
+        // systemd answers at once in a fixture.
+        mock.flush();
     }
     if let Some(i) = s.options {
         app.borrow_mut().toggle_options(i);

@@ -89,6 +89,30 @@ pub fn run() -> Result<Vec<Row>, String> {
     parse(&String::from_utf8_lossy(&out.stdout))
 }
 
+/// Start at login (F9): runs `junc service status --json`, or `enable` /
+/// `disable` first, and returns whether juncd starts at login (`None`:
+/// systemd could not say). Blocks: call it off the GUI thread.
+pub fn service(on: Option<bool>) -> Result<Option<bool>, String> {
+    let verb = match on {
+        None => "status",
+        Some(true) => "enable",
+        Some(false) => "disable",
+    };
+    let out = Command::new(junc())
+        .args(["service", verb, "--json"])
+        .output()
+        .map_err(|e| format!("junc service {verb}: {e}"))?;
+    Ok(service_enabled(&String::from_utf8_lossy(&out.stdout)))
+}
+
+/// `data.enabled` of `junc service … --json`.
+fn service_enabled(json: &str) -> Option<bool> {
+    serde_json::from_str::<serde_json::Value>(json)
+        .ok()?
+        .pointer("/data/enabled")?
+        .as_bool()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,6 +123,15 @@ mod tests {
             env!("CARGO_MANIFEST_DIR")
         ))
         .expect("golden")
+    }
+
+    #[test]
+    fn start_at_login_comes_from_the_service_status() {
+        let on = r#"{"junc":1,"ok":true,"data":{"enabled":true,"unit_file":"enabled","active":"active","daemon":"connected"}}"#;
+        assert_eq!(service_enabled(on), Some(true));
+        let failed = r#"{"junc":1,"ok":false,"error":{"code":"E_NO_SYSTEMD","message":"x"}}"#;
+        assert_eq!(service_enabled(failed), None);
+        assert_eq!(service_enabled("not json"), None);
     }
 
     #[test]
