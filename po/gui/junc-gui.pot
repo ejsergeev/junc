@@ -44,6 +44,34 @@ msgstr ""
 msgid "New"
 msgstr ""
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Rename"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Duplicate"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Turn off"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Turn on"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Export preset…"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Import preset…"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Delete…"
+msgstr ""
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
 msgstr ""
@@ -162,10 +190,6 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "Change app…"
-msgstr ""
-
-#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
-msgid "Rename"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
@@ -396,10 +420,6 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Junction is off — apps see silence"
-msgstr ""
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Turn on"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
@@ -672,6 +692,10 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} copy"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint

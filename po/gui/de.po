@@ -53,6 +53,34 @@ msgstr "Noch keine Junctions oder Kabel."
 msgid "New"
 msgstr "Neu"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Rename"
+msgstr "Umbenennen"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Duplicate"
+msgstr "Duplizieren"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Turn off"
+msgstr "Ausschalten"
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Turn on"
+msgstr "Einschalten"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Export preset…"
+msgstr "Preset exportieren…"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Import preset…"
+msgstr "Preset importieren…"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Delete…"
+msgstr "Löschen…"
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
 msgstr "Schließen"
@@ -172,10 +200,6 @@ msgstr "an"
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "Change app…"
 msgstr "App wechseln…"
-
-#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
-msgid "Rename"
-msgstr "Umbenennen"
 
 #: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "Name"
@@ -406,10 +430,6 @@ msgstr "Standard"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Junction is off — apps see silence"
 msgstr "Junction ist aus – Apps hören Stille"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Turn on"
-msgstr "Einschalten"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Inputs"
@@ -682,6 +702,10 @@ msgstr "Ausgabegeräte"
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
 msgstr "Standardausgabe (folgt dem System)"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} copy"
+msgstr "{0} Kopie"
 
 #: crates/junc-gui/ui/view.slint
 msgid "{0} and {1}"

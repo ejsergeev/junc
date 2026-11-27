@@ -53,6 +53,34 @@ msgstr "ジャンクションもケーブルもまだありません。"
 msgid "New"
 msgstr "新規"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Rename"
+msgstr "名前を変更"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Duplicate"
+msgstr "複製"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Turn off"
+msgstr "オフにする"
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Turn on"
+msgstr "オンにする"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Export preset…"
+msgstr "プリセットを書き出す…"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Import preset…"
+msgstr "プリセットを読み込む…"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Delete…"
+msgstr "削除…"
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
 msgstr "閉じる"
@@ -172,10 +200,6 @@ msgstr "オン"
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "Change app…"
 msgstr "アプリを変更…"
-
-#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
-msgid "Rename"
-msgstr "名前を変更"
 
 #: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "Name"
@@ -403,10 +427,6 @@ msgstr "デフォルト"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Junction is off — apps see silence"
 msgstr "ジャンクションはオフです — アプリには無音が届きます"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Turn on"
-msgstr "オンにする"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Inputs"
@@ -679,6 +699,10 @@ msgstr "出力デバイス"
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
 msgstr "デフォルト出力（システムに従う）"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} copy"
+msgstr "{0} のコピー"
 
 #: crates/junc-gui/ui/view.slint
 msgid "{0} and {1}"
