@@ -1347,6 +1347,17 @@ from the app's name) and the window selects it when juncd shows it.
 Rename renames the draft; Delete drops it without asking juncd; it is
 gone when the GUI closes.
 
+As built (B19, Audio service down): while juncd reports
+`waiting_for_pipewire` (board 20) the main area shows what is wrong and
+the sidebar says "Audio service down · routing paused" over its dimmed
+rows; the config is untouched. The window runs `junc doctor` when the
+state starts and on Retry (Enter), and shows its PipeWire and
+WirePlumber rows with doctor's fix to copy, then juncd's own row
+("Running · waiting for PipeWire"). Open logs (L) opens
+`journalctl --user -u juncd` in the desktop's terminal
+(`xdg-terminal-exec`). juncd itself not running stays as before (the
+sidebar says so); its own board is not in the design.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
