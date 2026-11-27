@@ -1302,6 +1302,12 @@ to take the focus through `JCard.wants-focus`). Del with the pointer on a
 link unlinks it, as a click does. ← → on channel groups wait for them
 (the Main screen draws none yet).
 
+As built (B19, Rename): F2 or the header's pencil puts the name in place
+(board 26, `JInlineField`, the title's type, its text selected) on the
+Main and the Cable screen. Enter or leaving the field saves through
+`Junction.Rename`; the id, and so the node name, stays. Esc, a blank name
+or the same one changes nothing.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
