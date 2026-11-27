@@ -51,6 +51,13 @@ pub enum Edit {
     },
     /// Input Options: remove the Input.
     RemoveInput(String),
+    /// A Cable (board 12) takes audio from another app: its one Input
+    /// matches `0`.
+    CableFrom(Box<Match>),
+    /// A Cable delivers to another app.
+    CableTo(Box<Match>),
+    /// A Listen output goes to another target.
+    ListenTarget { listen: String, target: String },
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
@@ -77,6 +84,28 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
         Edit::AddListen { target, label } => {
             let id = unique_id(label, j.listen.iter().map(|l| l.id.as_str()));
             j.listen.push(new_listen(id, target));
+            return true;
+        }
+        Edit::CableFrom(m) => {
+            if j.cable.is_none() || j.input.len() != 1 {
+                return false;
+            }
+            j.input[0].matcher = (**m).clone();
+            return true;
+        }
+        Edit::CableTo(m) => {
+            let Some(c) = j.cable.as_mut() else {
+                return false;
+            };
+            c.to = (**m).clone();
+            return true;
+        }
+        Edit::ListenTarget { listen, target } => {
+            let Some(l) = j.listen.iter_mut().find(|l| &l.id == listen) else {
+                return false;
+            };
+            l.target.clone_from(target);
+            l.links = None;
             return true;
         }
         Edit::RemoveInput(id) => {
@@ -435,5 +464,52 @@ target = "default"
                 on: true
             }
         ));
+    }
+
+    #[test]
+    fn a_cable_changes_its_apps_and_a_listen_its_target() {
+        let text = format!(
+            "{CONFIG}\n[[junction]]\nid = \"ff\"\nname = \"Firefox → OBS\"\nkind = \"cable\"\n\
+             [[junction.input]]\nid = \"firefox\"\nmatch = {{ binary = \"firefox\" }}\n\
+             [junction.cable]\nto = {{ binary = \"obs\" }}\n"
+        );
+        let mut c = junc_core::config::load(&text, "junctions.toml")
+            .expect("config")
+            .config;
+        let app = |b: &str| {
+            Box::new(Match {
+                binary: Some(b.into()),
+                ..Match::default()
+            })
+        };
+        assert!(apply(&mut c, "ff", &Edit::CableFrom(app("chromium"))));
+        assert!(apply(&mut c, "ff", &Edit::CableTo(app("discord"))));
+        assert_eq!(
+            c.junction[1].input[0].matcher.binary.as_deref(),
+            Some("chromium")
+        );
+        assert_eq!(
+            c.junction[1].cable.as_ref().map(|c| c.to.binary.as_deref()),
+            Some(Some("discord"))
+        );
+        assert!(
+            !apply(&mut c, "zoom", &Edit::CableTo(app("x"))),
+            "not a Cable"
+        );
+        assert!(
+            !apply(&mut c, "zoom", &Edit::CableFrom(app("x"))),
+            "not a Cable"
+        );
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &Edit::ListenTarget {
+                listen: "hp".into(),
+                target: "alsa_output.hdmi".into()
+            }
+        ));
+        assert_eq!(c.junction[0].listen[0].target, "alsa_output.hdmi");
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
     }
 }
