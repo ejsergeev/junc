@@ -10,7 +10,7 @@ use junc_gui::meter_service::Levels;
 use junc_gui::scenario::{self, Mock};
 use junc_gui::theme;
 use junc_gui::ui::{self, AppWindow, View};
-use slint::platform::WindowEvent;
+use slint::platform::{Key, WindowEvent};
 use slint::{ComponentHandle, LogicalSize, Model, SharedString};
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -34,6 +34,19 @@ fn key(w: &AppWindow, k: impl Into<SharedString>) {
     w.window()
         .dispatch_event(WindowEvent::KeyPressed { text: text.clone() });
     w.window().dispatch_event(WindowEvent::KeyReleased { text });
+}
+
+/// `k` with Ctrl held.
+fn ctrl(w: &AppWindow, k: &str) {
+    let press = |t: SharedString| {
+        w.window()
+            .dispatch_event(WindowEvent::KeyPressed { text: t })
+    };
+    press(Key::Control.into());
+    key(w, k);
+    w.window().dispatch_event(WindowEvent::KeyReleased {
+        text: Key::Control.into(),
+    });
 }
 
 fn settle() {
@@ -81,4 +94,63 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
         .invoke_accessible_default_action();
     settle();
     assert!(on(&mock));
+    drop((w, app, mock));
+
+    // Board 17: Ctrl+M opens the Add Listen output picker; added outputs
+    // are refused; Enter adds the default output; Esc closes.
+    let (w, _app, mock) = open("addListen");
+    let view = w.global::<View>();
+    assert!(view.get_picker_open() && view.get_picker_listen());
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_picker_open());
+    ctrl(&w, "m");
+    settle();
+    assert!(view.get_picker_open() && view.get_picker_listen());
+    let items = view.get_picker_items();
+    let texts: Vec<String> = (0..items.row_count())
+        .filter_map(|i| items.row_data(i))
+        .map(|i| i.text.to_string())
+        .collect();
+    assert_eq!(
+        texts,
+        [
+            "Default output (follows system)",
+            "Built-in Audio Analog Stereo",
+            "HDMI Output"
+        ]
+    );
+    let listens = |m: &Mock| m.config().expect("config").junction[0].listen.clone();
+    view.invoke_picker_picked(2);
+    settle();
+    assert_eq!(listens(&mock).len(), 2, "HDMI Output is heard already");
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_picker_open());
+    let l = listens(&mock);
+    assert_eq!(l.len(), 3);
+    assert_eq!(
+        (l[2].id.as_str(), l[2].target.as_str()),
+        ("default", "default")
+    );
+    drop((w, _app, mock));
+
+    // Board 11: the empty Listen column's button opens it too.
+    let (w, _app, mock) = open("emptyJunction");
+    let view = w.global::<View>();
+    ElementHandle::find_by_accessible_label(&w, "Add listen output")
+        .next()
+        .expect("the empty state's button")
+        .invoke_accessible_default_action();
+    settle();
+    assert!(view.get_picker_open() && view.get_picker_listen());
+    key(&w, "\n");
+    settle();
+    let c = mock.config().expect("config");
+    let j = c
+        .junction
+        .iter()
+        .find(|j| j.id == "new-junction")
+        .expect("selected");
+    assert_eq!(j.listen.len(), 1);
 }

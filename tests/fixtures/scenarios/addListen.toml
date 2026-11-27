@@ -1,0 +1,57 @@
+# GUI scenario: design board 17, "Add Listen output" — Ctrl+M or the "+"
+# on Listen: the default output first, then the output devices; those the
+# Junction is heard on already say "added". As on the board, the built-in
+# output is a Listen target by name here, so the default output is free.
+board = 17
+title = "Add Listen output"
+base = "default"
+listen_picker = true
+config = """
+schema = 1
+
+[[junction]]
+id = "virtual-mic-for-zoom"
+name = "Virtual Mic for Zoom"
+default = "input"
+volume = 50
+bus = { channels = 4 }
+
+[[junction.input]]
+id = "spotify"
+match = { binary = "spotify" }
+volume = 70
+exclusive = true
+
+[[junction.input]]
+id = "soundux"
+match = { binary = "soundux" }
+links = [[1, 3], [2, 4]]
+
+[[junction.input]]
+id = "mic"
+match = { device = "alsa_input.usb-Generic_USB_Microphone-00.analog-stereo" }
+name = "USB Microphone"
+
+[[junction.listen]]
+id = "builtin"
+target = "alsa_output.platform-builtin.analog-stereo"
+volume = 80
+links = [[1, 1], [2, 2]]
+
+[[junction.listen]]
+id = "hdmi"
+target = "alsa_output.platform-hdmi.hdmi-stereo"
+links = [[1, 1], [2, 2], [3, 1], [4, 2]]
+
+[[junction]]
+id = "firefox-to-obs"
+name = "Firefox → OBS"
+kind = "cable"
+
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+
+[junction.cable]
+to = { binary = "obs" }
+"""

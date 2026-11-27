@@ -42,6 +42,7 @@ const SCENARIOS: &[&str] = &[
     "onboardFlexoki",
     "emptyJunctionFlexoki",
     "junctionOff",
+    "addListen",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.
