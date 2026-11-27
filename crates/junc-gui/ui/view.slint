@@ -4,6 +4,7 @@
 
 import { CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
 import { PickerItem } from "components/picker.slint";
+import { ImportItem } from "components/import.slint";
 
 // One row of the onboarding system check (checks.rs).
 export struct CheckItem {
@@ -146,6 +147,12 @@ export global View {
     in-out property <bool> start-at-login;
     in-out property <bool> follow-theme: true;
     in-out property <string> version;
+    // Board 24: Import existing setups, what juncd found, how many are
+    // checked.
+    in-out property <bool> import-open;
+    in-out property <bool> import-scanning;
+    in-out property <[ImportItem]> import-items;
+    in-out property <int> import-count;
     // Board 20: the audio server's rows of the same check.
     in-out property <[CheckItem]> service-checks;
     // Doctor is running.
@@ -228,6 +235,11 @@ export global View {
     callback recheck();
     // Board 20: juncd's journal in a terminal.
     callback open-logs();
+    // Board 24.
+    callback open-import();
+    callback import-toggled(int);
+    callback import-cable(int, bool);
+    callback import-run();
     // Board 25.
     callback open-settings();
     callback start-at-login-changed(bool);

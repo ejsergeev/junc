@@ -503,6 +503,40 @@ pub fn slots(rows: &[Row], m: Option<&Main>) -> Vec<Slot> {
     out
 }
 
+/// A setup to import (board 24): checked when something is connected to
+/// it or it is one app into another, which starts as a Cable.
+pub fn import_item(i: &junc_core::import::Importable) -> ImportItem {
+    let name = |m: &junc_core::model::Match| {
+        m.app
+            .clone()
+            .or_else(|| m.binary.as_deref().map(main_view::app_word))
+            .unwrap_or_default()
+    };
+    let connected = i.inputs.len() + i.recorded_by.len();
+    ImportItem {
+        id: i.id.as_str().into(),
+        name: i.name.as_str().into(),
+        kind: i.kind.as_str().into(),
+        origin: i.origin.as_str().into(),
+        from: i
+            .cable
+            .as_ref()
+            .map(|c| name(&c.from))
+            .unwrap_or_default()
+            .into(),
+        to: i
+            .cable
+            .as_ref()
+            .map(|c| name(&c.to))
+            .unwrap_or_default()
+            .into(),
+        connected: i32::try_from(connected).unwrap_or(i32::MAX),
+        cable_ok: i.cable.is_some(),
+        checked: connected > 0 || i.cable.is_some(),
+        as_cable: i.cable.is_some() && i.suggested == "cable",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

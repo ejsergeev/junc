@@ -13,11 +13,12 @@ import { MainScreen, CardItem, PortItem, LinkItem, ChannelItem } from "screens/m
 import { CableScreen } from "screens/cable.slint";
 import { ServiceDown } from "screens/service-down.slint";
 import { SettingsScreen } from "screens/settings.slint";
+import { JImport, ImportItem } from "components/import.slint";
 import { JMeter } from "components/meter.slint";
 import { JSwitch } from "components/switch.slint";
 import { JSlider } from "components/slider.slint";
 import { JButton, JIconButton } from "components/button.slint";
-export { Tokens, View, Words, JunctionItem, CheckItem, PickerItem, CardItem, PortItem, LinkItem, ChannelItem }
+export { Tokens, View, Words, JunctionItem, CheckItem, PickerItem, CardItem, PortItem, LinkItem, ChannelItem, ImportItem }
 export { GalleryWindow } from "gallery.slint";
 
 // One Junction in the sidebar: name and switch; what feeds it; its meter
@@ -402,6 +403,8 @@ export component AppWindow inherits Window {
             start-at-login-changed(v) => { View.start-at-login-changed(v); }
             follow-theme-changed(v) => { View.follow-theme-changed(v); }
             open-source => { View.open-source(); }
+            can-import: true;
+            import => { View.open-import(); }
             open-logs => { View.open-logs(); }
             close => { View.settings-open = false; shortcuts.focus(); }
         }
@@ -611,6 +614,25 @@ export component AppWindow inherits Window {
                 if i == 1 { View.new-cable(); }
             }
             closed => { root.new-menu = false; shortcuts.focus(); }
+        }
+    }
+
+    // Board 24: Import existing setups, over everything.
+    if View.import-open: Rectangle {
+        background: Tokens.surface-desktop.with-alpha(0.6);
+        TouchArea { }
+        JImport {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 3;
+            height: self.preferred-height;
+            items: View.import-items;
+            scanning: View.import-scanning;
+            count: View.import-count;
+            init => { self.open(); }
+            toggled(i) => { View.import-toggled(i); }
+            cable(i, on) => { View.import-cable(i, on); }
+            import => { View.import-run(); shortcuts.focus(); }
+            cancelled => { View.import-open = false; shortcuts.focus(); }
         }
     }
 }

@@ -99,6 +99,12 @@ struct Fixture {
     /// Whether juncd starts at login, as the mock's systemd says.
     #[serde(default)]
     start_at_login: bool,
+    /// Setups juncd finds to import (board 24).
+    #[serde(default)]
+    importable: Vec<junc_core::import::Importable>,
+    /// Import existing setups open.
+    #[serde(default)]
+    import: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -183,6 +189,8 @@ pub struct Scenario {
     pub new_cable: bool,
     pub settings: bool,
     start_at_login: bool,
+    importables: Vec<junc_core::import::Importable>,
+    pub import: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -325,6 +333,8 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         new_cable: f.new_cable,
         settings: f.settings,
         start_at_login: f.start_at_login,
+        importables: f.importable,
+        import: f.import,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -360,6 +370,8 @@ struct MockState {
     /// asked.
     start_at_login: bool,
     service_asked: bool,
+    importables: Vec<junc_core::import::Importable>,
+    import_asked: bool,
 }
 
 impl std::fmt::Debug for Mock {
@@ -383,6 +395,8 @@ impl Mock {
                 logs_opened: false,
                 start_at_login: s.start_at_login,
                 service_asked: false,
+                importables: s.importables.clone(),
+                import_asked: false,
             })),
         }
     }
@@ -412,6 +426,13 @@ impl Mock {
         };
         if let (Some(a), Some(on)) = (&app, service) {
             a.borrow_mut().set_service(Some(on));
+        }
+        let found = {
+            let mut s = self.inner.borrow_mut();
+            std::mem::take(&mut s.import_asked).then(|| s.importables.clone())
+        };
+        if let (Some(a), Some(found)) = (&app, found) {
+            a.borrow_mut().set_importables(found);
         }
     }
 
@@ -450,6 +471,12 @@ impl Actions for Mock {
                 Command::Check => s.checking = true,
                 Command::Copy(text) => s.copied = Some(text.clone()),
                 Command::OpenLogs => s.logs_opened = true,
+                Command::ImportScan => s.import_asked = true,
+                Command::Import(items) => {
+                    if let Some(c) = s.config.as_mut() {
+                        Self::import(c, &s.importables, items);
+                    }
+                }
                 Command::Service(on) => {
                     if let Some(on) = on {
                         s.start_at_login = *on;
@@ -469,6 +496,38 @@ impl Actions for Mock {
 }
 
 impl Mock {
+    /// Imports setups as `junc import` would, roughly: a Junction by its
+    /// name, or a Cable of its two apps.
+    fn import(c: &mut Config, found: &[junc_core::import::Importable], items: &[(String, bool)]) {
+        for (id, cable) in items {
+            let Some(item) = found.iter().find(|i| &i.id == id) else {
+                continue;
+            };
+            match (&item.cable, cable) {
+                (Some(p), true) => {
+                    edits::apply(
+                        c,
+                        "",
+                        &edits::Edit::NewCable {
+                            name: item.name.clone(),
+                            from: Box::new(p.from.clone()),
+                            label: p.from.binary.clone().unwrap_or_default(),
+                            to: Box::new(p.to.clone()),
+                        },
+                    );
+                }
+                _ => {
+                    let mut t = toml::Table::new();
+                    t.insert("id".into(), junc_core::config::slugify(&item.name).into());
+                    t.insert("name".into(), item.name.clone().into());
+                    if let Ok(j) = toml::Value::Table(t).try_into() {
+                        c.junction.push(j);
+                    }
+                }
+            }
+        }
+    }
+
     /// Applies a request to the mock's config, as juncd would.
     fn change(c: &mut Config, command: &Command) {
         let find = |c: &mut Config, path: &str| {
@@ -523,7 +582,9 @@ impl Mock {
             | Command::Copy(_)
             | Command::OpenLogs
             | Command::Service(_)
-            | Command::Open(_) => {}
+            | Command::Open(_)
+            | Command::ImportScan
+            | Command::Import(_) => {}
         }
     }
 }
@@ -622,6 +683,10 @@ pub fn open(
     if s.settings {
         app.borrow_mut().open_settings();
         // systemd answers at once in a fixture.
+        mock.flush();
+    }
+    if s.import {
+        app.borrow_mut().open_import();
         mock.flush();
     }
     if let Some(i) = s.options {

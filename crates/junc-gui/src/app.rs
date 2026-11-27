@@ -305,6 +305,21 @@ pub fn install(
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
         let c = call.clone();
+        view.on_open_import(move || c(&App::open_import));
+        let c = call.clone();
+        view.on_import_toggled(move |i| c(&|a| a.import_change(i, |r| r.checked = !r.checked)));
+        let c = call.clone();
+        view.on_import_cable(move |i, on| {
+            c(&|a| {
+                a.import_change(i, |r| {
+                    r.as_cable = on && r.cable_ok;
+                    r.checked = true;
+                });
+            });
+        });
+        let c = call.clone();
+        view.on_import_run(move || c(&App::import_run));
+        let c = call.clone();
         view.on_start_at_login_changed(move |on| {
             c(&|a| a.actions.send(Command::Service(Some(on))));
         });
@@ -589,6 +604,67 @@ impl App {
         view.set_service_known(false);
         view.set_settings_open(true);
         self.actions.send(Command::Service(None));
+    }
+
+    /// Board 24: Import existing setups; juncd is asked what there is.
+    pub fn open_import(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let view = w.global::<View>();
+        view.set_import_items(ModelRc::new(VecModel::<ui::ImportItem>::default()));
+        view.set_import_count(0);
+        view.set_import_scanning(true);
+        view.set_import_open(true);
+        self.actions.send(Command::ImportScan);
+    }
+
+    /// What juncd found to import: a setup something is connected to
+    /// starts checked, one app into another as a Cable.
+    pub fn set_importables(&mut self, found: Vec<junc_core::import::Importable>) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let view = w.global::<View>();
+        let items: Vec<ui::ImportItem> = found.iter().map(ui::import_item).collect();
+        view.set_import_count(count(items.iter().filter(|i| i.checked).count()));
+        view.set_import_items(ModelRc::new(VecModel::from(items)));
+        view.set_import_scanning(false);
+    }
+
+    /// A row checked or not, or imported as a Cable or not.
+    fn import_change(&self, i: i32, change: impl Fn(&mut ui::ImportItem)) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let view = w.global::<View>();
+        let items = view.get_import_items();
+        let Some(i) = usize::try_from(i).ok() else {
+            return;
+        };
+        if let Some(mut item) = items.row_data(i) {
+            change(&mut item);
+            items.set_row_data(i, item);
+        }
+        view.set_import_count(count(items.iter().filter(|i| i.checked).count()));
+    }
+
+    /// Imports the checked rows (`junc import`); juncd shows them.
+    fn import_run(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let view = w.global::<View>();
+        let chosen: Vec<(String, bool)> = view
+            .get_import_items()
+            .iter()
+            .filter(|i| i.checked)
+            .map(|i| (i.id.to_string(), i.as_cable))
+            .collect();
+        view.set_import_open(false);
+        if !chosen.is_empty() {
+            self.actions.send(Command::Import(chosen));
+        }
     }
 
     /// What systemd says of Start at login (`None`: it could not say).
@@ -1605,6 +1681,19 @@ thread_local! {
 /// Sets what Follow Omarchy theme calls (GUI thread).
 pub fn set_theme_switch(f: ThemeSwitch) {
     THEME.with(|t| *t.borrow_mut() = Some(f));
+}
+
+/// A count for the window.
+fn count(n: usize) -> i32 {
+    i32::try_from(n).unwrap_or(i32::MAX)
+}
+
+/// Gives the current controller what juncd found to import.
+pub fn importables_current(found: Vec<junc_core::import::Importable>) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().set_importables(found);
+    }
 }
 
 /// Gives the current controller what systemd says of Start at login.

@@ -35,6 +35,11 @@ pub enum Command {
     Service(Option<bool>),
     /// A web page in the browser (`xdg-open`).
     Open(String),
+    /// Board 24: the setups juncd could import (`ScanImportable`).
+    ImportScan,
+    /// Board 24: import these setups, each as a Cable or not
+    /// (`junc import ID… --as …`).
+    Import(Vec<(String, bool)>),
 }
 
 /// Where the window sends requests: juncd, or a scenario's mock.
@@ -136,6 +141,17 @@ fn local(command: &Command) -> bool {
             }
             true
         }
+        Command::Import(items) => {
+            let items = items.clone();
+            let _ = std::thread::Builder::new()
+                .name("junc-import".into())
+                .spawn(move || {
+                    if let Err(e) = crate::checks::import(&items) {
+                        eprintln!("junc-gui: {e}");
+                    }
+                });
+            true
+        }
         Command::OpenLogs => {
             // The desktop's terminal (xdg-terminal-exec, as Omarchy's
             // own menus use); it is not waited for.
@@ -212,7 +228,23 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
         | Command::Copy(_)
         | Command::OpenLogs
         | Command::Service(_)
-        | Command::Open(_) => {}
+        | Command::Open(_)
+        | Command::Import(_) => {}
+        Command::ImportScan => {
+            let found = DaemonProxy::builder(conn)
+                .cache_properties(zbus::proxy::CacheProperties::No)
+                .build()
+                .await
+                .map_err(text)?
+                .scan_importable()
+                .await
+                .map_err(text)?;
+            let found: Vec<junc_core::import::Importable> =
+                serde_json::from_str(&found).map_err(|e| e.to_string())?;
+            let _ = slint::invoke_from_event_loop(move || {
+                crate::app::importables_current(found);
+            });
+        }
         Command::Edit { junction: id, edit } => {
             let daemon = DaemonProxy::builder(conn)
                 .cache_properties(zbus::proxy::CacheProperties::No)

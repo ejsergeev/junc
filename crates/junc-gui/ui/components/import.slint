@@ -1,0 +1,206 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Import existing setups (design board 24, F13): the null sinks and
+// loopbacks juncd found, each checked or not and imported as a Junction or
+// a Cable (only one app into another can be a Cable). Space checks the row
+// in focus, J and C choose what it becomes, Enter imports, Esc cancels.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+
+export struct ImportItem {
+    id: string,
+    name: string,
+    // "null_sink" or "loopback".
+    kind: string,
+    // "pactl load-module", "config", "pw-loopback", "loopback module".
+    origin: string,
+    // For a Cable: the app heard and the app that records it.
+    from: string,
+    to: string,
+    // Apps and devices it connects now.
+    connected: int,
+    cable-ok: bool,
+    checked: bool,
+    as-cable: bool,
+}
+
+component ImportRow inherits Rectangle {
+    in property <ImportItem> item;
+    in property <bool> first;
+    callback toggled();
+    callback cable(bool);
+    property <string> kind-word: root.item.kind == "null_sink" ? "null-sink"
+        : root.item.origin == "pw-loopback" ? "pw-loopback" : "loopback";
+    property <string> what: root.item.cable-ok ? @tr("capture {0}, playback to {1}", root.item.from, root.item.to)
+        : root.item.connected == 0 ? @tr("no apps connected")
+        : root.item.origin == "pactl load-module" ? @tr("loaded with {0}", "pactl load-module")
+        : root.item.origin == "config" ? @tr("from a PipeWire config file")
+        : @tr("{n} connected" | "{n} connected" % root.item.connected);
+    height: 52px * Tokens.scale;
+    accessible-role: checkbox;
+    accessible-checkable: true;
+    accessible-checked: root.item.checked;
+    accessible-label: root.item.name;
+    accessible-description: root.kind-word + " · " + root.what;
+    accessible-action-default => { root.toggle(); }
+    function toggle() { root.toggled(); }
+    function set-cable(on: bool) {
+        if !on || root.item.cable-ok { root.cable(on); }
+    }
+    if !root.first: Rectangle {
+        y: 0;
+        height: Tokens.border;
+        background: Tokens.line-divider;
+    }
+    focus := FocusScope {
+        key-pressed(e) => {
+            if e.text == " " { root.toggle(); return accept; }
+            if e.text == "j" || e.text == "J" { root.set-cable(false); return accept; }
+            if e.text == "c" || e.text == "C" { root.set-cable(true); return accept; }
+            reject
+        }
+    }
+    TouchArea { clicked => { root.toggle(); focus.focus(); } }
+    HorizontalLayout {
+        padding-left: 14px * Tokens.scale;
+        padding-right: 14px * Tokens.scale;
+        spacing: 12px * Tokens.scale;
+        Rectangle {
+            width: 16px * Tokens.scale;
+            height: 16px * Tokens.scale;
+            y: (parent.height - self.height) / 2;
+            border-width: Tokens.border;
+            border-color: root.item.checked ? Tokens.accent : Tokens.line-divider;
+            background: root.item.checked ? Tokens.accent.with-alpha(0.25) : transparent;
+            if root.item.checked: Text {
+                text: "\u{f012c}";
+                color: Tokens.accent;
+                font-size: Tokens.type-body-small;
+                accessible-role: none;
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+            horizontal-stretch: 1;
+            Text {
+                text: root.item.name;
+                color: focus.has-focus ? Tokens.accent : Tokens.text-strong;
+                overflow: elide;
+                accessible-role: none;
+            }
+            Text {
+                text: root.kind-word + " · " + root.what;
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                overflow: elide;
+                accessible-role: none;
+            }
+        }
+        Text {
+            text: @tr("Import as");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+            vertical-alignment: center;
+            accessible-role: none;
+        }
+        HorizontalLayout {
+            JButton {
+                y: (parent.height - self.height) / 2;
+                text: @tr("Junction");
+                controlled: true;
+                checked: !root.item.as-cable;
+                clicked => { root.set-cable(false); }
+            }
+            JButton {
+                y: (parent.height - self.height) / 2;
+                text: @tr("Cable");
+                controlled: true;
+                enabled: root.item.cable-ok;
+                checked: root.item.as-cable;
+                clicked => { root.set-cable(true); }
+            }
+        }
+    }
+}
+
+export component JImport inherits Rectangle {
+    in property <[ImportItem]> items;
+    // Still asking juncd.
+    in property <bool> scanning;
+    // How many are checked.
+    in property <int> count;
+    callback toggled(int);
+    callback cable(int, bool);
+    callback import();
+    callback cancelled();
+    width: 680px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: @tr("Import existing setups");
+
+    public function open() { keys.focus(); }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.Escape { root.cancelled(); return accept; }
+            if e.text == "\n" && root.count > 0 { root.import(); return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        padding: 20px * Tokens.scale;
+        spacing: 14px * Tokens.scale;
+        Text {
+            text: @tr("Import existing setups");
+            font-size: Tokens.type-heading;
+            color: Tokens.text-strong;
+        }
+        Text {
+            text: @tr("Found in the running PipeWire graph. Imported setups become Junctions or Cables that JUNC keeps alive; remove the old modules yourself when you're happy.");
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            background: Tokens.surface-card;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            VerticalLayout {
+                padding: Tokens.border;
+                for item[i] in root.items: ImportRow {
+                    first: i == 0;
+                    item: item;
+                    toggled => { root.toggled(i); }
+                    cable(on) => { root.cable(i, on); }
+                }
+                if root.items.length == 0: Text {
+                    height: 52px * Tokens.scale;
+                    text: root.scanning ? @tr("Looking for setups…") : @tr("No null sinks or loopbacks to import.");
+                    color: Tokens.text-subtle;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+        HorizontalLayout {
+            alignment: end;
+            spacing: Tokens.space-row-gap;
+            JButton {
+                text: @tr("Cancel");
+                shortcut: "Esc";
+                show-key: true;
+                clicked => { root.cancelled(); }
+            }
+            JButton {
+                text: @tr("Import {0}", root.count);
+                shortcut: "Enter";
+                show-key: true;
+                primary: true;
+                enabled: root.count > 0;
+                clicked => { root.import(); }
+            }
+        }
+    }
+}

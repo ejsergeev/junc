@@ -437,7 +437,7 @@ pub struct CableTo {
 
 /// An app's name from its binary while it is not running (board 23:
 /// "spotify" reads "Spotify").
-fn app_word(binary: &str) -> String {
+pub(crate) fn app_word(binary: &str) -> String {
     let mut c = binary.chars();
     c.next()
         .map(|f| f.to_uppercase().chain(c).collect())

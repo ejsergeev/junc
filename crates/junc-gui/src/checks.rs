@@ -105,6 +105,35 @@ pub fn service(on: Option<bool>) -> Result<Option<bool>, String> {
     Ok(service_enabled(&String::from_utf8_lossy(&out.stdout)))
 }
 
+/// Board 24: imports setups through `junc import ID… --as junction|cable`
+/// (the CLI builds them, as for `junc import`), one call per kind.
+/// Blocks: call it off the GUI thread.
+pub fn import(items: &[(String, bool)]) -> Result<(), String> {
+    for (cable, kind) in [(false, "junction"), (true, "cable")] {
+        let ids: Vec<&str> = items
+            .iter()
+            .filter(|(_, c)| *c == cable)
+            .map(|(id, _)| id.as_str())
+            .collect();
+        if ids.is_empty() {
+            continue;
+        }
+        let out = Command::new(junc())
+            .arg("import")
+            .args(&ids)
+            .args(["--as", kind, "--json"])
+            .output()
+            .map_err(|e| format!("junc import: {e}"))?;
+        if !out.status.success() {
+            return Err(format!(
+                "junc import: {}",
+                String::from_utf8_lossy(&out.stdout).trim()
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// `data.enabled` of `junc service … --json`.
 fn service_enabled(json: &str) -> Option<bool> {
     serde_json::from_str::<serde_json::Value>(json)
