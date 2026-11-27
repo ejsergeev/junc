@@ -1215,6 +1215,16 @@ what the boards use: `JButton.show-key` (the shortcut chip inside the
 button) and `flat`, `JPicker` icons, search icon and key hints, a
 `down` state in `JCheckRow`, `JLogo`.
 
+As built (B18, Junction off): a Junction that is off (board 18) keeps its
+cards, dimmed to 45 % with their own switches as they were, and draws no
+links, so every port is free; its meters stay dark. A neutral banner
+under the header ("Junction is off — apps see silence") shifts the
+columns down and offers Turn on with its key, Space: Space that nothing
+focused took turns the selected Junction back on (`Junction.SetEnabled`),
+as does its sidebar switch. The sidebar row says "Off · apps see
+silence" in place of its Inputs. `JBanner` gained `action-key` and
+`action-primary`.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1800,6 +1810,11 @@ other boards, languages and Weston come with the screens that show them.
   Junction (Ctrl+Shift+J) and the picker (Ctrl+N, "+", search, Esc,
   Enter, added rows refused); `check.sh` compares the AT-SPI trees of the
   five new screens.
+
+- **Main screen states** (B18): board 18 is scenario `junctionOff`
+  (fixture `off` takes a bare Junction id too). `tests/states.rs` turns
+  it on with Space and with the banner's button, and off again from its
+  switch; `check.sh` compares its AT-SPI tree.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
