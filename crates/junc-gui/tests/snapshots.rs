@@ -55,6 +55,7 @@ const SCENARIOS: &[&str] = &[
     "appClosed",
     "newCable",
     "serviceDown",
+    "settings",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.

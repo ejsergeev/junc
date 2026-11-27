@@ -1,0 +1,7 @@
+# GUI scenario: design board 25, "Settings" — Ctrl+, or the sidebar's gear:
+# General, Appearance, About in the main area.
+board = 25
+title = "Settings"
+base = "default"
+settings = true
+start_at_login = true
