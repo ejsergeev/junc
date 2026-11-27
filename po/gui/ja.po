@@ -29,6 +29,10 @@ msgstr "入力はまだありません"
 msgid "{0} offline"
 msgstr "{0} 件オフライン"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} waiting"
+msgstr "{0} 件待機中"
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint
 msgid "{0} volume"
 msgstr "{0} の音量"

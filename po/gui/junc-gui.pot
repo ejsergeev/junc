@@ -20,6 +20,10 @@ msgstr ""
 msgid "{0} offline"
 msgstr ""
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} waiting"
+msgstr ""
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint
 msgid "{0} volume"
 msgstr ""

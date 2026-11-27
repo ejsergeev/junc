@@ -29,6 +29,10 @@ msgstr "Noch keine Eingänge"
 msgid "{0} offline"
 msgstr "{0} offline"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} waiting"
+msgstr "{0} wartet"
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint
 msgid "{0} volume"
 msgstr "Lautstärke {0}"
