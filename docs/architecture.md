@@ -1308,6 +1308,17 @@ Main and the Cable screen. Enter or leaving the field saves through
 `Junction.Rename`; the id, and so the node name, stays. Esc, a blank name
 or the same one changes nothing.
 
+As built (B19, Delete confirmation): Ctrl+Delete or Delete in the bottom
+bar asks first (board 22, `JConfirm` with a lead, a "Removed with it"
+list and a note). The list counts the Inputs and links, names the Bus
+groups and counts the Listen outputs (`main_view::removal`); the note
+names the Inputs that keep playing. Focus starts on Cancel; Ctrl+Enter
+deletes from anywhere in the dialog (a plain button lets Ctrl+Enter
+pass). A Cable's dialog says which app goes back to its own input. Not
+built: naming the apps that record from the Junction, as the board does
+("Zoom uses this Junction…"); `Describe` does not say who records from
+it, so the lead says it of all such apps.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
