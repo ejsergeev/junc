@@ -105,6 +105,9 @@ struct Fixture {
     /// Import existing setups open.
     #[serde(default)]
     import: bool,
+    /// Settings' language picker open, Follow Omarchy off (board 31).
+    #[serde(default)]
+    lang_picker: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -191,6 +194,7 @@ pub struct Scenario {
     start_at_login: bool,
     importables: Vec<junc_core::import::Importable>,
     pub import: bool,
+    pub lang_picker: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -335,6 +339,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         start_at_login: f.start_at_login,
         importables: f.importable,
         import: f.import,
+        lang_picker: f.lang_picker,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -688,6 +693,11 @@ pub fn open(
     if s.import {
         app.borrow_mut().open_import();
         mock.flush();
+    }
+    if s.lang_picker {
+        let lang = crate::ui::language();
+        app.borrow_mut().choose_language(Some(lang));
+        app.borrow_mut().open_language_picker();
     }
     if let Some(i) = s.options {
         app.borrow_mut().toggle_options(i);

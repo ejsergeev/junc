@@ -23,8 +23,11 @@ export global Words {
     public pure function capturing(apps: string) -> string { @tr("Capturing: {0}", apps) }
     public pure function open-junc() -> string { @tr("Open JUNC") }
     public pure function quit() -> string { @tr("Quit") }
-    // TRANSLATORS: the language Settings shows, in its own name.
-    public pure function language-name() -> string { @tr("English") }
+    // TRANSLATORS: the language picker's groups (design board 31).
+    public pure function current-language() -> string { @tr("Current") }
+    public pure function all-languages() -> string { @tr("All languages") }
+    // TRANSLATORS: beside the language in use in the language picker.
+    public pure function current-word() -> string { @tr("current") }
     // TRANSLATORS: picker group captions (design board 7).
     public pure function running-apps() -> string { @tr("Running apps") }
     public pure function hardware-inputs() -> string { @tr("Hardware inputs") }
@@ -150,6 +153,15 @@ export global View {
     in-out property <bool> service-known;
     in-out property <bool> start-at-login;
     in-out property <bool> follow-theme: true;
+    // Board 31: the language follows Omarchy, or the one picked; its own
+    // name; the picker.
+    in-out property <bool> follow-language: true;
+    in-out property <string> language-name: "English";
+    in-out property <bool> lang-open;
+    in-out property <[PickerItem]> lang-items;
+    in-out property <string> lang-search;
+    in-out property <int> lang-cursor;
+    in-out property <int> lang-count;
     in-out property <string> version;
     // Board 24: Import existing setups, what juncd found, how many are
     // checked.
@@ -248,6 +260,11 @@ export global View {
     callback open-settings();
     callback start-at-login-changed(bool);
     callback follow-theme-changed(bool);
+    // Board 31.
+    callback follow-language-changed(bool);
+    callback open-language-picker();
+    callback language-search-edited(string);
+    callback language-picked(int);
     callback open-source();
     callback copy(string);
     // Step 1 → 2, and back.

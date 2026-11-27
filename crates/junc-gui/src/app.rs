@@ -69,6 +69,8 @@ pub struct App {
     draft: Option<Draft>,
     /// The tray, when the shell shows one (board 19).
     tray: Option<crate::tray::Tray>,
+    /// The language picker's rows (board 31).
+    languages: Vec<crate::language::Row>,
 }
 
 /// The sidebar id of the draft Cable (a config id has no `+`).
@@ -204,6 +206,7 @@ pub fn install(
         received: None,
         draft: None,
         tray: None,
+        languages: Vec::new(),
         picker: None,
         picking: Picking::Input,
         options: None,
@@ -307,6 +310,26 @@ pub fn install(
         view.on_recheck(move || c(&App::recheck));
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
+        let c = call.clone();
+        view.on_follow_language_changed(move |on| {
+            c(&|a| a.choose_language((!on).then(ui::language)));
+        });
+        let c = call.clone();
+        view.on_open_language_picker(move || c(&App::open_language_picker));
+        let c = call.clone();
+        view.on_language_search_edited(move |t| c(&|a| a.show_languages(t.as_str())));
+        let c = call.clone();
+        view.on_language_picked(move |i| {
+            c(&|a| {
+                let code = usize::try_from(i)
+                    .ok()
+                    .and_then(|i| a.languages.get(i))
+                    .map(|r| r.code.clone());
+                if let Some(code) = code {
+                    a.choose_language(Some(code));
+                }
+            });
+        });
         let c = call.clone();
         view.on_open_import(move || c(&App::open_import));
         let c = call.clone();
@@ -607,6 +630,75 @@ impl App {
         view.set_service_known(false);
         view.set_settings_open(true);
         self.actions.send(Command::Service(None));
+    }
+
+    /// Board 31: the language picker, the language in use first.
+    pub fn open_language_picker(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let view = w.global::<View>();
+        view.set_lang_search("".into());
+        view.set_lang_cursor(0);
+        view.set_lang_count(count(crate::language::count()));
+        self.show_languages("");
+        view.set_lang_open(true);
+    }
+
+    fn show_languages(&mut self, search: &str) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        self.languages = crate::language::rows(&ui::language(), search);
+        let words = w.global::<Words>();
+        let items: Vec<ui::PickerItem> = self
+            .languages
+            .iter()
+            .enumerate()
+            .map(|(i, r)| {
+                let first_other = !r.current && (i == 0 || self.languages[i - 1].current);
+                ui::PickerItem {
+                    // Captions are upper case, as the other pickers'.
+                    group: if r.current {
+                        words.invoke_current_language().to_uppercase().into()
+                    } else if first_other {
+                        words.invoke_all_languages().to_uppercase().into()
+                    } else {
+                        SharedString::new()
+                    },
+                    text: r.name.as_str().into(),
+                    detail: if r.current {
+                        words.invoke_current_word()
+                    } else {
+                        SharedString::new()
+                    },
+                    added: false,
+                    icon: SharedString::new(),
+                }
+            })
+            .collect();
+        w.global::<View>()
+            .set_lang_items(ModelRc::new(VecModel::from(items)));
+    }
+
+    /// Board 31: the UI in `explicit`, or Omarchy's language (`None`);
+    /// kept in the GUI's state file.
+    pub fn choose_language(&mut self, explicit: Option<String>) {
+        if let Some(file) = &self.state_file
+            && let Err(e) = onboarding::set_text(file, "language", explicit.as_deref())
+        {
+            eprintln!("junc-gui: {}: {e}", file.display());
+        }
+        let hooked = LANGUAGE.with(|l| l.borrow().as_ref().map(|f| f(explicit.clone())).is_some());
+        if !hooked {
+            ui::set_language(explicit.as_deref().unwrap_or("en"));
+        }
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_follow_language(explicit.is_none());
+            view.set_lang_open(false);
+        }
+        self.refresh();
     }
 
     /// Board 19: the tray this window's menu goes to.
@@ -1534,6 +1626,7 @@ impl App {
             t.set_menu(self.tray_menu(&w.global::<Words>()));
         }
         let view = w.global::<View>();
+        view.set_language_name(crate::language::native_name(&ui::language()).into());
         let selected = self.selected.clone();
         self.main = self
             .describe
@@ -1752,6 +1845,19 @@ pub fn set_theme_switch(f: ThemeSwitch) {
 /// A count for the window.
 fn count(n: usize) -> i32 {
     i32::try_from(n).unwrap_or(i32::MAX)
+}
+
+/// What applies a language choice (set by `main`: it also follows
+/// Omarchy's file); without it the choice is applied as it is.
+type LanguageSwitch = Box<dyn Fn(Option<String>)>;
+
+thread_local! {
+    static LANGUAGE: RefCell<Option<LanguageSwitch>> = const { RefCell::new(None) };
+}
+
+/// Sets what a language choice in Settings calls (GUI thread).
+pub fn set_language_switch(f: LanguageSwitch) {
+    LANGUAGE.with(|l| *l.borrow_mut() = Some(f));
 }
 
 /// Gives the current controller a click in the tray's menu.

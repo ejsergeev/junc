@@ -56,15 +56,34 @@ fn main() -> Result<(), slint::PlatformError> {
             }
         }));
     }
-    // The Omarchy language, followed live (architecture §8).
-    let sources = junc_l10n::Sources::from_env(None);
-    ui::set_language(&junc_l10n::resolve(&sources));
-    let _ = junc_l10n::watch::spawn(sources, |lang| {
-        let _ = slint::invoke_from_event_loop(move || {
-            ui::set_language(&lang);
-            app::refresh_current();
+    // The language: Settings' choice, else Omarchy's, followed live
+    // (architecture §8).
+    let chosen = onboarding::state_file().and_then(|f| onboarding::text(&f, "language"));
+    let explicit = Arc::new(std::sync::Mutex::new(chosen.clone()));
+    let resolve =
+        |explicit: Option<&str>| junc_l10n::resolve(&junc_l10n::Sources::from_env(explicit));
+    ui::set_language(&resolve(chosen.as_deref()));
+    window
+        .global::<ui::View>()
+        .set_follow_language(chosen.is_none());
+    {
+        let explicit = explicit.clone();
+        let _ = junc_l10n::watch::spawn(junc_l10n::Sources::from_env(None), move |lang| {
+            if explicit.lock().is_ok_and(|e| e.is_some()) {
+                return;
+            }
+            let _ = slint::invoke_from_event_loop(move || {
+                ui::set_language(&lang);
+                app::refresh_current();
+            });
         });
-    });
+    }
+    app::set_language_switch(Box::new(move |choice| {
+        if let Ok(mut e) = explicit.lock() {
+            e.clone_from(&choice);
+        }
+        ui::set_language(&resolve(choice.as_deref()));
+    }));
     let levels = meter_service::Levels::default();
     // Without PipeWire the window shows no levels.
     let meters = meter_service::start(&window, &levels).map(Rc::new);

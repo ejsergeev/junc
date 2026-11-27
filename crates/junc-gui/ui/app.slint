@@ -397,7 +397,18 @@ export component AppWindow inherits Window {
             service-known: View.service-known;
             start-at-login: View.start-at-login;
             follow-theme: View.follow-theme;
-            language: Words.language-name();
+            language: View.language-name;
+            follow-language: View.follow-language;
+            lang-open: View.lang-open;
+            lang-items: View.lang-items;
+            lang-search <=> View.lang-search;
+            lang-cursor <=> View.lang-cursor;
+            lang-count: View.lang-count;
+            follow-language-changed(v) => { View.follow-language-changed(v); }
+            open-language-picker => { View.open-language-picker(); }
+            language-search-edited(t) => { View.language-search-edited(t); }
+            language-picked(i) => { View.language-picked(i); }
+            language-closed => { View.lang-open = false; }
             version: View.version;
             init => { self.focus(); }
             start-at-login-changed(v) => { View.start-at-login-changed(v); }

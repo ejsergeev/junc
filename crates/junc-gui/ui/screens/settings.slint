@@ -7,6 +7,7 @@
 import { Tokens } from "../tokens.slint";
 import { JButton } from "../components/button.slint";
 import { JSwitch } from "../components/switch.slint";
+import { JPicker, PickerItem } from "../components/picker.slint";
 
 // One row: a title, a line under it, the control at the right.
 component Row inherits Rectangle {
@@ -100,6 +101,18 @@ export component SettingsScreen inherits Rectangle {
     in property <bool> can-import;
     callback start-at-login-changed(bool);
     callback follow-theme-changed(bool);
+    // Board 31: the language.
+    in property <bool> follow-language: true;
+    in property <bool> lang-open;
+    in property <[PickerItem]> lang-items;
+    in-out property <string> lang-search;
+    in-out property <int> lang-cursor;
+    in property <int> lang-count;
+    callback follow-language-changed(bool);
+    callback open-language-picker();
+    callback language-search-edited(string);
+    callback language-picked(int);
+    callback language-closed();
     callback open-source();
     callback import();
     callback open-logs();
@@ -170,21 +183,32 @@ export component SettingsScreen inherits Rectangle {
                         Fixed { y: (parent.height - self.height) / 2; text: @tr("Follow PipeWire"); }
                     }
                     Row {
-                        later: true;
                         title: @tr("Follow Omarchy (Setup > Language)");
-                        detail: @tr("Current language: {0}", root.language);
+                        detail: root.follow-language ? @tr("Current language: {0}", root.language)
+                            : @tr("Off: JUNC uses the language you pick below.");
                         JSwitch {
                             y: (parent.height - self.height) / 2;
                             label: @tr("Follow Omarchy (Setup > Language)");
-                            enabled: false;
-                            checked: true;
+                            checked: root.follow-language;
+                            toggled(v) => { root.follow-language-changed(v); }
                         }
                     }
                     Row {
-                        later: true;
+                        later: root.follow-language;
                         title: @tr("Language");
-                        detail: @tr("Follows Omarchy. Turn off the switch above to pick one.");
-                        Fixed { y: (parent.height - self.height) / 2; text: root.language; }
+                        detail: root.follow-language ? @tr("Follows Omarchy. Turn off the switch above to pick one.")
+                            : @tr("Shown by native name. Missing strings fall back to English.");
+                        if root.follow-language: Fixed {
+                            y: (parent.height - self.height) / 2;
+                            text: root.language;
+                        }
+                        if !root.follow-language: JButton {
+                            y: (parent.height - self.height) / 2;
+                            width: 260px * Tokens.scale;
+                            text: root.language;
+                            tooltip: @tr("Language");
+                            clicked => { root.open-language-picker(); }
+                        }
                     }
                 }
                 Section {
@@ -269,6 +293,31 @@ export component SettingsScreen inherits Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    // Board 31: the language picker under the Language row.
+    if root.lang-open: Rectangle {
+        TouchArea { clicked => { root.language-closed(); keys.focus(); } }
+        JPicker {
+            x: root.pad + min(760px * Tokens.scale, root.width - 2 * root.pad) - self.width - 14px * Tokens.scale;
+            y: 316px * Tokens.scale;
+            width: 320px * Tokens.scale;
+            height: self.preferred-height;
+            title: @tr("Language");
+            placeholder: @tr("Search languages");
+            search-icon: "\u{f0349}";
+            hints: true;
+            pick-word: @tr("choose");
+            max-list-height: 300px * Tokens.scale;
+            note: @tr("{0} languages · type to filter · English is the fallback", root.lang-count);
+            items: root.lang-items;
+            search <=> root.lang-search;
+            cursor <=> root.lang-cursor;
+            init => { self.open(); }
+            search-edited(t) => { root.language-search-edited(t); }
+            picked(i) => { root.language-picked(i); keys.focus(); }
+            closed => { root.language-closed(); keys.focus(); }
         }
     }
 }

@@ -80,6 +80,14 @@ pub fn apply_to(g: &Tokens<'_>, t: &theme::Tokens) {
 
 thread_local! {
     static LANGUAGE: std::cell::RefCell<String> = std::cell::RefCell::new("en".to_owned());
+    /// The language asked for, which may have no catalog of its own yet
+    /// (its messages show in English).
+    static ASKED: std::cell::RefCell<String> = std::cell::RefCell::new("en".to_owned());
+}
+
+/// The language the UI was last asked to show (a junc-l10n code).
+pub fn language() -> String {
+    ASKED.with(|l| l.borrow().clone())
 }
 
 /// Shows the UI in `code` (a junc-l10n language code): Slint switches every
@@ -90,6 +98,7 @@ thread_local! {
 /// system locale by language alone, so `en_US` would get the `en_XA`
 /// pseudo-locale. JUNC's language comes from Omarchy (junc-l10n) instead.
 pub fn set_language(code: &str) {
+    ASKED.with(|l| code.clone_into(&mut l.borrow_mut()));
     let lang = if slint::select_bundled_translation(code).is_ok() {
         code
     } else {
