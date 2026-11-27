@@ -8,7 +8,7 @@
 //! D-Bus methods and do not come through here.
 
 use junc_core::config::slugify;
-use junc_core::model::{Config, Input, Listen, MAX_BUS_CHANNELS, Match};
+use junc_core::model::{Config, DefaultRole, Input, Listen, MAX_BUS_CHANNELS, Match};
 
 /// An Input or a Listen output of a Junction.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,11 +65,25 @@ pub enum Edit {
     CableTo(Box<Match>),
     /// A Listen output goes to another target.
     ListenTarget { listen: String, target: String },
+    /// A copy of the Junction named `0` after it (board 21), its id from
+    /// the name; it is no system default.
+    Duplicate(String),
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
 /// part is gone (someone else changed the config meanwhile).
 pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
+    if let Edit::Duplicate(name) = edit {
+        let Some(i) = config.junction.iter().position(|j| j.id == junction) else {
+            return false;
+        };
+        let mut copy = config.junction[i].clone();
+        copy.id = unique_id(name, config.junction.iter().map(|j| j.id.as_str()));
+        copy.name.clone_from(name);
+        copy.default = DefaultRole::None;
+        config.junction.insert(i + 1, copy);
+        return true;
+    }
     let Some(j) = config.junction.iter_mut().find(|j| j.id == junction) else {
         return false;
     };
@@ -118,6 +132,8 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
             l.links = None;
             return true;
         }
+        // Done above: it adds a Junction rather than changing one.
+        Edit::Duplicate(_) => return true,
         Edit::RemoveInput(id) => {
             let before = j.input.len();
             j.input.retain(|i| &i.id != id);
@@ -338,6 +354,22 @@ target = "default"
             }
         ));
         assert_eq!(c.junction[0].input[1].links, Some(vec![[1, 3]]));
+    }
+
+    #[test]
+    fn a_duplicate_follows_its_original_and_is_no_default() {
+        let mut c = config();
+        c.junction[0].default = DefaultRole::Input;
+        assert!(apply(&mut c, "zoom", &Edit::Duplicate("Zoom copy".into())));
+        assert!(apply(&mut c, "zoom", &Edit::Duplicate("Zoom copy".into())));
+        let ids: Vec<&str> = c.junction.iter().map(|j| j.id.as_str()).collect();
+        assert_eq!(&ids[..3], ["zoom", "zoom-copy-2", "zoom-copy"]);
+        assert_eq!(c.junction[1].name, "Zoom copy");
+        assert_eq!(c.junction[1].input, c.junction[0].input);
+        assert_eq!(c.junction[1].default, DefaultRole::None);
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
+        assert!(!apply(&mut c, "gone", &Edit::Duplicate("x".into())));
     }
 
     #[test]
