@@ -4,7 +4,7 @@
 // accent fill. Offline: mark.dim. During a link: valid targets get an
 // accent border, the target under the cursor ("snap") an accent fill and
 // halo. One button per channel: Enter starts a link (or connects to the
-// focused target), Del removes its link.
+// focused target), Del removes its link; pressing it starts dragging one.
 
 import { Tokens } from "../tokens.slint";
 
@@ -15,8 +15,17 @@ export component JPort inherits Rectangle {
     // "free", "linked", "offline", "valid", "snap"
     in property <string> state: "free";
     out property <bool> has-focus: focus.has-focus;
+    // A link is being made: ↑ ↓ step through its targets, Esc cancels.
+    in property <bool> linking;
     callback activated();
     callback remove();
+    // Pressed, dragged (the pointer from the port's corner) and released.
+    callback drag-started();
+    callback dragged(length, length);
+    callback dropped();
+    callback step(int);
+    callback cancel();
+    property <bool> dragging;
 
     property <bool> big: touch.has-hover || focus.has-focus || root.state == "snap";
     width: 16px;
@@ -49,13 +58,29 @@ export component JPort inherits Rectangle {
     }
     touch := TouchArea {
         mouse-cursor: pointer;
-        clicked => {
-            focus.focus();
-            root.activated();
+        pointer-event(e) => {
+            if e.kind == PointerEventKind.down && e.button == PointerEventButton.left {
+                focus.focus();
+                root.dragging = true;
+                root.drag-started();
+            }
+            if e.kind == PointerEventKind.up && root.dragging {
+                root.dragging = false;
+                root.dropped();
+            }
+        }
+        moved => {
+            if root.dragging { root.dragged(self.mouse-x, self.mouse-y); }
         }
     }
     focus := FocusScope {
+        // The press belongs to the TouchArea under it (a link drag); it
+        // takes the focus itself.
+        focus-on-click: false;
         key-pressed(e) => {
+            if root.linking && e.text == Key.UpArrow { root.step(-1); return accept; }
+            if root.linking && e.text == Key.DownArrow { root.step(1); return accept; }
+            if root.linking && e.text == Key.Escape { root.cancel(); return accept; }
             if e.text == "\n" || e.text == " " { root.activated(); return accept; }
             if e.text == Key.Delete || e.text == Key.Backspace { root.remove(); return accept; }
             reject
