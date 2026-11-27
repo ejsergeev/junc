@@ -1,0 +1,6 @@
+# GUI scenario: design board 26, "Rename" — F2 or the pencil: the name in
+# place in the header, selected; Enter saves, Esc cancels.
+board = 26
+title = "Rename"
+base = "default"
+rename = true
