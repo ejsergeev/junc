@@ -16,7 +16,8 @@ use crate::onboarding::{self, Step};
 use crate::picker::{self, Entry, Pick};
 use crate::state::{self, Snapshot};
 use crate::ui::{self, AppWindow, View, Words};
-use junc_ipc::view::Describe;
+use junc_core::model::{DefaultRole, Kind, Match};
+use junc_ipc::view::{Describe, InputView, JunctionView, State};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
@@ -62,6 +63,61 @@ pub struct App {
     options: Option<usize>,
     /// A link being made (boards 13, 14).
     linking: Option<Linking>,
+    /// juncd's last snapshot as it came, before the draft is added.
+    received: Option<Describe>,
+    /// A new Cable held until both its apps are chosen (board 27).
+    draft: Option<Draft>,
+}
+
+/// The sidebar id of the draft Cable (a config id has no `+`).
+pub const DRAFT: &str = "+new-cable";
+
+/// A new Cable the window holds: the config needs both apps (board 27).
+#[derive(Debug, Clone)]
+struct Draft {
+    name: String,
+    /// The app it takes from, and its name.
+    from: Option<(Match, String)>,
+    to: Option<(Match, String)>,
+}
+
+/// The draft as juncd would show it, not routed yet.
+fn draft_view(d: &Draft) -> JunctionView {
+    JunctionView {
+        id: DRAFT.to_owned(),
+        name: d.name.clone(),
+        kind: Kind::Cable,
+        enabled: true,
+        volume: 100,
+        default: DefaultRole::None,
+        channels: 2,
+        node: format!(
+            "junc.{}",
+            junc_core::config::slugify(&d.name).replace('-', "_")
+        ),
+        path: String::new(),
+        status: State::Unknown,
+        inputs: d
+            .from
+            .iter()
+            .map(|(m, label)| InputView {
+                id: junc_core::config::slugify(label),
+                matcher: m.clone(),
+                name: Some(label.clone()),
+                enabled: true,
+                volume: 100,
+                exclusive: false,
+                status: State::Active,
+                matched: Vec::new(),
+                links: Vec::new(),
+                custom_links: false,
+                suppressed: Vec::new(),
+            })
+            .collect(),
+        listens: Vec::new(),
+        cable_target: d.to.as_ref().map(|_| State::Active),
+        cable_to: d.to.as_ref().map(|(m, _)| m.clone()),
+    }
 }
 
 impl std::fmt::Debug for App {
@@ -142,6 +198,8 @@ pub fn install(
         state_file: None,
         checks: Vec::new(),
         creating: None,
+        received: None,
+        draft: None,
         picker: None,
         picking: Picking::Input,
         options: None,
@@ -269,6 +327,8 @@ pub fn install(
     {
         let c = call.clone();
         view.on_new_junction(move || c(&App::new_junction));
+        let c = call.clone();
+        view.on_new_cable(move || c(&App::new_cable));
     }
     {
         let c = call.clone();
@@ -367,6 +427,11 @@ pub fn install(
         let c = call;
         view.on_delete_junction(move || {
             c(&|a| {
+                if a.selected.as_deref() == Some(DRAFT) {
+                    a.draft = None;
+                    a.redraw();
+                    return;
+                }
                 if let Some(path) = a.selected.clone().and_then(|id| a.path(&id)) {
                     a.actions.send(Command::Delete { path });
                 }
@@ -379,6 +444,11 @@ pub fn install(
 impl App {
     /// juncd's new snapshot, or `None` while it is away.
     pub fn update(&mut self, describe: Option<Describe>) {
+        self.received.clone_from(&describe);
+        let describe = describe.map(|mut d| {
+            d.junctions.extend(self.draft.iter().map(draft_view));
+            d
+        });
         self.sidebar = state::snapshot(describe.as_ref());
         self.describe = describe;
         let ids: Vec<&str> = self
@@ -473,6 +543,75 @@ impl App {
         }
     }
 
+    /// Shows the draft's change at once (nothing goes to juncd).
+    fn redraw(&mut self) {
+        let d = self.received.clone();
+        self.update(d);
+    }
+
+    /// Board 27: a new Cable, held by the window until both apps are
+    /// chosen; the picker of the app it takes from opens.
+    pub fn new_cable(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        if self.draft.is_none() {
+            self.draft = Some(Draft {
+                name: w.global::<Words>().invoke_new_cable().to_string(),
+                from: None,
+                to: None,
+            });
+        }
+        self.select(DRAFT);
+        self.redraw();
+        self.open_cable_picker(false);
+    }
+
+    /// Board 27: the draft takes the picked app; with both it is written
+    /// as a Cable and selected once juncd shows it.
+    fn pick_for_draft(&mut self, pick: &Pick, label: &str) {
+        let Some(d) = self.draft.as_mut() else { return };
+        match pick {
+            Pick::CableFrom(m) => d.from = Some((m.clone(), label.to_owned())),
+            Pick::CableTo(m) => d.to = Some((m.clone(), label.to_owned())),
+            Pick::Input(_) | Pick::Listen(_) => return,
+        }
+        self.close_picker();
+        if let Some(Draft {
+            name,
+            from: Some((from, label)),
+            to: Some((to, _)),
+        }) = self.draft.clone()
+        {
+            self.creating = Some(
+                self.sidebar
+                    .junctions
+                    .iter()
+                    .filter(|r| r.id != DRAFT)
+                    .map(|r| r.id.clone())
+                    .collect(),
+            );
+            self.draft = None;
+            self.actions.send(Command::Edit {
+                junction: String::new(),
+                edit: Edit::NewCable {
+                    name,
+                    from: Box::new(from),
+                    label,
+                    to: Box::new(to),
+                },
+            });
+            self.redraw();
+            return;
+        }
+        self.redraw();
+        if self.draft.as_ref().is_some_and(|d| d.to.is_none()) {
+            self.open_cable_picker(true);
+        } else if self.draft.as_ref().is_some_and(|d| d.from.is_none()) {
+            self.open_cable_picker(false);
+        }
+    }
+
     fn new_junction(&mut self) {
         let Some(w) = self.window.upgrade() else {
             return;
@@ -506,11 +645,18 @@ impl App {
     /// Opens the Add Bus channels popover on the selected Junction.
     /// Board 26: gives the selected Junction a new name. A blank name or
     /// the same one changes nothing.
-    pub fn rename(&self, name: &str) {
+    pub fn rename(&mut self, name: &str) {
         let name = name.trim();
         let Some(id) = self.selected.clone() else {
             return;
         };
+        if id == DRAFT {
+            if let Some(d) = self.draft.as_mut().filter(|_| !name.is_empty()) {
+                d.name = name.to_owned();
+            }
+            self.redraw();
+            return;
+        }
         let same = self
             .sidebar
             .junctions
@@ -641,6 +787,11 @@ impl App {
         if e.added {
             return;
         }
+        if m.id == DRAFT {
+            let (pick, label) = (e.pick.clone(), e.label.clone());
+            self.pick_for_draft(&pick, &label);
+            return;
+        }
         let edit = match &e.pick {
             Pick::Input(matcher) => Edit::AddInput {
                 matcher: Box::new(matcher.clone()),
@@ -697,6 +848,8 @@ impl App {
             .iter()
             .find(|r| r.id == id)
             .map(|r| r.path.clone())
+            // The draft Cable is not in juncd.
+            .filter(|p| !p.is_empty())
     }
 
     /// The Input or Listen output of card `i` in `column`.
@@ -839,6 +992,7 @@ impl App {
         view.set_cable_volume(i32::from(to.volume));
         view.set_cable_listen(listen.is_some_and(|l| l.enabled));
         view.set_cable_listen_index(i32::try_from(index).unwrap_or(0));
+        view.set_cable_draft(m.id == DRAFT);
         view.set_cable(true);
     }
 

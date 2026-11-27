@@ -17,6 +17,7 @@ export struct CheckItem {
 // Words Rust needs in the UI language (it has no translations of its own).
 export global Words {
     public pure function new-junction() -> string { @tr("New Junction") }
+    public pure function new-cable() -> string { @tr("New Cable") }
     // TRANSLATORS: picker group captions (design board 7).
     public pure function running-apps() -> string { @tr("Running apps") }
     public pure function hardware-inputs() -> string { @tr("Hardware inputs") }
@@ -67,6 +68,8 @@ export struct JunctionItem {
     offline: int,
     // App Inputs waiting for their app (board 23).
     waiting: int,
+    // A new Cable not set up yet (board 27), held by the window.
+    draft: bool,
     volume: int,
     selected: bool,
     // Index into the level models; -1 for none.
@@ -147,6 +150,8 @@ export global View {
     in-out property <bool> picker-listen;
     // It picks a Cable's app: 1 the one it takes from, 2 the one it feeds.
     in-out property <int> picker-cable;
+    // Board 27: the selected Cable is a draft the window holds.
+    in-out property <bool> cable-draft;
     // The Add Bus channels popover (board 16).
     in-out property <bool> adding-bus;
     // The name field in the header (board 26: F2 or the pencil).
@@ -218,6 +223,8 @@ export global View {
     callback template-chosen(string);
     // Board 10: New Junction.
     callback new-junction();
+    // Board 27: New Cable (Ctrl+Shift+K).
+    callback new-cable();
     callback open-picker();
     callback open-listen-picker();
     // Change app… on a Cable: false the app it takes from, true the one it

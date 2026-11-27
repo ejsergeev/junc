@@ -6,7 +6,7 @@
 //! text: the window formats counts and channel labels through its own
 //! translations, so this is tested without a window and in any language.
 
-use junc_core::model::{DefaultRole, Match};
+use junc_core::model::{DefaultRole, Kind, Match};
 use junc_core::plan::{default_map, gain_node_name, listen_node_name};
 use junc_ipc::view::{Describe, InputView, JunctionView, ListenView, State};
 
@@ -447,15 +447,22 @@ fn app_word(binary: &str) -> String {
 /// The app Junction `id` delivers to, when it is a Cable.
 pub fn cable_to(d: &Describe, id: &str) -> Option<CableTo> {
     let j = d.junctions.iter().find(|j| j.id == id)?;
-    let to = j.cable_to.as_ref()?;
-    let name = d
-        .candidates
-        .iter()
-        .filter(|c| c.kind == "app_capture")
-        .find(|c| to.binary.is_some() && c.binary == to.binary)
-        .and_then(|c| c.app.clone())
-        .or_else(|| to.app.clone())
-        .or_else(|| to.binary.as_deref().map(app_word))
+    if j.kind != Kind::Cable {
+        return None;
+    }
+    // A draft Cable (board 27) may have no app yet: no name.
+    let name = j
+        .cable_to
+        .as_ref()
+        .and_then(|to| {
+            d.candidates
+                .iter()
+                .filter(|c| c.kind == "app_capture")
+                .find(|c| to.binary.is_some() && c.binary == to.binary)
+                .and_then(|c| c.app.clone())
+                .or_else(|| to.app.clone())
+                .or_else(|| to.binary.as_deref().map(app_word))
+        })
         .unwrap_or_default();
     Some(CableTo {
         name,

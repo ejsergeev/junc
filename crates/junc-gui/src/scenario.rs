@@ -90,6 +90,9 @@ struct Fixture {
     /// The selected row's context menu open, its cursor on this item
     /// (board 21).
     menu: Option<i32>,
+    /// A New Cable, its From picker open (board 27).
+    #[serde(default)]
+    new_cable: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -171,6 +174,7 @@ pub struct Scenario {
     pub rename: bool,
     pub delete: bool,
     pub menu: Option<i32>,
+    pub new_cable: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -310,6 +314,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         rename: f.rename,
         delete: f.delete,
         menu: f.menu,
+        new_cable: f.new_cable,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -556,6 +561,9 @@ pub fn open(
     }
     if let Some(cursor) = s.menu {
         app.borrow().open_menu(cursor);
+    }
+    if s.new_cable {
+        app.borrow_mut().new_cable();
     }
     if let Some(i) = s.options {
         app.borrow_mut().toggle_options(i);

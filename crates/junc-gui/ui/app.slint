@@ -81,6 +81,7 @@ component SidebarRow inherits Rectangle {
             }
             Text {
                 text: !root.item.enabled ? @tr("Off · apps see silence")
+                    : root.item.draft ? @tr("Cable") + " · " + @tr("not set up")
                     : root.item.cable ? @tr("Cable")
                     : root.item.inputs != "" ? root.item.inputs : @tr("No inputs yet");
                 color: Tokens.text-subtle;
@@ -144,6 +145,8 @@ export component AppWindow inherits Window {
 
     out property <length> sidebar-width: root.width < 1100px ? 240px : 300px;
 
+    // The New menu over the sidebar's New button.
+    property <bool> new-menu;
     // How far the sidebar's rows are scrolled.
     property <length> sidebar-y;
     // Board 21: the context menu of sidebar row `i`.
@@ -219,6 +222,10 @@ export component AppWindow inherits Window {
             }
             if !e.modifiers.shift && (e.text == "d" || e.text == "D") && View.selected != "" {
                 View.duplicate(View.selected);
+                return accept;
+            }
+            if e.modifiers.shift && (e.text == "k" || e.text == "K") {
+                View.new-cable();
                 return accept;
             }
             if e.modifiers.shift && (e.text == "j" || e.text == "J") {
@@ -327,6 +334,7 @@ export component AppWindow inherits Window {
                             y: (parent.height - self.height) / 2;
                             text: @tr("New");
                             icon: "\u{f0415}";
+                            clicked => { root.new-menu = true; }
                         }
                     }
                 }
@@ -338,6 +346,7 @@ export component AppWindow inherits Window {
         }
         if View.selected != "" && View.cable: CableScreen {
             title: View.title;
+            draft: View.cable-draft;
             node: View.node;
             bus-channels: View.bus-channels;
             from: View.cable-from;
@@ -510,6 +519,29 @@ export component AppWindow inherits Window {
                 if i == 5 { View.select(row.id); View.confirming = true; }
             }
             closed => { View.menu-index = -1; shortcuts.focus(); }
+        }
+    }
+
+    // New: a Junction or a Cable (templates and presets come with B22).
+    if root.new-menu: Rectangle {
+        TouchArea { clicked => { root.new-menu = false; shortcuts.focus(); } }
+        JMenu {
+            x: Tokens.space-panel-pad;
+            y: root.height - 45px * Tokens.scale - self.preferred-height;
+            height: self.preferred-height;
+            title: @tr("New");
+            items: [
+                { text: @tr("Junction"), detail: @tr("A virtual mic and speaker"), shortcut: "Ctrl+Shift+J", enabled: true },
+                { text: @tr("Cable"), detail: @tr("One app straight into another"), shortcut: "Ctrl+Shift+K", enabled: true },
+            ];
+            init => { self.open(); }
+            activated(i) => {
+                root.new-menu = false;
+                shortcuts.focus();
+                if i == 0 { View.new-junction(); }
+                if i == 1 { View.new-cable(); }
+            }
+            closed => { root.new-menu = false; shortcuts.focus(); }
         }
     }
 }

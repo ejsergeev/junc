@@ -28,6 +28,8 @@ pub struct Row {
     pub offline: usize,
     /// App Inputs that are on and wait for their app (board 23).
     pub waiting: usize,
+    /// A new Cable the window holds, not in juncd yet (board 27).
+    pub draft: bool,
     pub volume: u16,
 }
 
@@ -89,6 +91,7 @@ pub fn snapshot(d: Option<&Describe>) -> Snapshot {
                         .filter(|c| c.enabled && c.state == CardState::NotRunning)
                         .count(),
                     volume: j.volume,
+                    draft: j.path.is_empty(),
                 }
             })
             .collect(),

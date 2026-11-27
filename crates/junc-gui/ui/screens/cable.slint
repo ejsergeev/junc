@@ -15,6 +15,7 @@ import { JSlider } from "../components/slider.slint";
 import { JSelect } from "../components/select.slint";
 import { JKbd } from "../components/kbd.slint";
 import { JConfirm } from "../components/confirm.slint";
+import { JEmptyState } from "../components/empty-state.slint";
 import { JInlineField } from "../components/inline-field.slint";
 import { JPicker, PickerItem } from "../components/picker.slint";
 import { CardItem, ChannelItem, ChannelRow } from "main.slint";
@@ -112,6 +113,8 @@ export component CableScreen inherits Rectangle {
     in property <string> title;
     in property <string> node;
     in property <int> bus-channels;
+    // Board 27: a new Cable the window holds until both apps are chosen.
+    in property <bool> draft;
     in property <string> from;
     in property <bool> from-running;
     in property <string> to;
@@ -220,7 +223,7 @@ export component CableScreen inherits Rectangle {
                 width: root.card-w;
                 height: self.preferred-height;
                 title: @tr("From");
-                detail: root.from-running ? @tr("App · playing") : @tr("App · not running");
+                detail: root.from == "" ? @tr("Choose an app") : root.from-running ? @tr("App · playing") : @tr("App · not running");
             }
             Side {
                 x: root.pad + root.card-w + root.gap;
@@ -228,9 +231,42 @@ export component CableScreen inherits Rectangle {
                 width: root.card-w;
                 height: self.preferred-height;
                 title: @tr("To");
-                detail: root.to-running ? @tr("App · hears this Cable as its input") : @tr("App · not running");
+                detail: root.to == "" ? @tr("Choose an app") : root.to-running ? @tr("App · hears this Cable as its input") : @tr("App · not running");
+            }
+            if root.from == "": JEmptyState {
+                x: root.pad;
+                y: root.cards-y - 62px * Tokens.scale;
+                width: root.card-w;
+                height: 144px * Tokens.scale;
+                title: @tr("No app yet");
+                text: @tr("The app whose sound goes in.");
+                action: @tr("Choose app");
+                activated => { root.change-app(false); }
+            }
+            if root.to == "": JEmptyState {
+                x: root.pad + root.card-w + root.gap;
+                y: root.cards-y - 62px * Tokens.scale;
+                width: root.card-w;
+                height: 144px * Tokens.scale;
+                title: @tr("No app yet");
+                text: @tr("Pick the app that should hear it.");
+                action: @tr("Choose app");
+                activated => { root.change-app(true); }
+            }
+            // Until both apps are chosen, a dashed line between them.
+            if root.draft: Rectangle {
+                x: root.pad + root.card-w;
+                y: root.cards-y - 62px * Tokens.scale + 72px * Tokens.scale;
+                width: root.gap;
+                height: 1px;
+                for i in max(1, floor(self.width / 8px)): Rectangle {
+                    x: i * 8px;
+                    width: 4px;
+                    background: Tokens.line-divider;
+                }
             }
             from-app := AppCard {
+                visible: root.from != "";
                 x: root.pad;
                 y: root.cards-y - 62px * Tokens.scale;
                 width: root.card-w;
@@ -244,6 +280,7 @@ export component CableScreen inherits Rectangle {
                 change => { root.change-app(false); }
             }
             to-app := AppCard {
+                visible: root.to != "";
                 x: root.pad + root.card-w + root.gap;
                 y: root.cards-y - 62px * Tokens.scale;
                 width: root.card-w;
@@ -257,6 +294,7 @@ export component CableScreen inherits Rectangle {
                 change => { root.change-app(true); }
             }
             // One straight link per channel, port to port.
+            if !root.draft: Rectangle {
             for ch[k] in root.to-card.channels: Rectangle {
                 // A straight 2 px line, dim while either app is away.
                 Rectangle {
@@ -279,8 +317,9 @@ export component CableScreen inherits Rectangle {
                     label: @tr("{0} channel {1}", root.to, ch.number);
                 }
             }
-            // Volume, Listen, Exclusive.
-            Rectangle {
+            }
+            // Volume, Listen, Exclusive (once it is set up).
+            if !root.draft: Rectangle {
                 x: root.pad;
                 y: to-app.y + to-app.preferred-height + 28px * Tokens.scale;
                 width: 2 * root.card-w + root.gap;
@@ -401,10 +440,11 @@ export component CableScreen inherits Rectangle {
         TouchArea { clicked => { root.picker-closed(); } }
         JPicker {
             x: root.pad + (root.picker-cable == 2 ? root.card-w + root.gap : 0);
-            y: root.cards-y + to-app.preferred-height;
+            y: root.cards-y + ((root.picker-cable == 2 ? root.to : root.from) == "" ? 152px * Tokens.scale : to-app.preferred-height);
             height: self.preferred-height;
             title: root.picker-cable == 2 ? @tr("App that hears the Cable") : @tr("App the Cable takes from");
             placeholder: @tr("Search apps");
+            note: @tr("Only apps that are playing or have played this session.");
             search-icon: "\u{f0349}";
             hints: true;
             pick-word: @tr("pick");
