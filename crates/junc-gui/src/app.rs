@@ -67,6 +67,8 @@ pub struct App {
     received: Option<Describe>,
     /// A new Cable held until both its apps are chosen (board 27).
     draft: Option<Draft>,
+    /// The tray, when the shell shows one (board 19).
+    tray: Option<crate::tray::Tray>,
 }
 
 /// The sidebar id of the draft Cable (a config id has no `+`).
@@ -201,6 +203,7 @@ pub fn install(
         creating: None,
         received: None,
         draft: None,
+        tray: None,
         picker: None,
         picking: Picking::Input,
         options: None,
@@ -604,6 +607,66 @@ impl App {
         view.set_service_known(false);
         view.set_settings_open(true);
         self.actions.send(Command::Service(None));
+    }
+
+    /// Board 19: the tray this window's menu goes to.
+    pub fn set_tray(&mut self, tray: crate::tray::Tray) {
+        self.tray = Some(tray);
+        self.refresh();
+    }
+
+    /// The tray's menu for juncd's snapshot (board 19).
+    fn tray_menu(&self, words: &Words) -> Vec<crate::tray::Entry> {
+        use crate::tray::Entry;
+        let mut out = Vec::new();
+        let capturing = self
+            .describe
+            .as_ref()
+            .map(|d| d.capture_apps.clone())
+            .unwrap_or_default();
+        if !capturing.is_empty() {
+            out.push(Entry::Label(
+                words
+                    .invoke_capturing(capturing.join(", ").into())
+                    .to_string(),
+            ));
+            out.push(Entry::Separator);
+        }
+        out.extend(
+            self.sidebar
+                .junctions
+                .iter()
+                .filter(|r| !r.draft)
+                .map(|r| Entry::Junction {
+                    id: r.id.clone(),
+                    label: r.name.clone(),
+                    on: r.enabled,
+                }),
+        );
+        out.push(Entry::Separator);
+        out.push(Entry::Open(words.invoke_open_junc().to_string()));
+        out.push(Entry::Quit(words.invoke_quit().to_string()));
+        out
+    }
+
+    /// A click in the tray's menu.
+    pub fn tray_event(&mut self, e: &crate::tray::Event) {
+        use crate::tray::Event;
+        match e {
+            Event::Toggle(id, on) => {
+                if let Some(path) = self.path(id) {
+                    self.actions.send(Command::Enabled { path, on: *on });
+                }
+            }
+            Event::Open => {
+                if let Some(w) = self.window.upgrade() {
+                    let _ = w.show();
+                }
+            }
+            Event::Quit => {
+                let _ = slint::quit_event_loop();
+            }
+        }
     }
 
     /// Board 24: Import existing setups; juncd is asked what there is.
@@ -1467,6 +1530,9 @@ impl App {
         let Some(w) = self.window.upgrade() else {
             return;
         };
+        if let Some(t) = &self.tray {
+            t.set_menu(self.tray_menu(&w.global::<Words>()));
+        }
         let view = w.global::<View>();
         let selected = self.selected.clone();
         self.main = self
@@ -1686,6 +1752,14 @@ pub fn set_theme_switch(f: ThemeSwitch) {
 /// A count for the window.
 fn count(n: usize) -> i32 {
     i32::try_from(n).unwrap_or(i32::MAX)
+}
+
+/// Gives the current controller a click in the tray's menu.
+pub fn tray_current(e: &crate::tray::Event) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().tray_event(e);
+    }
 }
 
 /// Gives the current controller what juncd found to import.

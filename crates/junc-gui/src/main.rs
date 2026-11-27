@@ -6,7 +6,7 @@
 #![forbid(unsafe_code)]
 
 use junc_gui::actions::{Actions, Command, Dbus};
-use junc_gui::{app, daemon, meter_service, onboarding, theme, theme_service, ui};
+use junc_gui::{app, daemon, meter_service, onboarding, theme, theme_service, tray, ui};
 use slint::ComponentHandle;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -81,7 +81,28 @@ fn main() -> Result<(), slint::PlatformError> {
     let _ = daemon::follow(None, move |d| {
         let _ = slint::invoke_from_event_loop(move || app::update_current(d));
     });
-    let run = window.run();
+    // The tray, when the shell has a StatusNotifierWatcher (§7.8).
+    let tray = tray::Tray::start(None, |e| {
+        let _ = slint::invoke_from_event_loop(move || app::tray_current(&e));
+    })
+    .ok()
+    .filter(|(_, shown)| *shown)
+    .map(|(t, _)| t);
+    let background = args.iter().any(|a| a == "--background");
+    let run = if let Some(t) = tray {
+        controller.borrow_mut().set_tray(t);
+        // With a tray, closing the window keeps JUNC in the tray; Quit
+        // in its menu ends it.
+        window
+            .window()
+            .on_close_requested(|| slint::CloseRequestResponse::HideWindow);
+        if !background {
+            window.show()?;
+        }
+        slint::run_event_loop_until_quit()
+    } else {
+        window.run()
+    };
     drop((controller, meters));
     run
 }

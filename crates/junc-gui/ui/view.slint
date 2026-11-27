@@ -19,6 +19,10 @@ export struct CheckItem {
 export global Words {
     public pure function new-junction() -> string { @tr("New Junction") }
     public pure function new-cable() -> string { @tr("New Cable") }
+    // TRANSLATORS: the tray's menu (design board 19).
+    public pure function capturing(apps: string) -> string { @tr("Capturing: {0}", apps) }
+    public pure function open-junc() -> string { @tr("Open JUNC") }
+    public pure function quit() -> string { @tr("Quit") }
     // TRANSLATORS: the language Settings shows, in its own name.
     public pure function language-name() -> string { @tr("English") }
     // TRANSLATORS: picker group captions (design board 7).
