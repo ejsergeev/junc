@@ -69,7 +69,7 @@ msgstr "オフライン"
 msgid "Not running"
 msgstr "未実行"
 
-#: crates/junc-gui/ui/components/card.slint
+#: crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/main.slint
 msgid "Exclusive"
 msgstr "排他"
 
@@ -193,7 +193,7 @@ msgstr "ケーブルはあるアプリの音を別のアプリへ直接送りま
 msgid "Import existing setups…"
 msgstr "既存の設定を読み込む…"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Ch {0}"
 msgstr "Ch {0}"
 
@@ -238,6 +238,26 @@ msgid "Add"
 msgstr "追加"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "{0} options"
+msgstr "{0} のオプション"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Mute {0} in your speakers while JUNC captures it."
+msgstr "JUNC が取り込んでいる間、スピーカーでは {0} をミュートします。"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "FEEDS BUS"
+msgstr "送り先のバス"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Channel {0} feeds"
+msgstr "チャンネル {0} の送り先"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Remove input"
+msgstr "入力を削除"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "{n} App"
 msgid_plural "{n} Apps"
 msgstr[0] "アプリ {n}"
@@ -264,7 +284,7 @@ msgid "{n} Channel"
 msgid_plural "{n} Channels"
 msgstr[0] "{n} チャンネル"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "None"
 msgstr "なし"
 
