@@ -7,7 +7,8 @@
 // A11y fixes from the validation: the root is exposed as a labelled group
 // (Slint has no dialog role; the best available), the search field is
 // labelled, focus stays inside until it closes. With `hints` a footer
-// under a divider names the keys (board 7).
+// under a divider names the keys (board 7); a `note` under the rows says
+// what to do when the one sought is missing (board 17).
 
 import { Tokens } from "../tokens.slint";
 import { ControlState } from "state.slint";
@@ -30,6 +31,7 @@ export component JPicker inherits Rectangle {
     in property <string> search-icon;
     // The footer naming ↑↓, Enter and Esc.
     in property <bool> hints;
+    in property <string> note;
     in property <string> pick-word: @tr("add");
     in-out property <string> search;
     in-out property <int> cursor: 0;
@@ -165,6 +167,12 @@ export component JPicker inherits Rectangle {
                 }
             }
         }
+        }
+        if root.note != "": Text {
+            text: root.note;
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+            wrap: word-wrap;
         }
         if root.hints: VerticalLayout {
             spacing: Tokens.space-row-gap;
