@@ -1322,14 +1322,16 @@ fn templates_and_presets_make_junctions() {
 #[test]
 fn messages_follow_the_language_and_json_stays_english() {
     let dir = std::env::temp_dir().join(format!("junc-cli-lang-{}", std::process::id()));
-    let mo = dir.join("locale/de/LC_MESSAGES");
-    std::fs::create_dir_all(&mo).expect("dir");
-    let built = Command::new("msgfmt")
-        .arg("-o")
-        .arg(mo.join("junc.mo"))
-        .arg(repo().join("po/cli/de.po"))
-        .status()
-        .is_ok_and(|s| s.success());
+    let built = ["de", "ja"].iter().all(|lang| {
+        let mo = dir.join(format!("locale/{lang}/LC_MESSAGES"));
+        std::fs::create_dir_all(&mo).expect("dir");
+        Command::new("msgfmt")
+            .arg("-o")
+            .arg(mo.join("junc.mo"))
+            .arg(repo().join(format!("po/cli/{lang}.po")))
+            .status()
+            .is_ok_and(|s| s.success())
+    });
     if !built {
         assert!(std::env::var_os("CI").is_none(), "msgfmt is missing in CI");
         eprintln!("skipped: no msgfmt");
@@ -1370,9 +1372,14 @@ fn messages_follow_the_language_and_json_stays_english() {
     assert!(out.ends_with(": valid\n"), "--lang wins: {out}");
     let (out, _) = junc(&[&["--lang", "en_XA"][..], &validate].concat(), None);
     assert!(out.contains("⟦"), "pseudo-locale: {out}");
+    let (out, _) = junc(&validate, Some("ja"));
+    assert!(out.ends_with(": 有効\n"), "Japanese: {out}");
     // A language without a catalog is English.
     let (out, _) = junc(&validate, Some("fi"));
     assert!(out.ends_with(": valid\n"), "{out}");
+    // Right-to-left languages are English until RTL (PRD).
+    let (out, _) = junc(&validate, Some("ar"));
+    assert!(out.ends_with(": valid\n"), "Arabic shows English: {out}");
 
     let (_, err) = junc(&["schema", "--version", "9"], Some("de"));
     assert!(
