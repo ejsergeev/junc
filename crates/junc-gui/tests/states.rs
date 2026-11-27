@@ -407,4 +407,61 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     settle();
     assert_eq!(view.get_linking(), 0);
     assert_eq!(soundux(&mock).map(|l| l.len()), Some(4));
+    drop((w, _app, mock));
+
+    // §7.4: Ctrl+2 selects the second Junction, Ctrl+1 the first; the
+    // arrows move between cards (Space then toggles the one reached); Del
+    // with the pointer on a link unlinks it.
+    let (w, app, mock) = open("default");
+    let view = w.global::<View>();
+    ctrl(&w, "2");
+    settle();
+    assert_eq!(app.borrow().selected(), Some("firefox-to-obs"));
+    ctrl(&w, "9");
+    assert_eq!(app.borrow().selected(), Some("firefox-to-obs"), "no ninth");
+    ctrl(&w, "1");
+    settle();
+    assert_eq!(app.borrow().selected(), Some("virtual-mic-for-zoom"));
+    let config = |m: &Mock| m.config().expect("config").junction[0].clone();
+    let spotify = ElementHandle::find_by_accessible_label(&w, "Spotify")
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::Groupbox))
+        .expect("the Spotify card");
+    click(&w, &spotify);
+    key(&w, Key::DownArrow);
+    key(&w, " ");
+    settle();
+    assert!(!config(&mock).input[1].enabled, "↓ to Soundux, Space");
+    key(&w, Key::RightArrow);
+    key(&w, Key::RightArrow);
+    key(&w, " ");
+    settle();
+    assert!(
+        !config(&mock)
+            .listen
+            .iter()
+            .find(|l| l.id == "hdmi")
+            .expect("hdmi")
+            .enabled,
+        "→ → past the Bus to HDMI Output, Space"
+    );
+    let point = {
+        let a = app.borrow();
+        let (m, l) = (a.main().expect("main"), a.layout().expect("layout"));
+        let i = m
+            .links
+            .iter()
+            .position(|k| k.owner == "builtin" && k.pair == [1, 1])
+            .expect("Ch 1 → Built-in 1");
+        l.curves[i].expect("drawn").at(0.5)
+    };
+    view.invoke_pointer_moved(point.x, point.y);
+    assert!(view.get_tip_visible());
+    key(&w, Key::Delete);
+    settle();
+    let builtin = config(&mock)
+        .listen
+        .into_iter()
+        .find(|l| l.id == "builtin")
+        .expect("builtin");
+    assert_eq!(builtin.links, Some(vec![[2, 2]]));
 }
