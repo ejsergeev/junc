@@ -1,0 +1,6 @@
+# GUI scenario: design board 16, "Add Bus channels" — Ctrl+Shift+N or the
+# "+" on Bus: a stereo pair or one mono channel after the last.
+board = 16
+title = "Add Bus channels"
+base = "default"
+add_bus = true

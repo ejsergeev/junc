@@ -77,6 +77,9 @@ struct Fixture {
     /// The Add Listen output picker open on it.
     #[serde(default)]
     listen_picker: bool,
+    /// The Add Bus channels popover open on it.
+    #[serde(default)]
+    add_bus: bool,
 }
 
 /// One doctor check (`junc doctor --json`).
@@ -147,6 +150,7 @@ pub struct Scenario {
     pub onboarding: Option<Step>,
     pub picker: bool,
     pub listen_picker: bool,
+    pub add_bus: bool,
     /// What the mock answers to the system check.
     checks: Vec<checks::Row>,
     /// What the mock IPC settles again after each change.
@@ -279,6 +283,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         onboarding,
         picker: f.picker,
         listen_picker: f.listen_picker,
+        add_bus: f.add_bus,
         checks,
         config,
         graph,
@@ -505,6 +510,9 @@ pub fn open(
     }
     if s.listen_picker {
         app.borrow_mut().open_listen_picker();
+    }
+    if s.add_bus {
+        app.borrow().open_add_bus();
     }
     (app, mock)
 }

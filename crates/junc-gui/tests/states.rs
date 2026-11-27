@@ -36,17 +36,28 @@ fn key(w: &AppWindow, k: impl Into<SharedString>) {
     w.window().dispatch_event(WindowEvent::KeyReleased { text });
 }
 
-/// `k` with Ctrl held.
-fn ctrl(w: &AppWindow, k: &str) {
-    let press = |t: SharedString| {
-        w.window()
-            .dispatch_event(WindowEvent::KeyPressed { text: t })
+/// `k` with Ctrl (and Shift) held.
+fn ctrl_shift(w: &AppWindow, shift: bool, k: &str) {
+    let hold = |t: SharedString, down: bool| {
+        w.window().dispatch_event(if down {
+            WindowEvent::KeyPressed { text: t }
+        } else {
+            WindowEvent::KeyReleased { text: t }
+        });
     };
-    press(Key::Control.into());
+    hold(Key::Control.into(), true);
+    if shift {
+        hold(Key::Shift.into(), true);
+    }
     key(w, k);
-    w.window().dispatch_event(WindowEvent::KeyReleased {
-        text: Key::Control.into(),
-    });
+    if shift {
+        hold(Key::Shift.into(), false);
+    }
+    hold(Key::Control.into(), false);
+}
+
+fn ctrl(w: &AppWindow, k: &str) {
+    ctrl_shift(w, false, k);
 }
 
 fn settle() {
@@ -153,4 +164,35 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
         .find(|j| j.id == "new-junction")
         .expect("selected");
     assert_eq!(j.listen.len(), 1);
+    drop((w, _app, mock));
+
+    // Board 16: Enter adds the stereo pair; Ctrl+Shift+N opens it again,
+    // ↓ picks mono; Esc and a click outside add nothing.
+    let (w, _app, mock) = open("addBus");
+    let view = w.global::<View>();
+    let channels = |m: &Mock| m.config().expect("config").junction[0].bus.channels;
+    assert!(view.get_adding_bus());
+    assert!(has(&w, "Apps that pick this Junction see 6 channels."));
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_adding_bus());
+    assert_eq!(channels(&mock), 6);
+    ctrl_shift(&w, true, "N");
+    settle();
+    assert!(view.get_adding_bus());
+    key(&w, Key::DownArrow);
+    assert!(has(&w, "Apps that pick this Junction see 7 channels."));
+    key(&w, "\n");
+    settle();
+    assert_eq!(channels(&mock), 7);
+    ElementHandle::find_by_accessible_label(&w, "Add Bus channels")
+        .next()
+        .expect("+ on Bus")
+        .invoke_accessible_default_action();
+    settle();
+    assert!(view.get_adding_bus());
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_adding_bus());
+    assert_eq!(channels(&mock), 7);
 }
