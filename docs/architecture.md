@@ -1335,6 +1335,18 @@ while it waits. The Inputs heading and the sidebar row add "· N waiting".
 A closed app is named from its binary with a capital ("spotify" →
 "Spotify") when nothing else names it.
 
+As built (B19, New Cable): Ctrl+Shift+K or New › Cable (the New button
+now opens the New menu: Junction, Cable; From template… and Import
+preset… come with B22) makes a Cable "New Cable" (board 27). The config
+needs both apps of a Cable, so the window holds it as a draft until they
+are chosen: a sidebar row "Cable · not set up" (id `+new-cable`, which no
+config id can be) and the Cable screen with two "No app yet" boxes and a
+dashed line, the From picker open. Picking From opens the To picker;
+with both, one `Apply` writes the Cable (`Edit::NewCable`: its Input's id
+from the app's name) and the window selects it when juncd shows it.
+Rename renames the draft; Delete drops it without asking juncd; it is
+gone when the GUI closes.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
