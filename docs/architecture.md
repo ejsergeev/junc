@@ -1319,6 +1319,15 @@ built: naming the apps that record from the Junction, as the board does
 ("Zoom uses this Junction…"); `Describe` does not say who records from
 it, so the lead says it of all such apps.
 
+As built (B19, Context menu): a right-click on a sidebar row, or the
+Menu key (Shift+F10) on the selected one, opens its menu beside the row
+(board 21, `JMenu` with dividers and a destructive item): Rename (F2),
+Duplicate (Ctrl+D), Turn off/on (Space), Export preset… and Import
+preset… (greyed until B22), Delete… (Ctrl+Delete, the board 22 dialog).
+Duplicate writes a copy after the original through `GetConfig` →
+`Apply` (`Edit::Duplicate`): named "<name> copy", its id from that name,
+and never a system default, since only one Junction can be.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
