@@ -1,0 +1,13 @@
+# GUI scenario: design board 27, "New Cable" — Ctrl+Shift+K: a Cable the
+# window holds until both apps are chosen; the picker of the app it takes
+# from is open.
+board = 27
+title = "New Cable"
+base = "default"
+new_cable = true
+
+[[node]]
+name = "discord"
+class = "Stream/Output/Audio"
+app = "Discord"
+binary = "discord"
