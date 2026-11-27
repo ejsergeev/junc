@@ -1373,6 +1373,15 @@ language rows (B20), Copy bug report… and Run checks (B22). Not built:
 the board's Third-party licenses link, which waits for the package's
 licence file.
 
+As built (B19, Import): Settings › Existing setups › Import… opens board
+24's dialog. juncd's `ScanImportable` lists the setups; one that
+something is connected to starts checked, and one app into another
+starts as a Cable (only such a setup can be one). Space checks the row
+in focus, J and C choose Junction or Cable, Enter imports, Esc cancels.
+The window imports through `junc import ID… --as junction|cable` (one
+call per kind, on a thread), so the CLI's builder stays the only one;
+juncd then shows the new Junctions. The old setups keep running.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
