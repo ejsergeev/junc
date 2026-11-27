@@ -8,7 +8,7 @@
 //! D-Bus methods and do not come through here.
 
 use junc_core::config::slugify;
-use junc_core::model::{Config, Input, Match};
+use junc_core::model::{Config, Input, Listen, Match};
 
 /// An Input or a Listen output of a Junction.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,6 +34,9 @@ pub enum Edit {
     },
     /// Add an Input taking `matcher`; its id comes from `label`.
     AddInput { matcher: Box<Match>, label: String },
+    /// Add a Listen output to `target` (`default` or an output node.name);
+    /// its id comes from `label`.
+    AddListen { target: String, label: String },
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
@@ -49,6 +52,11 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
             j.input.push(new_input(id, (**matcher).clone()));
             return true;
         }
+        Edit::AddListen { target, label } => {
+            let id = unique_id(label, j.listen.iter().map(|l| l.id.as_str()));
+            j.listen.push(new_listen(id, target));
+            return true;
+        }
     };
     match part {
         Part::Input(id) => {
@@ -61,7 +69,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     i.links = Some(remaining(i.links.as_deref(), in_use, remove));
                 }
-                Edit::AddInput { .. } => {}
+                Edit::AddInput { .. } | Edit::AddListen { .. } => {}
             }
         }
         Part::Listen(id) => {
@@ -74,15 +82,15 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     l.links = Some(remaining(l.links.as_deref(), in_use, remove));
                 }
-                Edit::AddInput { .. } => {}
+                Edit::AddInput { .. } | Edit::AddListen { .. } => {}
             }
         }
     }
     true
 }
 
-/// An id from `label` that no other Input of the Junction has: the slug,
-/// then `-2`, `-3`, … (as the CLI's `junc input add` makes them).
+/// An id from `label` that no other Input (or Listen output) of the
+/// Junction has: the slug, then `-2`, `-3`, … (as the CLI makes them).
 fn unique_id<'a>(label: &str, taken: impl Iterator<Item = &'a str> + Clone) -> String {
     let mut base = slugify(label);
     base.truncate(56);
@@ -113,6 +121,16 @@ fn new_input(id: String, matcher: Match) -> Input {
     toml::Value::Table(t)
         .try_into()
         .unwrap_or_else(|e| unreachable!("a minimal Input always parses: {e}"))
+}
+
+/// A Listen output to `target` with everything else at its default.
+fn new_listen(id: String, target: &str) -> Listen {
+    let mut t = toml::Table::new();
+    t.insert("id".into(), id.into());
+    t.insert("target".into(), target.into());
+    toml::Value::Table(t)
+        .try_into()
+        .unwrap_or_else(|e| unreachable!("a minimal Listen always parses: {e}"))
 }
 
 fn remaining(own: Option<&[[u8; 2]]>, in_use: &[[u8; 2]], remove: &[[u8; 2]]) -> Vec<[u8; 2]> {
@@ -247,6 +265,48 @@ target = "default"
             &Edit::AddInput {
                 matcher: Box::default(),
                 label: "x".into()
+            }
+        ));
+    }
+
+    #[test]
+    fn added_listen_outputs_get_their_own_id_and_validate() {
+        let mut c = config();
+        let add = |c: &mut Config, target: &str, label: &str| {
+            apply(
+                c,
+                "zoom",
+                &Edit::AddListen {
+                    target: target.into(),
+                    label: label.into(),
+                },
+            )
+        };
+        assert!(add(&mut c, "alsa_output.hdmi", "HDMI Output"));
+        assert!(add(&mut c, "default", "default"));
+        assert!(add(&mut c, "alsa_output.hdmi-2", "HDMI Output"));
+        let l = &c.junction[0].listen;
+        let got: Vec<(&str, &str)> = l
+            .iter()
+            .map(|l| (l.id.as_str(), l.target.as_str()))
+            .collect();
+        assert_eq!(
+            &got[got.len() - 3..],
+            [
+                ("hdmi-output", "alsa_output.hdmi"),
+                ("default", "default"),
+                ("hdmi-output-2", "alsa_output.hdmi-2"),
+            ]
+        );
+        assert!(l.iter().all(|l| l.enabled && l.links.is_none()));
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
+        assert!(!apply(
+            &mut c,
+            "gone",
+            &Edit::AddListen {
+                target: "default".into(),
+                label: "default".into()
             }
         ));
     }
