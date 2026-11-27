@@ -66,7 +66,18 @@ export global View {
     in-out property <bool> junction-on: true;
     in-out property <string> node;
     in-out property <int> bus-channels;
+    // The selected Junction is a Cable (board 12): its apps, whether they
+    // run, its options.
     in-out property <bool> cable;
+    in-out property <string> cable-from;
+    in-out property <bool> cable-from-running;
+    in-out property <string> cable-to;
+    in-out property <bool> cable-to-running;
+    in-out property <int> cable-volume;
+    in-out property <bool> cable-exclusive;
+    in-out property <bool> cable-listen;
+    in-out property <int> cable-listen-index;
+    in-out property <[string]> cable-outputs;
     in-out property <int> apps;
     in-out property <int> devices;
     in-out property <int> off;
@@ -107,6 +118,8 @@ export global View {
     in-out property <bool> picker-open;
     // The picker adds Listen outputs (board 17) rather than Inputs.
     in-out property <bool> picker-listen;
+    // It picks a Cable's app: 1 the one it takes from, 2 the one it feeds.
+    in-out property <int> picker-cable;
     // The Add Bus channels popover (board 16).
     in-out property <bool> adding-bus;
     // Input Options (boards 15, 30): card `options-index`, at its card's
@@ -153,6 +166,13 @@ export global View {
     callback new-junction();
     callback open-picker();
     callback open-listen-picker();
+    // Change app… on a Cable: false the app it takes from, true the one it
+    // feeds.
+    callback open-cable-picker(bool);
+    callback cable-exclusive-changed(bool);
+    // On or off, and the output its select shows.
+    callback cable-listen-toggled(bool, int);
+    callback cable-listen-target(int);
     // Add this many Bus channels.
     callback add-bus(int);
     callback options-toggled(int);

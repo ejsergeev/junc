@@ -1,0 +1,415 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// The Cable screen (design board 12): one app straight into another. From
+// (the app it takes audio from) and To (the app that hears it as its
+// input) side by side, linked channel to channel; under them the Cable's
+// volume, Listen and Exclusive. "Change app…" on either card opens the
+// picker of playing or recording apps. The channels and their meters are
+// the Main model's: the Input card (From) and the Bus (To).
+
+import { Tokens } from "../tokens.slint";
+import { JCard } from "../components/card.slint";
+import { JPort } from "../components/port.slint";
+import { JButton, JIconButton } from "../components/button.slint";
+import { JSwitch } from "../components/switch.slint";
+import { JSlider } from "../components/slider.slint";
+import { JSelect } from "../components/select.slint";
+import { JKbd } from "../components/kbd.slint";
+import { JConfirm } from "../components/confirm.slint";
+import { JPicker, PickerItem } from "../components/picker.slint";
+import { CardItem, ChannelItem, ChannelRow } from "main.slint";
+
+// "From" or "To" over its card: the heading and what the app does.
+component Side inherits VerticalLayout {
+    in property <string> title;
+    in property <string> detail;
+    spacing: 2px;
+    Text {
+        text: root.title;
+        color: Tokens.text-strong;
+        font-size: Tokens.type-heading;
+    }
+    Text {
+        text: root.detail;
+        color: Tokens.text-subtle;
+        font-size: Tokens.type-caption;
+        overflow: elide;
+    }
+}
+
+// An app's card: name and role, glyph, channel rows, Change app….
+component AppCard inherits VerticalLayout {
+    in property <string> title;
+    // "output" or "input": which way the audio goes for the app.
+    in property <string> role;
+    in property <string> glyph;
+    in property <bool> running;
+    in property <[ChannelItem]> channels;
+    in property <[float]> levels;
+    in property <[float]> peaks;
+    callback change();
+    JCard {
+        title: root.title;
+        tag: root.role;
+        switchable: false;
+        footer: false;
+        state: root.running ? "ok" : "not-running";
+        app: root.title;
+        HorizontalLayout {
+            spacing: 10px * Tokens.scale;
+            Rectangle {
+                width: 40px * Tokens.scale;
+                height: 40px * Tokens.scale;
+                y: (parent.height - self.height) / 2;
+                border-width: Tokens.border;
+                border-color: Tokens.line-divider;
+                Text {
+                    text: root.glyph;
+                    font-size: Tokens.type-heading;
+                    color: Tokens.text-default;
+                    accessible-role: none;
+                }
+            }
+            VerticalLayout {
+                spacing: 4px * Tokens.scale;
+                alignment: start;
+                for ch in root.channels: ChannelRow {
+                    ch: ch;
+                    live: root.running;
+                    levels: root.levels;
+                    peaks: root.peaks;
+                }
+            }
+        }
+    }
+    Rectangle {
+        height: Tokens.size-control;
+        background: Tokens.surface-card;
+        border-width: Tokens.border;
+        border-color: Tokens.line-divider;
+        HorizontalLayout {
+            padding-left: 4px;
+            alignment: start;
+            JButton {
+                y: (parent.height - self.height) / 2;
+                flat: true;
+                icon: "\u{f0142}";
+                text: @tr("Change app…");
+                clicked => { root.change(); }
+            }
+        }
+    }
+}
+
+// A label in the options' first column.
+component OptionLabel inherits Text {
+    width: 124px * Tokens.scale;
+    color: Tokens.text-default;
+    vertical-alignment: center;
+}
+
+export component CableScreen inherits Rectangle {
+    in property <string> title;
+    in property <string> node;
+    in property <int> bus-channels;
+    in property <string> from;
+    in property <bool> from-running;
+    in property <string> to;
+    in property <bool> to-running;
+    in property <int> volume;
+    in property <bool> exclusive;
+    in property <bool> listen;
+    in property <int> listen-index;
+    in property <[string]> outputs;
+    // The Main model's cards: the Input (From) first, then the Bus.
+    in property <[CardItem]> cards;
+    in property <[float]> levels;
+    in property <[float]> peaks;
+    in-out property <bool> confirming;
+    in property <bool> picker-open;
+    // 1: the app it takes from; 2: the app it feeds.
+    in property <int> picker-cable;
+    in property <[PickerItem]> picker-items;
+    in-out property <string> picker-search;
+    in-out property <int> picker-cursor;
+    callback volume-changed(int);
+    callback exclusive-changed(bool);
+    callback listen-toggled(bool, int);
+    callback listen-target(int);
+    callback change-app(bool);
+    callback delete-junction();
+    callback picker-search-edited(string);
+    callback picker-picked(int);
+    callback picker-closed();
+
+    background: Tokens.surface-window;
+    property <length> pad: Tokens.space-panel-pad;
+    property <length> card-w: 300px * Tokens.scale;
+    property <length> gap: 180px * Tokens.scale;
+    property <length> cards-y: (62px + 56px + 12px) * Tokens.scale;
+    property <bool> live: root.from-running && root.to-running;
+    property <CardItem> from-card: root.cards.length > 0 ? root.cards[0] : { };
+    property <CardItem> to-card: root.cards.length > 1 ? root.cards[1] : { };
+    // Where channel row k sits: card header, body padding, row centre.
+    pure function row-y(k: int) -> length {
+        return root.cards-y + (33px + 10px + 14px + k * 32px) * Tokens.scale;
+    }
+
+    VerticalLayout {
+        // Header: name and rename; what it is, its node and channels.
+        Rectangle {
+            height: 62px * Tokens.scale;
+            HorizontalLayout {
+                padding-left: root.pad;
+                padding-right: root.pad;
+                padding-top: 16px * Tokens.scale;
+                spacing: Tokens.space-row-gap;
+                Text {
+                    text: root.title;
+                    color: Tokens.text-strong;
+                    font-size: Tokens.type-display;
+                    vertical-alignment: center;
+                    overflow: elide;
+                    accessible-role: none;
+                }
+                JIconButton {
+                    y: (parent.height - self.height) / 2;
+                    icon: "\u{f03eb}";
+                    tooltip: @tr("Rename");
+                    shortcut: "F2";
+                }
+                Text {
+                    text: @tr("Cable") + " · " + root.node + " · " + @tr("{0} ch", root.bus-channels);
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-caption;
+                    vertical-alignment: center;
+                    horizontal-alignment: right;
+                    overflow: elide;
+                    min-width: 0;
+                    horizontal-stretch: 1;
+                }
+            }
+        }
+        Rectangle {
+            vertical-stretch: 1;
+            Side {
+                x: root.pad;
+                y: 12px * Tokens.scale;
+                width: root.card-w;
+                height: self.preferred-height;
+                title: @tr("From");
+                detail: root.from-running ? @tr("App · playing") : @tr("App · not running");
+            }
+            Side {
+                x: root.pad + root.card-w + root.gap;
+                y: 12px * Tokens.scale;
+                width: root.card-w;
+                height: self.preferred-height;
+                title: @tr("To");
+                detail: root.to-running ? @tr("App · hears this Cable as its input") : @tr("App · not running");
+            }
+            from-app := AppCard {
+                x: root.pad;
+                y: root.cards-y - 62px * Tokens.scale;
+                width: root.card-w;
+                title: root.from;
+                role: @tr("output");
+                glyph: root.from-card.icon;
+                running: root.from-running;
+                channels: root.from-card.channels;
+                levels: root.levels;
+                peaks: root.peaks;
+                change => { root.change-app(false); }
+            }
+            to-app := AppCard {
+                x: root.pad + root.card-w + root.gap;
+                y: root.cards-y - 62px * Tokens.scale;
+                width: root.card-w;
+                title: root.to;
+                role: @tr("input");
+                glyph: "\u{f0ec3}";
+                running: root.to-running;
+                channels: root.to-card.channels;
+                levels: root.levels;
+                peaks: root.peaks;
+                change => { root.change-app(true); }
+            }
+            // One straight link per channel, port to port.
+            for ch[k] in root.to-card.channels: Rectangle {
+                // A straight 2 px line, dim while either app is away.
+                Rectangle {
+                    x: root.pad + root.card-w;
+                    y: root.row-y(k) - 62px * Tokens.scale - 1px;
+                    width: root.gap;
+                    height: 2px;
+                    background: root.live ? Tokens.accent : Tokens.mark-dim;
+                }
+                JPort {
+                    x: root.pad + root.card-w - self.width / 2;
+                    y: root.row-y(k) - 62px * Tokens.scale - self.height / 2;
+                    state: root.live ? "linked" : "offline";
+                    label: @tr("{0} channel {1}", root.from, ch.number);
+                }
+                JPort {
+                    x: root.pad + root.card-w + root.gap - self.width / 2;
+                    y: root.row-y(k) - 62px * Tokens.scale - self.height / 2;
+                    state: root.live ? "linked" : "offline";
+                    label: @tr("{0} channel {1}", root.to, ch.number);
+                }
+            }
+            // Volume, Listen, Exclusive.
+            Rectangle {
+                x: root.pad;
+                y: to-app.y + to-app.preferred-height + 28px * Tokens.scale;
+                width: 2 * root.card-w + root.gap;
+                height: options.preferred-height;
+                background: Tokens.surface-card;
+                border-width: Tokens.border;
+                border-color: Tokens.line-divider;
+                options := VerticalLayout {
+                    padding: 18px * Tokens.scale;
+                    spacing: 8px * Tokens.scale;
+                    HorizontalLayout {
+                        spacing: Tokens.space-row-gap;
+                        height: Tokens.size-control;
+                        OptionLabel { text: @tr("Volume"); }
+                        JSlider {
+                            width: 360px * Tokens.scale;
+                            label: @tr("{0} volume", root.title);
+                            maximum: 150;
+                            value: root.volume;
+                            changed(v) => { root.volume-changed(v); }
+                        }
+                        Rectangle { }
+                    }
+                    HorizontalLayout {
+                        spacing: Tokens.space-row-gap;
+                        height: Tokens.size-control;
+                        OptionLabel { text: @tr("Listen"); }
+                        JSwitch {
+                            y: (parent.height - self.height) / 2;
+                            label: @tr("Listen");
+                            checked: root.listen;
+                            toggled(v) => { root.listen-toggled(v, root.listen-index); }
+                        }
+                        JSelect {
+                            width: 300px * Tokens.scale;
+                            opacity: root.listen ? 1 : 0.45;
+                            label: @tr("Listen output");
+                            options: root.outputs;
+                            selected: root.listen-index;
+                            changed(i) => { root.listen-target(i); }
+                        }
+                        Text {
+                            text: @tr("Hear the Cable on an output");
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                        }
+                        Rectangle { }
+                    }
+                    HorizontalLayout {
+                        spacing: Tokens.space-row-gap;
+                        height: Tokens.size-control;
+                        OptionLabel { text: @tr("Exclusive"); }
+                        JSwitch {
+                            y: (parent.height - self.height) / 2;
+                            label: @tr("Exclusive");
+                            checked: root.exclusive;
+                            toggled(v) => { root.exclusive-changed(v); }
+                        }
+                        Text {
+                            text: @tr("{0} is muted in your speakers while the Cable carries it", root.from);
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                            overflow: elide;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                }
+            }
+        }
+        // Bottom bar: delete and keyboard hints.
+        Rectangle {
+            height: 45px * Tokens.scale;
+            Rectangle {
+                y: 0;
+                height: Tokens.border;
+                background: Tokens.line-divider;
+            }
+            HorizontalLayout {
+                padding-left: root.pad;
+                padding-right: root.pad;
+                spacing: Tokens.space-row-gap;
+                alignment: space-between;
+                JButton {
+                    y: (parent.height - self.height) / 2;
+                    text: @tr("Delete");
+                    icon: "\u{f0a7a}";
+                    shortcut: "Ctrl+Delete";
+                    clicked => { root.confirming = true; }
+                }
+                HorizontalLayout {
+                    spacing: 6px;
+                    alignment: center;
+                    for hint in [
+                        { key: "Tab", text: @tr("move") },
+                        { key: "Space", text: @tr("toggle") },
+                        { key: "F2", text: @tr("rename") },
+                    ]: HorizontalLayout {
+                        spacing: 4px;
+                        padding-right: 10px;
+                        JKbd { y: (parent.height - self.height) / 2; text: hint.key; }
+                        Text {
+                            text: hint.text;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                        }
+                    }
+                }
+                Rectangle { width: 80px * Tokens.scale; }
+            }
+        }
+    }
+
+    // The picker of the app to take from or to feed, under its card.
+    if root.picker-open && root.picker-cable > 0: Rectangle {
+        TouchArea { clicked => { root.picker-closed(); } }
+        JPicker {
+            x: root.pad + (root.picker-cable == 2 ? root.card-w + root.gap : 0);
+            y: root.cards-y + to-app.preferred-height;
+            height: self.preferred-height;
+            title: root.picker-cable == 2 ? @tr("App that hears the Cable") : @tr("App the Cable takes from");
+            placeholder: @tr("Search apps");
+            search-icon: "\u{f0349}";
+            hints: true;
+            pick-word: @tr("pick");
+            items: root.picker-items;
+            search <=> root.picker-search;
+            cursor <=> root.picker-cursor;
+            init => { self.open(); }
+            search-edited(t) => { root.picker-search-edited(t); }
+            picked(i) => { root.picker-picked(i); }
+            closed => { root.picker-closed(); }
+        }
+    }
+
+    if root.confirming: Rectangle {
+        background: Tokens.surface-desktop.with-alpha(0.6);
+        TouchArea { }
+        JConfirm {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 3;
+            title: @tr("Delete “{0}”?", root.title);
+            consequences: [@tr("{0} goes back to its own input.", root.to)];
+            confirm-text: @tr("Delete");
+            init => { self.open(); }
+            confirmed => {
+                root.confirming = false;
+                root.delete-junction();
+            }
+            cancelled => { root.confirming = false; }
+        }
+    }
+}

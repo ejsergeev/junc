@@ -9,6 +9,7 @@ import { OnboardingCheck, OnboardingTemplates } from "screens/onboarding.slint";
 import { EmptyNone } from "screens/empty.slint";
 import { PickerItem } from "components/picker.slint";
 import { MainScreen, CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
+import { CableScreen } from "screens/cable.slint";
 import { JMeter } from "components/meter.slint";
 import { JSwitch } from "components/switch.slint";
 import { JSlider } from "components/slider.slint";
@@ -277,7 +278,40 @@ export component AppWindow inherits Window {
             width: 1px;
             background: Tokens.line-divider;
         }
-        if View.selected != "": MainScreen {
+        if View.selected != "" && View.cable: CableScreen {
+            title: View.title;
+            node: View.node;
+            bus-channels: View.bus-channels;
+            from: View.cable-from;
+            from-running: View.cable-from-running;
+            to: View.cable-to;
+            to-running: View.cable-to-running;
+            volume: View.cable-volume;
+            exclusive: View.cable-exclusive;
+            listen: View.cable-listen;
+            listen-index: View.cable-listen-index;
+            outputs: View.cable-outputs;
+            cards: View.cards;
+            levels: View.levels;
+            peaks: View.peaks;
+            picker-open: View.picker-open;
+            picker-cable: View.picker-cable;
+            picker-items: View.picker-items;
+            picker-search <=> View.picker-search;
+            picker-cursor <=> View.picker-cursor;
+            // Its cards and meters come from the Main model's layout.
+            init => { View.relayout(800px); }
+            volume-changed(v) => { View.junction-volume(View.selected, v); }
+            exclusive-changed(v) => { View.cable-exclusive-changed(v); }
+            listen-toggled(v, i) => { View.cable-listen-toggled(v, i); }
+            listen-target(i) => { View.cable-listen-target(i); }
+            change-app(to) => { View.open-cable-picker(to); }
+            delete-junction => { View.delete-junction(); }
+            picker-search-edited(t) => { View.picker-search-edited(t); }
+            picker-picked(i) => { View.picker-picked(i); }
+            picker-closed => { View.picker-closed(); shortcuts.focus(); }
+        }
+        if View.selected != "" && !View.cable: MainScreen {
             title: View.title;
             node: View.node;
             bus-channels: View.bus-channels;

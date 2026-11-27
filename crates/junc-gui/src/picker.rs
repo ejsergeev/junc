@@ -34,6 +34,10 @@ pub enum Pick {
     Input(Match),
     /// A Listen output to this target (`default` or an output node.name).
     Listen(String),
+    /// A Cable's app to take audio from (board 12, "Change app…").
+    CableFrom(Match),
+    /// A Cable's app to deliver to.
+    CableTo(Match),
 }
 
 /// One row.
@@ -56,7 +60,7 @@ impl Entry {
     pub fn matcher(&self) -> Option<&Match> {
         match &self.pick {
             Pick::Input(m) => Some(m),
-            Pick::Listen(_) => None,
+            Pick::Listen(_) | Pick::CableFrom(_) | Pick::CableTo(_) => None,
         }
     }
 }
@@ -215,6 +219,53 @@ pub fn outputs(d: &Describe, junction: &str) -> Vec<Entry> {
         .collect();
     devices.sort_by_key(|e| e.label.to_lowercase());
     out.extend(devices);
+    out
+}
+
+/// The apps Cable `junction` can take audio from (`to` false: playing
+/// apps) or deliver to (`to` true: recording apps), by name; the one it
+/// has now is added.
+pub fn cable_apps(d: &Describe, junction: &str, to: bool) -> Vec<Entry> {
+    let Some(me) = d.junctions.iter().find(|j| j.id == junction) else {
+        return Vec::new();
+    };
+    let current = if to {
+        me.cable_to.as_ref()
+    } else {
+        me.inputs.first().map(|i| &i.matcher)
+    };
+    let kind = if to { "app_capture" } else { "app_playback" };
+    let mut out: Vec<Entry> = Vec::new();
+    for c in d.candidates.iter().filter(|c| c.kind == kind) {
+        let Some(name) = c.app.clone().or_else(|| c.binary.clone()) else {
+            continue;
+        };
+        let matcher = Match {
+            binary: c.binary.clone(),
+            app: c.binary.is_none().then(|| name.clone()),
+            ..Match::default()
+        };
+        let taken = |e: &Entry| match &e.pick {
+            Pick::CableFrom(m) | Pick::CableTo(m) => same(m, &matcher),
+            _ => false,
+        };
+        if out.iter().any(taken) {
+            continue;
+        }
+        out.push(Entry {
+            group: Group::Apps,
+            label: name,
+            icon: match_icon(&matcher),
+            cable: false,
+            added: current.is_some_and(|m| same(m, &matcher)),
+            pick: if to {
+                Pick::CableTo(matcher)
+            } else {
+                Pick::CableFrom(matcher)
+            },
+        });
+    }
+    out.sort_by_key(|e| e.label.to_lowercase());
     out
 }
 
@@ -384,5 +435,27 @@ mod tests {
         assert_eq!(filter(&e, "hdmi"), [2], "the search skips the default row");
         assert_eq!(filter(&e, "").len(), 3);
         assert!(outputs(&d, "gone").is_empty());
+    }
+
+    #[test]
+    fn a_cable_picks_playing_apps_to_take_from_and_recording_apps_to_feed() {
+        let mut d = describe();
+        d.junctions[1].cable_to = Some(Match {
+            binary: Some("obs".into()),
+            ..Match::default()
+        });
+        d.junctions[1].inputs[0].matcher = Match {
+            binary: Some("discord".into()),
+            ..Match::default()
+        };
+        let from = cable_apps(&d, "firefox-to-obs", false);
+        let rows: Vec<(&str, bool)> = from.iter().map(|e| (e.label.as_str(), e.added)).collect();
+        assert_eq!(rows, [("Discord", true), ("Spotify", false)]);
+        assert!(matches!(from[1].pick, Pick::CableFrom(_)));
+        let to = cable_apps(&d, "firefox-to-obs", true);
+        let rows: Vec<(&str, bool)> = to.iter().map(|e| (e.label.as_str(), e.added)).collect();
+        assert_eq!(rows, [("OBS", true)]);
+        assert!(matches!(to[0].pick, Pick::CableTo(_)));
+        assert!(cable_apps(&d, "gone", true).is_empty());
     }
 }

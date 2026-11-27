@@ -417,6 +417,37 @@ pub fn main(d: &Describe, id: &str) -> Option<Main> {
     })
 }
 
+/// What a Cable's screen (board 12) shows beyond its Main model: the app
+/// it delivers to, and its own master volume.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CableTo {
+    /// The app's name, else what the config matches.
+    pub name: String,
+    /// The app is running and hears the Cable.
+    pub running: bool,
+    pub volume: u16,
+}
+
+/// The app Junction `id` delivers to, when it is a Cable.
+pub fn cable_to(d: &Describe, id: &str) -> Option<CableTo> {
+    let j = d.junctions.iter().find(|j| j.id == id)?;
+    let to = j.cable_to.as_ref()?;
+    let name = d
+        .candidates
+        .iter()
+        .filter(|c| c.kind == "app_capture")
+        .find(|c| to.binary.is_some() && c.binary == to.binary)
+        .and_then(|c| c.app.clone())
+        .or_else(|| to.app.clone())
+        .or_else(|| to.binary.clone())
+        .unwrap_or_default();
+    Some(CableTo {
+        name,
+        running: j.cable_target == Some(State::Active),
+        volume: j.volume,
+    })
+}
+
 /// Per channel of Input card `card`: the Bus channel it feeds (the first,
 /// when several), 0 for none (Input Options, board 15).
 pub fn feeds(m: &Main, card: usize) -> Vec<i32> {

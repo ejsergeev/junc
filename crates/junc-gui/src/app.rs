@@ -55,8 +55,8 @@ pub struct App {
     creating: Option<Vec<String>>,
     /// The picker's rows and those the search shows, when it is open.
     picker: Option<(Vec<Entry>, Vec<usize>)>,
-    /// The open picker adds Listen outputs (board 17), not Inputs.
-    picker_listen: bool,
+    /// What the open picker picks.
+    picking: Picking,
     /// The Input card whose Options panel is open (boards 15, 30).
     options: Option<usize>,
 }
@@ -69,6 +69,16 @@ impl std::fmt::Debug for App {
             .field("options", &self.options)
             .finish_non_exhaustive()
     }
+}
+
+/// What the picker picks: Inputs (board 7), Listen outputs (board 17), a
+/// Cable's apps (board 12).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Picking {
+    Input,
+    Listen,
+    CableFrom,
+    CableTo,
 }
 
 /// Puts `rows` into `current` in place when the counts match, so the
@@ -120,7 +130,7 @@ pub fn install(
         checks: Vec::new(),
         creating: None,
         picker: None,
-        picker_listen: false,
+        picking: Picking::Input,
         options: None,
     }));
     // Runs `f` on the controller unless it is busy (a callback raised while
@@ -251,6 +261,14 @@ pub fn install(
         view.on_open_picker(move || c(&App::open_picker));
         let c = call.clone();
         view.on_open_listen_picker(move || c(&App::open_listen_picker));
+        let c = call.clone();
+        view.on_open_cable_picker(move |to| c(&|a| a.open_cable_picker(to)));
+        let c = call.clone();
+        view.on_cable_exclusive_changed(move |on| c(&|a| a.cable_exclusive(on)));
+        let c = call.clone();
+        view.on_cable_listen_toggled(move |on, i| c(&|a| a.cable_listen(on, i)));
+        let c = call.clone();
+        view.on_cable_listen_target(move |i| c(&|a| a.cable_listen_target(i)));
         let c = call.clone();
         view.on_options_toggled(move |i| c(&|a| a.toggle_options(i)));
         let c = call.clone();
@@ -412,7 +430,17 @@ impl App {
 
     /// Opens the Add Input picker on the selected Junction.
     pub fn open_picker(&mut self) {
-        self.open(false);
+        self.open(Picking::Input);
+    }
+
+    /// Opens the picker of the app a Cable takes from (`to` false) or
+    /// delivers to.
+    pub fn open_cable_picker(&mut self, to: bool) {
+        self.open(if to {
+            Picking::CableTo
+        } else {
+            Picking::CableFrom
+        });
     }
 
     /// Opens the Add Bus channels popover on the selected Junction.
@@ -424,20 +452,25 @@ impl App {
 
     /// Opens the Add Listen output picker on the selected Junction.
     pub fn open_listen_picker(&mut self) {
-        self.open(true);
+        self.open(Picking::Listen);
     }
 
-    fn open(&mut self, listen: bool) {
+    fn open(&mut self, picking: Picking) {
         if self.main.is_none() {
             return;
         }
         self.picker = Some((Vec::new(), Vec::new()));
-        self.picker_listen = listen;
+        self.picking = picking;
         if let Some(w) = self.window.upgrade() {
             let view = w.global::<View>();
             view.set_picker_search("".into());
             view.set_picker_cursor(0);
-            view.set_picker_listen(listen);
+            view.set_picker_listen(picking == Picking::Listen);
+            view.set_picker_cable(match picking {
+                Picking::CableFrom => 1,
+                Picking::CableTo => 2,
+                Picking::Input | Picking::Listen => 0,
+            });
         }
         self.load_picker();
         if let Some(w) = self.window.upgrade() {
@@ -452,10 +485,11 @@ impl App {
             return;
         };
         let view = w.global::<View>();
-        let entries = if self.picker_listen {
-            picker::outputs(d, id)
-        } else {
-            picker::entries(d, id)
+        let entries = match self.picking {
+            Picking::Input => picker::entries(d, id),
+            Picking::Listen => picker::outputs(d, id),
+            Picking::CableFrom => picker::cable_apps(d, id, false),
+            Picking::CableTo => picker::cable_apps(d, id, true),
         };
         let shown = picker::filter(&entries, view.get_picker_search().as_str());
         let items = ui::picker(&w.global::<Words>(), &entries, &shown);
@@ -486,6 +520,8 @@ impl App {
                 matcher: Box::new(matcher.clone()),
                 label: e.label.clone(),
             },
+            Pick::CableFrom(matcher) => Edit::CableFrom(Box::new(matcher.clone())),
+            Pick::CableTo(matcher) => Edit::CableTo(Box::new(matcher.clone())),
             Pick::Listen(target) => Edit::AddListen {
                 target: target.clone(),
                 label: if e.label.is_empty() {
@@ -587,6 +623,127 @@ impl App {
             view.set_options_h(r.h);
         }
         self.layout = Some(l);
+    }
+
+    /// The outputs a Cable's Listen select offers (board 12), as the Add
+    /// Listen picker lists them.
+    fn cable_outputs(&self) -> Vec<Entry> {
+        match (&self.describe, &self.selected) {
+            (Some(d), Some(id)) => picker::outputs(d, id),
+            _ => Vec::new(),
+        }
+    }
+
+    /// Fills the Cable screen (board 12) when the selected Junction is a
+    /// Cable.
+    fn show_cable(&self) {
+        let (Some(m), Some(d), Some(w)) = (&self.main, &self.describe, self.window.upgrade())
+        else {
+            return;
+        };
+        let view = w.global::<View>();
+        let Some(to) = main_view::cable_to(d, &m.id) else {
+            view.set_cable(false);
+            return;
+        };
+        let words = w.global::<Words>();
+        let outputs = self.cable_outputs();
+        let listen = m.listens.first();
+        let target = d
+            .junctions
+            .iter()
+            .find(|j| j.id == m.id)
+            .and_then(|j| j.listens.first())
+            .map_or("default", |l| l.target.as_str());
+        let index = outputs
+            .iter()
+            .position(|e| e.pick == Pick::Listen(target.to_owned()))
+            .unwrap_or(0);
+        let names: Vec<slint::SharedString> = outputs
+            .iter()
+            .map(|e| {
+                if e.label.is_empty() {
+                    words.invoke_default_output()
+                } else {
+                    e.label.as_str().into()
+                }
+            })
+            .collect();
+        update(view.get_cable_outputs(), names, |m| {
+            view.set_cable_outputs(m)
+        });
+        let from = m.inputs.first();
+        view.set_cable_from(from.map_or_else(String::new, |c| c.title.clone()).into());
+        view.set_cable_from_running(from.is_some_and(|c| c.state == main_view::CardState::Ok));
+        view.set_cable_exclusive(from.is_some_and(|c| c.exclusive));
+        view.set_cable_to(to.name.as_str().into());
+        view.set_cable_to_running(to.running);
+        view.set_cable_volume(i32::from(to.volume));
+        view.set_cable_listen(listen.is_some_and(|l| l.enabled));
+        view.set_cable_listen_index(i32::try_from(index).unwrap_or(0));
+        view.set_cable(true);
+    }
+
+    fn cable_exclusive(&mut self, on: bool) {
+        let Some(m) = &self.main else { return };
+        if let Some(c) = m.inputs.first() {
+            self.actions.send(Command::Edit {
+                junction: m.id.clone(),
+                edit: Edit::Exclusive {
+                    input: c.id.clone(),
+                    on,
+                },
+            });
+        }
+    }
+
+    /// The Cable's Listen switch: its Listen output on or off, made on the
+    /// output its select shows when it has none.
+    fn cable_listen(&mut self, on: bool, index: i32) {
+        let Some(m) = &self.main else { return };
+        let edit = match m.listens.first() {
+            Some(l) => Edit::Enabled(Part::Listen(l.id.clone()), on),
+            None if on => {
+                let outputs = self.cable_outputs();
+                let Some(Pick::Listen(target)) = usize::try_from(index)
+                    .ok()
+                    .and_then(|i| outputs.get(i))
+                    .map(|e| e.pick.clone())
+                else {
+                    return;
+                };
+                Edit::AddListen {
+                    label: target.clone(),
+                    target,
+                }
+            }
+            None => return,
+        };
+        self.actions.send(Command::Edit {
+            junction: m.id.clone(),
+            edit,
+        });
+    }
+
+    /// The Cable's Listen select: its Listen output to output `index`.
+    fn cable_listen_target(&mut self, index: i32) {
+        let Some(m) = &self.main else { return };
+        let Some(l) = m.listens.first() else { return };
+        let outputs = self.cable_outputs();
+        let Some(Pick::Listen(target)) = usize::try_from(index)
+            .ok()
+            .and_then(|i| outputs.get(i))
+            .map(|e| e.pick.clone())
+        else {
+            return;
+        };
+        self.actions.send(Command::Edit {
+            junction: m.id.clone(),
+            edit: Edit::ListenTarget {
+                listen: l.id.clone(),
+                target,
+            },
+        });
     }
 
     /// Opens Input card `i`'s Options panel, or closes it when open.
@@ -728,6 +885,7 @@ impl App {
                 view.set_offline(i32::try_from(m.offline).unwrap_or(0));
                 view.set_listen_count(i32::try_from(m.listens.len()).unwrap_or(0));
                 view.set_selected(m.id.as_str().into());
+                self.show_cable();
             }
             None => {
                 view.set_selected("".into());
