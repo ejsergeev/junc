@@ -43,6 +43,33 @@ pub fn flag(path: &Path, key: &str) -> Option<bool> {
 
 /// Sets `key` in the state file, keeping what else it holds.
 pub fn set_flag(path: &Path, key: &str, value: bool) -> std::io::Result<()> {
+    edit(path, |t| {
+        t.insert(key.to_owned(), value.into());
+    })
+}
+
+/// A text the state file keeps (`language`).
+pub fn text(path: &Path, key: &str) -> Option<String> {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|t| t.parse::<toml::Table>().ok())
+        .and_then(|t| t.get(key).and_then(toml::Value::as_str).map(str::to_owned))
+}
+
+/// Sets `key` to `value` in the state file, or removes it (`None`),
+/// keeping what else it holds.
+pub fn set_text(path: &Path, key: &str, value: Option<&str>) -> std::io::Result<()> {
+    edit(path, |t| match value {
+        Some(v) => {
+            t.insert(key.to_owned(), v.into());
+        }
+        None => {
+            t.remove(key);
+        }
+    })
+}
+
+fn edit(path: &Path, change: impl FnOnce(&mut toml::Table)) -> std::io::Result<()> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir)?;
     }
@@ -50,7 +77,7 @@ pub fn set_flag(path: &Path, key: &str, value: bool) -> std::io::Result<()> {
         .ok()
         .and_then(|t| t.parse::<toml::Table>().ok())
         .unwrap_or_default();
-    t.insert(key.to_owned(), value.into());
+    change(&mut t);
     let body = toml::to_string(&t).map_err(std::io::Error::other)?;
     std::fs::write(
         path,
@@ -91,6 +118,11 @@ mod tests {
         set_flag(&file, "follow_theme", false).expect("write");
         assert!(done(&file), "other keys stay");
         assert_eq!(flag(&file, "follow_theme"), Some(false));
+        set_text(&file, "language", Some("de")).expect("write");
+        assert_eq!(text(&file, "language").as_deref(), Some("de"));
+        set_text(&file, "language", None).expect("write");
+        assert_eq!(text(&file, "language"), None);
+        assert!(done(&file), "other keys stay");
         std::fs::write(&file, "not toml [").expect("write");
         assert!(!done(&file), "a broken file shows onboarding again");
         let _ = std::fs::remove_dir_all(&dir);
