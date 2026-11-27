@@ -1,0 +1,15 @@
+# GUI scenario: design board 20, "Audio service down" — juncd runs but
+# PipeWire does not answer: what doctor finds, Retry, Open logs.
+board = 20
+title = "Audio service down"
+base = "default"
+daemon = "waiting_for_pipewire"
+
+[[check]]
+id = "pipewire"
+status = "down"
+fix = "systemctl --user restart pipewire wireplumber"
+
+[[check]]
+id = "wireplumber"
+status = "down"

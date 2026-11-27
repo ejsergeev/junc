@@ -1,0 +1,28 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Audio service down' states=[enabled,sensitive,showing,visible]
+    label name='routing paused' states=[enabled,sensitive,showing,visible]
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name="Can't reach the audio service" states=[enabled,sensitive,showing,visible]
+    label name='Your Junctions are saved. Nothing is routed until PipeWire answers again.' states=[enabled,sensitive,showing,visible]
+    list box name='Audio service' states=[enabled,sensitive,showing,visible]
+      list item name='PipeWire' desc='not running: pipewire.service is not running' states=[focusable,enabled,sensitive,showing,visible]
+        label name='systemctl --user restart pipewire wireplumber' states=[enabled,sensitive,showing,visible]
+        button name='Copy' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      list item name='WirePlumber' desc='not running: Stopped with PipeWire' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='junc daemon' desc='waiting: Running · waiting for PipeWire' states=[focusable,enabled,sensitive,showing,visible]
+    button name='Retry' desc='Enter' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Open logs' desc='L' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Opens journalctl --user -u juncd' states=[enabled,sensitive,showing,visible]
