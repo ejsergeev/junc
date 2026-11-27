@@ -1,0 +1,6 @@
+# GUI scenario: design board 22, "Delete confirmation" — Ctrl+Delete or
+# Delete in the bottom bar: what goes with the Junction and what stays.
+board = 22
+title = "Delete confirmation"
+base = "default"
+delete = true
