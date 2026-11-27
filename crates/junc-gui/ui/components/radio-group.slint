@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Radio group (Spec: Add Bus channels popover): one choice of several;
-// ↑ ↓ change it, Space picks the focused one.
+// ↑ ↓ change it, Space picks the focused one. An option may have a detail
+// at its right ("Ch 5–6"); while focused, the chosen row has the hover
+// fill and border (board 16).
 
 import { Tokens } from "../tokens.slint";
 
@@ -8,6 +10,7 @@ export component JRadioGroup inherits Rectangle {
     forward-focus: keys;
     in property <string> label;
     in property <[string]> options;
+    in property <[string]> details;
     in-out property <int> selected: 0;
     callback changed(int);
     accessible-role: radio-group;
@@ -30,14 +33,21 @@ export component JRadioGroup inherits Rectangle {
         spacing: Tokens.space-label-gap;
         for o[i] in root.options: Rectangle {
             height: Tokens.size-control;
+            property <bool> marked: keys.has-focus && i == root.selected;
+            background: self.marked ? Tokens.control-hover-fill : transparent;
+            border-width: self.marked ? Tokens.border : 0;
+            border-color: Tokens.control-hover-border;
             accessible-role: radio-button;
             accessible-label: o;
             accessible-checkable: true;
             accessible-checked: i == root.selected;
+            accessible-description: i < root.details.length ? root.details[i] : "";
             accessible-action-default => { root.pick(i); }
             TouchArea { clicked => { keys.focus(); root.pick(i); } }
             HorizontalLayout {
                 spacing: Tokens.space-row-gap;
+                padding-left: root.details.length > 0 ? Tokens.space-row-pad-x : 0;
+                padding-right: root.details.length > 0 ? Tokens.space-row-pad-x : 0;
                 Rectangle {
                     width: 12px;
                     height: 12px;
@@ -55,6 +65,14 @@ export component JRadioGroup inherits Rectangle {
                     text: o;
                     vertical-alignment: center;
                     color: keys.has-focus && i == root.selected ? Tokens.accent : Tokens.text-default;
+                    horizontal-stretch: 1;
+                    accessible-role: none;
+                }
+                if i < root.details.length: Text {
+                    text: root.details[i];
+                    vertical-alignment: center;
+                    color: Tokens.text-subtle;
+                    font-size: Tokens.type-body-small;
                     accessible-role: none;
                 }
             }
