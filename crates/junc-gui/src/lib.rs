@@ -13,6 +13,7 @@ pub mod app;
 pub mod checks;
 pub mod daemon;
 pub mod edits;
+pub mod language;
 pub mod layout;
 pub mod linking;
 pub mod main_view;
