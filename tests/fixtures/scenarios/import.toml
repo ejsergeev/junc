@@ -1,0 +1,41 @@
+# GUI scenario: design board 24, "Import existing setups" — Settings ›
+# Existing setups › Import… (F13): what juncd found, each as a Junction
+# or a Cable.
+board = 24
+title = "Import existing setups"
+base = "default"
+import = true
+
+[[importable]]
+id = "discord_mix"
+kind = "null_sink"
+origin = "pactl load-module"
+name = "discord_mix"
+channels = 2
+inputs = [{ binary = "discord" }]
+listens = []
+recorded_by = []
+suggested = "junction"
+
+[[importable]]
+id = "firefox-to-obs"
+kind = "loopback"
+origin = "pw-loopback"
+name = "firefox → obs"
+channels = 2
+inputs = [{ binary = "firefox" }]
+listens = []
+recorded_by = [{ binary = "obs" }]
+cable = { from = { binary = "firefox" }, to = { binary = "obs" } }
+suggested = "cable"
+
+[[importable]]
+id = "stream_monitor"
+kind = "null_sink"
+origin = "config"
+name = "stream_monitor"
+channels = 2
+inputs = []
+listens = []
+recorded_by = []
+suggested = "junction"

@@ -42,7 +42,7 @@ application name='junc-gui' states=[]
     button name='Source code' states=[focusable,enabled,sensitive,showing,visible] actions=click
     label name='Existing setups' states=[enabled,sensitive,showing,visible]
     label name='Bring in null-sink and pw-loopback setups.' states=[enabled,sensitive,showing,visible]
-    button name='Import…' states=[focusable,showing,visible] actions=click
+    button name='Import…' states=[focusable,enabled,sensitive,showing,visible] actions=click
     label name='Diagnostics' states=[enabled,sensitive,showing,visible]
     label name='Versions, Junction graph and recent logs. No audio, no personal data.' states=[enabled,sensitive,showing,visible]
     button name='Copy bug report…' states=[focusable,showing,visible] actions=click
