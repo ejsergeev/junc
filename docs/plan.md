@@ -459,9 +459,26 @@ de/ja, AT-SPI dump, keyboard test):
   FocusScope takes a press by default (`focus-on-click`), and replacing
   a model recreates its elements mid-drag. Not built: the sample rate
   in the headers (Describe has none), ← → on channel groups (none drawn).
-- [ ] **B19** [auto] Tray (DBusMenu tree test), service down, context menu
+- [x] **B19** [auto] Tray (DBusMenu tree test), service down, context menu
   (duplicate), delete confirmation, app closed, import, settings, rename,
   new Cable. Req: F1, F5, F9, F10, F13, F21.
+  Done 2026-11-27 (architecture §7.2, §7.8, as built), one PR per part:
+  Rename in place (board 26, F2); the delete confirmation with what goes
+  and what stays (22, Ctrl+Delete); the Junction context menu with
+  Duplicate (21, the Menu key, Ctrl+D); an app that quit shown as waiting
+  (23); New Cable held as a draft until both apps are picked (27,
+  Ctrl+Shift+K, the New menu); "Can't reach the audio service" while
+  PipeWire is away (20); Settings with Start at login, enabled at the end
+  of onboarding, and the theme switch (25, Ctrl+,); Import existing
+  setups through `junc import` (24); the tray, JUNC's own
+  StatusNotifierItem and DBusMenu on zbus (19, owner decision), tested as
+  a DBusMenu tree. 9 new scenarios with goldens in four languages and
+  their AT-SPI trees. Greyed until their stage: the language rows (B20),
+  Copy bug report… and Run checks (B22), presets in the menus (B22), a
+  default sample rate. Not built: naming the apps that record from a
+  deleted Junction (juncd does not report them), the Third-party
+  licenses link (waits for the package's licence file), destroying the
+  hidden window behind the tray.
 - [ ] **B20** [auto] Language picker, German, Japanese (Arabic shows English).
   Req: F14.
 - [ ] **B21** [auto] Pro Audio prompt, multichannel Input, use as default,
