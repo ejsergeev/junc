@@ -33,24 +33,39 @@ pub fn state_file() -> Option<PathBuf> {
     Some(state.join("junc/gui.toml"))
 }
 
-/// Whether onboarding was finished, as `path` says.
-pub fn done(path: &Path) -> bool {
+/// A yes/no the state file at `path` keeps (`onboarded`, `follow_theme`).
+pub fn flag(path: &Path, key: &str) -> Option<bool> {
     std::fs::read_to_string(path)
         .ok()
         .and_then(|t| t.parse::<toml::Table>().ok())
-        .and_then(|t| t.get("onboarded").and_then(toml::Value::as_bool))
-        .unwrap_or(false)
+        .and_then(|t| t.get(key).and_then(toml::Value::as_bool))
+}
+
+/// Sets `key` in the state file, keeping what else it holds.
+pub fn set_flag(path: &Path, key: &str, value: bool) -> std::io::Result<()> {
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    let mut t = std::fs::read_to_string(path)
+        .ok()
+        .and_then(|t| t.parse::<toml::Table>().ok())
+        .unwrap_or_default();
+    t.insert(key.to_owned(), value.into());
+    let body = toml::to_string(&t).map_err(std::io::Error::other)?;
+    std::fs::write(
+        path,
+        format!("# junc-gui's own state; safe to delete (onboarding shows again).\n{body}"),
+    )
+}
+
+/// Whether onboarding was finished, as `path` says.
+pub fn done(path: &Path) -> bool {
+    flag(path, "onboarded").unwrap_or(false)
 }
 
 /// Records that onboarding is finished.
 pub fn mark_done(path: &Path) -> std::io::Result<()> {
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir)?;
-    }
-    std::fs::write(
-        path,
-        "# junc-gui's own state; safe to delete (onboarding shows again).\nonboarded = true\n",
-    )
+    set_flag(path, "onboarded", true)
 }
 
 /// Whether to show onboarding: not done yet and juncd has no Junctions
@@ -72,6 +87,10 @@ mod tests {
         assert!(done(&file));
         std::fs::write(&file, "onboarded = false\n").expect("write");
         assert!(!done(&file));
+        mark_done(&file).expect("write");
+        set_flag(&file, "follow_theme", false).expect("write");
+        assert!(done(&file), "other keys stay");
+        assert_eq!(flag(&file, "follow_theme"), Some(false));
         std::fs::write(&file, "not toml [").expect("write");
         assert!(!done(&file), "a broken file shows onboarding again");
         let _ = std::fs::remove_dir_all(&dir);
