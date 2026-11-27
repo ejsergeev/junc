@@ -13,6 +13,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#: crates/junc-gui/ui/app.slint
+msgid "Off · apps see silence"
+msgstr "オフ · アプリには無音"
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "ケーブル"
@@ -247,6 +251,14 @@ msgstr "名前を変更"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
 msgstr "デフォルト"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Junction is off — apps see silence"
+msgstr "ジャンクションはオフです — アプリには無音が届きます"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Turn on"
+msgstr "オンにする"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Inputs"

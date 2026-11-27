@@ -13,6 +13,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: crates/junc-gui/ui/app.slint
+msgid "Off · apps see silence"
+msgstr "Aus · Apps hören Stille"
+
 #: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "Kabel"
@@ -250,6 +254,14 @@ msgstr "Umbenennen"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
 msgstr "Standard"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Junction is off — apps see silence"
+msgstr "Junction ist aus – Apps hören Stille"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Turn on"
+msgstr "Einschalten"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Inputs"
