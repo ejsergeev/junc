@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 (design boards 12–18, 30) against their
-//! scenarios' mock IPC, on Slint's testing backend: what each shows and
-//! that the keyboard and the pointer change the config the way juncd
-//! would be asked to (F3, F4, F5, F6, F8, F11).
+//! The Main screen's states of B18 and B19 (design boards 12–18, 26, 30)
+//! against their scenarios' mock IPC, on Slint's testing backend: what
+//! each shows and that the keyboard and the pointer change the config the
+//! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
 
 use i_slint_backend_testing::{ElementHandle, mock_elapsed_time};
 use junc_gui::meter_service::Levels;
@@ -464,4 +464,35 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
         .find(|l| l.id == "builtin")
         .expect("builtin");
     assert_eq!(builtin.links, Some(vec![[2, 2]]));
+    drop((w, app, mock));
+
+    // Board 26: F2 opens the name selected; typing replaces it, Enter
+    // saves. F2 again, Esc: the name stays. The pencil opens it too.
+    let (w, _app, mock) = open("default");
+    let view = w.global::<View>();
+    let name = |m: &Mock| m.config().expect("config").junction[0].name.clone();
+    key(&w, Key::F2);
+    settle();
+    assert!(view.get_renaming());
+    assert!(has(&w, "Name"));
+    for c in "Zoom Mic".chars() {
+        key(&w, c.to_string());
+    }
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_renaming());
+    assert_eq!(name(&mock), "Zoom Mic");
+    key(&w, Key::F2);
+    settle();
+    key(&w, "x");
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_renaming());
+    assert_eq!(name(&mock), "Zoom Mic");
+    ElementHandle::find_by_accessible_label(&w, "Rename")
+        .next()
+        .expect("pencil")
+        .invoke_accessible_default_action();
+    settle();
+    assert!(view.get_renaming());
 }
