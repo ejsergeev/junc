@@ -50,6 +50,14 @@ msgid "Settings"
 msgstr "設定"
 
 #: crates/junc-gui/ui/app.slint
+msgid "Audio service down"
+msgstr "オーディオサービス停止"
+
+#: crates/junc-gui/ui/app.slint
+msgid "routing paused"
+msgstr "ルーティング一時停止"
+
+#: crates/junc-gui/ui/app.slint
 msgid "juncd is not running"
 msgstr "juncd が実行されていません"
 
@@ -620,11 +628,11 @@ msgstr "JUNC へようこそ"
 msgid "JUNC builds on PipeWire. Checking that the pieces it needs are installed and running."
 msgstr "JUNC は PipeWire の上で動きます。必要な部品がインストールされ動いているか確認しています。"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "running"
 msgstr "実行中"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "Checking…"
 msgstr "確認中…"
 
@@ -719,6 +727,46 @@ msgstr "選択"
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Create {0}"
 msgstr "{0} を作成"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Can't reach the audio service"
+msgstr "オーディオサービスに接続できません"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Your Junctions are saved. Nothing is routed until PipeWire answers again."
+msgstr "ジャンクションは保存されています。PipeWire が応答するまでルーティングは行われません。"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Audio service"
+msgstr "オーディオサービス"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Stopped with PipeWire"
+msgstr "PipeWire とともに停止"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "{0} is not running"
+msgstr "{0} は実行されていません"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "junc daemon"
+msgstr "junc デーモン"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Running · waiting for PipeWire"
+msgstr "実行中 · PipeWire を待機中"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Retry"
+msgstr "再試行"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Open logs"
+msgstr "ログを開く"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Opens {0}"
+msgstr "{0} を開きます"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Running apps"

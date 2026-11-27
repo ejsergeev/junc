@@ -41,6 +41,14 @@ msgid "Settings"
 msgstr ""
 
 #: crates/junc-gui/ui/app.slint
+msgid "Audio service down"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "routing paused"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
 msgid "juncd is not running"
 msgstr ""
 
@@ -614,11 +622,11 @@ msgstr ""
 msgid "JUNC builds on PipeWire. Checking that the pieces it needs are installed and running."
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "running"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "Checking…"
 msgstr ""
 
@@ -712,6 +720,46 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Create {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Can't reach the audio service"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Your Junctions are saved. Nothing is routed until PipeWire answers again."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Audio service"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Stopped with PipeWire"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "{0} is not running"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "junc daemon"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Running · waiting for PipeWire"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Retry"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Open logs"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Opens {0}"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint

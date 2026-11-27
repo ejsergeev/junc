@@ -50,6 +50,14 @@ msgid "Settings"
 msgstr "Einstellungen"
 
 #: crates/junc-gui/ui/app.slint
+msgid "Audio service down"
+msgstr "Audiodienst ausgefallen"
+
+#: crates/junc-gui/ui/app.slint
+msgid "routing paused"
+msgstr "Routing pausiert"
+
+#: crates/junc-gui/ui/app.slint
 msgid "juncd is not running"
 msgstr "juncd läuft nicht"
 
@@ -623,11 +631,11 @@ msgstr "Willkommen bei JUNC"
 msgid "JUNC builds on PipeWire. Checking that the pieces it needs are installed and running."
 msgstr "JUNC baut auf PipeWire auf. Prüfe, ob die nötigen Teile installiert sind und laufen."
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "running"
 msgstr "läuft"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "Checking…"
 msgstr "Prüfe…"
 
@@ -722,6 +730,46 @@ msgstr "wählen"
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Create {0}"
 msgstr "{0} erstellen"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Can't reach the audio service"
+msgstr "Audiodienst nicht erreichbar"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Your Junctions are saved. Nothing is routed until PipeWire answers again."
+msgstr "Deine Junctions sind gespeichert. Nichts wird geroutet, bis PipeWire wieder antwortet."
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Audio service"
+msgstr "Audiodienst"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Stopped with PipeWire"
+msgstr "Mit PipeWire gestoppt"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "{0} is not running"
+msgstr "{0} läuft nicht"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "junc daemon"
+msgstr "junc-Daemon"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Running · waiting for PipeWire"
+msgstr "Läuft · wartet auf PipeWire"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Retry"
+msgstr "Erneut versuchen"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Open logs"
+msgstr "Logs öffnen"
+
+#: crates/junc-gui/ui/screens/service-down.slint
+msgid "Opens {0}"
+msgstr "Öffnet {0}"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Running apps"
