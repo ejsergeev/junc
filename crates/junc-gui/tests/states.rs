@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 21–23, 26, 27, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–23, 26, 27, 30)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -619,4 +619,19 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     key(&w, "\n");
     settle();
     assert_eq!(app.borrow().selected(), Some(junc_gui::app::DRAFT));
+    drop((w, app, mock));
+
+    // Board 20: PipeWire does not answer. Doctor's rows show; L opens
+    // juncd's journal; Enter checks again.
+    let (w, _app, mock) = open("serviceDown");
+    let view = w.global::<View>();
+    assert!(has(&w, "Can't reach the audio service"));
+    assert!(has(&w, "Audio service down"));
+    assert_eq!(view.get_service_checks().row_count(), 2);
+    key(&w, "l");
+    assert!(mock.logs_opened());
+    key(&w, "\n");
+    assert!(view.get_checking());
+    settle();
+    assert!(!view.get_checking());
 }
