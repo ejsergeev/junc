@@ -1263,6 +1263,20 @@ under the field, pushing what follows down; its owner sets the choice.
 `JButton.controlled` (a toggle whose state its owner sets; it stays a
 toggle button to assistive technology).
 
+As built (B18, Cable selected): a Cable has its own screen
+(`ui/screens/cable.slint`, board 12) in place of the Main screen. From
+(the app it takes from) and To (the app that hears it as its input), the
+Main model's Input card and Bus channels with their meters, linked
+straight across, dashed in mark.dim while either app is away; under them
+the Cable's volume (`Junction.SetVolume`), Listen (a switch and the
+outputs of `picker::outputs` in a `JSelect`: on makes a Listen output on
+the output shown, `Edit::ListenTarget` moves it) and Exclusive. "Change
+app…" opens the picker of playing apps (From, `Edit::CableFrom`) or
+recording apps (To, `Edit::CableTo`), the one it has marked added
+(`picker::cable_apps`). `main_view::cable_to` names the To app from the
+recording candidates. Not built: the sample rate in the header (Describe
+has none).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1857,8 +1871,9 @@ other boards, languages and Weston come with the screens that show them.
   the picker and the empty Listen column, and adds Bus channels (Enter,
   ↓ for mono, Esc), and drives Input Options (Exclusive, a select by
   pointer and keys, Esc, Del); boards 15 and 30 are `inputOptions` and
-  `inputOptionsNarrow` (fixture `options`, the card's index); `check.sh`
-  compares their AT-SPI trees.
+  `inputOptionsNarrow` (fixture `options`, the card's index), and a
+  Cable (`cable`, board 12: Exclusive, Listen on and to another output,
+  both Change app… pickers); `check.sh` compares their AT-SPI trees.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private

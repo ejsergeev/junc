@@ -451,6 +451,7 @@ de/ja, AT-SPI dump, keyboard test):
   Add Listen output done 2026-11-27: the picker of board 17 (Ctrl+M).
   Add Bus done 2026-11-27: board 16's popover (Ctrl+Shift+N).
   Input Options (+ narrow) done 2026-11-27: boards 15 and 30.
+  Cable selected done 2026-11-27: board 12, its own screen.
 - [ ] **B19** [auto] Tray (DBusMenu tree test), service down, context menu
   (duplicate), delete confirmation, app closed, import, settings, rename,
   new Cable. Req: F1, F5, F9, F10, F13, F21.
