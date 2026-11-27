@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 21–23, 26, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 21–23, 26, 27, 30)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -567,4 +567,56 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     assert_eq!(w.global::<View>().get_waiting(), 1);
     assert!(has(&w, "Waiting for Spotify…"));
     assert!(has(&w, "· 1 waiting"));
+    drop((w, _app, _mock));
+
+    // Board 27: a New Cable stays in the window until both apps are
+    // chosen: Enter picks Discord, the To picker opens, Enter picks OBS
+    // and the Cable is written and selected.
+    let (w, app, mock) = open("newCable");
+    let view = w.global::<View>();
+    assert_eq!(app.borrow().selected(), Some(junc_gui::app::DRAFT));
+    assert!(view.get_cable_draft());
+    assert!(has(&w, "No app yet"));
+    assert_eq!(mock.config().expect("config").junction.len(), 2);
+    assert_eq!(view.get_picker_cable(), 1);
+    key(&w, "\n");
+    settle();
+    assert!(view.get_picker_open());
+    assert_eq!(view.get_picker_cable(), 2);
+    key(&w, "\n");
+    settle();
+    let config = mock.config().expect("config");
+    let cable = config.junction.last().expect("cable");
+    assert_eq!(cable.name, "New Cable");
+    assert_eq!(cable.input[0].matcher.binary.as_deref(), Some("discord"));
+    assert_eq!(
+        cable.cable.as_ref().and_then(|c| c.to.binary.as_deref()),
+        Some("obs")
+    );
+    assert_eq!(app.borrow().selected(), Some("new-cable"));
+    assert!(!view.get_cable_draft());
+    drop((w, app, mock));
+
+    // Ctrl+Shift+K makes one; Delete drops it without asking juncd.
+    let (w, app, mock) = open("default");
+    ctrl_shift(&w, true, "K");
+    settle();
+    assert_eq!(app.borrow().selected(), Some(junc_gui::app::DRAFT));
+    key(&w, Key::Escape);
+    settle();
+    w.global::<View>().invoke_delete_junction();
+    settle();
+    assert_ne!(app.borrow().selected(), Some(junc_gui::app::DRAFT));
+    assert_eq!(mock.config().expect("config").junction.len(), 2);
+
+    // The New button's menu makes a Cable too.
+    ElementHandle::find_by_accessible_label(&w, "New")
+        .find(|e| e.accessible_role() == Some(i_slint_backend_testing::AccessibleRole::Button))
+        .expect("New")
+        .invoke_accessible_default_action();
+    settle();
+    key(&w, Key::DownArrow);
+    key(&w, "\n");
+    settle();
+    assert_eq!(app.borrow().selected(), Some(junc_gui::app::DRAFT));
 }
