@@ -11,6 +11,10 @@ export struct MenuItem {
     detail: string,
     shortcut: string,
     enabled: bool,
+    // A divider above it (board 21's groups).
+    separator: bool,
+    // Deletes something: in the urgent colour.
+    destructive: bool,
 }
 
 export component JMenu inherits Rectangle {
@@ -45,11 +49,9 @@ export component JMenu inherits Rectangle {
     VerticalLayout {
         padding: 6px;
         for item[i] in root.items: Rectangle {
-            height: item.detail == "" ? Tokens.size-control : 42px * Tokens.scale;
+            property <length> gap: item.separator ? 9px * Tokens.scale : 0;
             property <bool> on: i == root.cursor;
-            background: self.on ? Tokens.control-hover-fill : transparent;
-            border-width: self.on ? Tokens.border : 0;
-            border-color: Tokens.control-hover-border;
+            height: (item.detail == "" ? Tokens.size-control : 42px * Tokens.scale) + self.gap;
             opacity: item.enabled ? 1 : 0.45;
             accessible-role: list-item;
             accessible-label: item.text;
@@ -60,32 +62,44 @@ export component JMenu inherits Rectangle {
             accessible-item-index: i;
             accessible-item-count: root.items.length;
             accessible-action-default => { root.run(i); }
-            TouchArea {
-                clicked => { root.run(i); }
-                moved => { root.cursor = i; }
+            if item.separator: Rectangle {
+                y: (parent.gap - self.height) / 2;
+                height: Tokens.border;
+                background: Tokens.line-divider;
             }
-            HorizontalLayout {
-                padding-left: Tokens.space-row-pad-x;
-                padding-right: Tokens.space-row-pad-x;
-                spacing: Tokens.space-row-gap;
-                VerticalLayout {
-                    alignment: center;
-                    horizontal-stretch: 1;
-                    Text {
-                        text: item.text;
-                        color: i == root.cursor ? Tokens.accent : Tokens.text-strong;
-                        accessible-role: none;
-                    }
-                    if item.detail != "": Text {
-                        text: item.detail;
-                        color: Tokens.text-subtle;
-                        font-size: Tokens.type-body-small;
-                        accessible-role: none;
-                    }
+            Rectangle {
+                y: parent.gap;
+                height: parent.height - parent.gap;
+                background: parent.on ? Tokens.control-hover-fill : transparent;
+                border-width: parent.on ? Tokens.border : 0;
+                border-color: Tokens.control-hover-border;
+                TouchArea {
+                    clicked => { root.run(i); }
+                    moved => { root.cursor = i; }
                 }
-                if item.shortcut != "": JKbd {
-                    y: (parent.height - self.height) / 2;
-                    text: item.shortcut;
+                HorizontalLayout {
+                    padding-left: Tokens.space-row-pad-x;
+                    padding-right: Tokens.space-row-pad-x;
+                    spacing: Tokens.space-row-gap;
+                    VerticalLayout {
+                        alignment: center;
+                        horizontal-stretch: 1;
+                        Text {
+                            text: item.text;
+                            color: item.destructive ? Tokens.status-urgent : i == root.cursor ? Tokens.accent : Tokens.text-strong;
+                            accessible-role: none;
+                        }
+                        if item.detail != "": Text {
+                            text: item.detail;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            accessible-role: none;
+                        }
+                    }
+                    if item.shortcut != "": JKbd {
+                        y: (parent.height - self.height) / 2;
+                        text: item.shortcut;
+                    }
                 }
             }
         }
