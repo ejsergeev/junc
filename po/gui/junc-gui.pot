@@ -108,7 +108,7 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
-#: crates/junc-gui/ui/components/confirm.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr ""
 
@@ -201,6 +201,34 @@ msgid "{0} ← Ch {1}"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Add Bus channels"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Stereo pair"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Mono"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Ch {0}–{1}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Apps that pick this Junction see {0} channels."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "A Bus has at most 64 channels."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Add"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "{n} App"
 msgid_plural "{n} Apps"
 msgstr[0] ""
@@ -267,10 +295,6 @@ msgid "Bus"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Add Bus channels"
-msgstr ""
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Listen"
 msgstr ""
 
@@ -292,10 +316,6 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Add listen output"
-msgstr ""
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Ch {0}–{1}"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
