@@ -8,7 +8,7 @@
 //! D-Bus methods and do not come through here.
 
 use junc_core::config::slugify;
-use junc_core::model::{Config, Input, Listen, Match};
+use junc_core::model::{Config, Input, Listen, MAX_BUS_CHANNELS, Match};
 
 /// An Input or a Listen output of a Junction.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,6 +37,8 @@ pub enum Edit {
     /// Add a Listen output to `target` (`default` or an output node.name);
     /// its id comes from `label`.
     AddListen { target: String, label: String },
+    /// Add this many channels to the Bus (board 16: a pair or one).
+    AddBus(u8),
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
@@ -50,6 +52,14 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
         Edit::AddInput { matcher, label } => {
             let id = unique_id(label, j.input.iter().map(|i| i.id.as_str()));
             j.input.push(new_input(id, (**matcher).clone()));
+            return true;
+        }
+        Edit::AddBus(n) => {
+            let wanted = j.bus.channels.saturating_add(*n);
+            if wanted > MAX_BUS_CHANNELS {
+                return false;
+            }
+            j.bus.channels = wanted;
             return true;
         }
         Edit::AddListen { target, label } => {
@@ -69,7 +79,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     i.links = Some(remaining(i.links.as_deref(), in_use, remove));
                 }
-                Edit::AddInput { .. } | Edit::AddListen { .. } => {}
+                Edit::AddInput { .. } | Edit::AddListen { .. } | Edit::AddBus(_) => {}
             }
         }
         Part::Listen(id) => {
@@ -82,7 +92,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     l.links = Some(remaining(l.links.as_deref(), in_use, remove));
                 }
-                Edit::AddInput { .. } | Edit::AddListen { .. } => {}
+                Edit::AddInput { .. } | Edit::AddListen { .. } | Edit::AddBus(_) => {}
             }
         }
     }
@@ -309,5 +319,20 @@ target = "default"
                 label: "default".into()
             }
         ));
+    }
+
+    #[test]
+    fn the_bus_grows_by_a_pair_or_one_up_to_its_limit() {
+        let mut c = config();
+        assert!(apply(&mut c, "zoom", &Edit::AddBus(2)));
+        assert!(apply(&mut c, "zoom", &Edit::AddBus(1)));
+        assert_eq!(c.junction[0].bus.channels, 7);
+        c.junction[0].bus.channels = MAX_BUS_CHANNELS - 1;
+        assert!(!apply(&mut c, "zoom", &Edit::AddBus(2)), "never past 64");
+        assert_eq!(c.junction[0].bus.channels, MAX_BUS_CHANNELS - 1);
+        assert!(apply(&mut c, "zoom", &Edit::AddBus(1)));
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
+        assert!(!apply(&mut c, "gone", &Edit::AddBus(1)));
     }
 }
