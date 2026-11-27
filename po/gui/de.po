@@ -17,7 +17,7 @@ msgstr ""
 msgid "Off · apps see silence"
 msgstr "Aus · Apps hören Stille"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "Kabel"
 
@@ -97,7 +97,7 @@ msgstr "Preset importieren…"
 msgid "Delete…"
 msgstr "Löschen…"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/import.slint
 msgid "Junction"
 msgstr "Junction"
 
@@ -173,9 +173,55 @@ msgstr "passt nicht"
 msgid "Copy"
 msgstr "Kopieren"
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr "Abbrechen"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "capture {0}, playback to {1}"
+msgstr "Aufnahme von {0}, Wiedergabe an {1}"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "no apps connected"
+msgstr "keine Apps verbunden"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "loaded with {0}"
+msgstr "geladen mit {0}"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "from a PipeWire config file"
+msgstr "aus einer PipeWire-Konfigurationsdatei"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "{n} connected"
+msgid_plural "{n} connected"
+msgstr[0] "{n} verbunden"
+msgstr[1] "{n} verbunden"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import as"
+msgstr "Importieren als"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import existing setups"
+msgstr "Bestehende Setups importieren"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Found in the running PipeWire graph. Imported setups become Junctions or Cables that JUNC keeps alive; remove the old modules yourself when you're happy."
+msgstr "Im laufenden PipeWire-Graphen gefunden. Importierte Setups werden zu Junctions oder Kabeln, die JUNC am Leben hält; entferne die alten Module selbst, wenn alles passt."
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Looking for setups…"
+msgstr "Suche nach Setups…"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "No null sinks or loopbacks to import."
+msgstr "Keine null-sinks oder Loopbacks zum Importieren."
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import {0}"
+msgstr "{0} importieren"
 
 #: crates/junc-gui/ui/components/inline-field.slint
 msgid "save"

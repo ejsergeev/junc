@@ -17,7 +17,7 @@ msgstr ""
 msgid "Off · apps see silence"
 msgstr "オフ · アプリには無音"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "ケーブル"
 
@@ -97,7 +97,7 @@ msgstr "プリセットを読み込む…"
 msgid "Delete…"
 msgstr "削除…"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/import.slint
 msgid "Junction"
 msgstr "ジャンクション"
 
@@ -173,9 +173,54 @@ msgstr "不一致"
 msgid "Copy"
 msgstr "コピー"
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr "キャンセル"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "capture {0}, playback to {1}"
+msgstr "{0} を取り込み、{1} へ再生"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "no apps connected"
+msgstr "接続されたアプリなし"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "loaded with {0}"
+msgstr "{0} で読み込み"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "from a PipeWire config file"
+msgstr "PipeWire の設定ファイルから"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "{n} connected"
+msgid_plural "{n} connected"
+msgstr[0] "{n} 件接続"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import as"
+msgstr "インポート形式"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import existing setups"
+msgstr "既存の構成をインポート"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Found in the running PipeWire graph. Imported setups become Junctions or Cables that JUNC keeps alive; remove the old modules yourself when you're happy."
+msgstr "実行中の PipeWire グラフで見つかりました。インポートした構成は JUNC が維持するジャンクションまたはケーブルになります。問題がなければ古いモジュールはご自身で削除してください。"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Looking for setups…"
+msgstr "構成を検索中…"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "No null sinks or loopbacks to import."
+msgstr "インポートできる null-sink やループバックはありません。"
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import {0}"
+msgstr "{0} 件をインポート"
 
 #: crates/junc-gui/ui/components/inline-field.slint
 msgid "save"

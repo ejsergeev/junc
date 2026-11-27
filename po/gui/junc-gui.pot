@@ -8,7 +8,7 @@ msgstr ""
 msgid "Off · apps see silence"
 msgstr ""
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr ""
 
@@ -88,7 +88,7 @@ msgstr ""
 msgid "Delete…"
 msgstr ""
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/import.slint
 msgid "Junction"
 msgstr ""
 
@@ -164,8 +164,54 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "capture {0}, playback to {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "no apps connected"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "loaded with {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "from a PipeWire config file"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "{n} connected"
+msgid_plural "{n} connected"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import as"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import existing setups"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Found in the running PipeWire graph. Imported setups become Junctions or Cables that JUNC keeps alive; remove the old modules yourself when you're happy."
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Looking for setups…"
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "No null sinks or loopbacks to import."
+msgstr ""
+
+#: crates/junc-gui/ui/components/import.slint
+msgid "Import {0}"
 msgstr ""
 
 #: crates/junc-gui/ui/components/inline-field.slint
