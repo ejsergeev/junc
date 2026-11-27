@@ -1277,6 +1277,24 @@ recording apps (To, `Edit::CableTo`), the one it has marked added
 recording candidates. Not built: the sample rate in the header (Describe
 has none).
 
+As built (B18, links): a link is made from any port (boards 13, 14).
+Pressing a port and dragging draws the link to the pointer; the ports it
+may end at (`linking::targets`: across the Bus, Input ↔ Bus in and Bus
+out ↔ Listen, none it is linked to, no card that is off) get an accent
+border, the one within 16 px of the pointer snaps (`linking::snap`), a tip
+names the link ("Soundux 1 (L) → Ch 1", Esc) and releasing there links;
+anywhere else nothing happens. Enter on a focused port starts one with
+the keys: the first target is chosen, ↑ ↓ step through them top to
+bottom, the line is dashed, Enter connects, Esc cancels. The bottom bar
+shows only the keys that apply meanwhile. A link adds its pair through
+`GetConfig` → `Apply` (`Edit::Link`; the pairs in use become the config's
+own list, and the pair is no longer one another tool removed). The
+canvas updates its card, port and link models in place (`app::update`),
+so a port keeps the pointer while the canvas changes under a drag; the
+canvas no longer scrolls by dragging (the wheel does), and a port's
+FocusScope leaves the press to its TouchArea (`focus-on-click: false`,
+Slint's default would take it).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1873,7 +1891,9 @@ other boards, languages and Weston come with the screens that show them.
   pointer and keys, Esc, Del); boards 15 and 30 are `inputOptions` and
   `inputOptionsNarrow` (fixture `options`, the card's index), and a
   Cable (`cable`, board 12: Exclusive, Listen on and to another output,
-  both Change app… pickers); `check.sh` compares their AT-SPI trees.
+  both Change app… pickers), and links (`linkDrag`, `linkKeys`, fixture
+  `link` with `link_keys`: a drag from Soundux onto Bus 1, Enter ↓ Enter,
+  Enter Esc); `check.sh` compares their AT-SPI trees.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
