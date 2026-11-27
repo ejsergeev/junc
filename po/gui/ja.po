@@ -45,7 +45,7 @@ msgstr "{0} の音量"
 msgid "Junctions"
 msgstr "ジャンクション"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Settings"
 msgstr "設定"
 
@@ -185,7 +185,7 @@ msgstr "保存"
 msgid "cancel"
 msgstr "キャンセル"
 
-#: crates/junc-gui/ui/components/language-row.slint
+#: crates/junc-gui/ui/components/language-row.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Follow Omarchy (Setup > Language)"
 msgstr "Omarchy に従う (Setup > Language)"
 
@@ -193,7 +193,7 @@ msgstr "Omarchy に従う (Setup > Language)"
 msgid "Current: {0}"
 msgstr "現在: {0}"
 
-#: crates/junc-gui/ui/components/language-row.slint
+#: crates/junc-gui/ui/components/language-row.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Language"
 msgstr "言語"
 
@@ -616,7 +616,7 @@ msgstr "JACK アプリからジャンクションが見える"
 msgid "Step {0} of {1}"
 msgstr "ステップ {0}/{1}"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
 msgid "System check"
 msgstr "システムチェック"
 
@@ -760,13 +760,125 @@ msgstr "実行中 · PipeWire を待機中"
 msgid "Retry"
 msgstr "再試行"
 
-#: crates/junc-gui/ui/screens/service-down.slint
+#: crates/junc-gui/ui/screens/service-down.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Open logs"
 msgstr "ログを開く"
 
 #: crates/junc-gui/ui/screens/service-down.slint
 msgid "Opens {0}"
 msgstr "{0} を開きます"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Close"
+msgstr "閉じる"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "General"
+msgstr "一般"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Start at login"
+msgstr "ログイン時に起動"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Runs juncd as a systemd user service, so Junctions exist before you open the app."
+msgstr "juncd を systemd ユーザーサービスとして実行し、アプリを開く前からジャンクションを使えるようにします。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Default sample rate"
+msgstr "既定のサンプルレート"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Used for new Junctions and Cables."
+msgstr "新しいジャンクションとケーブルに使われます。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Follow PipeWire"
+msgstr "PipeWire に従う"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Current language: {0}"
+msgstr "現在の言語: {0}"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Follows Omarchy. Turn off the switch above to pick one."
+msgstr "Omarchy に従います。選ぶには上のスイッチをオフにしてください。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Appearance"
+msgstr "外観"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Follow Omarchy theme"
+msgstr "Omarchy のテーマに従う"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Retints with omarchy-theme-set. Off: use the theme JUNC ships with."
+msgstr "omarchy-theme-set で配色が変わります。オフ: JUNC 付属のテーマを使います。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "About"
+msgstr "情報"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Version"
+msgstr "バージョン"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "JUNC for Linux"
+msgstr "JUNC for Linux"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "License"
+msgstr "ライセンス"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Free software under the GNU GPL."
+msgstr "GNU GPL のフリーソフトウェアです。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Source code"
+msgstr "ソースコード"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Existing setups"
+msgstr "既存の構成"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Bring in null-sink and pw-loopback setups."
+msgstr "null-sink と pw-loopback の構成を取り込みます。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Import…"
+msgstr "インポート…"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Diagnostics"
+msgstr "診断"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Versions, Junction graph and recent logs. No audio, no personal data."
+msgstr "バージョン、ジャンクションのグラフ、最近のログ。音声や個人データは含みません。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Copy bug report…"
+msgstr "バグ報告をコピー…"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Same checks as junc doctor."
+msgstr "junc doctor と同じチェックです。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Run checks"
+msgstr "チェックを実行"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Logs"
+msgstr "ログ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "English"
+msgstr "日本語"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Running apps"

@@ -45,7 +45,7 @@ msgstr "Lautstärke {0}"
 msgid "Junctions"
 msgstr "Junctions"
 
-#: crates/junc-gui/ui/app.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -185,7 +185,7 @@ msgstr "speichern"
 msgid "cancel"
 msgstr "abbrechen"
 
-#: crates/junc-gui/ui/components/language-row.slint
+#: crates/junc-gui/ui/components/language-row.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Follow Omarchy (Setup > Language)"
 msgstr "Omarchy folgen (Setup > Language)"
 
@@ -193,7 +193,7 @@ msgstr "Omarchy folgen (Setup > Language)"
 msgid "Current: {0}"
 msgstr "Aktuell: {0}"
 
-#: crates/junc-gui/ui/components/language-row.slint
+#: crates/junc-gui/ui/components/language-row.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Language"
 msgstr "Sprache"
 
@@ -619,7 +619,7 @@ msgstr "JACK-Apps sehen Junctions"
 msgid "Step {0} of {1}"
 msgstr "Schritt {0} von {1}"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
 msgid "System check"
 msgstr "Systemprüfung"
 
@@ -763,13 +763,125 @@ msgstr "Läuft · wartet auf PipeWire"
 msgid "Retry"
 msgstr "Erneut versuchen"
 
-#: crates/junc-gui/ui/screens/service-down.slint
+#: crates/junc-gui/ui/screens/service-down.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Open logs"
 msgstr "Logs öffnen"
 
 #: crates/junc-gui/ui/screens/service-down.slint
 msgid "Opens {0}"
 msgstr "Öffnet {0}"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Close"
+msgstr "Schließen"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "General"
+msgstr "Allgemein"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Start at login"
+msgstr "Beim Anmelden starten"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Runs juncd as a systemd user service, so Junctions exist before you open the app."
+msgstr "Startet juncd als systemd-Benutzerdienst, damit Junctions bestehen, bevor du die App öffnest."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Default sample rate"
+msgstr "Standard-Abtastrate"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Used for new Junctions and Cables."
+msgstr "Für neue Junctions und Kabel."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Follow PipeWire"
+msgstr "Wie PipeWire"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Current language: {0}"
+msgstr "Aktuelle Sprache: {0}"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Follows Omarchy. Turn off the switch above to pick one."
+msgstr "Folgt Omarchy. Schalte den Schalter oben aus, um eine zu wählen."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Appearance"
+msgstr "Darstellung"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Follow Omarchy theme"
+msgstr "Omarchy-Theme folgen"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Retints with omarchy-theme-set. Off: use the theme JUNC ships with."
+msgstr "Färbt mit omarchy-theme-set um. Aus: das mitgelieferte Theme von JUNC."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "About"
+msgstr "Über"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Version"
+msgstr "Version"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "JUNC for Linux"
+msgstr "JUNC für Linux"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "License"
+msgstr "Lizenz"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Free software under the GNU GPL."
+msgstr "Freie Software unter der GNU GPL."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Source code"
+msgstr "Quellcode"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Existing setups"
+msgstr "Bestehende Setups"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Bring in null-sink and pw-loopback setups."
+msgstr "null-sink- und pw-loopback-Setups übernehmen."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Import…"
+msgstr "Importieren…"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Diagnostics"
+msgstr "Diagnose"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Versions, Junction graph and recent logs. No audio, no personal data."
+msgstr "Versionen, Junction-Graph und aktuelle Logs. Kein Audio, keine persönlichen Daten."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Copy bug report…"
+msgstr "Fehlerbericht kopieren…"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Same checks as junc doctor."
+msgstr "Dieselben Prüfungen wie junc doctor."
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Run checks"
+msgstr "Prüfen"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Logs"
+msgstr "Logs"
+
+#: crates/junc-gui/ui/view.slint
+msgid "English"
+msgstr "Deutsch"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Running apps"
