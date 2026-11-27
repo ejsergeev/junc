@@ -104,6 +104,8 @@ export global View {
     in-out property <bool> picker-open;
     // The picker adds Listen outputs (board 17) rather than Inputs.
     in-out property <bool> picker-listen;
+    // The Add Bus channels popover (board 16).
+    in-out property <bool> adding-bus;
     in-out property <[PickerItem]> picker-items;
     in-out property <string> picker-search;
     in-out property <int> picker-cursor;
@@ -134,6 +136,8 @@ export global View {
     callback new-junction();
     callback open-picker();
     callback open-listen-picker();
+    // Add this many Bus channels.
+    callback add-bus(int);
     callback picker-search-edited(string);
     callback picker-picked(int);
     callback picker-closed();

@@ -17,6 +17,7 @@ import { JConfirm } from "../components/confirm.slint";
 import { JEmptyState } from "../components/empty-state.slint";
 import { JPicker, PickerItem } from "../components/picker.slint";
 import { JBanner } from "../components/banner.slint";
+import { JRadioGroup } from "../components/radio-group.slint";
 
 export struct ChannelItem {
     number: int,
@@ -161,6 +162,80 @@ component ColumnHeading inherits Rectangle {
     }
 }
 
+// Add Bus channels (board 16): a stereo pair or one mono channel after the
+// last; ↑ ↓ choose, Enter adds, Esc cancels.
+component AddBus inherits Rectangle {
+    in property <int> channels;
+    callback add(int);
+    callback closed();
+    property <int> count: choice.selected == 0 ? 2 : 1;
+    property <bool> room: root.channels + root.count <= 64;
+    // Wider when the language needs it for its buttons.
+    width: max(280px * Tokens.scale, lay.min-width);
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: @tr("Add Bus channels");
+
+    public function open() { choice.focus(); }
+    function run() {
+        if root.room { root.add(root.count); }
+    }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == "\n" { root.run(); return accept; }
+            if e.text == Key.Escape { root.closed(); return accept; }
+            reject
+        }
+        lay := VerticalLayout {
+            padding: Tokens.space-popup-pad;
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: @tr("Add Bus channels");
+                color: Tokens.text-strong;
+                font-size: Tokens.type-title;
+                accessible-role: none;
+            }
+            choice := JRadioGroup {
+                label: @tr("Add Bus channels");
+                options: [@tr("Stereo pair"), @tr("Mono")];
+                details: [
+                    @tr("Ch {0}–{1}", root.channels + 1, root.channels + 2),
+                    @tr("Ch {0}", root.channels + 1),
+                ];
+            }
+            Text {
+                text: root.room
+                    ? @tr("Apps that pick this Junction see {0} channels.", root.channels + root.count)
+                    : @tr("A Bus has at most 64 channels.");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                wrap: word-wrap;
+            }
+            HorizontalLayout {
+                alignment: end;
+                spacing: Tokens.space-row-gap;
+                JButton {
+                    text: @tr("Cancel");
+                    shortcut: "Esc";
+                    show-key: true;
+                    clicked => { root.closed(); }
+                }
+                JButton {
+                    text: @tr("Add");
+                    shortcut: "Enter";
+                    show-key: true;
+                    primary: true;
+                    enabled: root.room;
+                    clicked => { root.run(); }
+                }
+            }
+        }
+    }
+}
+
 export component MainScreen inherits Rectangle {
     // The Junction.
     in property <string> title;
@@ -218,6 +293,8 @@ export component MainScreen inherits Rectangle {
     in property <[PickerItem]> picker-items;
     in-out property <string> picker-search;
     in-out property <int> picker-cursor;
+    // The Add Bus channels popover (board 16).
+    in-out property <bool> adding-bus;
 
     callback card-toggled(int, int, bool);
     callback card-volume(int, int, int);
@@ -229,6 +306,8 @@ export component MainScreen inherits Rectangle {
     callback turn-on();
     callback open-picker();
     callback open-listen-picker();
+    callback add-bus(int);
+    callback add-bus-closed();
     callback picker-search-edited(string);
     callback picker-picked(int);
     callback picker-closed();
@@ -327,6 +406,7 @@ export component MainScreen inherits Rectangle {
                 count: root.bus-count;
                 add-tip: @tr("Add Bus channels");
                 add-key: "Ctrl+Shift+N";
+                add => { root.adding-bus = true; }
             }
             if !root.stacked && root.show-listen: ColumnHeading {
                 x: root.pad + root.col-x2;
@@ -547,6 +627,31 @@ export component MainScreen inherits Rectangle {
             search-edited(t) => { root.picker-search-edited(t); }
             picked(i) => { root.picker-picked(i); }
             closed => { root.picker-closed(); }
+        }
+    }
+
+    // Add Bus channels, right-aligned to the Bus column (board 16).
+    if root.adding-bus: Rectangle {
+        TouchArea {
+            clicked => {
+                root.adding-bus = false;
+                root.add-bus-closed();
+            }
+        }
+        AddBus {
+            x: root.pad + root.col-x1 + root.col-w - self.width;
+            y: (62px + (root.on ? 0 : 50px) + 56px) * Tokens.scale;
+            height: self.preferred-height;
+            channels: root.bus-channels;
+            init => { self.open(); }
+            add(n) => {
+                root.adding-bus = false;
+                root.add-bus(n);
+            }
+            closed => {
+                root.adding-bus = false;
+                root.add-bus-closed();
+            }
         }
     }
 

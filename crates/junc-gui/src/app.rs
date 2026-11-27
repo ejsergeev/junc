@@ -228,6 +228,17 @@ pub fn install(
         view.on_open_picker(move || c(&App::open_picker));
         let c = call.clone();
         view.on_open_listen_picker(move || c(&App::open_listen_picker));
+        let c = call.clone();
+        view.on_add_bus(move |n| {
+            c(&|a| {
+                if let (Some(m), Ok(n)) = (&a.main, u8::try_from(n)) {
+                    a.actions.send(Command::Edit {
+                        junction: m.id.clone(),
+                        edit: Edit::AddBus(n),
+                    });
+                }
+            });
+        });
     }
     {
         let c = call.clone();
@@ -369,6 +380,13 @@ impl App {
     /// Opens the Add Input picker on the selected Junction.
     pub fn open_picker(&mut self) {
         self.open(false);
+    }
+
+    /// Opens the Add Bus channels popover on the selected Junction.
+    pub fn open_add_bus(&self) {
+        if let (Some(_), Some(w)) = (&self.main, self.window.upgrade()) {
+            w.global::<View>().set_adding_bus(true);
+        }
     }
 
     /// Opens the Add Listen output picker on the selected Junction.

@@ -151,6 +151,10 @@ export component AppWindow inherits Window {
                 View.open-listen-picker();
                 return accept;
             }
+            if e.modifiers.shift && (e.text == "n" || e.text == "N") && View.selected != "" {
+                View.adding-bus = true;
+                return accept;
+            }
             if e.modifiers.shift && (e.text == "j" || e.text == "J") {
                 View.new-junction();
                 return accept;
@@ -319,6 +323,9 @@ export component AppWindow inherits Window {
             open-picker => { View.open-picker(); }
             open-listen-picker => { View.open-listen-picker(); }
             picker-listen: View.picker-listen;
+            adding-bus <=> View.adding-bus;
+            add-bus(n) => { View.add-bus(n); shortcuts.focus(); }
+            add-bus-closed => { shortcuts.focus(); }
             picker-search-edited(t) => { View.picker-search-edited(t); }
             picker-picked(i) => { View.picker-picked(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
