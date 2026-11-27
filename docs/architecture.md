@@ -1732,6 +1732,20 @@ design's boards 33 and 34 as the term reference. Snapshots render
 Japanese with a subset of Noto Sans CJK JP (OFL) registered as the
 fallback for Japanese scripts.
 
+As built (B20), the language picker (board 31): Settings' Follow Omarchy
+switch and Language row work. Off, the Language button opens a picker:
+the language in use under "Current", then the 46 left-to-right languages
+of the registry by their own names, by code (`language.rs`); typing
+matches the own name, the English name or the code. The choice is the
+"Settings override" of the resolution order, kept as `language` in the
+GUI's state file; while it is set, Omarchy's file is not followed. On
+again, the GUI follows Omarchy at once. A language without a GUI catalog
+shows its messages in English. `JPicker` gained `max-list-height`: past
+it the list scrolls and keeps the cursor's row in view (the other
+pickers draw as before). The snapshot fonts now hold Greek, Cyrillic and
+the registry's CJK names; other scripts (Bengali, Devanagari, Thai, …)
+come from the desktop's fonts and are blank in snapshots.
+
 ---
 
 ## 9. Agent skill
