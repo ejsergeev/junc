@@ -267,4 +267,80 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     assert!(!view.get_options_open());
     assert!(spotify(&mock).is_none(), "removed");
     assert_eq!(app.borrow().main().expect("main").inputs.len(), 2);
+    drop((w, app, mock));
+
+    // Board 12: a Cable. Exclusive and Listen from their switches, the
+    // Listen output from its select, the apps from Change app….
+    let (w, _app, mock) = open("cable");
+    let view = w.global::<View>();
+    assert!(view.get_cable());
+    assert_eq!(
+        (view.get_cable_from().as_str(), view.get_cable_to().as_str()),
+        ("Firefox", "OBS")
+    );
+    let cable = |m: &Mock| {
+        m.config()
+            .expect("config")
+            .junction
+            .into_iter()
+            .find(|j| j.id == "firefox-to-obs")
+            .expect("the Cable")
+    };
+    let switch = |label: &str| {
+        ElementHandle::find_by_accessible_label(&w, label)
+            .find(|e| e.accessible_checkable() == Some(true))
+            .unwrap_or_else(|| panic!("the {label} switch"))
+    };
+    switch("Exclusive").invoke_accessible_default_action();
+    settle();
+    assert!(cable(&mock).input[0].exclusive);
+    switch("Listen").invoke_accessible_default_action();
+    settle();
+    let l = cable(&mock).listen;
+    assert_eq!((l.len(), l[0].target.as_str()), (1, "default"));
+    assert!(view.get_cable_listen());
+    let outputs: Vec<String> = (0..view.get_cable_outputs().row_count())
+        .filter_map(|i| view.get_cable_outputs().row_data(i))
+        .map(|s| s.to_string())
+        .collect();
+    let hdmi = outputs
+        .iter()
+        .position(|o| o == "HDMI Output")
+        .expect("HDMI Output");
+    view.invoke_cable_listen_target(i32::try_from(hdmi).expect("index"));
+    settle();
+    assert_eq!(
+        cable(&mock).listen[0].target,
+        "alsa_output.platform-hdmi.hdmi-stereo"
+    );
+    // From: the playing apps, Firefox taken; pick Spotify.
+    let change: Vec<ElementHandle> =
+        ElementHandle::find_by_accessible_label(&w, "Change app…").collect();
+    assert_eq!(change.len(), 2);
+    change[0].invoke_accessible_default_action();
+    settle();
+    assert!(view.get_picker_open());
+    assert_eq!(view.get_picker_cable(), 1);
+    let items = view.get_picker_items();
+    let rows: Vec<(String, bool)> = (0..items.row_count())
+        .filter_map(|i| items.row_data(i))
+        .map(|i| (i.text.to_string(), i.added))
+        .collect();
+    assert!(rows.contains(&("Firefox".to_owned(), true)));
+    let spotify = rows.iter().position(|r| r.0 == "Spotify").expect("Spotify");
+    view.invoke_picker_picked(i32::try_from(spotify).expect("index"));
+    settle();
+    assert!(!view.get_picker_open());
+    assert_eq!(
+        cable(&mock).input[0].matcher.binary.as_deref(),
+        Some("spotify")
+    );
+    // To: the recording apps; OBS is the one it has. Esc closes.
+    change[1].invoke_accessible_default_action();
+    settle();
+    assert_eq!(view.get_picker_cable(), 2);
+    assert_eq!(view.get_picker_items().row_count(), 1);
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_picker_open());
 }

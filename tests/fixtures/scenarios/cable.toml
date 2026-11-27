@@ -1,0 +1,7 @@
+# GUI scenario: design board 12, "Cable selected" — a Cable in the
+# sidebar: where it takes audio from, the app that hears it as its input,
+# and its options (volume, listen, exclusive).
+board = 12
+title = "Cable selected"
+base = "default"
+select = "firefox-to-obs"
