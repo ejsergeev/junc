@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–23, 25–27, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -658,4 +658,46 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     view.invoke_select("firefox-to-obs".into());
     settle();
     assert!(!view.get_settings_open());
+    drop((w, _app, mock));
+
+    // Board 24: two setups start checked, the loopback as a Cable; the
+    // unconnected one is checked by hand, the Cable made a Junction, Enter
+    // imports three; Esc imports nothing.
+    let (w, _app, mock) = open("import");
+    let view = w.global::<View>();
+    let count = |m: &Mock| m.config().expect("config").junction.len();
+    assert!(view.get_import_open());
+    assert_eq!(view.get_import_count(), 2);
+    assert!(has(&w, "Import 2"));
+    let items = view.get_import_items();
+    assert!(items.row_data(1).expect("loopback").as_cable);
+    assert!(!items.row_data(2).expect("monitor").checked);
+    view.invoke_import_toggled(2);
+    view.invoke_import_cable(1, false);
+    view.invoke_import_cable(0, true);
+    assert!(
+        !items.row_data(0).expect("sink").as_cable,
+        "a sink cannot be a Cable"
+    );
+    assert_eq!(view.get_import_count(), 3);
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_import_open());
+    let names: Vec<String> = mock
+        .config()
+        .expect("config")
+        .junction
+        .iter()
+        .map(|j| j.name.clone())
+        .collect();
+    assert_eq!(
+        names[2..],
+        ["discord_mix", "firefox → obs", "stream_monitor"]
+    );
+    view.invoke_open_import();
+    settle();
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_import_open());
+    assert_eq!(count(&mock), 5);
 }
