@@ -81,6 +81,9 @@ struct Fixture {
     /// The Add Bus channels popover open on it.
     #[serde(default)]
     add_bus: bool,
+    /// The header's name field open (board 26).
+    #[serde(default)]
+    rename: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -159,6 +162,7 @@ pub struct Scenario {
     pub picker: bool,
     pub listen_picker: bool,
     pub add_bus: bool,
+    pub rename: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -295,6 +299,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         picker: f.picker,
         listen_picker: f.listen_picker,
         add_bus: f.add_bus,
+        rename: f.rename,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -428,6 +433,11 @@ impl Mock {
                     c.junction.remove(i);
                 }
             }
+            Command::Rename { path, name } => {
+                if let Some(i) = find(c, path) {
+                    c.junction[i].name.clone_from(name);
+                }
+            }
             Command::Edit { junction, edit } => {
                 edits::apply(c, junction, edit);
             }
@@ -527,6 +537,9 @@ pub fn open(
     }
     if s.add_bus {
         app.borrow().open_add_bus();
+    }
+    if s.rename {
+        app.borrow().start_rename();
     }
     if let Some(i) = s.options {
         app.borrow_mut().toggle_options(i);

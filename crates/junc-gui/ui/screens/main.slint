@@ -14,6 +14,7 @@ import { JButton, JIconButton } from "../components/button.slint";
 import { JTooltip } from "../components/tooltip.slint";
 import { JKbd } from "../components/kbd.slint";
 import { JConfirm } from "../components/confirm.slint";
+import { JInlineField } from "../components/inline-field.slint";
 import { JEmptyState } from "../components/empty-state.slint";
 import { JPicker, PickerItem } from "../components/picker.slint";
 import { JBanner } from "../components/banner.slint";
@@ -440,6 +441,9 @@ export component MainScreen inherits Rectangle {
     callback link-step(int);
     callback link-cancel();
     callback delete-junction();
+    // Board 26: the header's name field is open.
+    in-out property <bool> renaming;
+    callback rename(string);
     callback turn-on();
     callback open-picker();
     callback open-listen-picker();
@@ -481,7 +485,7 @@ export component MainScreen inherits Rectangle {
                 padding-right: root.pad;
                 padding-top: 16px * Tokens.scale;
                 spacing: Tokens.space-row-gap;
-                Text {
+                if !root.renaming: Text {
                     text: root.title;
                     color: Tokens.text-strong;
                     font-size: Tokens.type-display;
@@ -489,11 +493,29 @@ export component MainScreen inherits Rectangle {
                     overflow: elide;
                     accessible-role: none;
                 }
-                JIconButton {
+                if !root.renaming: JIconButton {
                     y: (parent.height - self.height) / 2;
                     icon: "\u{f03eb}";
                     tooltip: @tr("Rename");
                     shortcut: "F2";
+                    clicked => { root.renaming = true; }
+                }
+                // Board 26: the name in place, Enter saves, Esc cancels.
+                if root.renaming: JInlineField {
+                    min-width: 360px * Tokens.scale;
+                    label: @tr("Name");
+                    original: root.title;
+                    font-size: Tokens.type-display;
+                    init => { self.edit(); }
+                    accepted(t) => {
+                        root.renaming = false;
+                        root.rename(t);
+                    }
+                    // The same name changes nothing; the window takes the keys back.
+                    cancelled => {
+                        root.renaming = false;
+                        root.rename(root.title);
+                    }
                 }
                 // Board 11 has no Default menu until something feeds it.
                 if root.apps + root.devices > 0: JButton {

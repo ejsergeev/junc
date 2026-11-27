@@ -19,6 +19,8 @@ pub enum Command {
     Volume { path: String, percent: u16 },
     /// Remove it (`Junction.Delete(true)`, after the window confirmed).
     Delete { path: String },
+    /// A new display name (`Junction.Rename`; the id stays).
+    Rename { path: String, name: String },
     /// A config change to one Junction (`GetConfig` → `Apply`).
     Edit { junction: String, edit: Edit },
     /// A new empty Junction (`Daemon.CreateJunction`).
@@ -142,6 +144,14 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
                 .await
                 .map_err(text)?
                 .delete(true)
+                .await
+                .map_err(text)?;
+        }
+        Command::Rename { path, name } => {
+            junction(conn, path)
+                .await
+                .map_err(text)?
+                .rename(name)
                 .await
                 .map_err(text)?;
         }

@@ -356,6 +356,10 @@ pub fn install(
         view.on_picker_closed(move || c(&App::close_picker));
     }
     {
+        let c = call.clone();
+        view.on_rename(move |name| c(&|a| a.rename(name.as_str())));
+    }
+    {
         let c = call;
         view.on_delete_junction(move || {
             c(&|a| {
@@ -496,6 +500,36 @@ impl App {
     }
 
     /// Opens the Add Bus channels popover on the selected Junction.
+    /// Board 26: gives the selected Junction a new name. A blank name or
+    /// the same one changes nothing.
+    pub fn rename(&self, name: &str) {
+        let name = name.trim();
+        let Some(id) = self.selected.clone() else {
+            return;
+        };
+        let same = self
+            .sidebar
+            .junctions
+            .iter()
+            .any(|r| r.id == id && r.name == name);
+        if name.is_empty() || same {
+            return;
+        }
+        if let Some(path) = self.path(&id) {
+            self.actions.send(Command::Rename {
+                path,
+                name: name.to_owned(),
+            });
+        }
+    }
+
+    /// Board 26: the name field in the header, as F2 opens it.
+    pub fn start_rename(&self) {
+        if let (Some(_), Some(w)) = (&self.selected, self.window.upgrade()) {
+            w.global::<View>().set_renaming(true);
+        }
+    }
+
     pub fn open_add_bus(&self) {
         if let (Some(_), Some(w)) = (&self.main, self.window.upgrade()) {
             w.global::<View>().set_adding_bus(true);
@@ -609,6 +643,9 @@ impl App {
             self.hovered = None;
             self.linking = None;
             self.close_options();
+            if let Some(w) = self.window.upgrade() {
+                w.global::<View>().set_renaming(false);
+            }
             self.refresh();
         }
     }

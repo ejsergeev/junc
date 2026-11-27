@@ -157,6 +157,11 @@ export component AppWindow inherits Window {
                 View.link-clicked();
                 return accept;
             }
+            // Board 26: F2 renames the selected Junction or Cable.
+            if e.text == Key.F2 && View.selected != "" {
+                View.renaming = true;
+                return accept;
+            }
             if !e.modifiers.control { return reject; }
             // Ctrl+1…9: the Junctions in the sidebar's order.
             if !e.modifiers.shift && e.text >= "1" && e.text <= "9" && e.text.character-count == 1 {
@@ -320,6 +325,8 @@ export component AppWindow inherits Window {
             listen-target(i) => { View.cable-listen-target(i); }
             change-app(to) => { View.open-cable-picker(to); }
             delete-junction => { View.delete-junction(); }
+            renaming <=> View.renaming;
+            rename(t) => { View.rename(t); shortcuts.focus(); }
             picker-search-edited(t) => { View.picker-search-edited(t); }
             picker-picked(i) => { View.picker-picked(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
@@ -379,6 +386,8 @@ export component AppWindow inherits Window {
             card-arrow(i, dx, dy) => { View.card-arrow(i, dx, dy); }
             focus-card-done => { View.focus-card = -1; }
             delete-junction => { View.delete-junction(); }
+            renaming <=> View.renaming;
+            rename(t) => { View.rename(t); shortcuts.focus(); }
             empty-inputs: View.empty-inputs;
             empty-listens: View.empty-listens;
             empty-listens-y: View.empty-listens-y;
