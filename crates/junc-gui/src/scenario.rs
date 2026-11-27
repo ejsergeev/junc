@@ -80,6 +80,8 @@ struct Fixture {
     /// The Add Bus channels popover open on it.
     #[serde(default)]
     add_bus: bool,
+    /// The Options panel of this Input card (0-based) open.
+    options: Option<i32>,
 }
 
 /// One doctor check (`junc doctor --json`).
@@ -151,6 +153,7 @@ pub struct Scenario {
     pub picker: bool,
     pub listen_picker: bool,
     pub add_bus: bool,
+    pub options: Option<i32>,
     /// What the mock answers to the system check.
     checks: Vec<checks::Row>,
     /// What the mock IPC settles again after each change.
@@ -284,6 +287,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         picker: f.picker,
         listen_picker: f.listen_picker,
         add_bus: f.add_bus,
+        options: f.options,
         checks,
         config,
         graph,
@@ -513,6 +517,9 @@ pub fn open(
     }
     if s.add_bus {
         app.borrow().open_add_bus();
+    }
+    if let Some(i) = s.options {
+        app.borrow_mut().toggle_options(i);
     }
     (app, mock)
 }

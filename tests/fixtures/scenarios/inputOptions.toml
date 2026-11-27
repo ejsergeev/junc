@@ -1,0 +1,6 @@
+# GUI scenario: design board 15, "Input Options" — Options on the Spotify
+# card: Exclusive, which Bus channel each channel feeds, Remove input.
+board = 15
+title = "Input Options"
+base = "default"
+options = 0

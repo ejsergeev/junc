@@ -1,0 +1,6 @@
+# GUI scenario: design board 30, "Input Options · Narrow" — board 15 in a
+# narrow tile: the panel opens beside the card, over the Bus.
+board = 30
+title = "Input Options · Narrow"
+base = "narrow"
+options = 0

@@ -10,8 +10,9 @@ use junc_gui::meter_service::Levels;
 use junc_gui::scenario::{self, Mock};
 use junc_gui::theme;
 use junc_gui::ui::{self, AppWindow, View};
+use slint::platform::PointerEventButton;
 use slint::platform::{Key, WindowEvent};
-use slint::{ComponentHandle, LogicalSize, Model, SharedString};
+use slint::{ComponentHandle, LogicalPosition, LogicalSize, Model, SharedString};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -58,6 +59,26 @@ fn ctrl_shift(w: &AppWindow, shift: bool, k: &str) {
 
 fn ctrl(w: &AppWindow, k: &str) {
     ctrl_shift(w, false, k);
+}
+
+fn click(w: &AppWindow, e: &ElementHandle) {
+    let (p, s) = (e.absolute_position(), e.size());
+    let position = LogicalPosition::new(p.x + s.width / 2.0, p.y + 10.0);
+    w.window()
+        .dispatch_event(WindowEvent::PointerMoved { position });
+    for down in [true, false] {
+        w.window().dispatch_event(if down {
+            WindowEvent::PointerPressed {
+                position,
+                button: PointerEventButton::Left,
+            }
+        } else {
+            WindowEvent::PointerReleased {
+                position,
+                button: PointerEventButton::Left,
+            }
+        });
+    }
 }
 
 fn settle() {
@@ -195,4 +216,55 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     settle();
     assert!(!view.get_adding_bus());
     assert_eq!(channels(&mock), 7);
+    drop((w, _app, mock));
+
+    // Board 15: Spotify's Options. Exclusive off, channel 1 to Bus 3 from
+    // its select (↓ twice), Esc closes, Options opens it again, Del
+    // removes the Input.
+    let (w, app, mock) = open("inputOptions");
+    let view = w.global::<View>();
+    let spotify = |m: &Mock| {
+        m.config().expect("config").junction[0]
+            .input
+            .iter()
+            .find(|i| i.id == "spotify")
+            .cloned()
+    };
+    assert!(view.get_options_open());
+    assert!(has(&w, "Spotify options"));
+    let feeds: Vec<i32> = (0..view.get_options_feeds().row_count())
+        .filter_map(|i| view.get_options_feeds().row_data(i))
+        .collect();
+    assert_eq!(feeds, [1, 2]);
+    ElementHandle::find_by_accessible_label(&w, "Exclusive")
+        .find(|e| e.accessible_checkable() == Some(true))
+        .expect("the Exclusive switch")
+        .invoke_accessible_default_action();
+    settle();
+    assert!(!spotify(&mock).expect("spotify").exclusive);
+    let select = ElementHandle::find_by_accessible_label(&w, "Channel 1 feeds")
+        .next()
+        .expect("channel 1's select");
+    click(&w, &select);
+    assert_eq!(select.accessible_expanded(), Some(true));
+    key(&w, Key::DownArrow);
+    key(&w, Key::DownArrow);
+    key(&w, "\n");
+    settle();
+    assert_eq!(
+        spotify(&mock).expect("spotify").links,
+        Some(vec![[1, 3], [2, 2]])
+    );
+    assert_eq!(select.accessible_value().as_deref(), Some("Ch 3"));
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_options_open());
+    view.invoke_options_toggled(0);
+    settle();
+    assert!(view.get_options_open());
+    key(&w, Key::Delete);
+    settle();
+    assert!(!view.get_options_open());
+    assert!(spotify(&mock).is_none(), "removed");
+    assert_eq!(app.borrow().main().expect("main").inputs.len(), 2);
 }
