@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 21, 22, 26, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 21–23, 26, 30)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -560,4 +560,11 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     ctrl(&w, "d");
     settle();
     assert_eq!(names(&mock).len(), 4);
+    drop((w, _app, mock));
+
+    // Board 23: Spotify quit; its card and the counts wait for it.
+    let (w, _app, _mock) = open("appClosed");
+    assert_eq!(w.global::<View>().get_waiting(), 1);
+    assert!(has(&w, "Waiting for Spotify…"));
+    assert!(has(&w, "· 1 waiting"));
 }
