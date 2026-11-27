@@ -479,8 +479,14 @@ de/ja, AT-SPI dump, keyboard test):
   deleted Junction (juncd does not report them), the Third-party
   licenses link (waits for the package's licence file), destroying the
   hidden window behind the tray.
-- [ ] **B20** [auto] Language picker, German, Japanese (Arabic shows English).
+- [x] **B20** [auto] Language picker, German, Japanese (Arabic shows English).
   Req: F14.
+  Done 2026-11-28 (architecture §8, as built): the language picker in
+  Settings (board 31: Follow Omarchy off, the 46 left-to-right languages
+  by their own names, the choice kept in the GUI's state file); German
+  and Japanese catalogs for the CLI and the GUI (Japanese CLI new, both
+  machine-drafted); `ar` shows English in the CLI and the GUI (board 32).
+  Boards 33 and 34 are the `default` goldens in `de` and `ja`.
 - [ ] **B21** [auto] Pro Audio prompt, multichannel Input, use as default,
   default restored, link overridden, Bluetooth warning. Req: F15, F16, F17,
   F18.

@@ -1746,6 +1746,12 @@ pickers draw as before). The snapshot fonts now hold Greek, Cyrillic and
 the registry's CJK names; other scripts (Bengali, Devanagari, Thai, …)
 come from the desktop's fonts and are blank in snapshots.
 
+As built (B20), German and Japanese: both have a CLI and a GUI catalog
+(`po/cli/ja.po` is new, machine-drafted and marked like `de.po`); the
+CLI test reads Omarchy's `de` and `ja`, and `ar` shows English, as does
+the GUI (`tests/states.rs`, board 32). The design's boards 33 and 34
+are the `default` scenario's `de` and `ja` goldens.
+
 ---
 
 ## 9. Agent skill
