@@ -382,6 +382,9 @@ export component MainScreen inherits Rectangle {
     in property <string> tip-pos;
     in property <int> tip-bus;
     in property <bool> tip-listen;
+    // A link being made: 0 none, 1 by the pointer, 2 by the keys.
+    in property <int> linking;
+    in property <LinkItem> pending;
     // Show the Listen column (bottom bar).
     in-out property <bool> show-listen: true;
     // A tile narrower than 1100 px (the window says so, not this screen's
@@ -425,6 +428,12 @@ export component MainScreen inherits Rectangle {
     callback pointer-left();
     callback link-clicked();
     callback port-remove(int, int, int, int);
+    callback link-start(int, int, int, int);
+    callback link-key(int, int, int, int);
+    callback link-drag(length, length);
+    callback link-drop();
+    callback link-step(int);
+    callback link-cancel();
     callback delete-junction();
     callback turn-on();
     callback open-picker();
@@ -549,6 +558,8 @@ export component MainScreen inherits Rectangle {
         }
         // The routing canvas.
         canvas := Flickable {
+            // The wheel scrolls; a drag belongs to the ports (links).
+            interactive: false;
             content-height: max(self.height, root.canvas-height + root.pad);
             content-width: self.width;
             hover := TouchArea {
@@ -668,6 +679,25 @@ export component MainScreen inherits Rectangle {
                     ? (p.side == 0 ? @tr("Bus channel {0} in", p.ch) : @tr("Bus channel {0} out", p.ch))
                     : @tr("{0} channel {1}", p.owner, p.ch);
                 remove => { root.port-remove(p.column, p.card, p.ch, p.side); }
+                linking: root.linking > 0;
+                activated => { root.link-key(p.column, p.card, p.ch, p.side); }
+                drag-started => { root.link-start(p.column, p.card, p.ch, p.side); }
+                dragged(dx, dy) => { root.link-drag(p.x - self.width / 2 + dx, p.y - self.height / 2 + dy); }
+                dropped => { root.link-drop(); }
+                step(d) => { root.link-step(d); }
+                cancel => { root.link-cancel(); }
+            }
+            // The link being made, over the others.
+            if root.linking > 0: JLink {
+                x: root.pad + root.pending.x;
+                y: root.pending.y;
+                width: root.pending.w;
+                height: root.pending.h;
+                x1: root.pending.x1;
+                y1: root.pending.y1;
+                x2: root.pending.x2;
+                y2: root.pending.y2;
+                offline: root.pending.offline;
             }
             // Under its card; beside it on a narrow tile (board 30).
             if root.options-open: InputOptions {
@@ -692,12 +722,17 @@ export component MainScreen inherits Rectangle {
                 height: self.preferred-height;
                 x: root.pad + min(root.tip-x + 12px, canvas.content-width - self.width - root.pad);
                 y: root.tip-y + 16px;
-                text: @tr("Click to unlink");
-                shortcut: "Del";
                 property <string> ch: root.tip-pos == "" ? root.tip-ch : @tr("{0} ({1})", root.tip-ch, root.tip-pos);
-                detail: root.tip-listen
+                property <string> route: root.tip-listen
                     ? @tr("Ch {0} → {1} {2}", root.tip-bus, root.tip-owner, self.ch)
                     : @tr("{0} {1} → Ch {2}", root.tip-owner, self.ch, root.tip-bus);
+                // Hovering a link: what a click does, then the link. Making
+                // one: the link, then how to finish (boards 13, 14).
+                text: root.linking > 0 ? self.route : @tr("Click to unlink");
+                shortcut: root.linking == 1 ? "Esc" : root.linking == 2 ? "Enter" : "Del";
+                detail: root.linking == 1 ? @tr("Release to link · Esc cancels")
+                    : root.linking == 2 ? @tr("Enter connects · Esc cancels")
+                    : self.route;
             }
         }
         // Bottom bar: delete, keyboard hints, Show Listen.
@@ -724,7 +759,14 @@ export component MainScreen inherits Rectangle {
                 if !root.narrow: HorizontalLayout {
                     spacing: 6px;
                     alignment: center;
-                    for hint in [
+                    // While a link is made, only its keys (boards 13, 14).
+                    for hint in root.linking == 1 ? [
+                        { key: "Esc", text: @tr("cancel link") },
+                    ] : root.linking == 2 ? [
+                        { key: "↑↓", text: @tr("target") },
+                        { key: "Enter", text: @tr("connect") },
+                        { key: "Esc", text: @tr("cancel") },
+                    ] : [
                         { key: "Tab", text: @tr("move") },
                         { key: "Space", text: @tr("toggle") },
                         { key: "Enter", text: @tr("link") },

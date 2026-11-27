@@ -9,6 +9,7 @@ use crate::actions::{Actions, Command};
 use crate::checks;
 use crate::edits::{Edit, Part};
 use crate::layout::{self, Layout, Point};
+use crate::linking;
 use crate::main_view::{self, End, Icon, Main};
 use crate::meter_service::{Levels, MeterService};
 use crate::onboarding::{self, Step};
@@ -59,6 +60,8 @@ pub struct App {
     picking: Picking,
     /// The Input card whose Options panel is open (boards 15, 30).
     options: Option<usize>,
+    /// A link being made (boards 13, 14).
+    linking: Option<Linking>,
 }
 
 impl std::fmt::Debug for App {
@@ -69,6 +72,16 @@ impl std::fmt::Debug for App {
             .field("options", &self.options)
             .finish_non_exhaustive()
     }
+}
+
+/// A link being made: from a port, to the target it would end at; by the
+/// pointer (at `pointer`) or the keys.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Linking {
+    from: End,
+    target: Option<End>,
+    keys: bool,
+    pointer: Point,
 }
 
 /// What the picker picks: Inputs (board 7), Listen outputs (board 17), a
@@ -132,6 +145,7 @@ pub fn install(
         picker: None,
         picking: Picking::Input,
         options: None,
+        linking: None,
     }));
     // Runs `f` on the controller unless it is busy (a callback raised while
     // it updates the window, such as a relayout when the canvas appears).
@@ -261,6 +275,30 @@ pub fn install(
         view.on_open_picker(move || c(&App::open_picker));
         let c = call.clone();
         view.on_open_listen_picker(move || c(&App::open_listen_picker));
+        let c = call.clone();
+        view.on_link_start(move |col, card, ch, side| {
+            c(&|a| {
+                if let Some(e) = ui::port_end(col, card, ch, side) {
+                    a.link_start(e, false);
+                }
+            });
+        });
+        let c = call.clone();
+        view.on_link_key(move |col, card, ch, side| {
+            c(&|a| {
+                if let Some(e) = ui::port_end(col, card, ch, side) {
+                    a.link_key(e);
+                }
+            });
+        });
+        let c = call.clone();
+        view.on_link_drag(move |x, y| c(&|a| a.link_drag(Point { x, y })));
+        let c = call.clone();
+        view.on_link_drop(move || c(&App::link_finish));
+        let c = call.clone();
+        view.on_link_step(move |d| c(&|a| a.link_step(d)));
+        let c = call.clone();
+        view.on_link_cancel(move || c(&App::link_cancel));
         let c = call.clone();
         view.on_open_cable_picker(move |to| c(&|a| a.open_cable_picker(to)));
         let c = call.clone();
@@ -555,6 +593,7 @@ impl App {
         if self.selected.as_deref() != Some(id) {
             self.selected = Some(id.to_owned());
             self.hovered = None;
+            self.linking = None;
             self.close_options();
             self.refresh();
         }
@@ -601,7 +640,32 @@ impl App {
         let Some(m) = &self.main else { return };
         let l = layout::layout(m, self.width.get(), view.get_show_listen());
         let rows = &self.sidebar.junctions;
-        let c = ui::canvas(m, &l, self.hovered, rows.len());
+        let mut c = ui::canvas(m, &l, self.hovered, rows.len());
+        if let Some(k) = self.linking {
+            let targets = linking::targets(m, &l, k.from);
+            for p in &mut c.ports {
+                let Some(end) = ui::port_end(p.column, p.card, p.ch, p.side) else {
+                    continue;
+                };
+                if end == k.from || Some(end) == k.target {
+                    p.state = "snap".into();
+                } else if targets.contains(&end) {
+                    p.state = "valid".into();
+                }
+            }
+            if let Some(from) = linking::at(m, &l, k.from) {
+                let to = k
+                    .target
+                    .and_then(|t| linking::at(m, &l, t))
+                    .unwrap_or(k.pointer);
+                view.set_pending(ui::link_item(from, to, k.keys, false));
+            }
+        }
+        view.set_linking(match self.linking {
+            None => 0,
+            Some(k) if k.keys => 2,
+            Some(_) => 1,
+        });
         view.set_stacked(l.stacked);
         view.set_col_x0(l.columns[0].0);
         view.set_col_x1(l.columns[1].0);
@@ -613,9 +677,11 @@ impl App {
         view.set_empty_listens(l.empty_listens.is_some());
         view.set_empty_listens_y(l.empty_listens.map_or(0.0, |r| r.y));
         view.set_empty_h(l.empty_inputs.or(l.empty_listens).map_or(0.0, |r| r.h));
-        view.set_cards(ModelRc::new(VecModel::from(c.cards)));
-        view.set_ports(ModelRc::new(VecModel::from(c.ports)));
-        view.set_links(ModelRc::new(VecModel::from(c.links)));
+        // In place: a port keeps its element, so a drag that started on it
+        // keeps the pointer while the canvas changes under it.
+        update(view.get_cards(), c.cards, |m| view.set_cards(m));
+        update(view.get_ports(), c.ports, |m| view.set_ports(m));
+        update(view.get_links(), c.links, |m| view.set_links(m));
         if let Some(r) = self.options.and_then(|i| l.inputs.get(i)) {
             view.set_options_x(r.x);
             view.set_options_y(r.y);
@@ -744,6 +810,154 @@ impl App {
                 target,
             },
         });
+    }
+
+    /// A link starts at a port: by the pointer (`keys` false) or Enter.
+    pub fn link_start(&mut self, from: End, keys: bool) {
+        let (Some(m), Some(l)) = (&self.main, &self.layout) else {
+            return;
+        };
+        let pointer = linking::at(m, l, from).unwrap_or(Point { x: 0.0, y: 0.0 });
+        let target = if keys {
+            linking::targets(m, l, from).first().copied()
+        } else {
+            None
+        };
+        self.linking = Some(Linking {
+            from,
+            target,
+            keys,
+            pointer,
+        });
+        self.show_linking();
+    }
+
+    /// The pointer moved while dragging a link, to `p` on the canvas.
+    pub fn link_drag(&mut self, p: Point) {
+        let (Some(m), Some(l), Some(k)) = (&self.main, &self.layout, self.linking.as_mut()) else {
+            return;
+        };
+        k.pointer = p;
+        k.target = linking::snap(m, l, k.from, p);
+        self.show_linking();
+    }
+
+    /// Chooses `to` as the target of the link made with the keys.
+    pub fn link_target(&mut self, to: End) {
+        if let Some(k) = self.linking.as_mut() {
+            k.target = Some(to);
+        }
+        self.show_linking();
+    }
+
+    /// The next (`d` 1) or previous (-1) target, with the keys.
+    fn link_step(&mut self, d: i32) {
+        let (Some(m), Some(l), Some(k)) = (&self.main, &self.layout, self.linking.as_mut()) else {
+            return;
+        };
+        let t = linking::targets(m, l, k.from);
+        if t.is_empty() {
+            return;
+        }
+        let now = k
+            .target
+            .and_then(|e| t.iter().position(|x| *x == e))
+            .unwrap_or(0);
+        let next = if d < 0 {
+            now.saturating_sub(1)
+        } else {
+            (now + 1).min(t.len() - 1)
+        };
+        k.target = Some(t[next]);
+        self.show_linking();
+    }
+
+    /// Release or Enter: links to the target, if any; either way the link
+    /// being made is gone.
+    pub fn link_finish(&mut self) {
+        let k = self.linking.take();
+        if let (Some(k), Some(m), Some(d)) = (k, &self.main, &self.describe)
+            && let Some(to) = k.target
+            && let Some((part, pair)) = linking::pair(m, k.from, to)
+            && let Some(j) = d.junctions.iter().find(|j| j.id == m.id)
+        {
+            let in_use = match &part {
+                Part::Input(id) => j
+                    .inputs
+                    .iter()
+                    .find(|v| &v.id == id)
+                    .map(|v| v.links.clone()),
+                Part::Listen(id) => j
+                    .listens
+                    .iter()
+                    .find(|v| &v.id == id)
+                    .map(|v| v.links.clone()),
+            };
+            if let Some(in_use) = in_use {
+                self.actions.send(Command::Edit {
+                    junction: m.id.clone(),
+                    edit: Edit::Link { part, pair, in_use },
+                });
+            }
+        }
+        self.show_linking();
+    }
+
+    fn link_cancel(&mut self) {
+        self.linking = None;
+        self.show_linking();
+    }
+
+    /// Enter on a port: starts a link, or ends the one made with the keys.
+    fn link_key(&mut self, from: End) {
+        if self.linking.is_some_and(|k| k.keys) {
+            self.link_finish();
+        } else {
+            self.link_start(from, true);
+        }
+    }
+
+    /// Shows the link being made, its target and what it would be.
+    fn show_linking(&mut self) {
+        self.relayout();
+        let (Some(w), Some(m), Some(l)) = (self.window.upgrade(), &self.main, &self.layout) else {
+            return;
+        };
+        let view = w.global::<View>();
+        let Some(k) = self.linking else {
+            view.set_tip_visible(false);
+            return;
+        };
+        let Some(to) = k.target else {
+            view.set_tip_visible(false);
+            return;
+        };
+        let (card, ch, bus, listen) = match (k.from, to) {
+            (End::Input { card, ch }, End::BusIn { ch: bus })
+            | (End::BusIn { ch: bus }, End::Input { card, ch }) => {
+                (m.inputs.get(card), ch, bus, false)
+            }
+            (End::BusOut { ch: bus }, End::Listen { card, ch })
+            | (End::Listen { card, ch }, End::BusOut { ch: bus }) => {
+                (m.listens.get(card), ch, bus, true)
+            }
+            _ => return,
+        };
+        let Some(card) = card else { return };
+        let pos = card
+            .channels
+            .iter()
+            .find(|c| c.number == ch)
+            .map_or("", |c| c.position);
+        let at = linking::at(m, l, to).unwrap_or(k.pointer);
+        view.set_tip_owner(card.title.as_str().into());
+        view.set_tip_ch(i32::from(ch));
+        view.set_tip_pos(pos.into());
+        view.set_tip_bus(i32::from(bus));
+        view.set_tip_listen(listen);
+        view.set_tip_x(at.x);
+        view.set_tip_y(at.y);
+        view.set_tip_visible(true);
     }
 
     /// Opens Input card `i`'s Options panel, or closes it when open.
@@ -912,6 +1126,9 @@ impl App {
     }
 
     fn hover(&mut self, p: Option<Point>) {
+        if self.linking.is_some() {
+            return;
+        }
         let hit = p.and_then(|p| self.layout.as_ref()?.hit(p));
         let Some(w) = self.window.upgrade() else {
             return;

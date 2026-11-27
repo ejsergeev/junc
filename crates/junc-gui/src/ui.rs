@@ -3,7 +3,7 @@
 //! The Slint side: the generated window and assigning [`theme::Tokens`]
 //! to its `Tokens` global in one pass (architecture §7.7 step 4).
 
-use crate::layout::{Layout, Rect, row_centre};
+use crate::layout::{Layout, Point, Rect, row_centre};
 use crate::main_view::{self, Card, CardState, End, Icon, Main};
 use crate::meter_service::Slot;
 use crate::picker::{Entry, Group};
@@ -386,21 +386,39 @@ pub fn canvas(m: &Main, l: &Layout, hovered: Option<usize>, meter_base: usize) -
 
     for (i, (link, curve)) in m.links.iter().zip(&l.curves).enumerate() {
         let Some(c) = curve else { continue };
-        let (x, y) = (c.from.x.min(c.to.x), c.from.y.min(c.to.y) - 8.0);
-        out.links.push(LinkItem {
-            x: px(x),
-            y: px(y),
-            w: px((c.to.x - c.from.x).abs().max(1.0)),
-            h: px((c.to.y - c.from.y).abs() + 16.0),
-            x1: px(c.from.x - x),
-            y1: px(c.from.y - y),
-            x2: px(c.to.x - x),
-            y2: px(c.to.y - y),
-            offline: link.offline,
-            hovered: hovered == Some(i),
-        });
+        out.links
+            .push(link_item(c.from, c.to, link.offline, hovered == Some(i)));
     }
     out
+}
+
+/// A link drawn from `from` to `to`, in a box spanning both.
+pub fn link_item(from: Point, to: Point, offline: bool, hovered: bool) -> LinkItem {
+    let (x, y) = (from.x.min(to.x), from.y.min(to.y) - 8.0);
+    LinkItem {
+        x: px(x),
+        y: px(y),
+        w: px((to.x - from.x).abs().max(1.0)),
+        h: px((to.y - from.y).abs() + 16.0),
+        x1: px(from.x - x),
+        y1: px(from.y - y),
+        x2: px(to.x - x),
+        y2: px(to.y - y),
+        offline,
+        hovered,
+    }
+}
+
+/// The end a port of the canvas stands for.
+pub fn port_end(column: i32, card: i32, ch: i32, side: i32) -> Option<End> {
+    let card = usize::try_from(card).ok()?;
+    let ch = u8::try_from(ch).ok()?;
+    Some(match (column, side) {
+        (0, _) => End::Input { card, ch },
+        (1, 0) => End::BusIn { ch },
+        (1, _) => End::BusOut { ch },
+        _ => End::Listen { card, ch },
+    })
 }
 
 fn card(column: i32, i: usize, c: &Card, r: &Rect, channels: Vec<ChannelItem>) -> CardItem {

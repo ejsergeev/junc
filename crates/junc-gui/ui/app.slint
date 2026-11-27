@@ -354,6 +354,14 @@ export component AppWindow inherits Window {
             pointer-left => { View.pointer-left(); }
             link-clicked => { View.link-clicked(); }
             port-remove(c, i, ch, side) => { View.port-remove(c, i, ch, side); }
+            linking: View.linking;
+            pending: View.pending;
+            link-start(c, i, ch, side) => { View.link-start(c, i, ch, side); }
+            link-key(c, i, ch, side) => { View.link-key(c, i, ch, side); }
+            link-drag(x, y) => { View.link-drag(x, y); }
+            link-drop => { View.link-drop(); }
+            link-step(d) => { View.link-step(d); }
+            link-cancel => { View.link-cancel(); }
             delete-junction => { View.delete-junction(); }
             empty-inputs: View.empty-inputs;
             empty-listens: View.empty-listens;

@@ -104,6 +104,10 @@ export global View {
     in-out property <int> tip-bus;
     in-out property <bool> tip-listen;
     in-out property <bool> show-listen: true;
+    // A link being made (boards 13, 14): 0 none, 1 by the pointer, 2 by
+    // the keys; its line from the port to the target or the pointer.
+    in-out property <int> linking;
+    in-out property <LinkItem> pending;
     // Onboarding (boards 8, 9): 0 none, 1 the system check, 2 templates.
     in-out property <int> onboarding;
     in-out property <[CheckItem]> checks;
@@ -154,6 +158,16 @@ export global View {
     callback pointer-left();
     callback link-clicked();
     callback port-remove(int, int, int, int);
+    // A port (column, card, channel, side): pressed to drag a link from
+    // it, or Enter on it.
+    callback link-start(int, int, int, int);
+    callback link-key(int, int, int, int);
+    // The pointer while dragging, on the canvas.
+    callback link-drag(length, length);
+    callback link-drop();
+    // ↑ ↓ through the targets.
+    callback link-step(int);
+    callback link-cancel();
     callback delete-junction();
     callback recheck();
     callback copy(string);
