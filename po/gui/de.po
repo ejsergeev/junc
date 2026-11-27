@@ -125,7 +125,7 @@ msgstr "Abbrechen"
 msgid "save"
 msgstr "speichern"
 
-#: crates/junc-gui/ui/components/inline-field.slint
+#: crates/junc-gui/ui/components/inline-field.slint crates/junc-gui/ui/screens/main.slint
 msgid "cancel"
 msgstr "abbrechen"
 
@@ -452,16 +452,36 @@ msgid "Bus channel {0} out"
 msgstr "Bus-Kanal {0} Ausgang"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Click to unlink"
-msgstr "Klicken zum Trennen"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Ch {0} → {1} {2}"
 msgstr "Kanal {0} → {1} {2}"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "{0} {1} → Ch {2}"
 msgstr "{0} {1} → Kanal {2}"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Click to unlink"
+msgstr "Klicken zum Trennen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Release to link · Esc cancels"
+msgstr "Loslassen verbindet · Esc bricht ab"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Enter connects · Esc cancels"
+msgstr "Enter verbindet · Esc bricht ab"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "cancel link"
+msgstr "Verbindung abbrechen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "target"
+msgstr "Ziel"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "connect"
+msgstr "verbinden"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "link"

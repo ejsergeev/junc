@@ -125,7 +125,7 @@ msgstr "キャンセル"
 msgid "save"
 msgstr "保存"
 
-#: crates/junc-gui/ui/components/inline-field.slint
+#: crates/junc-gui/ui/components/inline-field.slint crates/junc-gui/ui/screens/main.slint
 msgid "cancel"
 msgstr "キャンセル"
 
@@ -449,16 +449,36 @@ msgid "Bus channel {0} out"
 msgstr "バス Ch {0} 出力"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Click to unlink"
-msgstr "クリックでリンク解除"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Ch {0} → {1} {2}"
 msgstr "Ch {0} → {1} {2}"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "{0} {1} → Ch {2}"
 msgstr "{0} {1} → Ch {2}"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Click to unlink"
+msgstr "クリックでリンク解除"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Release to link · Esc cancels"
+msgstr "離すとリンク · Esc で取り消し"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Enter connects · Esc cancels"
+msgstr "Enter で接続 · Esc で取り消し"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "cancel link"
+msgstr "リンクを取り消す"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "target"
+msgstr "接続先"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "connect"
+msgstr "接続"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "link"
