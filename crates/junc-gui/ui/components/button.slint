@@ -93,7 +93,8 @@ export component JButton inherits Rectangle {
                 }
                 return reject;
             }
-            if e.text == " " || e.text == "\n" {
+            // Ctrl+Enter belongs to the dialog's destructive button.
+            if e.text == " " || (e.text == "\n" && !e.modifiers.control) {
                 root.activate();
                 return accept;
             }
