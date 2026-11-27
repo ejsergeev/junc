@@ -27,5 +27,6 @@ pub mod snapshot;
 pub mod state;
 pub mod theme;
 pub mod theme_service;
+pub mod tray;
 pub mod ui;
 pub mod visibility;
