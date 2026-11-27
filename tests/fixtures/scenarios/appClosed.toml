@@ -1,0 +1,6 @@
+# GUI scenario: design board 23, "App closed · waiting" — Spotify quit:
+# its card waits for it, its links are dashed, the counts say so.
+board = 23
+title = "App closed · waiting"
+base = "default"
+unplug = ["spotify"]
