@@ -2,7 +2,7 @@
 // What Rust gives the window and what the window asks Rust to do (ui.rs,
 // app.rs). One global keeps the plumbing in one place.
 
-import { CardItem, PortItem, LinkItem } from "screens/main.slint";
+import { CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
 import { PickerItem } from "components/picker.slint";
 
 // One row of the onboarding system check (checks.rs).
@@ -28,6 +28,9 @@ export global Words {
     // TRANSLATORS: Add Listen output picker (design board 17).
     public pure function output-devices() -> string { @tr("Output devices") }
     public pure function default-output() -> string { @tr("Default output (follows system)") }
+    // TRANSLATORS: Input Options, what a channel feeds: nothing, or a Bus channel.
+    public pure function no-bus() -> string { @tr("None") }
+    public pure function bus-channel(n: int) -> string { @tr("Ch {0}", n) }
 }
 
 export struct JunctionItem {
@@ -106,6 +109,20 @@ export global View {
     in-out property <bool> picker-listen;
     // The Add Bus channels popover (board 16).
     in-out property <bool> adding-bus;
+    // Input Options (boards 15, 30): card `options-index`, at its card's
+    // rectangle on the canvas.
+    in-out property <bool> options-open;
+    in-out property <int> options-index;
+    in-out property <length> options-x;
+    in-out property <length> options-y;
+    in-out property <length> options-w;
+    in-out property <length> options-h;
+    in-out property <string> options-title;
+    in-out property <bool> options-app;
+    in-out property <bool> options-exclusive;
+    in-out property <[ChannelItem]> options-channels;
+    in-out property <[int]> options-feeds;
+    in-out property <[string]> bus-options;
     in-out property <[PickerItem]> picker-items;
     in-out property <string> picker-search;
     in-out property <int> picker-cursor;
@@ -138,6 +155,12 @@ export global View {
     callback open-listen-picker();
     // Add this many Bus channels.
     callback add-bus(int);
+    callback options-toggled(int);
+    callback options-closed();
+    callback options-exclusive-changed(bool);
+    // Channel, Bus channel (0: none).
+    callback options-feed(int, int);
+    callback options-remove();
     callback picker-search-edited(string);
     callback picker-picked(int);
     callback picker-closed();

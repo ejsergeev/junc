@@ -18,6 +18,8 @@ import { JEmptyState } from "../components/empty-state.slint";
 import { JPicker, PickerItem } from "../components/picker.slint";
 import { JBanner } from "../components/banner.slint";
 import { JRadioGroup } from "../components/radio-group.slint";
+import { JSelect } from "../components/select.slint";
+import { JSwitch } from "../components/switch.slint";
 
 export struct ChannelItem {
     number: int,
@@ -236,6 +238,113 @@ component AddBus inherits Rectangle {
     }
 }
 
+// Input Options (boards 15, 30): Exclusive for apps, which Bus channel
+// each channel feeds, Remove input (Del). Esc closes.
+component InputOptions inherits Rectangle {
+    in property <string> title;
+    in property <bool> app;
+    in property <bool> exclusive;
+    in property <[ChannelItem]> channels;
+    // Per channel: index into bus-options (0: none).
+    in property <[int]> feeds;
+    in property <[string]> bus-options;
+    callback exclusive-changed(bool);
+    callback feed(int, int);
+    callback remove();
+    callback closed();
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: @tr("{0} options", root.title);
+
+    public function open() { keys.focus(); }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.Escape { root.closed(); return accept; }
+            if e.text == Key.Delete { root.remove(); return accept; }
+            reject
+        }
+        VerticalLayout {
+            padding: Tokens.space-popup-pad;
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: @tr("{0} options", root.title);
+                color: Tokens.text-strong;
+                font-size: Tokens.type-title;
+                overflow: elide;
+                accessible-role: none;
+            }
+            if root.app: HorizontalLayout {
+                spacing: Tokens.space-row-gap;
+                JSwitch {
+                    y: 0;
+                    label: @tr("Exclusive");
+                    checked: root.exclusive;
+                    toggled(v) => { root.exclusive-changed(v); }
+                }
+                VerticalLayout {
+                    spacing: 2px;
+                    Text {
+                        text: @tr("Exclusive");
+                        color: Tokens.text-strong;
+                        accessible-role: none;
+                    }
+                    Text {
+                        text: @tr("Mute {0} in your speakers while JUNC captures it.", root.title);
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+            Text {
+                // TRANSLATORS: a caption, in capitals where the script has them.
+                text: @tr("FEEDS BUS");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-caption;
+            }
+            for ch[i] in root.channels: HorizontalLayout {
+                spacing: Tokens.space-row-gap;
+                ChannelLabel {
+                    width: max(40px * Tokens.scale, self.preferred-width);
+                    height: Tokens.size-control;
+                    number: ch.number;
+                    position: ch.position;
+                    accessible-role: none;
+                }
+                Text {
+                    text: "\u{f0054}";
+                    height: Tokens.size-control;
+                    color: Tokens.text-subtle;
+                    vertical-alignment: center;
+                    accessible-role: none;
+                }
+                JSelect {
+                    horizontal-stretch: 1;
+                    label: @tr("Channel {0} feeds", ch.number);
+                    options: root.bus-options;
+                    selected: i < root.feeds.length ? root.feeds[i] : 0;
+                    changed(v) => { root.feed(ch.number, v); }
+                }
+            }
+            Rectangle {
+                height: Tokens.border;
+                background: Tokens.line-divider;
+            }
+            JButton {
+                text: @tr("Remove input");
+                icon: "\u{f0a7a}";
+                shortcut: "Del";
+                show-key: true;
+                destructive: true;
+                clicked => { root.remove(); }
+            }
+        }
+    }
+}
+
 export component MainScreen inherits Rectangle {
     // The Junction.
     in property <string> title;
@@ -295,6 +404,20 @@ export component MainScreen inherits Rectangle {
     in-out property <int> picker-cursor;
     // The Add Bus channels popover (board 16).
     in-out property <bool> adding-bus;
+    // Input Options (boards 15, 30) of Input card `options-index`, which
+    // sits at options-x/y/w/h on the canvas.
+    in property <bool> options-open;
+    in property <int> options-index;
+    in property <length> options-x;
+    in property <length> options-y;
+    in property <length> options-w;
+    in property <length> options-h;
+    in property <string> options-title;
+    in property <bool> options-app;
+    in property <bool> options-exclusive;
+    in property <[ChannelItem]> options-channels;
+    in property <[int]> options-feeds;
+    in property <[string]> bus-options;
 
     callback card-toggled(int, int, bool);
     callback card-volume(int, int, int);
@@ -307,6 +430,11 @@ export component MainScreen inherits Rectangle {
     callback open-picker();
     callback open-listen-picker();
     callback add-bus(int);
+    callback options-toggled(int);
+    callback options-closed();
+    callback options-exclusive-changed(bool);
+    callback options-feed(int, int);
+    callback options-remove();
     callback add-bus-closed();
     callback picker-search-edited(string);
     callback picker-picked(int);
@@ -497,6 +625,8 @@ export component MainScreen inherits Rectangle {
                 switchable: c.column != 1;
                 tag: c.column == 1 ? (c.stereo ? @tr("stereo") : @tr("mono")) : "";
                 options: c.column == 0;
+                options-open: root.options-open && c.column == 0 && c.index == root.options-index;
+                options-clicked => { root.options-toggled(c.index); }
                 app: c.title;
                 toggled(v) => { root.card-toggled(c.column, c.index, v); }
                 volume-changed(v) => { root.card-volume(c.column, c.index, v); }
@@ -538,6 +668,24 @@ export component MainScreen inherits Rectangle {
                     ? (p.side == 0 ? @tr("Bus channel {0} in", p.ch) : @tr("Bus channel {0} out", p.ch))
                     : @tr("{0} channel {1}", p.owner, p.ch);
                 remove => { root.port-remove(p.column, p.card, p.ch, p.side); }
+            }
+            // Under its card; beside it on a narrow tile (board 30).
+            if root.options-open: InputOptions {
+                x: root.pad + root.options-x + (root.narrow ? root.options-w + 8px * Tokens.scale : 0);
+                y: root.options-y + (root.narrow ? 56px * Tokens.scale : root.options-h);
+                width: root.narrow ? 268px * Tokens.scale : root.options-w;
+                height: self.preferred-height;
+                title: root.options-title;
+                app: root.options-app;
+                exclusive: root.options-exclusive;
+                channels: root.options-channels;
+                feeds: root.options-feeds;
+                bus-options: root.bus-options;
+                init => { self.open(); }
+                exclusive-changed(v) => { root.options-exclusive-changed(v); }
+                feed(ch, bus) => { root.options-feed(ch, bus); }
+                remove => { root.options-remove(); }
+                closed => { root.options-closed(); }
             }
             if root.tip-visible: JTooltip {
                 width: self.preferred-width;

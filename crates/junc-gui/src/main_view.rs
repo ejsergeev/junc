@@ -417,6 +417,30 @@ pub fn main(d: &Describe, id: &str) -> Option<Main> {
     })
 }
 
+/// Per channel of Input card `card`: the Bus channel it feeds (the first,
+/// when several), 0 for none (Input Options, board 15).
+pub fn feeds(m: &Main, card: usize) -> Vec<i32> {
+    let Some(c) = m.inputs.get(card) else {
+        return Vec::new();
+    };
+    c.channels
+        .iter()
+        .map(|ch| {
+            m.links
+                .iter()
+                .find_map(|l| match (l.from, l.to) {
+                    (End::Input { card: k, ch: n }, End::BusIn { ch: b })
+                        if k == card && n == ch.number =>
+                    {
+                        Some(i32::from(b))
+                    }
+                    _ => None,
+                })
+                .unwrap_or(0)
+        })
+        .collect()
+}
+
 impl Main {
     /// Nodes the column meters read, without repeats.
     pub fn metered(&self) -> Vec<String> {

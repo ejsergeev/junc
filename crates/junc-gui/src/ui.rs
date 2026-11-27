@@ -121,6 +121,19 @@ pub fn glyph(icon: Icon) -> &'static str {
     }
 }
 
+/// An Input card's channel rows for its Options panel (no meters).
+pub fn option_channels(card: &Card) -> Vec<ChannelItem> {
+    card.channels
+        .iter()
+        .map(|c| ChannelItem {
+            number: i32::from(c.number),
+            position: c.position.into(),
+            meter: -1,
+            source: 0,
+        })
+        .collect()
+}
+
 /// The onboarding check rows.
 pub fn checks(rows: &[crate::checks::Row]) -> Vec<CheckItem> {
     rows.iter()

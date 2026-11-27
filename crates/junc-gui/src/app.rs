@@ -9,14 +9,14 @@ use crate::actions::{Actions, Command};
 use crate::checks;
 use crate::edits::{Edit, Part};
 use crate::layout::{self, Layout, Point};
-use crate::main_view::{self, End, Main};
+use crate::main_view::{self, End, Icon, Main};
 use crate::meter_service::{Levels, MeterService};
 use crate::onboarding::{self, Step};
 use crate::picker::{self, Entry, Pick};
 use crate::state::{self, Snapshot};
 use crate::ui::{self, AppWindow, View, Words};
 use junc_ipc::view::Describe;
-use slint::{ComponentHandle, ModelRc, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -57,6 +57,8 @@ pub struct App {
     picker: Option<(Vec<Entry>, Vec<usize>)>,
     /// The open picker adds Listen outputs (board 17), not Inputs.
     picker_listen: bool,
+    /// The Input card whose Options panel is open (boards 15, 30).
+    options: Option<usize>,
 }
 
 impl std::fmt::Debug for App {
@@ -64,7 +66,27 @@ impl std::fmt::Debug for App {
         f.debug_struct("App")
             .field("selected", &self.selected)
             .field("hovered", &self.hovered)
+            .field("options", &self.options)
             .finish_non_exhaustive()
+    }
+}
+
+/// Puts `rows` into `current` in place when the counts match, so the
+/// window keeps the elements (and the focus) it made for them; else sets a
+/// new model.
+fn update<T: Clone + PartialEq + 'static>(
+    current: ModelRc<T>,
+    rows: Vec<T>,
+    set: impl FnOnce(ModelRc<T>),
+) {
+    if current.row_count() != rows.len() {
+        set(ModelRc::new(VecModel::from(rows)));
+        return;
+    }
+    for (i, row) in rows.into_iter().enumerate() {
+        if current.row_data(i).as_ref() != Some(&row) {
+            current.set_row_data(i, row);
+        }
     }
 }
 
@@ -99,6 +121,7 @@ pub fn install(
         creating: None,
         picker: None,
         picker_listen: false,
+        options: None,
     }));
     // Runs `f` on the controller unless it is busy (a callback raised while
     // it updates the window, such as a relayout when the canvas appears).
@@ -228,6 +251,16 @@ pub fn install(
         view.on_open_picker(move || c(&App::open_picker));
         let c = call.clone();
         view.on_open_listen_picker(move || c(&App::open_listen_picker));
+        let c = call.clone();
+        view.on_options_toggled(move |i| c(&|a| a.toggle_options(i)));
+        let c = call.clone();
+        view.on_options_closed(move || c(&App::close_options));
+        let c = call.clone();
+        view.on_options_exclusive_changed(move |on| c(&|a| a.options_exclusive(on)));
+        let c = call.clone();
+        view.on_options_feed(move |ch, bus| c(&|a| a.options_feed(ch, bus)));
+        let c = call.clone();
+        view.on_options_remove(move || c(&App::options_remove));
         let c = call.clone();
         view.on_add_bus(move |n| {
             c(&|a| {
@@ -486,6 +519,7 @@ impl App {
         if self.selected.as_deref() != Some(id) {
             self.selected = Some(id.to_owned());
             self.hovered = None;
+            self.close_options();
             self.refresh();
         }
     }
@@ -546,7 +580,114 @@ impl App {
         view.set_cards(ModelRc::new(VecModel::from(c.cards)));
         view.set_ports(ModelRc::new(VecModel::from(c.ports)));
         view.set_links(ModelRc::new(VecModel::from(c.links)));
+        if let Some(r) = self.options.and_then(|i| l.inputs.get(i)) {
+            view.set_options_x(r.x);
+            view.set_options_y(r.y);
+            view.set_options_w(r.w);
+            view.set_options_h(r.h);
+        }
         self.layout = Some(l);
+    }
+
+    /// Opens Input card `i`'s Options panel, or closes it when open.
+    pub fn toggle_options(&mut self, i: i32) {
+        let i = usize::try_from(i).ok();
+        if i.is_none() || i == self.options {
+            self.close_options();
+            return;
+        }
+        self.options = i;
+        self.show_options();
+        self.relayout();
+    }
+
+    fn close_options(&mut self) {
+        self.options = None;
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_options_open(false);
+        }
+    }
+
+    /// Fills the Options panel from the Main model; closes it when its
+    /// Input is gone.
+    fn show_options(&mut self) {
+        let (Some(i), Some(m), Some(w)) = (self.options, &self.main, self.window.upgrade()) else {
+            return;
+        };
+        let Some(card) = m.inputs.get(i) else {
+            self.close_options();
+            return;
+        };
+        let view = w.global::<View>();
+        let words = w.global::<Words>();
+        let bus: u8 = m
+            .bus
+            .iter()
+            .map(|g| u8::try_from(g.channels.len()).unwrap_or(0))
+            .sum();
+        let mut options = vec![words.invoke_no_bus()];
+        options.extend((1..=bus).map(|ch| words.invoke_bus_channel(i32::from(ch))));
+        update(view.get_bus_options(), options, |m| view.set_bus_options(m));
+        view.set_options_title(card.title.as_str().into());
+        view.set_options_app(matches!(card.icon, Icon::Music | Icon::App));
+        view.set_options_exclusive(card.exclusive);
+        update(
+            view.get_options_channels(),
+            ui::option_channels(card),
+            |m| {
+                view.set_options_channels(m);
+            },
+        );
+        update(view.get_options_feeds(), main_view::feeds(m, i), |m| {
+            view.set_options_feeds(m);
+        });
+        view.set_options_index(i32::try_from(i).unwrap_or(-1));
+        view.set_options_open(true);
+    }
+
+    /// The Input whose panel is open and its links in use.
+    fn options_input(&self) -> Option<(String, String, Vec<[u8; 2]>)> {
+        let (i, m, d) = (self.options?, self.main.as_ref()?, self.describe.as_ref()?);
+        let id = m.inputs.get(i)?.id.clone();
+        let j = d.junctions.iter().find(|j| j.id == m.id)?;
+        let v = j.inputs.iter().find(|v| v.id == id)?;
+        Some((m.id.clone(), id, v.links.clone()))
+    }
+
+    fn options_exclusive(&mut self, on: bool) {
+        if let Some((junction, input, _)) = self.options_input() {
+            self.actions.send(Command::Edit {
+                junction,
+                edit: Edit::Exclusive { input, on },
+            });
+        }
+    }
+
+    /// Channel `ch` feeds Bus channel `bus` (0: nothing).
+    fn options_feed(&mut self, ch: i32, bus: i32) {
+        let (Some((junction, input, in_use)), Ok(ch)) = (self.options_input(), u8::try_from(ch))
+        else {
+            return;
+        };
+        self.actions.send(Command::Edit {
+            junction,
+            edit: Edit::Feed {
+                input,
+                ch,
+                bus: u8::try_from(bus).ok().filter(|b| *b > 0),
+                in_use,
+            },
+        });
+    }
+
+    fn options_remove(&mut self) {
+        if let Some((junction, input, _)) = self.options_input() {
+            self.actions.send(Command::Edit {
+                junction,
+                edit: Edit::RemoveInput(input),
+            });
+        }
+        self.close_options();
     }
 
     /// Shows the sidebar and the selected Junction.
@@ -598,6 +739,9 @@ impl App {
         }
         if self.picker.is_some() && self.main.is_some() {
             self.load_picker();
+        }
+        if self.options.is_some() {
+            self.show_options();
         }
         if self
             .hovered
