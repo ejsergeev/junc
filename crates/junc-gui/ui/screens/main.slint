@@ -213,6 +213,8 @@ export component MainScreen inherits Rectangle {
     in property <length> empty-h;
     // The Add Input picker (board 7).
     in property <bool> picker-open;
+    // It adds Listen outputs (board 17).
+    in property <bool> picker-listen;
     in property <[PickerItem]> picker-items;
     in-out property <string> picker-search;
     in-out property <int> picker-cursor;
@@ -226,6 +228,7 @@ export component MainScreen inherits Rectangle {
     callback delete-junction();
     callback turn-on();
     callback open-picker();
+    callback open-listen-picker();
     callback picker-search-edited(string);
     callback picker-picked(int);
     callback picker-closed();
@@ -333,6 +336,7 @@ export component MainScreen inherits Rectangle {
                 count: root.listen-heading;
                 add-tip: @tr("Add Listen output");
                 add-key: "Ctrl+M";
+                add => { root.open-listen-picker(); }
             }
         }
         // The routing canvas.
@@ -370,6 +374,7 @@ export component MainScreen inherits Rectangle {
                 count: root.listen-heading;
                 add-tip: @tr("Add Listen output");
                 add-key: "Ctrl+M";
+                add => { root.open-listen-picker(); }
             }
             if root.empty-inputs: JEmptyState {
                 x: root.pad + root.col-x0;
@@ -393,6 +398,7 @@ export component MainScreen inherits Rectangle {
                 text: @tr("Hear this Junction on an output.");
                 action: @tr("Add listen output");
                 shortcut: "Ctrl+M";
+                activated => { root.open-listen-picker(); }
             }
             for c in root.cards: JCard {
                 opacity: root.on ? 1 : 0.45;
@@ -520,15 +526,18 @@ export component MainScreen inherits Rectangle {
         }
     }
 
-    // The Add Input picker over the Inputs column (board 7).
+    // The Add Input picker over the Inputs column (board 7), the Add
+    // Listen output picker over the Listen column's right edge (board 17).
     if root.picker-open: Rectangle {
         TouchArea { clicked => { root.picker-closed(); } }
         picker := JPicker {
-            x: root.pad + root.col-x0;
-            y: (62px + (root.on ? 0 : 50px) + 56px) * Tokens.scale;
+            x: root.picker-listen ? root.pad + root.col-x2 + root.col-w - self.width : root.pad + root.col-x0;
+            y: (62px + (root.on ? 0 : 50px) + 56px) * Tokens.scale
+                + (root.picker-listen && root.stacked ? root.listen-heading-y + 56px * Tokens.scale + canvas.viewport-y : 0);
             height: self.preferred-height;
-            title: @tr("Add input");
-            placeholder: @tr("Search apps, inputs, system audio");
+            title: root.picker-listen ? @tr("Add listen output") : @tr("Add input");
+            placeholder: root.picker-listen ? @tr("Search output devices") : @tr("Search apps, inputs, system audio");
+            note: root.picker-listen ? @tr("Plug in headphones or a USB device to see it here.") : "";
             search-icon: "\u{f0349}";
             hints: true;
             items: root.picker-items;

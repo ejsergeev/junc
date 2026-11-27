@@ -12,7 +12,7 @@ use crate::layout::{self, Layout, Point};
 use crate::main_view::{self, End, Main};
 use crate::meter_service::{Levels, MeterService};
 use crate::onboarding::{self, Step};
-use crate::picker::{self, Entry};
+use crate::picker::{self, Entry, Pick};
 use crate::state::{self, Snapshot};
 use crate::ui::{self, AppWindow, View, Words};
 use junc_ipc::view::Describe;
@@ -55,6 +55,8 @@ pub struct App {
     creating: Option<Vec<String>>,
     /// The picker's rows and those the search shows, when it is open.
     picker: Option<(Vec<Entry>, Vec<usize>)>,
+    /// The open picker adds Listen outputs (board 17), not Inputs.
+    picker_listen: bool,
 }
 
 impl std::fmt::Debug for App {
@@ -96,6 +98,7 @@ pub fn install(
         checks: Vec::new(),
         creating: None,
         picker: None,
+        picker_listen: false,
     }));
     // Runs `f` on the controller unless it is busy (a callback raised while
     // it updates the window, such as a relayout when the canvas appears).
@@ -223,6 +226,8 @@ pub fn install(
     {
         let c = call.clone();
         view.on_open_picker(move || c(&App::open_picker));
+        let c = call.clone();
+        view.on_open_listen_picker(move || c(&App::open_listen_picker));
     }
     {
         let c = call.clone();
@@ -363,14 +368,25 @@ impl App {
 
     /// Opens the Add Input picker on the selected Junction.
     pub fn open_picker(&mut self) {
+        self.open(false);
+    }
+
+    /// Opens the Add Listen output picker on the selected Junction.
+    pub fn open_listen_picker(&mut self) {
+        self.open(true);
+    }
+
+    fn open(&mut self, listen: bool) {
         if self.main.is_none() {
             return;
         }
         self.picker = Some((Vec::new(), Vec::new()));
+        self.picker_listen = listen;
         if let Some(w) = self.window.upgrade() {
             let view = w.global::<View>();
             view.set_picker_search("".into());
             view.set_picker_cursor(0);
+            view.set_picker_listen(listen);
         }
         self.load_picker();
         if let Some(w) = self.window.upgrade() {
@@ -385,7 +401,11 @@ impl App {
             return;
         };
         let view = w.global::<View>();
-        let entries = picker::entries(d, id);
+        let entries = if self.picker_listen {
+            picker::outputs(d, id)
+        } else {
+            picker::entries(d, id)
+        };
         let shown = picker::filter(&entries, view.get_picker_search().as_str());
         let items = ui::picker(&w.global::<Words>(), &entries, &shown);
         view.set_picker_items(ModelRc::new(VecModel::from(items)));
@@ -410,12 +430,23 @@ impl App {
         if e.added {
             return;
         }
-        self.actions.send(Command::Edit {
-            junction: m.id.clone(),
-            edit: Edit::AddInput {
-                matcher: Box::new(e.matcher.clone()),
+        let edit = match &e.pick {
+            Pick::Input(matcher) => Edit::AddInput {
+                matcher: Box::new(matcher.clone()),
                 label: e.label.clone(),
             },
+            Pick::Listen(target) => Edit::AddListen {
+                target: target.clone(),
+                label: if e.label.is_empty() {
+                    target.clone()
+                } else {
+                    e.label.clone()
+                },
+            },
+        };
+        self.actions.send(Command::Edit {
+            junction: m.id.clone(),
+            edit,
         });
         self.close_picker();
     }

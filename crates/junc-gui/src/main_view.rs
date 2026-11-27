@@ -25,6 +25,8 @@ pub enum Icon {
     Junction,
     /// An output device.
     Speaker,
+    /// A screen's output (HDMI, DisplayPort).
+    Screen,
 }
 
 impl Icon {
@@ -36,6 +38,7 @@ impl Icon {
             Self::Monitor => "monitor",
             Self::Junction => "junction",
             Self::Speaker => "speaker",
+            Self::Screen => "screen",
         }
     }
 }

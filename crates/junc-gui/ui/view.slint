@@ -25,6 +25,9 @@ export global Words {
     // TRANSLATORS: system audio in the picker: what an output plays.
     public pure function monitor-of(output: string) -> string { @tr("Monitor of {0}", output) }
     public pure function cable() -> string { @tr("Cable") }
+    // TRANSLATORS: Add Listen output picker (design board 17).
+    public pure function output-devices() -> string { @tr("Output devices") }
+    public pure function default-output() -> string { @tr("Default output (follows system)") }
 }
 
 export struct JunctionItem {
@@ -99,6 +102,8 @@ export global View {
     in-out property <length> empty-listens-y;
     in-out property <length> empty-h;
     in-out property <bool> picker-open;
+    // The picker adds Listen outputs (board 17) rather than Inputs.
+    in-out property <bool> picker-listen;
     in-out property <[PickerItem]> picker-items;
     in-out property <string> picker-search;
     in-out property <int> picker-cursor;
@@ -128,6 +133,7 @@ export global View {
     // Board 10: New Junction.
     callback new-junction();
     callback open-picker();
+    callback open-listen-picker();
     callback picker-search-edited(string);
     callback picker-picked(int);
     callback picker-closed();

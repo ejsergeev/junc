@@ -117,6 +117,7 @@ pub fn glyph(icon: Icon) -> &'static str {
         Icon::Monitor => "\u{f0f5f}",
         Icon::Junction => "\u{f062d}",
         Icon::Speaker => "\u{f04c3}",
+        Icon::Screen => "\u{f0379}",
     }
 }
 
@@ -148,11 +149,14 @@ pub fn picker(words: &Words<'_>, entries: &[Entry], shown: &[usize]) -> Vec<Pick
                     Group::Hardware => words.invoke_hardware_inputs(),
                     Group::System => words.invoke_system_audio(),
                     Group::Junctions => words.invoke_junctions(),
+                    Group::Outputs => words.invoke_output_devices(),
                 }
                 .to_uppercase()
             };
             let text = if e.group == Group::System {
                 words.invoke_monitor_of(e.label.as_str().into())
+            } else if e.group == Group::Outputs && e.label.is_empty() {
+                words.invoke_default_output()
             } else {
                 e.label.as_str().into()
             };

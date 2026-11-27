@@ -2,8 +2,10 @@
 
 //! The Add Input picker (design board 7, F2): what a Junction can take
 //! audio from, from juncd's candidates and Junctions, in the board's
-//! groups. Plain data, so it is tested without a window; the window words
-//! the groups and the monitors in the UI language.
+//! groups; and the Add Listen output picker (board 17, F6): the outputs it
+//! can be heard on. Plain data, so it is tested without a window; the
+//! window words the groups, the monitors and the default output in the UI
+//! language.
 
 use crate::main_view::{Icon, match_icon};
 use junc_core::model::Match;
@@ -21,6 +23,17 @@ pub enum Group {
     System,
     /// Other Junctions and Cables.
     Junctions,
+    /// Output devices (Add Listen output).
+    Outputs,
+}
+
+/// What picking a row adds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Pick {
+    /// An Input taking this.
+    Input(Match),
+    /// A Listen output to this target (`default` or an output node.name).
+    Listen(String),
 }
 
 /// One row.
@@ -33,10 +46,19 @@ pub struct Entry {
     pub icon: Icon,
     /// A Cable among the Junctions.
     pub cable: bool,
-    /// The Junction already has an Input taking this.
+    /// The Junction already has an Input or Listen output taking this.
     pub added: bool,
-    /// What the new Input matches.
-    pub matcher: Match,
+    pub pick: Pick,
+}
+
+impl Entry {
+    /// What the new Input matches, for an Input row.
+    pub fn matcher(&self) -> Option<&Match> {
+        match &self.pick {
+            Pick::Input(m) => Some(m),
+            Pick::Listen(_) => None,
+        }
+    }
 }
 
 /// Whether two matches take the same thing.
@@ -81,7 +103,7 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
     let mut push = |group: Group, label: String, matcher: Match, cable: bool| {
         if out
             .iter()
-            .any(|e| e.group == group && same(&e.matcher, &matcher))
+            .any(|e| e.group == group && e.matcher().is_some_and(|m| same(m, &matcher)))
         {
             return;
         }
@@ -95,7 +117,7 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
             },
             cable,
             added: added(&matcher),
-            matcher,
+            pick: Pick::Input(matcher),
         });
     };
     for c in &d.candidates {
@@ -148,13 +170,64 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
     out
 }
 
-/// The rows whose name contains `query` (any case), as indexes.
+/// The outputs Junction `junction` can be heard on: the default output
+/// (label empty: the window words it), then the output devices by name. A
+/// row is added when a Listen output goes there already, by name or, for
+/// one that follows the default, to the device it follows.
+pub fn outputs(d: &Describe, junction: &str) -> Vec<Entry> {
+    let Some(me) = d.junctions.iter().find(|j| j.id == junction) else {
+        return Vec::new();
+    };
+    let default = d.defaults.output.as_deref();
+    let goes_to = |node: &str| {
+        me.listens
+            .iter()
+            .any(|l| l.target == node || (l.target == "default" && default == Some(node)))
+    };
+    let mut out = vec![Entry {
+        group: Group::Outputs,
+        label: String::new(),
+        icon: Icon::Speaker,
+        cable: false,
+        added: me.listens.iter().any(|l| l.target == "default"),
+        pick: Pick::Listen("default".into()),
+    }];
+    let mut devices: Vec<Entry> = d
+        .candidates
+        .iter()
+        .filter(|c| c.kind == "sink")
+        .map(|c| Entry {
+            group: Group::Outputs,
+            label: if c.description.is_empty() {
+                c.node.clone()
+            } else {
+                c.description.clone()
+            },
+            icon: if ["hdmi", "displayport"].iter().any(|s| c.node.contains(s)) {
+                Icon::Screen
+            } else {
+                Icon::Speaker
+            },
+            cable: false,
+            added: goes_to(&c.node),
+            pick: Pick::Listen(c.node.clone()),
+        })
+        .collect();
+    devices.sort_by_key(|e| e.label.to_lowercase());
+    out.extend(devices);
+    out
+}
+
+/// The rows whose name contains `query` (any case), as indexes. The
+/// default output (no label) shows only without a query.
 pub fn filter(entries: &[Entry], query: &str) -> Vec<usize> {
     let q = query.trim().to_lowercase();
     entries
         .iter()
         .enumerate()
-        .filter(|(_, e)| q.is_empty() || e.label.to_lowercase().contains(&q))
+        .filter(|(_, e)| {
+            q.is_empty() || (!e.label.is_empty() && e.label.to_lowercase().contains(&q))
+        })
         .map(|(i, _)| i)
         .collect()
 }
@@ -203,7 +276,10 @@ mod tests {
         assert_eq!(groups, sorted, "in the board's group order");
         let spotify = e
             .iter()
-            .find(|e| e.matcher.binary.as_deref() == Some("spotify"))
+            .find(|e| {
+                e.matcher()
+                    .is_some_and(|m| m.binary.as_deref() == Some("spotify"))
+            })
             .expect("spotify");
         assert!(spotify.added && spotify.group == Group::Apps);
         assert_eq!(spotify.icon, Icon::Music);
@@ -227,10 +303,14 @@ mod tests {
             .find(|e| e.group == Group::Junctions)
             .expect("the Cable");
         assert!(cable.cable && !cable.added);
-        assert_eq!(cable.matcher.junction.as_deref(), Some("firefox-to-obs"));
+        assert_eq!(
+            cable.matcher().and_then(|m| m.junction.as_deref()),
+            Some("firefox-to-obs")
+        );
         assert!(
             e.iter()
-                .all(|e| e.matcher.junction.as_deref() != Some("virtual-mic-for-zoom")),
+                .all(|e| e.matcher().and_then(|m| m.junction.as_deref())
+                    != Some("virtual-mic-for-zoom")),
             "never itself"
         );
         assert!(entries(&d, "gone").is_empty());
@@ -251,10 +331,9 @@ mod tests {
         assert!(e.iter().all(|e| e.group != Group::Junctions));
         // The other way round is fine.
         let e = entries(&d, "firefox-to-obs");
-        assert!(
-            e.iter()
-                .any(|e| e.matcher.junction.as_deref() == Some("virtual-mic-for-zoom"))
-        );
+        assert!(e.iter().any(
+            |e| e.matcher().and_then(|m| m.junction.as_deref()) == Some("virtual-mic-for-zoom")
+        ));
     }
 
     #[test]
@@ -268,5 +347,42 @@ mod tests {
         );
         assert_eq!(filter(&e, "  ").len(), e.len());
         assert!(filter(&e, "no such thing").is_empty());
+    }
+
+    #[test]
+    fn outputs_start_with_the_default_and_say_where_it_is_heard() {
+        let mut d = describe();
+        d.candidates.push(Candidate {
+            node: "alsa_output.builtin".into(),
+            description: "Built-in Audio".into(),
+            kind: "sink".into(),
+            app: None,
+            binary: None,
+            bluetooth: None,
+        });
+        d.candidates[5].node = "alsa_output.hdmi-stereo".into();
+        d.defaults.output = Some("alsa_output.builtin".into());
+        let j = &mut d.junctions[0];
+        j.listens.truncate(1);
+        j.listens[0].target = "default".into();
+        let e = outputs(&d, "virtual-mic-for-zoom");
+        let rows: Vec<(&str, Icon, bool)> = e
+            .iter()
+            .map(|e| (e.label.as_str(), e.icon, e.added))
+            .collect();
+        assert_eq!(
+            rows,
+            [
+                ("", Icon::Speaker, true),
+                ("Built-in Audio", Icon::Speaker, true),
+                ("HDMI Output", Icon::Screen, false),
+            ],
+            "the default first; the device it follows is taken too"
+        );
+        assert_eq!(e[2].pick, Pick::Listen("alsa_output.hdmi-stereo".into()));
+        assert!(e.iter().all(|e| e.matcher().is_none()));
+        assert_eq!(filter(&e, "hdmi"), [2], "the search skips the default row");
+        assert_eq!(filter(&e, "").len(), 3);
+        assert!(outputs(&d, "gone").is_empty());
     }
 }
