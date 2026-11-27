@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -700,4 +700,33 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     settle();
     assert!(!view.get_import_open());
     assert_eq!(count(&mock), 5);
+    drop((w, _app, mock));
+
+    // Board 31: Follow Omarchy off opens the picker: English first, then
+    // the 46 languages; typing filters, Enter shows the UI in German; the
+    // switch back on follows Omarchy (English here).
+    let (w, _app, _mock) = open("langPicker");
+    let view = w.global::<View>();
+    assert!(!view.get_follow_language());
+    assert!(view.get_lang_open());
+    assert_eq!(view.get_lang_items().row_count(), 46);
+    assert_eq!(
+        view.get_lang_items().row_data(0).expect("current").text,
+        "English"
+    );
+    for c in "deu".chars() {
+        key(&w, c.to_string());
+    }
+    settle();
+    assert_eq!(view.get_lang_items().row_count(), 1);
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_lang_open());
+    assert_eq!(view.get_language_name(), "Deutsch");
+    assert!(has(&w, "Einstellungen"));
+    view.invoke_follow_language_changed(true);
+    settle();
+    assert!(view.get_follow_language());
+    assert_eq!(view.get_language_name(), "English");
+    assert!(has(&w, "Settings"));
 }
