@@ -17,7 +17,7 @@ msgstr ""
 msgid "Off · apps see silence"
 msgstr "オフ · アプリには無音"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "ケーブル"
 
@@ -29,7 +29,7 @@ msgstr "入力はまだありません"
 msgid "{0} offline"
 msgstr "{0} 件オフライン"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint
 msgid "{0} volume"
 msgstr "{0} の音量"
 
@@ -69,7 +69,7 @@ msgstr "オフライン"
 msgid "Not running"
 msgstr "未実行"
 
-#: crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "Exclusive"
 msgstr "排他"
 
@@ -85,7 +85,7 @@ msgstr "デバイスを待機中…"
 msgid "Waiting for {0}…"
 msgstr "{0} を待機中…"
 
-#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "{0} ch"
 msgstr "{0} ch"
 
@@ -149,7 +149,7 @@ msgstr "追加"
 msgid "added"
 msgstr "追加済み"
 
-#: crates/junc-gui/ui/components/picker.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/picker.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "move"
 msgstr "移動"
 
@@ -168,6 +168,102 @@ msgstr "オフライン"
 #: crates/junc-gui/ui/components/switch.slint
 msgid "on"
 msgstr "オン"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Change app…"
+msgstr "アプリを変更…"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Rename"
+msgstr "名前を変更"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "From"
+msgstr "送り元"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App · playing"
+msgstr "アプリ · 再生中"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App · not running"
+msgstr "アプリ · 起動していません"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "To"
+msgstr "送り先"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App · hears this Cable as its input"
+msgstr "アプリ · このケーブルを入力として受け取ります"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "output"
+msgstr "出力"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "input"
+msgstr "入力"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} channel {1}"
+msgstr "{0} Ch {1}"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Volume"
+msgstr "音量"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Listen"
+msgstr "試聴"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Listen output"
+msgstr "試聴出力"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Hear the Cable on an output"
+msgstr "ケーブルを出力で試聴します"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "{0} is muted in your speakers while the Cable carries it"
+msgstr "ケーブルが運んでいる間、スピーカーでは {0} がミュートされます"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Delete"
+msgstr "削除"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "toggle"
+msgstr "切替"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "rename"
+msgstr "名前変更"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App that hears the Cable"
+msgstr "ケーブルを受け取るアプリ"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App the Cable takes from"
+msgstr "ケーブルの送り元のアプリ"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Search apps"
+msgstr "アプリを検索"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "pick"
+msgstr "選択"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Delete “{0}”?"
+msgstr "「{0}」を削除しますか?"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "{0} goes back to its own input."
+msgstr "{0} は元の入力に戻ります。"
 
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
@@ -293,10 +389,6 @@ msgid "stacked"
 msgstr "縦並び"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Rename"
-msgstr "名前を変更"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
 msgstr "デフォルト"
 
@@ -319,10 +411,6 @@ msgstr "入力を追加"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Bus"
 msgstr "バス"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Listen"
-msgstr "試聴"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Add Listen output"
@@ -361,10 +449,6 @@ msgid "Bus channel {0} out"
 msgstr "バス Ch {0} 出力"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "{0} channel {1}"
-msgstr "{0} Ch {1}"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Click to unlink"
 msgstr "クリックでリンク解除"
 
@@ -377,24 +461,12 @@ msgid "{0} {1} → Ch {2}"
 msgstr "{0} {1} → Ch {2}"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Delete"
-msgstr "削除"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "toggle"
-msgstr "切替"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "link"
 msgstr "リンク"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "unlink"
 msgstr "リンク解除"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "rename"
-msgstr "名前変更"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Show Listen"
@@ -411,10 +483,6 @@ msgstr "アプリ・入力・システム音声を検索"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Plug in headphones or a USB device to see it here."
 msgstr "ヘッドホンや USB デバイスをつなぐとここに表示されます。"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Delete “{0}”?"
-msgstr "「{0}」を削除しますか?"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Apps recording from it lose this input."

@@ -17,7 +17,7 @@ msgstr ""
 msgid "Off · apps see silence"
 msgstr "Aus · Apps hören Stille"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Cable"
 msgstr "Kabel"
 
@@ -29,7 +29,7 @@ msgstr "Noch keine Eingänge"
 msgid "{0} offline"
 msgstr "{0} offline"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint
 msgid "{0} volume"
 msgstr "Lautstärke {0}"
 
@@ -69,7 +69,7 @@ msgstr "Offline"
 msgid "Not running"
 msgstr "Läuft nicht"
 
-#: crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/card.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "Exclusive"
 msgstr "Exklusiv"
 
@@ -85,7 +85,7 @@ msgstr "Warte auf Gerät…"
 msgid "Waiting for {0}…"
 msgstr "Warte auf {0}…"
 
-#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "{0} ch"
 msgstr "{0} Kanäle"
 
@@ -149,7 +149,7 @@ msgstr "hinzufügen"
 msgid "added"
 msgstr "hinzugefügt"
 
-#: crates/junc-gui/ui/components/picker.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/picker.slint crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
 msgid "move"
 msgstr "bewegen"
 
@@ -168,6 +168,102 @@ msgstr "offline"
 #: crates/junc-gui/ui/components/switch.slint
 msgid "on"
 msgstr "an"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Change app…"
+msgstr "App wechseln…"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Rename"
+msgstr "Umbenennen"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "From"
+msgstr "Von"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App · playing"
+msgstr "App · spielt"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App · not running"
+msgstr "App · läuft nicht"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "To"
+msgstr "Nach"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App · hears this Cable as its input"
+msgstr "App · hört dieses Kabel als Eingang"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "output"
+msgstr "Ausgang"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "input"
+msgstr "Eingang"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "{0} channel {1}"
+msgstr "{0} Kanal {1}"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Volume"
+msgstr "Lautstärke"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Listen"
+msgstr "Abhören"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Listen output"
+msgstr "Abhörausgang"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Hear the Cable on an output"
+msgstr "Das Kabel auf einem Ausgang hören"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "{0} is muted in your speakers while the Cable carries it"
+msgstr "{0} ist in deinen Lautsprechern stumm, solange das Kabel es überträgt"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Delete"
+msgstr "Löschen"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "toggle"
+msgstr "umschalten"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "rename"
+msgstr "umbenennen"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App that hears the Cable"
+msgstr "App, die das Kabel hört"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "App the Cable takes from"
+msgstr "App, aus der das Kabel nimmt"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Search apps"
+msgstr "Apps suchen"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "pick"
+msgstr "wählen"
+
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Delete “{0}”?"
+msgstr "„{0}“ löschen?"
+
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "{0} goes back to its own input."
+msgstr "{0} kehrt zu ihrem eigenen Eingang zurück."
 
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
@@ -296,10 +392,6 @@ msgid "stacked"
 msgstr "gestapelt"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Rename"
-msgstr "Umbenennen"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
 msgstr "Standard"
 
@@ -322,10 +414,6 @@ msgstr "Eingang hinzufügen"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Bus"
 msgstr "Bus"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Listen"
-msgstr "Abhören"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Add Listen output"
@@ -364,10 +452,6 @@ msgid "Bus channel {0} out"
 msgstr "Bus-Kanal {0} Ausgang"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "{0} channel {1}"
-msgstr "{0} Kanal {1}"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "Click to unlink"
 msgstr "Klicken zum Trennen"
 
@@ -380,24 +464,12 @@ msgid "{0} {1} → Ch {2}"
 msgstr "{0} {1} → Kanal {2}"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Delete"
-msgstr "Löschen"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "toggle"
-msgstr "umschalten"
-
-#: crates/junc-gui/ui/screens/main.slint
 msgid "link"
 msgstr "verbinden"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "unlink"
 msgstr "trennen"
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "rename"
-msgstr "umbenennen"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Show Listen"
@@ -414,10 +486,6 @@ msgstr "Apps, Eingänge, Systemaudio suchen"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Plug in headphones or a USB device to see it here."
 msgstr "Schließe Kopfhörer oder ein USB-Gerät an, damit es hier erscheint."
-
-#: crates/junc-gui/ui/screens/main.slint
-msgid "Delete “{0}”?"
-msgstr "„{0}“ löschen?"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Apps recording from it lose this input."
