@@ -765,7 +765,7 @@ msgstr "すべて後から変更できます。オーディオ環境は問題あ
 msgid "Back"
 msgstr "戻る"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
 msgid "choose"
 msgstr "選択"
 
@@ -846,8 +846,16 @@ msgid "Current language: {0}"
 msgstr "現在の言語: {0}"
 
 #: crates/junc-gui/ui/screens/settings.slint
+msgid "Off: JUNC uses the language you pick below."
+msgstr "オフ: 下で選んだ言語を使います。"
+
+#: crates/junc-gui/ui/screens/settings.slint
 msgid "Follows Omarchy. Turn off the switch above to pick one."
 msgstr "Omarchy に従います。選ぶには上のスイッチをオフにしてください。"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Shown by native name. Missing strings fall back to English."
+msgstr "各言語の名前で表示。未翻訳の文字列は英語になります。"
 
 #: crates/junc-gui/ui/screens/settings.slint
 msgid "Appearance"
@@ -921,6 +929,14 @@ msgstr "チェックを実行"
 msgid "Logs"
 msgstr "ログ"
 
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Search languages"
+msgstr "言語を検索"
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "{0} languages · type to filter · English is the fallback"
+msgstr "{0} 言語 · 入力で絞り込み · 既定は英語"
+
 #: crates/junc-gui/ui/view.slint
 msgid "Capturing: {0}"
 msgstr "取り込み中: {0}"
@@ -934,8 +950,16 @@ msgid "Quit"
 msgstr "終了"
 
 #: crates/junc-gui/ui/view.slint
-msgid "English"
-msgstr "日本語"
+msgid "Current"
+msgstr "現在"
+
+#: crates/junc-gui/ui/view.slint
+msgid "All languages"
+msgstr "すべての言語"
+
+#: crates/junc-gui/ui/view.slint
+msgid "current"
+msgstr "現在"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Running apps"

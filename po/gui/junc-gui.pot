@@ -760,7 +760,7 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
 msgid "choose"
 msgstr ""
 
@@ -841,7 +841,15 @@ msgid "Current language: {0}"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/settings.slint
+msgid "Off: JUNC uses the language you pick below."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/settings.slint
 msgid "Follows Omarchy. Turn off the switch above to pick one."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Shown by native name. Missing strings fall back to English."
 msgstr ""
 
 #: crates/junc-gui/ui/screens/settings.slint
@@ -916,6 +924,14 @@ msgstr ""
 msgid "Logs"
 msgstr ""
 
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "Search languages"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/settings.slint
+msgid "{0} languages · type to filter · English is the fallback"
+msgstr ""
+
 #: crates/junc-gui/ui/view.slint
 msgid "Capturing: {0}"
 msgstr ""
@@ -929,7 +945,15 @@ msgid "Quit"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint
-msgid "English"
+msgid "Current"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "All languages"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "current"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint
