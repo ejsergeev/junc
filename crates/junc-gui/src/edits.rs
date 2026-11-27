@@ -39,6 +39,18 @@ pub enum Edit {
     AddListen { target: String, label: String },
     /// Add this many channels to the Bus (board 16: a pair or one).
     AddBus(u8),
+    /// Input Options (board 15): mute the app elsewhere while captured.
+    Exclusive { input: String, on: bool },
+    /// Input Options: Input channel `ch` feeds Bus channel `bus` alone
+    /// (`None`: nothing), given the pairs in use now.
+    Feed {
+        input: String,
+        ch: u8,
+        bus: Option<u8>,
+        in_use: Vec<[u8; 2]>,
+    },
+    /// Input Options: remove the Input.
+    RemoveInput(String),
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
@@ -67,6 +79,43 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
             j.listen.push(new_listen(id, target));
             return true;
         }
+        Edit::RemoveInput(id) => {
+            let before = j.input.len();
+            j.input.retain(|i| &i.id != id);
+            return j.input.len() < before;
+        }
+        Edit::Exclusive { input, on } => {
+            let Some(i) = j.input.iter_mut().find(|i| &i.id == input) else {
+                return false;
+            };
+            i.exclusive = *on;
+            return true;
+        }
+        Edit::Feed {
+            input,
+            ch,
+            bus,
+            in_use,
+        } => {
+            if bus.is_some_and(|b| b == 0 || b > j.bus.channels) {
+                return false;
+            }
+            let Some(i) = j.input.iter_mut().find(|i| &i.id == input) else {
+                return false;
+            };
+            let mut links: Vec<[u8; 2]> = i
+                .links
+                .as_deref()
+                .unwrap_or(in_use)
+                .iter()
+                .filter(|p| p[0] != *ch)
+                .copied()
+                .collect();
+            links.extend(bus.map(|b| [*ch, b]));
+            links.sort_unstable();
+            i.links = Some(links);
+            return true;
+        }
     };
     match part {
         Part::Input(id) => {
@@ -79,7 +128,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     i.links = Some(remaining(i.links.as_deref(), in_use, remove));
                 }
-                Edit::AddInput { .. } | Edit::AddListen { .. } | Edit::AddBus(_) => {}
+                _ => {}
             }
         }
         Part::Listen(id) => {
@@ -92,7 +141,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
                 Edit::Unlink { remove, in_use, .. } => {
                     l.links = Some(remaining(l.links.as_deref(), in_use, remove));
                 }
-                Edit::AddInput { .. } | Edit::AddListen { .. } | Edit::AddBus(_) => {}
+                _ => {}
             }
         }
     }
@@ -334,5 +383,57 @@ target = "default"
         let text = toml::to_string(&c).expect("toml");
         junc_core::config::load(&text, "junctions.toml").expect("still valid");
         assert!(!apply(&mut c, "gone", &Edit::AddBus(1)));
+    }
+
+    #[test]
+    fn input_options_change_exclusive_feeds_and_remove_it() {
+        let mut c = config();
+        let ex = |on| Edit::Exclusive {
+            input: "music".into(),
+            on,
+        };
+        assert!(apply(&mut c, "zoom", &ex(true)));
+        assert!(c.junction[0].input[1].exclusive);
+        // music: 1 → 3, 2 → 4. Channel 1 to Bus 1 instead; 2 to nothing.
+        let feed = |ch, bus| Edit::Feed {
+            input: "music".into(),
+            ch,
+            bus,
+            in_use: vec![[1, 3], [2, 4]],
+        };
+        assert!(apply(&mut c, "zoom", &feed(1, Some(1))));
+        assert_eq!(c.junction[0].input[1].links, Some(vec![[1, 1], [2, 4]]));
+        assert!(apply(&mut c, "zoom", &feed(2, None)));
+        assert_eq!(c.junction[0].input[1].links, Some(vec![[1, 1]]));
+        assert!(
+            !apply(&mut c, "zoom", &feed(1, Some(5))),
+            "no Bus channel 5"
+        );
+        // mic has no list of its own: the pairs in use become it.
+        assert!(apply(
+            &mut c,
+            "zoom",
+            &Edit::Feed {
+                input: "mic".into(),
+                ch: 2,
+                bus: Some(1),
+                in_use: vec![[1, 1], [2, 2]],
+            }
+        ));
+        assert_eq!(c.junction[0].input[0].links, Some(vec![[1, 1], [2, 1]]));
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
+        assert!(apply(&mut c, "zoom", &Edit::RemoveInput("mic".into())));
+        assert!(!apply(&mut c, "zoom", &Edit::RemoveInput("mic".into())));
+        let ids: Vec<&str> = c.junction[0].input.iter().map(|i| i.id.as_str()).collect();
+        assert_eq!(ids, ["music"]);
+        assert!(!apply(
+            &mut c,
+            "zoom",
+            &Edit::Exclusive {
+                input: "mic".into(),
+                on: true
+            }
+        ));
     }
 }
