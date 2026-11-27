@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 26, 30)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 22, 26, 30)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -495,4 +495,29 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
         .invoke_accessible_default_action();
     settle();
     assert!(view.get_renaming());
+    drop((w, _app, mock));
+
+    // Board 22: what goes with it and what stays; Esc keeps it, Ctrl+Delete
+    // asks again, Ctrl+Enter deletes it.
+    let (w, _app, mock) = open("deleteConfirm");
+    let view = w.global::<View>();
+    let count = |m: &Mock| m.config().expect("config").junction.len();
+    assert!(view.get_confirming());
+    assert!(has(&w, "Delete “Virtual Mic for Zoom”?"));
+    assert!(has(&w, "3 Inputs · 12 Links"));
+    assert!(has(&w, "Bus Ch 1–2, Ch 3–4 · 2 Listen outputs"));
+    assert!(has(
+        &w,
+        "Spotify, Soundux and USB Microphone keep playing as before."
+    ));
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_confirming());
+    assert_eq!(count(&mock), 2);
+    ctrl(&w, &SharedString::from(Key::Delete));
+    settle();
+    assert!(view.get_confirming());
+    ctrl(&w, "\n");
+    settle();
+    assert_eq!(count(&mock), 1);
 }
