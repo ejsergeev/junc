@@ -1246,6 +1246,23 @@ through `GetConfig` → `Apply` (`Edit::AddBus`), never past 64. The Bus
 keeps no grouping of its own: its cards pair channels from the first, so
 a mono channel followed by a pair reads as pairs from the start.
 
+As built (B18, Input Options): the Options button of an Input card opens
+its panel (boards 15, 30), under the card, or beside it over the Bus on
+a narrow tile; one at a time, its place from `layout.rs` like the card's.
+It has Exclusive for apps (`Edit::Exclusive`), "Feeds Bus" with a
+`JSelect` per channel showing the Bus channel it feeds (the first when
+several; `main_view::feeds`) and setting that channel to feed only the
+one chosen, or none (`Edit::Feed`, the other channels' pairs kept), and
+Remove input (Del, `Edit::RemoveInput`, no confirmation: the Input comes
+back from the picker). Esc closes it; the window also takes Esc and Del
+while it is open, in case an update moved the focus. Its models are
+updated in place (`app::update`), so the selects keep their elements and
+the focus. `JSelect` (new in the library and the gallery) opens its list
+under the field, pushing what follows down; its owner sets the choice.
+`JCard` lets its owner say whether the Options panel is open, through
+`JButton.controlled` (a toggle whose state its owner sets; it stays a
+toggle button to assistive technology).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
@@ -1838,7 +1855,10 @@ other boards, languages and Weston come with the screens that show them.
   `tests/states.rs` turns a Junction on with Space and with the banner's
   button and off again from its switch, adds Listen outputs from Ctrl+M,
   the picker and the empty Listen column, and adds Bus channels (Enter,
-  ↓ for mono, Esc); `check.sh` compares their AT-SPI trees.
+  ↓ for mono, Esc), and drives Input Options (Exclusive, a select by
+  pointer and keys, Esc, Del); boards 15 and 30 are `inputOptions` and
+  `inputOptionsNarrow` (fixture `options`, the card's index); `check.sh`
+  compares their AT-SPI trees.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
