@@ -82,6 +82,7 @@ application name='junc-gui' states=[]
       radio button name='Stereo pair' states=[checkable,checked,enabled,sensitive,showing,visible] actions=click
       radio button name='Mono' states=[checkable,enabled,sensitive,showing,visible] actions=click
       radio button name='Two pairs' states=[checkable,enabled,sensitive,showing,visible] actions=click
+    combo box name='Channel 1 feeds' states=[focusable,enabled,sensitive,showing,visible]
     entry name='Junction name' states=[focusable,enabled,sensitive,editable,showing,visible]
     unknown name='' states=[enabled,sensitive,showing,visible]
       label name='Enter' states=[enabled,sensitive,showing,visible]
