@@ -33,6 +33,9 @@ export component JPicker inherits Rectangle {
     in property <bool> hints;
     in property <string> note;
     in property <string> pick-word: @tr("add");
+    // A long list (the languages) scrolls past this height, keeping the
+    // cursor's row in view; 0 shows every row.
+    in property <length> max-list-height: 0;
     in-out property <string> search;
     in-out property <int> cursor: 0;
     callback picked(int);
@@ -87,7 +90,11 @@ export component JPicker inherits Rectangle {
                 accessible-role: text-input;
                 accessible-label: root.placeholder;
                 accessible-placeholder-text: root.placeholder;
-                edited => { root.cursor = 0; root.search-edited(self.text); }
+                edited => {
+                    root.cursor = 0;
+                    list.viewport-y = 0;
+                    root.search-edited(self.text);
+                }
                 key-pressed(e) => {
                     if e.text == Key.DownArrow { root.step(1); return accept; }
                     if e.text == Key.UpArrow { root.step(-1); return accept; }
@@ -111,8 +118,24 @@ export component JPicker inherits Rectangle {
             }
         }
         // Rows touch (28 px apart); a group's caption sits above its first.
-        VerticalLayout {
+        list := Flickable {
+            height: root.max-list-height > 0 ? min(rows.preferred-height, root.max-list-height) : rows.preferred-height;
+            viewport-height: rows.preferred-height;
+            interactive: root.max-list-height > 0;
+        rows := VerticalLayout {
+        width: list.width;
         for item[i] in root.items: VerticalLayout {
+            // Keep the cursor's row in view.
+            property <bool> current: i == root.cursor;
+            changed current => {
+                if self.current && root.max-list-height > 0 {
+                    if self.y + list.viewport-y < 0 {
+                        list.viewport-y = -self.y;
+                    } else if self.y + self.height + list.viewport-y > list.height {
+                        list.viewport-y = list.height - self.y - self.height;
+                    }
+                }
+            }
             if item.group != "": Text {
                 text: item.group;
                 font-size: Tokens.type-caption;
@@ -166,6 +189,7 @@ export component JPicker inherits Rectangle {
                     }
                 }
             }
+        }
         }
         }
         if root.note != "": Text {
