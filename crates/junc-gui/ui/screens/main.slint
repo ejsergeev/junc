@@ -16,6 +16,7 @@ import { JKbd } from "../components/kbd.slint";
 import { JConfirm } from "../components/confirm.slint";
 import { JEmptyState } from "../components/empty-state.slint";
 import { JPicker, PickerItem } from "../components/picker.slint";
+import { JBanner } from "../components/banner.slint";
 
 export struct ChannelItem {
     number: int,
@@ -166,6 +167,8 @@ export component MainScreen inherits Rectangle {
     in property <string> node;
     in property <int> bus-channels;
     in property <bool> cable;
+    // Off (board 18): a banner, every card dimmed, nothing linked.
+    in property <bool> on: true;
     // Input counts.
     in property <int> apps;
     in property <int> devices;
@@ -221,6 +224,7 @@ export component MainScreen inherits Rectangle {
     callback link-clicked();
     callback port-remove(int, int, int, int);
     callback delete-junction();
+    callback turn-on();
     callback open-picker();
     callback picker-search-edited(string);
     callback picker-picked(int);
@@ -283,6 +287,20 @@ export component MainScreen inherits Rectangle {
                     min-width: 0;
                     horizontal-stretch: 1;
                 }
+            }
+        }
+        // Off: what that means and how to undo it.
+        if !root.on: Rectangle {
+            height: 50px * Tokens.scale;
+            JBanner {
+                x: root.pad;
+                y: 14px * Tokens.scale;
+                width: parent.width - 2 * root.pad;
+                text: @tr("Junction is off — apps see silence");
+                action: @tr("Turn on");
+                action-key: "Space";
+                action-primary: false;
+                activated => { root.turn-on(); }
             }
         }
         // Column headings (Listen's moves into the canvas when stacked).
@@ -377,6 +395,7 @@ export component MainScreen inherits Rectangle {
                 shortcut: "Ctrl+M";
             }
             for c in root.cards: JCard {
+                opacity: root.on ? 1 : 0.45;
                 x: root.pad + c.x;
                 y: c.y;
                 width: c.w;
@@ -417,7 +436,7 @@ export component MainScreen inherits Rectangle {
                             ch: ch;
                             bus: c.column == 1;
                             stacked-listen: c.column == 2 && root.stacked;
-                            live: c.on && c.state == "ok";
+                            live: root.on && c.on && c.state == "ok";
                             levels: root.levels;
                             peaks: root.peaks;
                         }
@@ -425,6 +444,7 @@ export component MainScreen inherits Rectangle {
                 }
             }
             for p in root.ports: JPort {
+                opacity: root.on ? 1 : 0.45;
                 x: root.pad + p.x - self.width / 2;
                 y: p.y - self.height / 2;
                 state: p.state;
@@ -505,7 +525,7 @@ export component MainScreen inherits Rectangle {
         TouchArea { clicked => { root.picker-closed(); } }
         picker := JPicker {
             x: root.pad + root.col-x0;
-            y: (62px + 56px) * Tokens.scale;
+            y: (62px + (root.on ? 0 : 50px) + 56px) * Tokens.scale;
             height: self.preferred-height;
             title: @tr("Add input");
             placeholder: @tr("Search apps, inputs, system audio");

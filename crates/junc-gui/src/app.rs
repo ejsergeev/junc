@@ -526,6 +526,7 @@ impl App {
         match &self.main {
             Some(m) => {
                 view.set_title(m.name.as_str().into());
+                view.set_junction_on(m.enabled);
                 view.set_node(m.node.as_str().into());
                 view.set_bus_channels(
                     i32::try_from(m.bus.iter().map(|g| g.channels.len()).sum::<usize>())

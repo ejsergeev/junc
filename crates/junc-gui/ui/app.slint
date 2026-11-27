@@ -69,7 +69,9 @@ component SidebarRow inherits Rectangle {
                 accessible-role: none;
             }
             Text {
-                text: root.item.cable ? @tr("Cable") : root.item.inputs != "" ? root.item.inputs : @tr("No inputs yet");
+                text: !root.item.enabled ? @tr("Off · apps see silence")
+                    : root.item.cable ? @tr("Cable")
+                    : root.item.inputs != "" ? root.item.inputs : @tr("No inputs yet");
                 color: Tokens.text-subtle;
                 font-size: Tokens.type-body-small;
                 overflow: elide;
@@ -134,7 +136,13 @@ export component AppWindow inherits Window {
         width: root.width;
         height: root.height;
         key-pressed(e) => {
-            if View.onboarding != 0 || !e.modifiers.control { return reject; }
+            if View.onboarding != 0 { return reject; }
+            // Board 18: Space turns the selected Junction back on.
+            if e.text == " " && View.selected != "" && !View.junction-on && !e.modifiers.control {
+                View.junction-toggled(View.selected, true);
+                return accept;
+            }
+            if !e.modifiers.control { return reject; }
             if !e.modifiers.shift && (e.text == "n" || e.text == "N") && View.selected != "" {
                 View.open-picker();
                 return accept;
@@ -257,6 +265,8 @@ export component AppWindow inherits Window {
             node: View.node;
             bus-channels: View.bus-channels;
             cable: View.cable;
+            on: View.junction-on;
+            turn-on => { View.junction-toggled(View.selected, true); }
             apps: View.apps;
             devices: View.devices;
             off: View.off;
