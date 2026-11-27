@@ -260,6 +260,10 @@ msgstr ""
 msgid "{0} goes back to its own input."
 msgstr ""
 
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Delete Cable"
+msgstr ""
+
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
 msgstr ""
@@ -312,7 +316,7 @@ msgstr ""
 msgid "Mono"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Ch {0}–{1}"
 msgstr ""
 
@@ -360,7 +364,7 @@ msgid_plural "{n} Devices"
 msgstr[0] ""
 msgstr[1] ""
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "{0}, {1}"
 msgstr ""
 
@@ -503,11 +507,15 @@ msgid "Plug in headphones or a USB device to see it here."
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Apps recording from it lose this input."
+msgid "Apps that record from it hear silence until you pick another input there."
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Its Inputs and Listen outputs go with it."
+msgid "REMOVED WITH IT"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Delete Junction"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/onboarding.slint
@@ -665,3 +673,35 @@ msgstr ""
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
 msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} and {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Input"
+msgid_plural "{n} Inputs"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Link"
+msgid_plural "{n} Links"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Bus {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Listen output"
+msgid_plural "{n} Listen outputs"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} keeps playing as before."
+msgid_plural "{0} keep playing as before."
+msgstr[0] ""
+msgstr[1] ""

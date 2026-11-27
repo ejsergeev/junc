@@ -269,6 +269,10 @@ msgstr "「{0}」を削除しますか?"
 msgid "{0} goes back to its own input."
 msgstr "{0} は元の入力に戻ります。"
 
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Delete Cable"
+msgstr "ケーブルを削除"
+
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
 msgstr "ジャンクションはまだありません"
@@ -321,7 +325,7 @@ msgstr "ステレオペア"
 msgid "Mono"
 msgstr "モノラル"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Ch {0}–{1}"
 msgstr "Ch {0}–{1}"
 
@@ -367,7 +371,7 @@ msgid "{n} Device"
 msgid_plural "{n} Devices"
 msgstr[0] "デバイス {n}"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "{0}, {1}"
 msgstr "{0}・{1}"
 
@@ -509,12 +513,16 @@ msgid "Plug in headphones or a USB device to see it here."
 msgstr "ヘッドホンや USB デバイスをつなぐとここに表示されます。"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Apps recording from it lose this input."
-msgstr "ここから録音しているアプリはこの入力を失います。"
+msgid "Apps that record from it hear silence until you pick another input there."
+msgstr "これから録音しているアプリは、別の入力を選ぶまで無音になります。"
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Its Inputs and Listen outputs go with it."
-msgstr "入力と試聴出力も一緒に削除されます。"
+msgid "REMOVED WITH IT"
+msgstr "一緒に削除されるもの"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Delete Junction"
+msgstr "ジャンクションを削除"
 
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Audio server"
@@ -671,3 +679,31 @@ msgstr "出力デバイス"
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
 msgstr "デフォルト出力（システムに従う）"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} and {1}"
+msgstr "{0}と{1}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Input"
+msgid_plural "{n} Inputs"
+msgstr[0] "入力 {n} 件"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Link"
+msgid_plural "{n} Links"
+msgstr[0] "接続 {n} 本"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Bus {0}"
+msgstr "バス {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Listen output"
+msgid_plural "{n} Listen outputs"
+msgstr[0] "試聴出力 {n} 件"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} keeps playing as before."
+msgid_plural "{0} keep playing as before."
+msgstr[0] "{0}はこれまでどおり再生されます。"

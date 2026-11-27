@@ -269,6 +269,10 @@ msgstr "„{0}“ löschen?"
 msgid "{0} goes back to its own input."
 msgstr "{0} kehrt zu ihrem eigenen Eingang zurück."
 
+#: crates/junc-gui/ui/screens/cable.slint
+msgid "Delete Cable"
+msgstr "Cable löschen"
+
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
 msgstr "Noch keine Junctions"
@@ -321,7 +325,7 @@ msgstr "Stereopaar"
 msgid "Mono"
 msgstr "Mono"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Ch {0}–{1}"
 msgstr "Kanal {0}–{1}"
 
@@ -369,7 +373,7 @@ msgid_plural "{n} Devices"
 msgstr[0] "{n} Gerät"
 msgstr[1] "{n} Geräte"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "{0}, {1}"
 msgstr "{0}, {1}"
 
@@ -512,12 +516,16 @@ msgid "Plug in headphones or a USB device to see it here."
 msgstr "Schließe Kopfhörer oder ein USB-Gerät an, damit es hier erscheint."
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Apps recording from it lose this input."
-msgstr "Apps, die davon aufnehmen, verlieren diesen Eingang."
+msgid "Apps that record from it hear silence until you pick another input there."
+msgstr "Apps, die davon aufnehmen, hören Stille, bis du dort einen anderen Eingang wählst."
 
 #: crates/junc-gui/ui/screens/main.slint
-msgid "Its Inputs and Listen outputs go with it."
-msgstr "Seine Eingänge und Abhörausgänge werden mit entfernt."
+msgid "REMOVED WITH IT"
+msgstr "WIRD MIT ENTFERNT"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Delete Junction"
+msgstr "Junction löschen"
 
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Audio server"
@@ -674,3 +682,35 @@ msgstr "Ausgabegeräte"
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
 msgstr "Standardausgabe (folgt dem System)"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} and {1}"
+msgstr "{0} und {1}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Input"
+msgid_plural "{n} Inputs"
+msgstr[0] "{n} Eingang"
+msgstr[1] "{n} Eingänge"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Link"
+msgid_plural "{n} Links"
+msgstr[0] "{n} Verbindung"
+msgstr[1] "{n} Verbindungen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Bus {0}"
+msgstr "Bus {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Listen output"
+msgid_plural "{n} Listen outputs"
+msgstr[0] "{n} Abhörausgang"
+msgstr[1] "{n} Abhörausgänge"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} keeps playing as before."
+msgid_plural "{0} keep playing as before."
+msgstr[0] "{0} spielt weiter wie bisher."
+msgstr[1] "{0} spielen weiter wie bisher."
