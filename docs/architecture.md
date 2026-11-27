@@ -1328,6 +1328,13 @@ Duplicate writes a copy after the original through `GetConfig` →
 `Apply` (`Edit::Duplicate`): named "<name> copy", its id from that name,
 and never a system default, since only one Junction can be.
 
+As built (B19, App closed): an app Input whose app quit (board 23) keeps
+its card with "Not running" (a subtle marker), "Waiting for <app>…" in
+place of Options and volume, and dashed links; Exclusive is not shown
+while it waits. The Inputs heading and the sidebar row add "· N waiting".
+A closed app is named from its binary with a capital ("spotify" →
+"Spotify") when nothing else names it.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
