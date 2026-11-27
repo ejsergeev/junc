@@ -51,3 +51,7 @@ required-features = ["scenarios"]
 [[test]]
 name = "onboarding"
 required-features = ["scenarios"]
+
+[[test]]
+name = "states"
+required-features = ["scenarios"]

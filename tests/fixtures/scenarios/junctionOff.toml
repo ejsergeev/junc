@@ -1,0 +1,6 @@
+# GUI scenario: design board 18, "Junction off" — Space on a Junction row:
+# the banner says apps hear silence, its cards dim, its links go.
+board = 18
+title = "Junction off"
+base = "default"
+off = ["virtual-mic-for-zoom"]

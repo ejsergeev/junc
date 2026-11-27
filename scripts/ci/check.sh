@@ -12,7 +12,7 @@ step "meter";     cargo clippy -p junc-pw --features meter --all-targets --locke
 step "gui";       cargo clippy -p junc-gui --features scenarios --all-targets --locked -- -D warnings
 cargo test -p junc-gui --features scenarios --locked
 cargo build -p junc-gui --features scenarios --locked
-scripts/gui/atspi-check.sh default flexoki narrow sourceOff offline wireHover picker onboardCheck onboardTemplates emptyNone emptyJunction gallery
+scripts/gui/atspi-check.sh default flexoki narrow sourceOff offline wireHover picker onboardCheck onboardTemplates emptyNone emptyJunction junctionOff gallery
 step "i18n";      command -v xgettext >/dev/null || { echo "xgettext (gettext) is missing"; exit 1; }
 cargo xtask i18n check
 step "deps";      scripts/ci/check-deps.sh
