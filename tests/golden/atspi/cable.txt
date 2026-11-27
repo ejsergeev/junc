@@ -1,0 +1,58 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Rename' desc='F2' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Cable · junc.firefox_to_obs · 2 ch' states=[enabled,sensitive,showing,visible]
+    label name='From' states=[enabled,sensitive,showing,visible]
+    label name='App · playing' states=[enabled,sensitive,showing,visible]
+    label name='To' states=[enabled,sensitive,showing,visible]
+    label name='App · hears this Cable as its input' states=[enabled,sensitive,showing,visible]
+    panel name='Firefox' states=[enabled,sensitive,showing,visible]
+      label name='output' states=[enabled,sensitive,showing,visible]
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+    button name='Change app…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    panel name='OBS' states=[enabled,sensitive,showing,visible]
+      label name='input' states=[enabled,sensitive,showing,visible]
+      label name='1 (L)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='2 (R)' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+    button name='Change app…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Firefox channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='OBS channel 1' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Firefox channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='OBS channel 2' desc='linked' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Volume' states=[enabled,sensitive,showing,visible]
+    slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    label name='Listen' states=[enabled,sensitive,showing,visible]
+    toggle button name='Listen' desc='off' states=[enabled,sensitive,showing,visible] actions=click
+    combo box name='Listen output' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Hear the Cable on an output' states=[enabled,sensitive,showing,visible]
+    label name='Exclusive' states=[enabled,sensitive,showing,visible]
+    toggle button name='Exclusive' desc='off' states=[enabled,sensitive,showing,visible] actions=click
+    label name='Firefox is muted in your speakers while the Cable carries it' states=[enabled,sensitive,showing,visible]
+    button name='Delete' desc='Ctrl+Delete' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Tab' states=[enabled,sensitive,showing,visible]
+    label name='move' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='Space' states=[enabled,sensitive,showing,visible]
+    label name='toggle' states=[enabled,sensitive,showing,visible]
+    unknown name='' states=[enabled,sensitive,showing,visible]
+      label name='F2' states=[enabled,sensitive,showing,visible]
+    label name='rename' states=[enabled,sensitive,showing,visible]
