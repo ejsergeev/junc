@@ -32,10 +32,12 @@ export component JCard inherits Rectangle {
     in property <bool> options: true;
     in-out property <int> volume: 100;
     in property <int> volume-max: 150;
-    in-out property <bool> options-open;
+    // The owner shows the Options panel (board 15) and says so here.
+    in property <bool> options-open;
     out property <bool> has-focus: focus.has-focus;
     callback toggled(bool);
     callback volume-changed(int);
+    callback options-clicked();
 
     property <bool> hover: touch.has-hover;
     background: Tokens.surface-card;
@@ -148,7 +150,9 @@ export component JCard inherits Rectangle {
                     icon: root.options-open ? "\u{f0140}" : "\u{f0142}";
                     text: @tr("Options");
                     checkable: true;
-                    checked <=> root.options-open;
+                    controlled: true;
+                    checked: root.options-open;
+                    clicked => { root.options-clicked(); }
                 }
                 if root.state == "ok": JSlider {
                     horizontal-stretch: 1;

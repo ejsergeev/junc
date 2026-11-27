@@ -29,6 +29,9 @@ export component JButton inherits Rectangle {
     // Toggle buttons (Show Listen).
     in property <bool> checkable;
     in-out property <bool> checked;
+    // The owner sets `checked` (a toggle whose state lives elsewhere): a
+    // click only raises `clicked`.
+    in property <bool> controlled;
     out property <bool> has-focus: focus.has-focus;
     callback clicked();
 
@@ -60,7 +63,7 @@ export component JButton inherits Rectangle {
 
     function activate() {
         if !root.enabled { return; }
-        if root.checkable { root.checked = !root.checked; }
+        if root.checkable && !root.controlled { root.checked = !root.checked; }
         root.clicked();
     }
 
