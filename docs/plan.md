@@ -444,15 +444,21 @@ de/ja, AT-SPI dump, keyboard test):
   (B19), Add listen output (B18), Start at login after onboarding (F9,
   with Settings in B19); the picker's "playing" needs node state the
   graph does not keep.
-- [ ] **B18** [auto] Cable selected, link drag, link keyboard, Input Options
+- [x] **B18** [auto] Cable selected, link drag, link keyboard, Input Options
   (+ narrow), add Bus, add Listen, Junction off. Req: F3, F4, F5, F6, F8, F11.
-  Under way, one PR per part. Junction off done 2026-11-27 (architecture
-  §7.2, as built): banner with Turn on (Space), dimmed cards, no links.
-  Add Listen output done 2026-11-27: the picker of board 17 (Ctrl+M).
-  Add Bus done 2026-11-27: board 16's popover (Ctrl+Shift+N).
-  Input Options (+ narrow) done 2026-11-27: boards 15 and 30.
-  Cable selected done 2026-11-27: board 12, its own screen.
-  Link drag and link keys done 2026-11-27: boards 13 and 14.
+  Done 2026-11-27 (architecture §7.2, §11.3, as built), one PR per part:
+  Junction off (board 18: banner with Turn on, Space; dimmed cards, no
+  links); Add Listen output (board 17, Ctrl+M, also the empty Listen
+  column's button); Add Bus channels (board 16, Ctrl+Shift+N); Input
+  Options (boards 15, 30: Exclusive, Feeds Bus, Remove input); Cable
+  selected (board 12, its own screen: From, To, volume, Listen,
+  Exclusive, Change app…); links by drag and by the keys (boards 13, 14);
+  and the keys left from B16: Ctrl+1…9, arrows between cards, Del on a
+  hovered link. 8 new scenarios with goldens in four languages and
+  AT-SPI trees; `tests/states.rs` drives them. Found on the way: Slint's
+  FocusScope takes a press by default (`focus-on-click`), and replacing
+  a model recreates its elements mid-drag. Not built: the sample rate
+  in the headers (Describe has none), ← → on channel groups (none drawn).
 - [ ] **B19** [auto] Tray (DBusMenu tree test), service down, context menu
   (duplicate), delete confirmation, app closed, import, settings, rename,
   new Cable. Req: F1, F5, F9, F10, F13, F21.

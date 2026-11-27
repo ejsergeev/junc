@@ -1178,10 +1178,9 @@ level models the window owns, so an unfed meter reads silence. Show
 Listen hides the Listen column (the docs left it open; the design shows
 it pressed everywhere). Delete asks with `JConfirm`; Rename, Default, the
 add buttons, New and Settings are drawn and come alive with their boards
-(B17–B22). Not built yet from §7.4: Ctrl+1…9, arrow keys between cards and
-columns (B18 with link keyboard), Del on a hovered link without focus;
-Tab follows the tree: sidebar, header, cards column by column, ports,
-bottom bar.
+(B17–B22). Ctrl+1…9, the arrow keys between cards and Del on a hovered
+link came with B18 (below); Tab follows the tree: sidebar, header, cards
+column by column, ports, bottom bar.
 
 As built (B17): `ui/screens/onboarding.slint` (boards 8, 9, 28) and
 `ui/screens/empty.slint` (board 10) take the window in place of the Main
@@ -1294,6 +1293,14 @@ so a port keeps the pointer while the canvas changes under a drag; the
 canvas no longer scrolls by dragging (the wheel does), and a port's
 FocusScope leaves the press to its TouchArea (`focus-on-click: false`,
 Slint's default would take it).
+
+As built (B18, keys from §7.4): Ctrl+1…9 select the Junctions in the
+sidebar's order. On a focused card ↑ ↓ go to the card above or below in
+its column and ← → to the card of the next column whose middle is
+nearest, skipping an empty column (`ui::arrow_target`; the card is asked
+to take the focus through `JCard.wants-focus`). Del with the pointer on a
+link unlinks it, as a click does. ← → on channel groups wait for them
+(the Main screen draws none yet).
 
 ### 7.3 Routing canvas
 
@@ -1893,7 +1900,8 @@ other boards, languages and Weston come with the screens that show them.
   Cable (`cable`, board 12: Exclusive, Listen on and to another output,
   both Change app… pickers), and links (`linkDrag`, `linkKeys`, fixture
   `link` with `link_keys`: a drag from Soundux onto Bus 1, Enter ↓ Enter,
-  Enter Esc); `check.sh` compares their AT-SPI trees.
+  Enter Esc), and the keys of §7.4 (Ctrl+2, Ctrl+1, ↓ and → → with
+  Space, Del on a hovered link); `check.sh` compares their AT-SPI trees.
 
 - **Hidden-window gate** (B15, §7.6): `scripts/gui/hidden-check.sh` under
   `with-pipewire.sh` runs `--scenario default --meters` in the private
