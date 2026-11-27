@@ -364,8 +364,16 @@ msgid "Show Listen"
 msgstr "Abhören einblenden"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Search output devices"
+msgstr "Ausgabegeräte suchen"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Search apps, inputs, system audio"
 msgstr "Apps, Eingänge, Systemaudio suchen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Plug in headphones or a USB device to see it here."
+msgstr "Schließe Kopfhörer oder ein USB-Gerät an, damit es hier erscheint."
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Delete “{0}”?"
@@ -526,3 +534,11 @@ msgstr "Systemaudio"
 #: crates/junc-gui/ui/view.slint
 msgid "Monitor of {0}"
 msgstr "Monitor von {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Output devices"
+msgstr "Ausgabegeräte"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default output (follows system)"
+msgstr "Standardausgabe (folgt dem System)"

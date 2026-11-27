@@ -361,8 +361,16 @@ msgid "Show Listen"
 msgstr "試聴を表示"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Search output devices"
+msgstr "出力デバイスを検索"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Search apps, inputs, system audio"
 msgstr "アプリ・入力・システム音声を検索"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Plug in headphones or a USB device to see it here."
+msgstr "ヘッドホンや USB デバイスをつなぐとここに表示されます。"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Delete “{0}”?"
@@ -523,3 +531,11 @@ msgstr "システム音声"
 #: crates/junc-gui/ui/view.slint
 msgid "Monitor of {0}"
 msgstr "{0} のモニター"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Output devices"
+msgstr "出力デバイス"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default output (follows system)"
+msgstr "デフォルト出力（システムに従う）"
