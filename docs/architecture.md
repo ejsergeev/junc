@@ -1594,6 +1594,24 @@ for the tray; the window is created on demand and destroyed on close to free
 renderer memory. On Omarchy the bar plugin is primary; the tray is offered when
 an SNI host is present.
 
+As built (B19): the StatusNotifierItem and its DBusMenu are JUNC's own,
+on zbus 6 (`junc-gui/src/tray.rs`), not `ksni`: `ksni` is Unlicense (not
+in `deny.toml`'s list) and brings zbus 5 and tokio beside zbus 6 (owner
+decision 2026-11-27). The item is served as
+`org.kde.StatusNotifierItem-<pid>-1` and registered with the shell's
+StatusNotifierWatcher; without one there is no tray. The window builds
+the menu in its language ("Capturing: …" when apps are captured, one
+checkmark item per Junction or Cable, Open JUNC, Quit) and the tray
+serves it; a new menu is a new layout revision (`LayoutUpdated`). A
+click on a Junction turns it on or off, Open JUNC or a click on the icon
+shows the window, Quit ends the GUI (juncd keeps running). With a tray,
+closing the window hides it; `junc-gui --background` starts with the
+window hidden. Not built: destroying the hidden window to free renderer
+memory (it is hidden, as Slint keeps one window per component), and the
+board's right-hand "Junction"/"Cable" and "Junctions keep running"
+texts, which DBusMenu has no place for. Tested as a DBusMenu tree on a
+private bus (`tests/tray.rs`): the layout, the toggle states, clicks.
+
 ### 7.9 Accessibility checklist (from the validation report)
 
 - `JSwitch`: label + on/off description.
