@@ -26,6 +26,8 @@ pub struct Row {
     pub inputs: Vec<String>,
     /// Inputs that are on and wait for their device.
     pub offline: usize,
+    /// App Inputs that are on and wait for their app (board 23).
+    pub waiting: usize,
     pub volume: u16,
 }
 
@@ -81,6 +83,10 @@ pub fn snapshot(d: Option<&Describe>) -> Snapshot {
                     offline: cards
                         .iter()
                         .filter(|c| c.enabled && c.state == CardState::Offline)
+                        .count(),
+                    waiting: cards
+                        .iter()
+                        .filter(|c| c.enabled && c.state == CardState::NotRunning)
                         .count(),
                     volume: j.volume,
                 }

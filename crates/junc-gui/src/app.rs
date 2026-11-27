@@ -1193,6 +1193,7 @@ impl App {
                 view.set_devices(i32::try_from(m.devices).unwrap_or(0));
                 view.set_off(i32::try_from(m.off).unwrap_or(0));
                 view.set_offline(i32::try_from(m.offline).unwrap_or(0));
+                view.set_waiting(i32::try_from(m.waiting).unwrap_or(0));
                 view.set_listen_count(i32::try_from(m.listens.len()).unwrap_or(0));
                 let (lines, note) = removal_words(&w.global::<Words>(), &main_view::removal(m));
                 view.set_delete_lines(ModelRc::new(VecModel::from(lines)));

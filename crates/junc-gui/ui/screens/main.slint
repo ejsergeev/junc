@@ -359,6 +359,7 @@ export component MainScreen inherits Rectangle {
     in property <int> devices;
     in property <int> off;
     in property <int> offline;
+    in property <int> waiting;
     in property <int> listen-count;
     // From layout.rs.
     in property <bool> stacked;
@@ -474,7 +475,8 @@ export component MainScreen inherits Rectangle {
             : root.devices > 0 ? root.devices-count
             : @tr("None yet"))
         + (root.off > 0 ? " · " + @tr("{0} off", root.off) : "")
-        + (root.offline > 0 ? " · " + @tr("{0} offline", root.offline) : "");
+        + (root.offline > 0 ? " · " + @tr("{0} offline", root.offline) : "")
+        + (root.waiting > 0 ? " · " + @tr("{0} waiting", root.waiting) : "");
     property <string> bus-count: @tr("{n} Channel" | "{n} Channels" % root.bus-channels);
     property <string> listen-heading: (root.listen-count == 0 ? @tr("None")
             : @tr("{n} Device" | "{n} Devices" % root.listen-count))

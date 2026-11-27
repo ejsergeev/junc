@@ -99,7 +99,7 @@ export component JCard inherits Rectangle {
                     color: focus.has-focus ? Tokens.accent : root.on ? Tokens.text-strong : Tokens.text-subtle;
                     accessible-role: none;
                 }
-                if root.exclusive: Text {
+                if root.exclusive && root.state == "ok": Text {
                     text: @tr("Exclusive");
                     color: Tokens.accent;
                     font-size: Tokens.type-body-small;
@@ -121,11 +121,21 @@ export component JCard inherits Rectangle {
                         vertical-alignment: center;
                     }
                 }
-                if root.state == "not-running": Text {
-                    text: @tr("Not running");
-                    color: Tokens.text-subtle;
-                    font-size: Tokens.type-body-small;
-                    vertical-alignment: center;
+                if root.state == "not-running": HorizontalLayout {
+                    spacing: 4px;
+                    alignment: end;
+                    Rectangle {
+                        width: 6px;
+                        height: 6px;
+                        y: (parent.height - self.height) / 2;
+                        background: Tokens.text-subtle;
+                    }
+                    Text {
+                        text: @tr("Not running");
+                        color: Tokens.text-subtle;
+                        font-size: Tokens.type-body-small;
+                        vertical-alignment: center;
+                    }
                 }
                 if root.tag != "": Text {
                     text: root.tag;

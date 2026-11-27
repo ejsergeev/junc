@@ -208,6 +208,7 @@ pub fn sidebar(rows: &[Row], selected: Option<&str>) -> Vec<JunctionItem> {
                 .into(),
             inputs: list(&r.inputs).into(),
             offline: i32::try_from(r.offline).unwrap_or(i32::MAX),
+            waiting: i32::try_from(r.waiting).unwrap_or(i32::MAX),
             volume: i32::from(r.volume),
             selected: selected == Some(r.id.as_str()),
             meter: i,

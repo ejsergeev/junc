@@ -93,6 +93,11 @@ component SidebarRow inherits Rectangle {
                 color: Tokens.status-urgent;
                 font-size: Tokens.type-body-small;
             }
+            if root.item.waiting > 0: Text {
+                text: "· " + @tr("{0} waiting", root.item.waiting);
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+            }
         }
         JMeter {
             height: 4px;
@@ -379,6 +384,7 @@ export component AppWindow inherits Window {
             devices: View.devices;
             off: View.off;
             offline: View.offline;
+            waiting: View.waiting;
             listen-count: View.listen-count;
             stacked: View.stacked;
             cards: View.cards;

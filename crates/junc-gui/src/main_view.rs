@@ -141,11 +141,14 @@ pub struct Main {
     pub bus: Vec<BusGroup>,
     pub listens: Vec<Card>,
     pub links: Vec<Link>,
-    /// Inputs that are apps, devices (anything else), off, offline.
+    /// Inputs that are apps, devices (anything else), off, offline,
+    /// waiting for their app.
     pub apps: usize,
     pub devices: usize,
     pub off: usize,
     pub offline: usize,
+    /// App Inputs that are on and wait for their app (board 23).
+    pub waiting: usize,
 }
 
 /// Position letters for a node of `n` channels (stereo pairs read L, R).
@@ -237,7 +240,7 @@ fn input_title(d: &Describe, i: &InputView) -> String {
     }
     m.app
         .clone()
-        .or_else(|| m.binary.clone())
+        .or_else(|| m.binary.as_deref().map(app_word))
         .or_else(|| m.device.clone())
         .or_else(|| m.monitor.clone())
         .or_else(|| m.node.clone())
@@ -410,6 +413,10 @@ pub fn main(d: &Describe, id: &str) -> Option<Main> {
             .iter()
             .filter(|c| c.enabled && c.state == CardState::Offline)
             .count(),
+        waiting: inputs
+            .iter()
+            .filter(|c| c.enabled && c.state == CardState::NotRunning)
+            .count(),
         inputs,
         bus: bus(j),
         listens,
@@ -428,6 +435,15 @@ pub struct CableTo {
     pub volume: u16,
 }
 
+/// An app's name from its binary while it is not running (board 23:
+/// "spotify" reads "Spotify").
+fn app_word(binary: &str) -> String {
+    let mut c = binary.chars();
+    c.next()
+        .map(|f| f.to_uppercase().chain(c).collect())
+        .unwrap_or_default()
+}
+
 /// The app Junction `id` delivers to, when it is a Cable.
 pub fn cable_to(d: &Describe, id: &str) -> Option<CableTo> {
     let j = d.junctions.iter().find(|j| j.id == id)?;
@@ -439,7 +455,7 @@ pub fn cable_to(d: &Describe, id: &str) -> Option<CableTo> {
         .find(|c| to.binary.is_some() && c.binary == to.binary)
         .and_then(|c| c.app.clone())
         .or_else(|| to.app.clone())
-        .or_else(|| to.binary.clone())
+        .or_else(|| to.binary.as_deref().map(app_word))
         .unwrap_or_default();
     Some(CableTo {
         name,
@@ -540,7 +556,7 @@ mod tests {
             titles,
             [
                 "Spotify",
-                "soundux",
+                "Soundux",
                 "alsa_input.usb-Generic_USB_Microphone-00.mono-fallback"
             ],
             "app name, binary, then the device as a last resort"
