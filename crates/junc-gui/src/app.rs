@@ -360,6 +360,10 @@ pub fn install(
         view.on_rename(move |name| c(&|a| a.rename(name.as_str())));
     }
     {
+        let c = call.clone();
+        view.on_duplicate(move |id| c(&|a| a.duplicate(id.as_str())));
+    }
+    {
         let c = call;
         view.on_delete_junction(move || {
             c(&|a| {
@@ -520,6 +524,34 @@ impl App {
                 path,
                 name: name.to_owned(),
             });
+        }
+    }
+
+    /// Board 21: a copy of Junction `id` after it, named "<name> copy".
+    pub fn duplicate(&self, id: &str) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let Some(row) = self.sidebar.junctions.iter().find(|r| r.id == id) else {
+            return;
+        };
+        let name = w.global::<Words>().invoke_copy_of(row.name.as_str().into());
+        self.actions.send(Command::Edit {
+            junction: id.to_owned(),
+            edit: Edit::Duplicate(name.into()),
+        });
+    }
+
+    /// Board 21: the selected row's context menu with the cursor on item
+    /// `cursor`, as the Menu key opens it.
+    pub fn open_menu(&self, cursor: i32) {
+        let (Some(id), Some(w)) = (&self.selected, self.window.upgrade()) else {
+            return;
+        };
+        if let Some(i) = self.sidebar.junctions.iter().position(|r| &r.id == id) {
+            let view = w.global::<View>();
+            view.set_menu_cursor(cursor);
+            view.set_menu_index(i32::try_from(i).unwrap_or(-1));
         }
     }
 
@@ -1139,6 +1171,10 @@ impl App {
             rows,
             selected.as_deref(),
         ))));
+        let row = rows
+            .iter()
+            .position(|r| Some(r.id.as_str()) == selected.as_deref());
+        view.set_selected_row(row.and_then(|i| i32::try_from(i).ok()).unwrap_or(0));
         let slots = ui::slots(rows, self.main.as_ref());
         self.levels.reset(slots.len());
         if let Some(meters) = &self.meters {

@@ -87,6 +87,9 @@ struct Fixture {
     /// The delete confirmation open (board 22).
     #[serde(default)]
     delete: bool,
+    /// The selected row's context menu open, its cursor on this item
+    /// (board 21).
+    menu: Option<i32>,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -167,6 +170,7 @@ pub struct Scenario {
     pub add_bus: bool,
     pub rename: bool,
     pub delete: bool,
+    pub menu: Option<i32>,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -305,6 +309,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         add_bus: f.add_bus,
         rename: f.rename,
         delete: f.delete,
+        menu: f.menu,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -548,6 +553,9 @@ pub fn open(
     }
     if s.delete {
         app.borrow().start_delete();
+    }
+    if let Some(cursor) = s.menu {
+        app.borrow().open_menu(cursor);
     }
     if let Some(i) = s.options {
         app.borrow_mut().toggle_options(i);

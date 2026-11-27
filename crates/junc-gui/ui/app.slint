@@ -4,6 +4,7 @@
 // sidebar 300 px (240 px when the tile is narrower than 1100 px).
 
 import { Tokens } from "tokens.slint";
+import { JMenu } from "components/menu.slint";
 import { View, Words, JunctionItem, CheckItem } from "view.slint";
 import { OnboardingCheck, OnboardingTemplates } from "screens/onboarding.slint";
 import { EmptyNone } from "screens/empty.slint";
@@ -25,6 +26,8 @@ component SidebarRow inherits Rectangle {
     callback select();
     callback toggled(bool);
     callback volume(int);
+    // Right-click (board 21).
+    callback menu();
     height: 102px * Tokens.scale;
     background: root.item.selected ? Tokens.selection : touch.has-hover ? Tokens.control-hover-fill : transparent;
     accessible-role: list-item;
@@ -32,7 +35,14 @@ component SidebarRow inherits Rectangle {
     accessible-item-selectable: true;
     accessible-item-selected: root.item.selected;
     accessible-action-default => { root.select(); }
-    touch := TouchArea { clicked => { root.select(); } }
+    touch := TouchArea {
+        clicked => { root.select(); }
+        pointer-event(e) => {
+            if e.button == PointerEventButton.right && e.kind == PointerEventKind.down {
+                root.menu();
+            }
+        }
+    }
     if root.item.selected: Rectangle {
         x: 0;
         width: 3px;
@@ -129,6 +139,15 @@ export component AppWindow inherits Window {
 
     out property <length> sidebar-width: root.width < 1100px ? 240px : 300px;
 
+    // How far the sidebar's rows are scrolled.
+    property <length> sidebar-y;
+    // Board 21: the context menu of sidebar row `i`.
+    function open-menu(i: int) {
+        View.menu-cursor = 0;
+        View.menu-index = i;
+    }
+
+
     forward-focus: shortcuts;
     // Window-wide shortcuts (architecture §7.4): keys nothing focused took.
     shortcuts := FocusScope {
@@ -155,6 +174,11 @@ export component AppWindow inherits Window {
             // Del with the pointer on a link unlinks it (§7.4).
             if e.text == Key.Delete && View.tip-visible && View.linking == 0 && !e.modifiers.control {
                 View.link-clicked();
+                return accept;
+            }
+            // Board 21: the Menu key or Shift+F10 opens the selected row's menu.
+            if (e.text == Key.Menu || (e.text == Key.F10 && e.modifiers.shift)) && View.selected != "" {
+                root.open-menu(View.selected-row);
                 return accept;
             }
             // Board 26: F2 renames the selected Junction or Cable.
@@ -186,6 +210,10 @@ export component AppWindow inherits Window {
             }
             if e.modifiers.shift && (e.text == "n" || e.text == "N") && View.selected != "" {
                 View.adding-bus = true;
+                return accept;
+            }
+            if !e.modifiers.shift && (e.text == "d" || e.text == "D") && View.selected != "" {
+                View.duplicate(View.selected);
                 return accept;
             }
             if e.modifiers.shift && (e.text == "j" || e.text == "J") {
@@ -254,15 +282,17 @@ export component AppWindow inherits Window {
                     }
                 }
                 Flickable {
+                    changed content-y => { root.sidebar-y = self.content-y; }
                     VerticalLayout {
                         width: root.sidebar-width;
                         alignment: start;
-                        for j in View.junctions: SidebarRow {
+                        for j[i] in View.junctions: SidebarRow {
                             item: j;
                             levels: View.levels;
                             select => { View.select(j.id); }
                             toggled(v) => { View.junction-toggled(j.id, v); }
                             volume(v) => { View.junction-volume(j.id, v); }
+                            menu => { root.open-menu(i); }
                         }
                         if View.junctions.length == 0: HorizontalLayout {
                             padding-left: Tokens.space-panel-pad;
@@ -441,5 +471,39 @@ export component AppWindow inherits Window {
             background: Tokens.surface-window;
         }
     }
+    }
+
+    // Board 21: beside its row, Esc or a click outside closes it.
+    if View.menu-index >= 0 && View.menu-index < View.junctions.length: Rectangle {
+        property <JunctionItem> item: View.junctions[View.menu-index];
+        TouchArea { clicked => { View.menu-index = -1; shortcuts.focus(); } }
+        JMenu {
+            x: root.sidebar-width - 137px * Tokens.scale;
+            y: min(62px * Tokens.scale + root.sidebar-y + View.menu-index * 102px * Tokens.scale + 32px * Tokens.scale,
+                root.height - self.preferred-height - 8px);
+            height: self.preferred-height;
+            width: 240px * Tokens.scale;
+            title: parent.item.name;
+            cursor <=> View.menu-cursor;
+            items: [
+                { text: @tr("Rename"), shortcut: "F2", enabled: true },
+                { text: @tr("Duplicate"), shortcut: "Ctrl+D", enabled: true },
+                { text: parent.item.enabled ? @tr("Turn off") : @tr("Turn on"), shortcut: "Space", enabled: true },
+                { text: @tr("Export preset…"), shortcut: "Ctrl+E", enabled: false, separator: true },
+                { text: @tr("Import preset…"), shortcut: "Ctrl+I", enabled: false },
+                { text: @tr("Delete…"), shortcut: "Ctrl+Delete", enabled: true, separator: true, destructive: true },
+            ];
+            init => { self.open(); }
+            activated(i) => {
+                let row = parent.item;
+                View.menu-index = -1;
+                shortcuts.focus();
+                if i == 0 { View.select(row.id); View.renaming = true; }
+                if i == 1 { View.duplicate(row.id); }
+                if i == 2 { View.junction-toggled(row.id, !row.enabled); }
+                if i == 5 { View.select(row.id); View.confirming = true; }
+            }
+            closed => { View.menu-index = -1; shortcuts.focus(); }
+        }
     }
 }

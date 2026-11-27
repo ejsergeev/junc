@@ -31,6 +31,8 @@ export global Words {
     // TRANSLATORS: Input Options, what a channel feeds: nothing, or a Bus channel.
     public pure function no-bus() -> string { @tr("None") }
     public pure function bus-channel(n: int) -> string { @tr("Ch {0}", n) }
+    // TRANSLATORS: the name of a duplicated Junction (design board 21).
+    public pure function copy-of(name: string) -> string { @tr("{0} copy", name) }
     // TRANSLATORS: what deleting a Junction removes (design board 22).
     public pure function bus-pair(first: int) -> string { @tr("Ch {0}–{1}", first, first + 1) }
     // TRANSLATORS: joins two items of a list (the last two take list-and).
@@ -149,6 +151,11 @@ export global View {
     // Deleting the selected Junction (board 22): what goes with it, and
     // what stays as it was.
     in-out property <bool> confirming;
+    // Board 21: the context menu of this sidebar row (-1: closed), its
+    // cursor; the selected row, for the Menu key.
+    in-out property <int> menu-index: -1;
+    in-out property <int> menu-cursor;
+    in-out property <int> selected-row;
     in-out property <[string]> delete-lines;
     in-out property <string> delete-note;
     // Input Options (boards 15, 30): card `options-index`, at its card's
@@ -195,6 +202,8 @@ export global View {
     callback link-cancel();
     callback card-arrow(int, int, int);
     callback delete-junction();
+    // Board 21: a copy of Junction `id` after it.
+    callback duplicate(string);
     // Board 26: a new name for the selected Junction.
     callback rename(string);
     callback recheck();
