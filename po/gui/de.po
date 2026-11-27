@@ -926,6 +926,18 @@ msgid "Logs"
 msgstr "Logs"
 
 #: crates/junc-gui/ui/view.slint
+msgid "Capturing: {0}"
+msgstr "Erfasst: {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Open JUNC"
+msgstr "JUNC öffnen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Quit"
+msgstr "Beenden"
+
+#: crates/junc-gui/ui/view.slint
 msgid "English"
 msgstr "Deutsch"
 
