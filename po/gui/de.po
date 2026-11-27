@@ -177,6 +177,10 @@ msgstr "App wechseln…"
 msgid "Rename"
 msgstr "Umbenennen"
 
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Name"
+msgstr "Name"
+
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "From"
 msgstr "Von"

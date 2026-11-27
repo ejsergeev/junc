@@ -168,6 +168,10 @@ msgstr ""
 msgid "Rename"
 msgstr ""
 
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Name"
+msgstr ""
+
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "From"
 msgstr ""

@@ -177,6 +177,10 @@ msgstr "アプリを変更…"
 msgid "Rename"
 msgstr "名前を変更"
 
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+msgid "Name"
+msgstr "名前"
+
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "From"
 msgstr "送り元"
