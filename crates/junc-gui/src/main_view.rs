@@ -355,7 +355,8 @@ pub fn main(d: &Describe, id: &str) -> Option<Main> {
     let inputs: Vec<Card> = j.inputs.iter().map(|i| input_card(d, j, i)).collect();
     let listens: Vec<Card> = j.listens.iter().map(|l| listen_card(d, j, l)).collect();
     let mut links = Vec::new();
-    for (card, i) in j.inputs.iter().enumerate() {
+    // Off, the Junction carries nothing: no links (board 18).
+    for (card, i) in j.inputs.iter().enumerate().filter(|_| j.enabled) {
         if !i.enabled {
             continue;
         }
@@ -375,7 +376,7 @@ pub fn main(d: &Describe, id: &str) -> Option<Main> {
             });
         }
     }
-    for (card, l) in j.listens.iter().enumerate() {
+    for (card, l) in j.listens.iter().enumerate().filter(|_| j.enabled) {
         if !l.enabled {
             continue;
         }
@@ -525,5 +526,19 @@ mod tests {
         let mic: Vec<&Link> = m.links.iter().filter(|l| l.owner == "usb-mic").collect();
         assert_eq!(mic.len(), 2, "waiting: the default stereo mapping, dashed");
         assert!(mic.iter().all(|l| l.offline));
+    }
+
+    #[test]
+    fn an_off_junction_keeps_its_cards_but_draws_no_links() {
+        let mut d = golden();
+        d.junctions[0].enabled = false;
+        let m = main(&d, "virtual-mic-for-zoom").expect("junction");
+        assert!(!m.enabled);
+        assert_eq!((m.inputs.len(), m.listens.len()), (3, 1));
+        assert!(
+            m.inputs.iter().all(|c| c.enabled),
+            "its Inputs keep their switches"
+        );
+        assert!(m.links.is_empty(), "apps see silence: nothing is linked");
     }
 }
