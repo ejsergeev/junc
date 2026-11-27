@@ -152,7 +152,20 @@ export component AppWindow inherits Window {
                 View.junction-toggled(View.selected, true);
                 return accept;
             }
+            // Del with the pointer on a link unlinks it (§7.4).
+            if e.text == Key.Delete && View.tip-visible && View.linking == 0 {
+                View.link-clicked();
+                return accept;
+            }
             if !e.modifiers.control { return reject; }
+            // Ctrl+1…9: the Junctions in the sidebar's order.
+            if !e.modifiers.shift && e.text >= "1" && e.text <= "9" && e.text.character-count == 1 {
+                let n = e.text.to-float();
+                if n <= View.junctions.length {
+                    View.select(View.junctions[n - 1].id);
+                }
+                return accept;
+            }
             if !e.modifiers.shift && (e.text == "n" || e.text == "N") && View.selected != "" {
                 View.open-picker();
                 return accept;
@@ -362,6 +375,9 @@ export component AppWindow inherits Window {
             link-drop => { View.link-drop(); }
             link-step(d) => { View.link-step(d); }
             link-cancel => { View.link-cancel(); }
+            focus-card: View.focus-card;
+            card-arrow(i, dx, dy) => { View.card-arrow(i, dx, dy); }
+            focus-card-done => { View.focus-card = -1; }
             delete-junction => { View.delete-junction(); }
             empty-inputs: View.empty-inputs;
             empty-listens: View.empty-listens;

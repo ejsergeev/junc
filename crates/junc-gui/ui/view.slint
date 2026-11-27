@@ -107,6 +107,8 @@ export global View {
     // A link being made (boards 13, 14): 0 none, 1 by the pointer, 2 by
     // the keys; its line from the port to the target or the pointer.
     in-out property <int> linking;
+    // The card (index into `cards`) the arrow keys move the focus to.
+    in-out property <int> focus-card: -1;
     in-out property <LinkItem> pending;
     // Onboarding (boards 8, 9): 0 none, 1 the system check, 2 templates.
     in-out property <int> onboarding;
@@ -168,6 +170,7 @@ export global View {
     // ↑ ↓ through the targets.
     callback link-step(int);
     callback link-cancel();
+    callback card-arrow(int, int, int);
     callback delete-junction();
     callback recheck();
     callback copy(string);

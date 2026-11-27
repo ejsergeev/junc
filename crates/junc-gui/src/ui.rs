@@ -409,6 +409,38 @@ pub fn link_item(from: Point, to: Point, offline: bool, hovered: bool) -> LinkIt
     }
 }
 
+/// Where the arrow keys move the focus from card `i` (of `cards`, as the
+/// canvas lists them): ↑ ↓ (`dy`) to the card above or below in its
+/// column, ← → (`dx`) to the card of the next column whose middle is
+/// nearest; `None` at an edge.
+pub fn arrow_target(cards: &[CardItem], i: usize, dx: i32, dy: i32) -> Option<usize> {
+    let here = cards.get(i)?;
+    let mid = |c: &CardItem| c.y + c.h / 2.0;
+    if dx == 0 {
+        let column: Vec<usize> = (0..cards.len())
+            .filter(|&k| cards[k].column == here.column)
+            .collect();
+        let at = column.iter().position(|&k| k == i)?;
+        let next = if dy < 0 { at.checked_sub(1)? } else { at + 1 };
+        return column.get(next).copied();
+    }
+    let mut column = here.column + dx;
+    while (0..=2).contains(&column) {
+        let best = (0..cards.len())
+            .filter(|&k| cards[k].column == column)
+            .min_by(|&a, &b| {
+                (mid(&cards[a]) - mid(here))
+                    .abs()
+                    .total_cmp(&(mid(&cards[b]) - mid(here)).abs())
+            });
+        if best.is_some() {
+            return best;
+        }
+        column += dx;
+    }
+    None
+}
+
 /// The end a port of the canvas stands for.
 pub fn port_end(column: i32, card: i32, ch: i32, side: i32) -> Option<End> {
     let card = usize::try_from(card).ok()?;
@@ -467,4 +499,40 @@ pub fn slots(rows: &[Row], m: Option<&Main>) -> Vec<Slot> {
         }
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_arrow_keys_go_through_the_cards_and_columns() {
+        let card = |column: i32, y: f32, h: f32| CardItem {
+            column,
+            y,
+            h,
+            ..CardItem::default()
+        };
+        // Inputs at 0, 150, 300; Bus at 0, 130; Listen at 0.
+        let cards = [
+            card(0, 0.0, 130.0),
+            card(0, 150.0, 130.0),
+            card(0, 300.0, 130.0),
+            card(1, 0.0, 110.0),
+            card(1, 130.0, 110.0),
+            card(2, 0.0, 130.0),
+        ];
+        assert_eq!(arrow_target(&cards, 0, 0, 1), Some(1));
+        assert_eq!(arrow_target(&cards, 2, 0, 1), None, "the column's last");
+        assert_eq!(arrow_target(&cards, 0, 0, -1), None);
+        assert_eq!(arrow_target(&cards, 4, 0, -1), Some(3));
+        assert_eq!(arrow_target(&cards, 2, 1, 0), Some(4), "nearest middle");
+        assert_eq!(arrow_target(&cards, 4, 1, 0), Some(5));
+        assert_eq!(arrow_target(&cards, 5, 1, 0), None);
+        assert_eq!(arrow_target(&cards, 3, -1, 0), Some(0));
+        // No Bus cards: → from Inputs goes on to Listen.
+        let two = [card(0, 0.0, 130.0), card(2, 0.0, 130.0)];
+        assert_eq!(arrow_target(&two, 0, 1, 0), Some(1));
+        assert_eq!(arrow_target(&cards, 9, 1, 0), None);
+    }
 }

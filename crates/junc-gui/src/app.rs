@@ -276,6 +276,20 @@ pub fn install(
         let c = call.clone();
         view.on_open_listen_picker(move || c(&App::open_listen_picker));
         let c = call.clone();
+        view.on_card_arrow(move |i, dx, dy| {
+            c(&|a| {
+                let Some(w) = a.window.upgrade() else { return };
+                let view = w.global::<View>();
+                let cards: Vec<_> = view.get_cards().iter().collect();
+                if let Some(j) = usize::try_from(i)
+                    .ok()
+                    .and_then(|i| ui::arrow_target(&cards, i, dx, dy))
+                {
+                    view.set_focus_card(i32::try_from(j).unwrap_or(-1));
+                }
+            });
+        });
+        let c = call.clone();
         view.on_link_start(move |col, card, ch, side| {
             c(&|a| {
                 if let Some(e) = ui::port_end(col, card, ch, side) {

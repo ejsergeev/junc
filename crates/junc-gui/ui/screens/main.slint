@@ -384,6 +384,8 @@ export component MainScreen inherits Rectangle {
     in property <bool> tip-listen;
     // A link being made: 0 none, 1 by the pointer, 2 by the keys.
     in property <int> linking;
+    // The card (index into `cards`) to take the focus; -1 none.
+    in property <int> focus-card: -1;
     in property <LinkItem> pending;
     // Show the Listen column (bottom bar).
     in-out property <bool> show-listen: true;
@@ -429,6 +431,9 @@ export component MainScreen inherits Rectangle {
     callback link-clicked();
     callback port-remove(int, int, int, int);
     callback link-start(int, int, int, int);
+    // Arrow keys on card `i` of `cards`; Rust answers with focus-card.
+    callback card-arrow(int, int, int);
+    callback focus-card-done();
     callback link-key(int, int, int, int);
     callback link-drag(length, length);
     callback link-drop();
@@ -619,7 +624,10 @@ export component MainScreen inherits Rectangle {
                 shortcut: "Ctrl+M";
                 activated => { root.open-listen-picker(); }
             }
-            for c in root.cards: JCard {
+            for c[i] in root.cards: JCard {
+                wants-focus: root.focus-card == i;
+                focused => { root.focus-card-done(); }
+                arrow(dx, dy) => { root.card-arrow(i, dx, dy); }
                 opacity: root.on ? 1 : 0.45;
                 x: root.pad + c.x;
                 y: c.y;
