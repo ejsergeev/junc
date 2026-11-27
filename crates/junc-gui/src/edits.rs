@@ -68,11 +68,47 @@ pub enum Edit {
     /// A copy of the Junction named `0` after it (board 21), its id from
     /// the name; it is no system default.
     Duplicate(String),
+    /// A new Cable (board 27) named `name` from app `from` (its Input's id
+    /// from `label`) to app `to`, after the others.
+    NewCable {
+        name: String,
+        from: Box<Match>,
+        label: String,
+        to: Box<Match>,
+    },
 }
 
 /// Applies `edit` to Junction `junction`. Returns false when it or the
 /// part is gone (someone else changed the config meanwhile).
 pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
+    if let Edit::NewCable {
+        name,
+        from,
+        label,
+        to,
+    } = edit
+    {
+        let mut t = toml::Table::new();
+        let id = unique_id(name, config.junction.iter().map(|j| j.id.as_str()));
+        t.insert("id".into(), id.into());
+        t.insert("name".into(), name.clone().into());
+        t.insert("kind".into(), "cable".into());
+        let mut cable = toml::Table::new();
+        let Ok(to) = toml::Value::try_from(&**to) else {
+            return false;
+        };
+        cable.insert("to".into(), to);
+        t.insert("cable".into(), cable.into());
+        let Ok(mut j) = toml::Value::Table(t).try_into::<junc_core::model::Junction>() else {
+            return false;
+        };
+        j.input.push(new_input(
+            unique_id(label, std::iter::empty()),
+            (**from).clone(),
+        ));
+        config.junction.push(j);
+        return true;
+    }
     if let Edit::Duplicate(name) = edit {
         let Some(i) = config.junction.iter().position(|j| j.id == junction) else {
             return false;
@@ -132,8 +168,8 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
             l.links = None;
             return true;
         }
-        // Done above: it adds a Junction rather than changing one.
-        Edit::Duplicate(_) => return true,
+        // Done above: they add a Junction rather than change one.
+        Edit::Duplicate(_) | Edit::NewCable { .. } => return true,
         Edit::RemoveInput(id) => {
             let before = j.input.len();
             j.input.retain(|i| &i.id != id);
@@ -370,6 +406,34 @@ target = "default"
         let text = toml::to_string(&c).expect("toml");
         junc_core::config::load(&text, "junctions.toml").expect("still valid");
         assert!(!apply(&mut c, "gone", &Edit::Duplicate("x".into())));
+    }
+
+    #[test]
+    fn a_new_cable_has_one_app_input_and_validates() {
+        let mut c = config();
+        let app = |b: &str| {
+            Box::new(Match {
+                binary: Some(b.into()),
+                ..Match::default()
+            })
+        };
+        let cable = Edit::NewCable {
+            name: "New Cable".into(),
+            from: app("firefox"),
+            label: "Firefox".into(),
+            to: app("obs"),
+        };
+        assert!(apply(&mut c, "", &cable));
+        let j = c.junction.last().expect("cable");
+        assert_eq!((j.id.as_str(), j.name.as_str()), ("new-cable", "New Cable"));
+        assert_eq!(j.input.len(), 1);
+        assert_eq!(j.input[0].id, "firefox");
+        assert_eq!(
+            j.cable.as_ref().map(|c| c.to.binary.clone()),
+            Some(Some("obs".into()))
+        );
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
     }
 
     #[test]
