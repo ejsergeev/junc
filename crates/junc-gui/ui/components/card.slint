@@ -38,6 +38,17 @@ export component JCard inherits Rectangle {
     callback toggled(bool);
     callback volume-changed(int);
     callback options-clicked();
+    // ↑ ↓ ← → on the focused card: to the next card (the owner decides
+    // which); `wants-focus` asks it to take the focus, `focused` says it did.
+    callback arrow(int, int);
+    in property <bool> wants-focus;
+    callback focused();
+    changed wants-focus => {
+        if root.wants-focus {
+            focus.focus();
+            root.focused();
+        }
+    }
 
     property <bool> hover: touch.has-hover;
     background: Tokens.surface-card;
@@ -58,6 +69,10 @@ export component JCard inherits Rectangle {
                 root.toggled(root.on);
                 return accept;
             }
+            if e.text == Key.UpArrow { root.arrow(0, -1); return accept; }
+            if e.text == Key.DownArrow { root.arrow(0, 1); return accept; }
+            if e.text == Key.LeftArrow { root.arrow(-1, 0); return accept; }
+            if e.text == Key.RightArrow { root.arrow(1, 0); return accept; }
             reject
         }
     }
