@@ -122,6 +122,10 @@ struct Fixture {
     /// The config file on disk does not validate (board 47).
     #[serde(default)]
     config_error: Option<ConfigErrorFixture>,
+    /// juncd was updated to this version since the window last ran
+    /// (board 43).
+    #[serde(default)]
+    updated: Option<String>,
     /// Input channels ALSA reports for the graph's USB cards whatever the
     /// profile (board 35: "2 of 18 channels").
     #[serde(default)]
@@ -236,6 +240,7 @@ pub struct Scenario {
     pub defaults: bool,
     pub notices: Vec<NoticeFixture>,
     pub cursor_on: Option<String>,
+    pub updated: Option<String>,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -414,6 +419,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         defaults: f.defaults,
         notices: f.notice,
         cursor_on: f.cursor_on,
+        updated: f.updated,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -824,6 +830,9 @@ pub fn open(
     }
     if s.defaults {
         window.global::<crate::ui::View>().set_defaults_open(true);
+    }
+    if let Some(v) = &s.updated {
+        app.borrow_mut().show_updated(v);
     }
     for n in &s.notices {
         app.borrow_mut().notice(&n.kind, &n.body);

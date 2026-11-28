@@ -334,6 +334,17 @@ pub fn install(
         let c = call.clone();
         view.on_open_config(move || c(&|a| a.open_config()));
         let c = call.clone();
+        view.on_open_news(move || {
+            c(&|a| {
+                if let Some(w) = a.window.upgrade() {
+                    let view = w.global::<View>();
+                    a.actions
+                        .send(Command::Open(view.get_toast_news().to_string()));
+                    view.set_toast("".into());
+                }
+            });
+        });
+        let c = call.clone();
         view.on_dismiss_config_error(move || c(&App::dismiss_config_error));
         let c = call.clone();
         view.on_restore_link(move || c(&|a| a.resolve_link("restore")));
@@ -565,6 +576,9 @@ impl App {
             self.recheck();
         }
         self.received.clone_from(&describe);
+        if let Some(d) = &describe {
+            self.check_updated(&d.daemon_version);
+        }
         for j in describe.iter().flat_map(|d| &d.junctions) {
             let role = match j.default {
                 DefaultRole::Input => "input",
@@ -739,6 +753,7 @@ impl App {
                     .map(|id| (id.clone(), role.clone()));
                 let view = w.global::<View>();
                 view.set_toast_undo(self.undo.is_some());
+                view.set_toast_news("".into());
                 view.set_toast(message);
             }
             _ => {}
@@ -783,6 +798,39 @@ impl App {
             action: action.to_owned(),
         });
         self.refresh();
+    }
+
+    /// Board 43: juncd's version changed since the window last saw it
+    /// (kept in the GUI's state file): a toast says so, with the release
+    /// notes. The first version seen is only remembered.
+    fn check_updated(&mut self, version: &str) {
+        let Some(file) = self.state_file.clone() else {
+            return;
+        };
+        let seen = onboarding::text(&file, "daemon_version");
+        if seen.as_deref() == Some(version) {
+            return;
+        }
+        if let Err(e) = onboarding::set_text(&file, "daemon_version", Some(version)) {
+            eprintln!("junc-gui: {}: {e}", file.display());
+        }
+        if seen.is_some() {
+            self.show_updated(version);
+        }
+    }
+
+    /// Board 43's toast for `version`.
+    pub fn show_updated(&mut self, version: &str) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        self.undo = None;
+        let view = w.global::<View>();
+        view.set_toast_undo(false);
+        view.set_toast_news(
+            format!("{}/releases/tag/v{version}", env!("CARGO_PKG_REPOSITORY")).into(),
+        );
+        view.set_toast(w.global::<Words>().invoke_updated(version.into()));
     }
 
     /// Board 47's banner: the config file's first error, unless dismissed.

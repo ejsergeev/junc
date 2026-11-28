@@ -689,8 +689,10 @@ export component AppWindow inherits Window {
         width: min(500px * Tokens.scale, root.width - root.sidebar-width - 2 * Tokens.space-panel-pad);
         text: View.toast;
         glyph: "\u{f012c}";
-        action: View.toast-undo ? @tr("Undo") : "";
-        activated => { View.undo-default(); }
+        action: View.toast-undo ? @tr("Undo") : View.toast-news != "" ? @tr("What's new") : "";
+        activated => {
+            if View.toast-undo { View.undo-default(); } else { View.open-news(); }
+        }
         dismissed => { View.toast-dismissed(); }
     }
 }

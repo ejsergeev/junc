@@ -32,6 +32,8 @@ export global Words {
     public pure function bluetooth-note() -> string { @tr("Its mic switches the headset to the call profile (HFP): playback drops to call quality.") }
     public pure function add-anyway() -> string { @tr("Add anyway") }
     public pure function choose-another-mic() -> string { @tr("Choose another mic") }
+    // TRANSLATORS: board 43's toast; {0} is the new version.
+    public pure function updated(version: string) -> string { @tr("JUNC updated to {0} · audio kept running", version) }
     // TRANSLATORS: board 47's banner: the file, the line, juncd's message.
     public pure function config-error-at(file: string, line: int, message: string) -> string {
         @tr("Config error in {0} line {1}: {2}. Using last good config.", file, line, message)
@@ -227,6 +229,8 @@ export global View {
     // Board 38: the toast, and whether it can undo.
     in-out property <string> toast;
     in-out property <bool> toast-undo;
+    // Board 43: the release notes the toast's What's new opens.
+    in-out property <string> toast-news;
     // Deleting the selected Junction (board 22): what goes with it, and
     // what stays as it was.
     in-out property <bool> confirming;
@@ -289,6 +293,8 @@ export global View {
     // Board 47.
     callback open-config();
     callback dismiss-config-error();
+    // Board 43.
+    callback open-news();
     // Board 38.
     callback undo-default();
     callback toast-dismissed();
