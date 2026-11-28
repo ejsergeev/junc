@@ -100,6 +100,9 @@ fn main() -> Result<(), slint::PlatformError> {
     let _ = daemon::follow(None, move |d| {
         let _ = slint::invoke_from_event_loop(move || app::update_current(d));
     });
+    let _ = daemon::notices(None, |kind, body| {
+        let _ = slint::invoke_from_event_loop(move || app::notice_current(&kind, &body));
+    });
     // The tray, when the shell has a StatusNotifierWatcher (§7.8).
     let tray = tray::Tray::start(None, |e| {
         let _ = slint::invoke_from_event_loop(move || app::tray_current(&e));

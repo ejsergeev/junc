@@ -541,6 +541,31 @@ pub fn removal(m: &Main) -> Removal {
     }
 }
 
+/// The two ends of a link juncd reported as removed by another tool
+/// (board 39), from its reference: `in/<input>/<a>-><b>` (an Input
+/// channel into a Bus channel) or `listen/<id>/<a>-><b>` (a Bus channel
+/// to a Listen output's). Names come from the cards; `None` for a
+/// reference it cannot read.
+pub fn link_ends(m: &Main, reference: &str) -> Option<(String, u8, u8)> {
+    let mut parts = reference.split('/');
+    let side = parts.next()?;
+    let id = parts.next()?;
+    let (a, b) = parts.next()?.split_once("->")?;
+    let (a, b) = (a.parse().ok()?, b.parse().ok()?);
+    let cards = match side {
+        "in" => &m.inputs,
+        "listen" => &m.listens,
+        _ => return None,
+    };
+    let card = cards.iter().find(|c| c.id == id)?;
+    Some((card.title.clone(), a, b))
+}
+
+/// Whether reference `reference` is an Input's (else a Listen output's).
+pub fn link_is_input(reference: &str) -> bool {
+    reference.starts_with("in/")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -6,6 +6,7 @@
 import { Tokens } from "tokens.slint";
 import { JMenu } from "components/menu.slint";
 import { JBadge } from "components/badge.slint";
+import { JToast } from "components/toast.slint";
 import { View, Words, JunctionItem, CheckItem } from "view.slint";
 import { OnboardingCheck, OnboardingTemplates } from "screens/onboarding.slint";
 import { EmptyNone } from "screens/empty.slint";
@@ -204,7 +205,17 @@ export component AppWindow inherits Window {
                 View.renaming = true;
                 return accept;
             }
+            // Board 39: Enter puts a removed link back.
+            if e.text == "\n" && View.overridden != "" && !e.modifiers.control {
+                View.restore-link();
+                return accept;
+            }
             if !e.modifiers.control { return reject; }
+            // Board 38: Ctrl+Z undoes the restored default.
+            if (e.text == "z" || e.text == "Z") && View.toast-undo && View.toast != "" {
+                View.undo-default();
+                return accept;
+            }
             // Board 22: Ctrl+Delete asks before deleting the selected one.
             if e.text == Key.Delete && View.selected != "" {
                 View.confirming = true;
@@ -482,6 +493,9 @@ export component AppWindow inherits Window {
             set-default(r) => { View.set-default(r); }
             defaults-open <=> View.defaults-open;
             defaults-closed => { shortcuts.focus(); }
+            overridden: View.overridden;
+            restore-link => { View.restore-link(); }
+            leave-link => { View.leave-link(); }
             turn-on => { View.junction-toggled(View.selected, true); }
             apps: View.apps;
             devices: View.devices;
@@ -656,5 +670,17 @@ export component AppWindow inherits Window {
             import => { View.import-run(); shortcuts.focus(); }
             cancelled => { View.import-open = false; shortcuts.focus(); }
         }
+    }
+
+    // Board 38: a quiet confirmation at the main pane's bottom end.
+    if View.toast != "": JToast {
+        x: root.width - self.width - Tokens.space-panel-pad;
+        y: root.height - 45px * Tokens.scale - self.height - 10px;
+        width: min(500px * Tokens.scale, root.width - root.sidebar-width - 2 * Tokens.space-panel-pad);
+        text: View.toast;
+        glyph: "\u{f012c}";
+        action: View.toast-undo ? @tr("Undo") : "";
+        activated => { View.undo-default(); }
+        dismissed => { View.toast-dismissed(); }
     }
 }

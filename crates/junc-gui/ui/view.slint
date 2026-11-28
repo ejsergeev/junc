@@ -23,6 +23,15 @@ export global Words {
     public pure function capturing(apps: string) -> string { @tr("Capturing: {0}", apps) }
     public pure function open-junc() -> string { @tr("Open JUNC") }
     public pure function quit() -> string { @tr("Quit") }
+    // TRANSLATORS: board 38's toast; {0} is the device now the default.
+    public pure function default-input-restored(device: string) -> string { @tr("Default input restored to {0}", device) }
+    public pure function default-output-restored(device: string) -> string { @tr("Default output restored to {0}", device) }
+    // TRANSLATORS: board 39's banner: an Input channel or a Bus channel,
+    // then the other end ("USB Microphone 2 (R)", "Ch 2").
+    public pure function link-removed(from: string, to: string) -> string { @tr("Another app removed the link {0} → {1}", from, to) }
+    public pure function input-channel(card: string, ch: int, pos: string) -> string {
+        pos == "" ? @tr("{0} {1}", card, ch) : @tr("{0} {1} ({2})", card, ch, pos)
+    }
     // TRANSLATORS: the language picker's groups (design board 31).
     public pure function current-language() -> string { @tr("Current") }
     public pure function all-languages() -> string { @tr("All languages") }
@@ -195,6 +204,11 @@ export global View {
     // Board 37: the selected Junction's default role, its menu open.
     in-out property <string> default-role: "none";
     in-out property <bool> defaults-open;
+    // Board 39: a link another tool removed, for the selected Junction.
+    in-out property <string> overridden;
+    // Board 38: the toast, and whether it can undo.
+    in-out property <string> toast;
+    in-out property <bool> toast-undo;
     // Deleting the selected Junction (board 22): what goes with it, and
     // what stays as it was.
     in-out property <bool> confirming;
@@ -249,6 +263,12 @@ export global View {
     callback link-cancel();
     callback card-arrow(int, int, int);
     callback delete-junction();
+    // Board 39: put the link back, or leave it removed.
+    callback restore-link();
+    callback leave-link();
+    // Board 38.
+    callback undo-default();
+    callback toast-dismissed();
     // Board 37: make the selected Junction the default `role`, or none.
     callback set-default(string);
     // Board 21: a copy of Junction `id` after it.

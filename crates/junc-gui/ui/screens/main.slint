@@ -541,6 +541,12 @@ export component MainScreen inherits Rectangle {
     }
     callback set-default(string);
     callback defaults-closed();
+    // Board 39: a link another tool removed (its text), the answers.
+    in property <string> overridden;
+    callback restore-link();
+    callback leave-link();
+    // A banner under the header: off (board 18) or a removed link.
+    property <bool> banner: !root.on || root.overridden != "";
     // Board 22: what deleting it removes, and what stays.
     in property <[string]> delete-lines;
     in property <string> delete-note;
@@ -640,6 +646,22 @@ export component MainScreen inherits Rectangle {
                     min-width: 0;
                     horizontal-stretch: 1;
                 }
+            }
+        }
+        // Board 39: another tool removed a link; put it back or leave it.
+        if root.on && root.overridden != "": Rectangle {
+            height: 50px * Tokens.scale;
+            JBanner {
+                x: root.pad;
+                y: 14px * Tokens.scale;
+                width: parent.width - 2 * root.pad;
+                kind: "warning";
+                text: root.overridden;
+                action: @tr("Restore");
+                action-key: "Enter";
+                secondary: @tr("Leave as is");
+                activated => { root.restore-link(); }
+                secondary-activated => { root.leave-link(); }
             }
         }
         // Off: what that means and how to undo it.
@@ -939,7 +961,7 @@ export component MainScreen inherits Rectangle {
         TouchArea { clicked => { root.picker-closed(); } }
         picker := JPicker {
             x: root.picker-listen ? root.pad + root.col-x2 + root.col-w - self.width : root.pad + root.col-x0;
-            y: (62px + (root.on ? 0 : 50px) + 56px) * Tokens.scale
+            y: (62px + (root.banner ? 50px : 0) + 56px) * Tokens.scale
                 + (root.picker-listen && root.stacked ? root.listen-heading-y + 56px * Tokens.scale + canvas.viewport-y : 0);
             height: self.preferred-height;
             title: root.picker-listen ? @tr("Add listen output") : @tr("Add input");
@@ -967,7 +989,7 @@ export component MainScreen inherits Rectangle {
         }
         AddBus {
             x: root.pad + root.col-x1 + root.col-w - self.width;
-            y: (62px + (root.on ? 0 : 50px) + 56px) * Tokens.scale;
+            y: (62px + (root.banner ? 50px : 0) + 56px) * Tokens.scale;
             height: self.preferred-height;
             channels: root.bus-channels;
             init => { self.open(); }

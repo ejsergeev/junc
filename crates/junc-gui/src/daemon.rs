@@ -69,3 +69,36 @@ pub fn follow(
         })?;
     Ok(())
 }
+
+/// Starts a thread that calls `notice` with the kind and JSON body of
+/// every `Notice` juncd sends (`link_overridden`, `default_restored`, …;
+/// boards 38, 39). `address` as for [`follow`].
+pub fn notices(
+    address: Option<String>,
+    notice: impl Fn(String, String) + Send + 'static,
+) -> std::io::Result<()> {
+    std::thread::Builder::new()
+        .name("junc-notices".into())
+        .spawn(move || {
+            let run = async {
+                let conn = match &address {
+                    Some(a) => {
+                        zbus::connection::Builder::address(a.as_str())
+                            .build()
+                            .await?
+                    }
+                    None => zbus::Connection::session().await?,
+                };
+                let p = DaemonProxy::new(&conn).await?;
+                let mut stream = p.receive_notice().await?;
+                while let Some(n) = stream.next().await {
+                    if let Ok(args) = n.args() {
+                        notice(args.kind().to_string(), args.body().to_string());
+                    }
+                }
+                zbus::Result::Ok(())
+            };
+            let _ = zbus::block_on(run);
+        })?;
+    Ok(())
+}

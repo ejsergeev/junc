@@ -19,6 +19,13 @@ pub enum Command {
     Volume { path: String, percent: u16 },
     /// Remove it (`Junction.Delete(true)`, after the window confirmed).
     Delete { path: String },
+    /// Board 39: answer a `link_overridden` notice (`restore` or `leave`,
+    /// `Daemon.ResolveLink`).
+    ResolveLink {
+        junction: String,
+        reference: String,
+        action: String,
+    },
     /// A new display name (`Junction.Rename`; the id stays).
     Rename { path: String, name: String },
     /// The system default it is (`Junction.SetDefault`: `none`, `input`,
@@ -206,6 +213,20 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
                 .await
                 .map_err(text)?
                 .delete(true)
+                .await
+                .map_err(text)?;
+        }
+        Command::ResolveLink {
+            junction,
+            reference,
+            action,
+        } => {
+            DaemonProxy::builder(conn)
+                .cache_properties(zbus::proxy::CacheProperties::No)
+                .build()
+                .await
+                .map_err(text)?
+                .resolve_link(junction, reference, action)
                 .await
                 .map_err(text)?;
         }

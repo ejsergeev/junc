@@ -109,13 +109,16 @@ struct Fixture {
     /// Settings' language picker open, Follow Omarchy off (board 31).
     #[serde(default)]
     lang_picker: bool,
-    /// The selected Junction made this default (`input`, `output`), as
-    /// its menu would (board 37).
+    /// The first Junction made this default (`input`, `output`), as its
+    /// menu would (boards 37, 38).
     #[serde(default)]
     default_role: Option<String>,
     /// Its Default menu open.
     #[serde(default)]
     defaults: bool,
+    /// Notices juncd sends once the window is up (boards 38, 39).
+    #[serde(default)]
+    notice: Vec<NoticeFixture>,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -123,6 +126,14 @@ struct Fixture {
     link: Option<String>,
     #[serde(default)]
     link_keys: bool,
+}
+
+/// A `Notice` signal: its kind and JSON body.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+pub struct NoticeFixture {
+    pub kind: String,
+    pub body: String,
 }
 
 /// One doctor check (`junc doctor --json`).
@@ -205,6 +216,7 @@ pub struct Scenario {
     pub lang_picker: bool,
     pub default_role: Option<String>,
     pub defaults: bool,
+    pub notices: Vec<NoticeFixture>,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -352,6 +364,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         lang_picker: f.lang_picker,
         default_role: f.default_role,
         defaults: f.defaults,
+        notices: f.notice,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -389,6 +402,8 @@ struct MockState {
     service_asked: bool,
     importables: Vec<junc_core::import::Importable>,
     import_asked: bool,
+    /// How the window answered a link_overridden notice.
+    resolved: Option<String>,
 }
 
 impl std::fmt::Debug for Mock {
@@ -414,6 +429,7 @@ impl Mock {
                 service_asked: false,
                 importables: s.importables.clone(),
                 import_asked: false,
+                resolved: None,
             })),
         }
     }
@@ -458,6 +474,11 @@ impl Mock {
         self.inner.borrow().copied.clone()
     }
 
+    /// How the window answered a link_overridden notice (board 39).
+    pub fn resolved(&self) -> Option<String> {
+        self.inner.borrow().resolved.clone()
+    }
+
     /// Start at login as the mock's systemd has it (F9).
     pub fn start_at_login(&self) -> bool {
         self.inner.borrow().start_at_login
@@ -488,6 +509,7 @@ impl Actions for Mock {
                 Command::Check => s.checking = true,
                 Command::Copy(text) => s.copied = Some(text.clone()),
                 Command::OpenLogs => s.logs_opened = true,
+                Command::ResolveLink { action, .. } => s.resolved = Some(action.clone()),
                 Command::ImportScan => s.import_asked = true,
                 Command::Import(items) => {
                     if let Some(c) = s.config.as_mut() {
@@ -567,6 +589,9 @@ impl Mock {
                     c.junction.remove(i);
                 }
             }
+            // juncd keeps a left link out (the config's suppressed
+            // pairs); a restored one comes back by itself.
+            Command::ResolveLink { .. } => {}
             Command::SetDefault { path, role } => {
                 // As juncd: one Junction per role; the old one lets go.
                 let role = match role.as_str() {
@@ -678,6 +703,13 @@ pub fn open(
         .global::<crate::ui::View>()
         .set_show_listen(!s.hide_listen);
     app.borrow_mut().update(s.describe.clone());
+    // The first Junction, selected now, made a default (board 37, 38).
+    if let Some(role) = &s.default_role {
+        window
+            .global::<crate::ui::View>()
+            .invoke_set_default(role.as_str().into());
+        mock.flush();
+    }
     if let Some(id) = &s.select {
         app.borrow_mut().select(id);
     }
@@ -723,14 +755,11 @@ pub fn open(
         app.borrow_mut().open_import();
         mock.flush();
     }
-    if let Some(role) = &s.default_role {
-        window
-            .global::<crate::ui::View>()
-            .invoke_set_default(role.as_str().into());
-        mock.flush();
-    }
     if s.defaults {
         window.global::<crate::ui::View>().set_defaults_open(true);
+    }
+    for n in &s.notices {
+        app.borrow_mut().notice(&n.kind, &n.body);
     }
     if s.lang_picker {
         let lang = crate::ui::language();

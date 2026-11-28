@@ -71,6 +71,14 @@ pub struct App {
     tray: Option<crate::tray::Tray>,
     /// The language picker's rows (board 31).
     languages: Vec<crate::language::Row>,
+    /// Links another tool removed, waiting for Restore or Leave as is:
+    /// (Junction id, juncd's reference); board 39.
+    overridden: Vec<(String, String)>,
+    /// The last Junction seen holding each default role (board 38's
+    /// Undo).
+    holders: BTreeMap<String, String>,
+    /// What the toast's Undo makes the default again: (Junction id, role).
+    undo: Option<(String, String)>,
 }
 
 /// The sidebar id of the draft Cable (a config id has no `+`).
@@ -207,6 +215,9 @@ pub fn install(
         draft: None,
         tray: None,
         languages: Vec::new(),
+        overridden: Vec::new(),
+        holders: BTreeMap::new(),
+        undo: None,
         picker: None,
         picking: Picking::Input,
         options: None,
@@ -310,6 +321,21 @@ pub fn install(
         view.on_recheck(move || c(&App::recheck));
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
+        let c = call.clone();
+        view.on_restore_link(move || c(&|a| a.resolve_link("restore")));
+        let c = call.clone();
+        view.on_leave_link(move || c(&|a| a.resolve_link("leave")));
+        let c = call.clone();
+        view.on_undo_default(move || c(&App::undo_default));
+        let c = call.clone();
+        view.on_toast_dismissed(move || {
+            c(&|a| {
+                a.undo = None;
+                if let Some(w) = a.window.upgrade() {
+                    w.global::<View>().set_toast("".into());
+                }
+            });
+        });
         let c = call.clone();
         view.on_set_default(move |role| {
             c(&|a| {
@@ -523,6 +549,14 @@ impl App {
             self.recheck();
         }
         self.received.clone_from(&describe);
+        for j in describe.iter().flat_map(|d| &d.junctions) {
+            let role = match j.default {
+                DefaultRole::Input => "input",
+                DefaultRole::Output => "output",
+                DefaultRole::None => continue,
+            };
+            self.holders.insert(role.to_owned(), j.id.clone());
+        }
         let describe = describe.map(|mut d| {
             d.junctions.extend(self.draft.iter().map(draft_view));
             d
@@ -641,6 +675,132 @@ impl App {
         view.set_service_known(false);
         view.set_settings_open(true);
         self.actions.send(Command::Service(None));
+    }
+
+    /// A `Notice` from juncd: a link another tool removed (board 39), a
+    /// default put back (board 38); others are not shown.
+    pub fn notice(&mut self, kind: &str, body: &str) {
+        let Ok(v) = serde_json::from_str::<serde_json::Value>(body) else {
+            return;
+        };
+        let text = |k: &str| {
+            v.get(k)
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned)
+        };
+        match kind {
+            "link_overridden" => {
+                if let (Some(j), Some(r)) = (text("junction"), text("ref"))
+                    && !self.overridden.contains(&(j.clone(), r.clone()))
+                {
+                    self.overridden.push((j, r));
+                }
+                self.refresh();
+            }
+            "default_restored" => {
+                let Some(w) = self.window.upgrade() else {
+                    return;
+                };
+                let role = text("kind").unwrap_or_default();
+                let device = text("to").map(|node| {
+                    self.describe
+                        .as_ref()
+                        .and_then(|d| d.candidates.iter().find(|c| c.node == node))
+                        .map_or(node.clone(), |c| c.description.clone())
+                });
+                let words = w.global::<Words>();
+                let device = device.unwrap_or_default();
+                let message = if role == "output" {
+                    words.invoke_default_output_restored(device.into())
+                } else {
+                    words.invoke_default_input_restored(device.into())
+                };
+                // Undo when the Junction that held it is still there.
+                self.undo = self
+                    .holders
+                    .get(&role)
+                    .filter(|id| self.sidebar.junctions.iter().any(|r| &&r.id == id))
+                    .map(|id| (id.clone(), role.clone()));
+                let view = w.global::<View>();
+                view.set_toast_undo(self.undo.is_some());
+                view.set_toast(message);
+            }
+            _ => {}
+        }
+    }
+
+    /// Board 38's Undo: the Junction on again and the default again.
+    fn undo_default(&mut self) {
+        let Some((id, role)) = self.undo.take() else {
+            return;
+        };
+        if let Some(row) = self.sidebar.junctions.iter().find(|r| r.id == id) {
+            if !row.enabled {
+                self.actions.send(Command::Enabled {
+                    path: row.path.clone(),
+                    on: true,
+                });
+            }
+            self.actions.send(Command::SetDefault {
+                path: row.path.clone(),
+                role,
+            });
+        }
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_toast("".into());
+        }
+    }
+
+    /// Board 39: put the selected Junction's removed link back, or leave
+    /// it removed (also after restarts).
+    fn resolve_link(&mut self, action: &str) {
+        let Some(id) = self.selected.clone() else {
+            return;
+        };
+        let Some(i) = self.overridden.iter().position(|(j, _)| *j == id) else {
+            return;
+        };
+        let (junction, reference) = self.overridden.remove(i);
+        self.actions.send(Command::ResolveLink {
+            junction,
+            reference,
+            action: action.to_owned(),
+        });
+        self.refresh();
+    }
+
+    /// Board 39's banner text for the selected Junction, if a link of it
+    /// waits for an answer.
+    fn overridden_text(&self, words: &Words) -> SharedString {
+        let (Some(m), Some(id)) = (&self.main, &self.selected) else {
+            return SharedString::new();
+        };
+        let Some((_, reference)) = self.overridden.iter().find(|(j, _)| j == id) else {
+            return SharedString::new();
+        };
+        let Some((card, a, b)) = main_view::link_ends(m, reference) else {
+            return SharedString::new();
+        };
+        let channel = |card: &str, ch: u8, cards: &[main_view::Card]| {
+            let pos = cards
+                .iter()
+                .find(|c| c.title == card)
+                .and_then(|c| c.channels.iter().find(|x| x.number == ch))
+                .map(|x| x.position.to_string())
+                .unwrap_or_default();
+            words.invoke_input_channel(card.into(), i32::from(ch), pos.into())
+        };
+        if main_view::link_is_input(reference) {
+            words.invoke_link_removed(
+                channel(&card, a, &m.inputs),
+                words.invoke_bus_channel(i32::from(b)),
+            )
+        } else {
+            words.invoke_link_removed(
+                words.invoke_bus_channel(i32::from(a)),
+                channel(&card, b, &m.listens),
+            )
+        }
     }
 
     /// Board 31: the language picker, the language in use first.
@@ -1687,6 +1847,7 @@ impl App {
                 view.set_delete_note(note);
                 view.set_selected(m.id.as_str().into());
                 self.show_cable();
+                view.set_overridden(self.overridden_text(&w.global::<Words>()));
             }
             None => {
                 view.set_selected("".into());
@@ -1970,5 +2131,13 @@ fn join(words: &Words, items: &[SharedString]) -> SharedString {
             );
             words.invoke_list_and(before, last.clone())
         }
+    }
+}
+
+/// Gives the current controller a notice from juncd (GUI thread).
+pub fn notice_current(kind: &str, body: &str) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().notice(kind, body);
     }
 }
