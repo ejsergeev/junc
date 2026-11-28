@@ -1,0 +1,7 @@
+# GUI scenario: design board 47, "Config error" — a hand edit of
+# junctions.toml does not validate: juncd keeps the last good config and
+# the window says where; Open file, or Dismiss (Esc).
+board = 47
+title = "Config error"
+base = "default"
+config_error = { line = 14, message = "unknown key 'volum'" }
