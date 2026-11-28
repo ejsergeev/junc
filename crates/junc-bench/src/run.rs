@@ -508,6 +508,9 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
         read("/sys/kernel/mm/transparent_hugepage/enabled"),
         std::thread::available_parallelism().map_or(0, std::num::NonZero::get)
     ));
+    // Each phase says when it starts: a run that hangs (once on CI, in
+    // 2 h of silence after this point) then shows where.
+    log("phase: idle");
     let before = switches(pid);
     std::thread::sleep(Duration::from_secs(o.idle_secs));
     #[allow(clippy::cast_precision_loss)]
@@ -515,6 +518,7 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
     m.insert("idle_wakeups_per_s".into(), rate);
 
     // CLI round trip.
+    log("phase: cli");
     let mut cli = Vec::new();
     for i in 0..o.cli_runs {
         let t = Instant::now();
@@ -534,6 +538,7 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
     routed_again.ok_or("not routed after the CLI calls")?;
 
     // Re-link: an app that restarts over and over.
+    log("phase: relink");
     let mut relink = churn(&rx, &mut g, "bench-app", "b9", "app", o.churn)?;
     m.insert("relink_p95_ms".into(), percentile(&mut relink, 0.95));
 
@@ -542,6 +547,7 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
         .map_err(|_| "JUNC_PW_SESSION is not set (run under scripts/ci/with-pipewire.sh)")?;
     let (mut recovery, mut total) = (Vec::new(), Vec::new());
     for i in 0..o.recoveries {
+        log(&format!("phase: recovery {i}"));
         let ok = |arg: &str| {
             Command::new(&session)
                 .arg(arg)
@@ -587,12 +593,14 @@ pub fn run(o: &Opts) -> Result<Metrics, String> {
         return Err("juncd did not survive the PipeWire restarts".into());
     }
 
+    log("phase: latency");
     let (added, quantum) =
         crate::latency::added_frames("junc.b9.in.app:playback_FL", "junc.b9:capture_FL", 4)?;
     log(&format!(
         "latency: the Junction adds {added} frames (quantum {quantum})"
     ));
     m.insert("added_latency_frames".into(), added);
+    log("phase: bit-exact");
     m.insert("bit_exact".into(), bit_exact(&dir)?);
 
     drop(daemon);
