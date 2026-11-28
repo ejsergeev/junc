@@ -71,6 +71,8 @@ pub struct App {
     tray: Option<crate::tray::Tray>,
     /// A template's slots being filled in (board 49).
     form: Option<SlotForm>,
+    /// Where presets are, when not the user's (scenarios).
+    presets: Option<PathBuf>,
     /// The language picker's rows (board 31).
     languages: Vec<crate::language::Row>,
     /// Links another tool removed, waiting for Restore or Leave as is:
@@ -281,6 +283,7 @@ pub fn install(
         draft: None,
         tray: None,
         form: None,
+        presets: None,
         languages: Vec::new(),
         overridden: Vec::new(),
         holders: BTreeMap::new(),
@@ -1066,9 +1069,17 @@ impl App {
         view.set_toast(w.global::<Words>().invoke_updated(version.into()));
     }
 
+    /// Presets from `dir` rather than the user's folder (scenarios).
+    pub fn set_presets_dir(&mut self, dir: PathBuf) {
+        self.presets = Some(dir);
+    }
+
     /// Where presets go: `$XDG_CONFIG_HOME/junc/presets`, else
     /// `~/.config/junc/presets`.
-    fn presets_dir() -> PathBuf {
+    fn presets_dir(&self) -> PathBuf {
+        if let Some(dir) = &self.presets {
+            return dir.clone();
+        }
         std::env::var_os("XDG_CONFIG_HOME")
             .filter(|v| !v.is_empty())
             .map(PathBuf::from)
@@ -1138,14 +1149,19 @@ impl App {
         let view = w.global::<View>();
         view.set_export_title(m.name.as_str().into());
         view.set_export_file(format!("{}.junc.toml", m.id).into());
-        let dir = Self::presets_dir();
-        let shown = std::env::var_os("HOME")
-            .and_then(|h| {
-                dir.strip_prefix(&h)
-                    .ok()
-                    .map(|r| format!("~/{}", r.display()))
-            })
-            .unwrap_or_else(|| dir.display().to_string());
+        let dir = self.presets_dir();
+        // Scenarios read presets from the fixtures but show the usual place.
+        let shown = if self.presets.is_some() {
+            "~/.config/junc/presets".to_owned()
+        } else {
+            std::env::var_os("HOME")
+                .and_then(|h| {
+                    dir.strip_prefix(&h)
+                        .ok()
+                        .map(|r| format!("~/{}", r.display()))
+                })
+                .unwrap_or_else(|| dir.display().to_string())
+        };
         view.set_export_dir(shown.into());
         view.set_export_rows(ModelRc::new(VecModel::from(rows)));
         view.set_export_open(true);
@@ -1162,7 +1178,7 @@ impl App {
         if file.is_empty() || file.contains('/') {
             return;
         }
-        let path = Self::presets_dir().join(file).display().to_string();
+        let path = self.presets_dir().join(file).display().to_string();
         self.actions
             .send(Command::ExportPreset { junction: id, path });
     }

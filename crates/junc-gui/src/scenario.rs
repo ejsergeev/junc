@@ -808,6 +808,8 @@ pub fn open(
     let mock = Mock::new(s);
     let app = crate::app::install(window, Rc::new(mock.clone()), meters, levels);
     mock.attach(&app);
+    // Never the user's presets folder: the fixtures' (boards 46, 48).
+    app.borrow_mut().set_presets_dir(fixtures().join("presets"));
     window
         .global::<crate::ui::View>()
         .set_show_listen(!s.hide_listen);

@@ -968,7 +968,7 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     assert!(!view.get_export_open());
     assert!(
         mock.exported()
-            .is_some_and(|p| p.ends_with("junc/presets/virtual-mic-for-zoom.junc.toml"))
+            .is_some_and(|p| p.ends_with("presets/virtual-mic-for-zoom.junc.toml"))
     );
     assert!(view.get_toast().starts_with("Exported to "));
     ctrl(&w, "e");
