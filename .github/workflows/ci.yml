@@ -67,3 +67,49 @@ jobs:
       - name: Restore cache ownership
         if: always()
         run: sudo chown -R "$(id -u):$(id -g)" .ci-cache || true
+
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    name: package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # pkgver counts the commits.
+          fetch-depth: 0
+      - uses: actions/cache@v6
+        with:
+          path: .ci-cache/cargo
+          key: pkg-cargo-${{ matrix.arch }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: pkg-cargo-${{ matrix.arch }}-
+      - name: Container image
+        id: image
+        run: |
+          if [ "${{ matrix.arch }}" = x86_64 ]; then
+            echo "name=docker.io/library/archlinux:base-devel" >> "$GITHUB_OUTPUT"
+          else
+            scripts/ci/alarm-image.sh
+            echo "name=junc-ci-alarm" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build and namcap
+        timeout-minutes: 90
+        run: docker run --rm -v "$PWD:/src" -w /src "${{ steps.image.outputs.name }}" scripts/ci/package.sh
+      - name: Install into a fresh container and use it
+        timeout-minutes: 15
+        run: docker run --rm -v "$PWD:/src" -w /src "${{ steps.image.outputs.name }}" scripts/ci/package-smoke.sh
+      - name: Packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: packages-${{ matrix.arch }}
+          path: .ci-cache/pkg/*.pkg.tar.*
+          retention-days: 14
+      - name: Restore cache ownership
+        if: always()
+        run: sudo chown -R "$(id -u):$(id -g)" .ci-cache || true
