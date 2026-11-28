@@ -1,0 +1,7 @@
+# GUI scenario: design board 46, "Export preset" — Ctrl+E: the file name,
+# where it goes, what the preset holds and which parts are tied to this
+# machine's devices.
+board = 46
+title = "Export preset"
+base = "default"
+export = true
