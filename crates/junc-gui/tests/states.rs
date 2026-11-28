@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35, 37–40)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -857,4 +857,38 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     });
     settle();
     assert_eq!(inputs(&mock), before + 1);
+    drop((w, _app, mock));
+
+    // Board 36: 18 channels in groups of eight, the first open; opening
+    // In 9–16 gives each of its channels a row and a port.
+    let (w, app, _mock) = open("multichannel");
+    let view = w.global::<View>();
+    let card = view
+        .get_cards()
+        .iter()
+        .position(|c| c.title == "JUNC Test 18in")
+        .expect("card");
+    let rows = |v: &View| v.get_cards().row_data(card).expect("card").rows.row_count();
+    let ports = |v: &View| {
+        v.get_ports()
+            .iter()
+            .filter(|p| p.column == 0 && p.owner == "JUNC Test 18in")
+            .count()
+    };
+    assert_eq!(
+        rows(&view),
+        1 + 8 + 2,
+        "In 1–8 open, In 9–16 and In 17–18 closed"
+    );
+    assert_eq!(ports(&view), 8 + 2);
+    let index = view.get_cards().row_data(card).expect("card").index;
+    view.invoke_group_toggled(index, 9);
+    settle();
+    assert_eq!(rows(&view), 1 + 8 + 1 + 8 + 1);
+    assert_eq!(ports(&view), 8 + 8 + 1);
+    assert!(
+        app.borrow()
+            .main()
+            .is_some_and(|m| m.inputs[2].groups[1].expanded)
+    );
 }
