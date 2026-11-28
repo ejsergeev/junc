@@ -1467,6 +1467,18 @@ the config (`GetConfig`) and writes `Preset::from_junction`'s file on the
 actions thread, as `junc preset export -o` does; a toast says where. Not
 built: leaving parts out (the board's checkboxes show what goes in).
 
+As built (B22, New menu): New now lists Junction, Cable, From template…
+and Import preset… (Ctrl+I; also in the context menu). From template…
+opens board 48's picker: the six built-in templates, then the preset
+files in the presets folder; Import preset… shows the presets alone. A
+template starts as onboarding's does (Start empty, the Cable draft, or
+the slots step); a preset with slots asks for them, else
+`junc_core::preset::load` reads it and one `Apply` adds its Junction
+(`Edit::AddJunction`), selected when juncd shows it. Scenarios read
+presets from `tests/fixtures/presets`, never the user's folder. Not
+built: picking a preset file outside the presets folder (there is no
+file chooser).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
