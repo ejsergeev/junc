@@ -2255,6 +2255,50 @@ recovery 8 ms after the devices return (190–250 ms from PipeWire's
 start), `junc enable` p95 3–36 ms, 0 added frames, bit-exact, juncd
 3.1 / 2.9 MB.
 
+As built (B26), the GUI rows: `junc-bench gui` runs the release
+`junc-gui` against the real juncd (ten Junctions, the first fed with
+noise by an app so every meter of its Main screen moves) on the
+isolated PipeWire and a private bus with no service directories. The
+GUI's own state, config and language point into the bench's folder.
+`JUNC_GUI_PERF=FILE` turns on `junc-gui`'s timings (`perf.rs`, in every
+build, inert without the variable, so the shipped binary is measured):
+from Slint's rendering notifier it writes the first frame after juncd's
+state with a Junction arrived, measured from `JUNC_GUI_PERF_T0` (the
+bench's clock at launch), and later drags a link from the first Input
+port to its first target and back, one step per frame, through the same
+calls as the pointer, then cancels it (no config change). The bench
+reads PSS from `smaps_rollup` 3 s after the first frame, CPU (clock
+ticks) and context switches over 10 s visible, and, under Hyprland, the
+same with the window on a hidden special workspace.
+
+- `scripts/gui/perf.sh --hyprland` on the owner's laptop opens the
+  window on a temporary headless monitor through Hyprland's `exec_cmd`
+  (no focus taken, the monitor removed afterwards), femtovg on the GPU,
+  and gates the results against `bench/gui-thresholds.toml` (the PRD
+  targets, no baseline).
+- CI runs `scripts/gui/perf.sh` in the private Xvfb session after the
+  daemon bench on both arches and uploads `gui-bench-results.json`:
+  tracked, not gated. Xvfb renders with Mesa's llvmpipe on the CPU, so
+  its CPU, PSS (llvmpipe's heap) and frame times say little about a GPU
+  desktop; cold start and trends are what it shows. The hidden figure
+  stays with `hidden-check.sh`.
+
+First numbers on the owner's M1 (2026-11-28, five runs, femtovg on the
+Apple GPU, 1640×1013 on a headless monitor): first frame with juncd's
+state 114–193 ms (window created at ~70 ms, juncd's state at ~85 ms;
+the first run after a fresh build, binary and Mesa shader cache cold,
+took 439 ms), PSS 77.8–79.0 MB (21 MB of it Mesa's LLVM), CPU with every
+meter moving 0.6–0.7 % of a core at ~41 wakeups/s, a link drag's frame
+rendering p95 8.5–8.7 ms (max 14.6 ms; frames every ~19 ms on the 60 Hz
+headless output), hidden 0 % in four runs and one tick in 10 s (0.1 %)
+in the fifth. While hidden, no JUNC thread woke; over 10 s the main
+thread (6–9 switches), winit's `smithay-clipboard` (14–18), the
+`blocking` pool's thread of the zbus 5 that Slint's winit backend
+brings (20: ~2 Hz, as in an empty Slint 1.19.1 window without JUNC,
+with or without accessibility) and Mesa's `agx-bo-cache` (2–3) used
+~2 ms together, so a clock tick (10 ms) lands now and then (the gate in
+`hidden-check.sh` sees the same; owner decision in plan.md).
+
 ### 11.5 CI vs owner laptop
 
 | CI (every PR / nightly) | Owner's Omarchy laptop (developer runs, owner assists) |
