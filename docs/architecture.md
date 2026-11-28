@@ -1959,6 +1959,23 @@ them). Source: `git+https://github.com/ejsergeev/junc.git#tag=v$pkgver`
 --locked` (layer 1). `junc.install` handles `pre_remove` teardown (§3.13).
 Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 
+As built (B25, first part, 2026-11-28): `packaging/arch/PKGBUILD` as in the
+table; the CLI's catalogs come from `cargo xtask i18n build` into
+`/usr/share/locale`, the hicolor PNGs (16–512) are rendered from the SVGs
+with `rsvg-convert` at build time, and the plugin is installed without its
+tests. The icons are design board 50: `packaging/icons/junc.svg`,
+`junc-16.svg` (pixel-aligned, used for 16 and 24 px) and
+`junc-symbolic.svg` (the tray's icon). The board's Omarchy icon template is
+not shipped: Omarchy 4 has no themed icon templates. The GUI sets its
+Wayland app_id / X11 class to `junc`, matching `junc.desktop`. Completions
+and man pages are not built yet. CI's `package` job (both architectures)
+builds from the commit with `scripts/ci/package.sh` (pkgver
+`0.1.0.r<commits>.g<hash>`), fails on namcap errors, and
+`scripts/ci/package-smoke.sh` installs the packages into a fresh container
+and checks the files, the German CLI catalog, juncd through D-Bus
+activation and `junc doctor`. The packages are a build artifact until the
+signing key exists (B24); `junc-keyring` and publishing follow it.
+
 ### 10.2 Signed pacman repository
 
 - Hosted on GitHub Pages of `ejsergeev/junc-pkgs`:

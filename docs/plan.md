@@ -525,6 +525,9 @@ Omarchy and packaging:
   CI publish to `junc-testing` for x86_64 + aarch64, install smoke test in a
   fresh container. Acceptance: `pacman -S junc-gui` from the testing repo on
   the owner laptop works with signature checking on.
+  In progress: PKGBUILD, icons, desktop entry and the CI build + fresh
+  container smoke test done (2026-11-28); `junc-keyring`, signing and
+  publishing wait for B24.
 - [ ] **B26** [auto] GUI perf gates: cold start, PSS, CPU with meters, CPU
   hidden, frame time while dragging (owner laptop for GPU numbers).
 - [ ] **B27** [owner] Beta walkthrough with the real USB interface, once,
