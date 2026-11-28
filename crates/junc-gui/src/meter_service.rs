@@ -164,6 +164,7 @@ pub fn start(window: &AppWindow, levels: &Levels) -> Option<MeterService> {
     let frames = Frames::spawn(gate.clone()).ok().and_then(|f| {
         let (f2, g2) = (f.clone(), gate.clone());
         let set = window.window().set_rendering_notifier(move |state, _| {
+            crate::perf::frame(&state);
             if matches!(state, slint::RenderingState::AfterRendering) {
                 f2.presented(&g2);
             }
