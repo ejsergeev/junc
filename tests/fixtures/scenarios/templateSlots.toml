@@ -1,0 +1,15 @@
+# GUI scenario: design board 49, "Template slots" — onboarding's Mic +
+# App: the mic picked, the picker of running apps open for the app.
+board = 49
+title = "Template slots"
+base = "default"
+onboarding = "templates"
+template = "mic-plus-app"
+slot_fill = [["mic", "USB Microphone"]]
+slot_picker = 1
+
+[[node]]
+name = "discord"
+class = "Stream/Output/Audio"
+app = "Discord"
+binary = "discord"

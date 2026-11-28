@@ -1,0 +1,26 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Step 2 of 2 · Mic + App' states=[enabled,sensitive,showing,visible]
+    label name='Mic + App' states=[enabled,sensitive,showing,visible]
+    label name='Pick what the template needs. You can change everything later.' states=[enabled,sensitive,showing,visible]
+    label name='Mic' states=[enabled,sensitive,showing,visible]
+    label name='Hardware input' states=[enabled,sensitive,showing,visible]
+    button name='USB Microphone' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='App' states=[enabled,sensitive,showing,visible]
+    label name='An app that is playing' states=[enabled,sensitive,showing,visible]
+    button name='Choose an app' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Back' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Create Junction' desc='Enter' states=[focusable,showing,visible] actions=click
+    panel name='Choose' states=[enabled,sensitive,showing,visible]
+      entry name='Search' states=[focusable,enabled,sensitive,editable,showing,visible]
+      label name='RUNNING APPS' states=[enabled,sensitive,showing,visible]
+      list item name='Discord' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      list item name='Firefox' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Soundux' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      list item name='Spotify' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      label name='↑↓' states=[enabled,sensitive,showing,visible]
+      label name='move' states=[enabled,sensitive,showing,visible]
+      label name='Enter' states=[enabled,sensitive,showing,visible]
+      label name='pick' states=[enabled,sensitive,showing,visible]
+      label name='Esc' states=[enabled,sensitive,showing,visible]
+      label name='close' states=[enabled,sensitive,showing,visible]
