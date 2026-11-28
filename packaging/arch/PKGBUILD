@@ -15,7 +15,7 @@ arch=(x86_64 aarch64)
 url='https://github.com/ejsergeev/junc'
 license=(GPL-3.0-or-later)
 # The split packages' depends are listed too (namcap wants them here).
-makedepends=(cargo clang gcc-libs git libglvnd librsvg libxkbcommon pipewire pkgconf
+makedepends=(cargo clang gcc-libs git hicolor-icon-theme libglvnd librsvg libxkbcommon pipewire pkgconf
              wayland wireplumber)
 options=(!lto)
 source=("junc::git+https://github.com/ejsergeev/junc.git#tag=v$pkgver")
