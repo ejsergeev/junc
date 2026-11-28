@@ -121,7 +121,7 @@ msgstr "あるアプリの音を別のアプリへ直接"
 msgid "Undo"
 msgstr "元に戻す"
 
-#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
+#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
 msgid "Dismiss"
 msgstr "閉じる"
 
@@ -548,6 +548,10 @@ msgstr "縦並び"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
 msgstr "デフォルト"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Open file"
+msgstr "ファイルを開く"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Restore"
@@ -1032,6 +1036,14 @@ msgstr "それでも追加"
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
 msgstr "別のマイクを選ぶ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Config error in {0} line {1}: {2}. Using last good config."
+msgstr "{0} の {1} 行目に設定エラー: {2}。最後に正常だった設定を使っています。"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Config error: {0}. Using last good config."
+msgstr "設定エラー: {0}。最後に正常だった設定を使っています。"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Default input restored to {0}"

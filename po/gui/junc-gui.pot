@@ -112,7 +112,7 @@ msgstr ""
 msgid "Undo"
 msgstr ""
 
-#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
+#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
 msgid "Dismiss"
 msgstr ""
 
@@ -542,6 +542,10 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Open file"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
@@ -1026,6 +1030,14 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Config error in {0} line {1}: {2}. Using last good config."
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Config error: {0}. Using last good config."
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint

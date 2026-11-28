@@ -121,7 +121,7 @@ msgstr "Eine App direkt in eine andere"
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
+#: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
 msgid "Dismiss"
 msgstr "Schließen"
 
@@ -552,6 +552,10 @@ msgstr "gestapelt"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Default"
 msgstr "Standard"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Open file"
+msgstr "Datei öffnen"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Restore"
@@ -1036,6 +1040,14 @@ msgstr "Trotzdem hinzufügen"
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
 msgstr "Anderes Mikrofon wählen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Config error in {0} line {1}: {2}. Using last good config."
+msgstr "Konfigurationsfehler in {0} Zeile {1}: {2}. Die letzte gültige Konfiguration bleibt in Gebrauch."
+
+#: crates/junc-gui/ui/view.slint
+msgid "Config error: {0}. Using last good config."
+msgstr "Konfigurationsfehler: {0}. Die letzte gültige Konfiguration bleibt in Gebrauch."
 
 #: crates/junc-gui/ui/view.slint
 msgid "Default input restored to {0}"
