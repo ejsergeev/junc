@@ -189,9 +189,33 @@ msgstr "不一致"
 msgid "Copy"
 msgstr "コピー"
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr "キャンセル"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Export preset"
+msgstr "プリセットを書き出す"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "File name"
+msgstr "ファイル名"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Save to"
+msgstr "保存先"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "device-specific"
+msgstr "デバイス固有"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Device-specific items are matched by name on import. Devices that aren't there show as offline until you plug them in."
+msgstr "デバイス固有の項目はインポート時に名前で照合されます。ないデバイスは接続するまでオフラインと表示されます。"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Export"
+msgstr "書き出す"
 
 #: crates/junc-gui/ui/components/import.slint
 msgid "capture {0}, playback to {1}"
@@ -350,7 +374,7 @@ msgstr "{0} Ch {1}"
 msgid "Volume"
 msgstr "音量"
 
-#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Listen"
 msgstr "試聴"
 
@@ -569,7 +593,7 @@ msgstr "このままにする"
 msgid "Junction is off — apps see silence"
 msgstr "ジャンクションはオフです — アプリには無音が届きます"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Inputs"
 msgstr "入力"
 
@@ -577,7 +601,7 @@ msgstr "入力"
 msgid "Add input"
 msgstr "入力を追加"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Bus"
 msgstr "バス"
 
@@ -1056,6 +1080,23 @@ msgstr "それでも追加"
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
 msgstr "別のマイクを選ぶ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Links"
+msgstr "接続"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Link between Inputs, Bus and Listen"
+msgid_plural "{n} Links between Inputs, Bus and Listen"
+msgstr[0] "入力・バス・試聴の間の接続 {n} 本"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Exported to {0}"
+msgstr "{0} に書き出しました"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Could not export: {0}"
+msgstr "書き出せませんでした: {0}"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Hardware input"

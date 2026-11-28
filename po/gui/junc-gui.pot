@@ -180,8 +180,32 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
+msgstr ""
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Export preset"
+msgstr ""
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "File name"
+msgstr ""
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Save to"
+msgstr ""
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "device-specific"
+msgstr ""
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Device-specific items are matched by name on import. Devices that aren't there show as offline until you plug them in."
+msgstr ""
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Export"
 msgstr ""
 
 #: crates/junc-gui/ui/components/import.slint
@@ -342,7 +366,7 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Listen"
 msgstr ""
 
@@ -564,7 +588,7 @@ msgstr ""
 msgid "Junction is off — apps see silence"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Inputs"
 msgstr ""
 
@@ -572,7 +596,7 @@ msgstr ""
 msgid "Add input"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Bus"
 msgstr ""
 
@@ -1050,6 +1074,24 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Links"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Link between Inputs, Bus and Listen"
+msgid_plural "{n} Links between Inputs, Bus and Listen"
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Exported to {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Could not export: {0}"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint

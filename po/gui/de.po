@@ -189,9 +189,33 @@ msgstr "passt nicht"
 msgid "Copy"
 msgstr "Kopieren"
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr "Abbrechen"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Export preset"
+msgstr "Preset exportieren"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "File name"
+msgstr "Dateiname"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Save to"
+msgstr "Speichern in"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "device-specific"
+msgstr "gerätespezifisch"
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Device-specific items are matched by name on import. Devices that aren't there show as offline until you plug them in."
+msgstr "Gerätespezifisches wird beim Import über den Namen zugeordnet. Fehlende Geräte erscheinen offline, bis du sie anschließt."
+
+#: crates/junc-gui/ui/components/export.slint
+msgid "Export"
+msgstr "Exportieren"
 
 #: crates/junc-gui/ui/components/import.slint
 msgid "capture {0}, playback to {1}"
@@ -351,7 +375,7 @@ msgstr "{0} Kanal {1}"
 msgid "Volume"
 msgstr "Lautstärke"
 
-#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Listen"
 msgstr "Abhören"
 
@@ -573,7 +597,7 @@ msgstr "So lassen"
 msgid "Junction is off — apps see silence"
 msgstr "Junction ist aus – Apps hören Stille"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Inputs"
 msgstr "Eingänge"
 
@@ -581,7 +605,7 @@ msgstr "Eingänge"
 msgid "Add input"
 msgstr "Eingang hinzufügen"
 
-#: crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/screens/main.slint crates/junc-gui/ui/view.slint
 msgid "Bus"
 msgstr "Bus"
 
@@ -1060,6 +1084,24 @@ msgstr "Trotzdem hinzufügen"
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
 msgstr "Anderes Mikrofon wählen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Links"
+msgstr "Verbindungen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{n} Link between Inputs, Bus and Listen"
+msgid_plural "{n} Links between Inputs, Bus and Listen"
+msgstr[0] "{n} Verbindung zwischen Eingängen, Bus und Abhören"
+msgstr[1] "{n} Verbindungen zwischen Eingängen, Bus und Abhören"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Exported to {0}"
+msgstr "Exportiert nach {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Could not export: {0}"
+msgstr "Export fehlgeschlagen: {0}"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Hardware input"
