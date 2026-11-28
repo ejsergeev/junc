@@ -52,6 +52,8 @@ jobs:
             echo "name=junc-ci-alarm" >> "$GITHUB_OUTPUT"
           fi
       - name: Checks in Arch container
+        # ~20 min warm; a hang must not hold the runner for six hours.
+        timeout-minutes: 90
         run: docker run --rm -v "$PWD:/src" -w /src "${{ steps.image.outputs.name }}" scripts/ci/in-container.sh
       - name: systemd user session (A15)
         run: scripts/ci/systemd-user.sh "${{ steps.image.outputs.name }}"

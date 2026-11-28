@@ -9,7 +9,9 @@ cd "$(dirname "$0")/../.."
 bin=target/release
 results=target/bench-results.json
 baseline=bench/baseline/$(uname -m).json
-scripts/ci/with-pipewire.sh "$bin/junc-bench" run --out "$results" >/dev/null
+# The run takes ~25 s; a hang (seen once on CI) fails here instead of
+# holding the runner for hours.
+timeout -k 10 300 scripts/ci/with-pipewire.sh "$bin/junc-bench" run --out "$results" >/dev/null
 gate() { "$bin/junc-bench" compare "$results" --baseline "$baseline" --thresholds bench/thresholds.toml "$@"; }
 gate
 echo "== the gate must fail on an injected regression"
