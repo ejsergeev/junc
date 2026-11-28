@@ -18,11 +18,11 @@ fn main() -> Result<(), slint::PlatformError> {
         let name = args.get(i + 1).cloned().unwrap_or_default();
         return scenario(&name, &args);
     }
-    // The Wayland app_id / X11 class: launchers and the compositor match
-    // the window to junc.desktop and its icon by it. (It initialises the
-    // platform, so scenarios, which pick their own, come first.)
-    slint::set_xdg_app_id("junc")?;
     let window = ui::AppWindow::new()?;
+    // The Wayland app_id / X11 class: launchers and the compositor match
+    // the window to junc.desktop and its icon by it. It needs the platform
+    // the window just started, and must come before the window is shown.
+    slint::set_xdg_app_id("junc")?;
     let dir = theme::omarchy_dir();
     // Settings › Follow Omarchy theme (board 25), on unless turned off.
     let pref = onboarding::state_file()
