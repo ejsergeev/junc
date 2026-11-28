@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 47)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 47, 49)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -921,4 +921,32 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
             .is_some_and(|u| u.ends_with("/releases/tag/v1.1"))
     );
     assert_eq!(view.get_toast(), "");
+    drop((w, _app, mock));
+
+    // Board 49: Mic + App with the mic picked and the app's picker open;
+    // Enter picks Discord, Enter creates the Junction from the template.
+    let (w, app, mock) = open("templateSlots");
+    let view = w.global::<View>();
+    let count = |m: &Mock| m.config().expect("config").junction.len();
+    let before = count(&mock);
+    assert_eq!(view.get_onboarding(), 3);
+    assert!(view.get_slot_picker_open());
+    assert!(!view.get_slot_ready());
+    key(&w, "\n");
+    settle();
+    assert!(view.get_slot_ready());
+    key(&w, "\n");
+    settle();
+    assert_eq!(view.get_onboarding(), 0);
+    let config = mock.config().expect("config");
+    assert_eq!(count(&mock), before + 1);
+    let made = config.junction.last().expect("made");
+    assert!(made.input.iter().any(|i| i.matcher.device.as_deref()
+        == Some("alsa_input.usb-Generic_USB_Microphone-00.analog-stereo")));
+    assert!(
+        made.input
+            .iter()
+            .any(|i| i.matcher.binary.as_deref() == Some("discord"))
+    );
+    assert_eq!(app.borrow().selected(), Some(made.id.as_str()));
 }
