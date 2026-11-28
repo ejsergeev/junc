@@ -1439,6 +1439,13 @@ good config."), with Open file (`xdg-open` on the config file) and
 Dismiss (also Esc), which hides it until another error comes. A
 Junction that is off keeps its own banner; a removed link's waits.
 
+As built (B22, updated): the GUI keeps juncd's version in its state file
+(`daemon_version`); when juncd's `Describe` names another one, a quiet
+toast says "JUNC updated to 1.1 · audio kept running" (board 43, juncd
+re-executes without an audio gap) with What's new, which opens the
+release's notes on the repository (`xdg-open`). The first version seen
+is only remembered.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
