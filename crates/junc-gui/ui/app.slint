@@ -544,6 +544,7 @@ export component AppWindow inherits Window {
             link-cancel => { View.link-cancel(); }
             focus-card: View.focus-card;
             card-arrow(i, dx, dy) => { View.card-arrow(i, dx, dy); }
+            group-toggled(c, f) => { View.group-toggled(c, f); }
             focus-card-done => { View.focus-card = -1; }
             delete-junction => { View.delete-junction(); }
             renaming <=> View.renaming;

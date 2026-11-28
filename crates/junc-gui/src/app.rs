@@ -79,6 +79,9 @@ pub struct App {
     holders: BTreeMap<String, String>,
     /// What the toast's Undo makes the default again: (Junction id, role).
     undo: Option<(String, String)>,
+    /// Groups of channels opened or closed by hand: (Input id, first
+    /// channel) → open (board 36).
+    groups_open: BTreeMap<(String, u8), bool>,
 }
 
 /// The sidebar id of the draft Cable (a config id has no `+`).
@@ -218,6 +221,7 @@ pub fn install(
         overridden: Vec::new(),
         holders: BTreeMap::new(),
         undo: None,
+        groups_open: BTreeMap::new(),
         picker: None,
         picking: Picking::Input,
         options: None,
@@ -321,6 +325,8 @@ pub fn install(
         view.on_recheck(move || c(&App::recheck));
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
+        let c = call.clone();
+        view.on_group_toggled(move |card, first| c(&|a| a.toggle_group(card, first)));
         let c = call.clone();
         view.on_restore_link(move || c(&|a| a.resolve_link("restore")));
         let c = call.clone();
@@ -803,6 +809,27 @@ impl App {
                 channel(&card, b, &m.listens),
             )
         }
+    }
+
+    /// Board 36: opens or closes the group of Input card `card` that
+    /// starts at channel `first`.
+    pub fn toggle_group(&mut self, card: i32, first: i32) {
+        let Some(c) = self
+            .main
+            .as_ref()
+            .and_then(|m| m.inputs.get(usize::try_from(card).ok()?))
+        else {
+            return;
+        };
+        let Ok(first) = u8::try_from(first) else {
+            return;
+        };
+        let Some(g) = c.groups.iter().find(|g| g.first == first) else {
+            return;
+        };
+        self.groups_open.insert((c.id.clone(), first), !g.expanded);
+        self.refresh();
+        self.relayout();
     }
 
     /// Board 31: the language picker, the language in use first.
@@ -1836,6 +1863,16 @@ impl App {
             .as_ref()
             .zip(selected.as_deref())
             .and_then(|(d, id)| main_view::main(d, id));
+        // Groups of channels opened or closed by hand (board 36).
+        if let Some(m) = self.main.as_mut() {
+            for c in &mut m.inputs {
+                for g in &mut c.groups {
+                    if let Some(&open) = self.groups_open.get(&(c.id.clone(), g.first)) {
+                        g.expanded = open;
+                    }
+                }
+            }
+        }
         let rows = &self.sidebar.junctions;
         view.set_daemon_state(self.sidebar.daemon.as_str().into());
         view.set_junctions(ModelRc::new(VecModel::from(ui::sidebar(

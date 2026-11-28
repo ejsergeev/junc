@@ -271,6 +271,8 @@ export global View {
     callback link-step(int);
     callback link-cancel();
     callback card-arrow(int, int, int);
+    // Board 36: open or close a group of an Input card's channels.
+    callback group-toggled(int, int);
     callback delete-junction();
     // Board 39: put the link back, or leave it removed.
     callback restore-link();

@@ -18,6 +18,7 @@ import { JInlineField } from "../components/inline-field.slint";
 import { JEmptyState } from "../components/empty-state.slint";
 import { JPicker, PickerItem } from "../components/picker.slint";
 import { JBanner } from "../components/banner.slint";
+import { JBadge } from "../components/badge.slint";
 import { JRadioGroup } from "../components/radio-group.slint";
 import { JSelect } from "../components/select.slint";
 import { JSwitch } from "../components/switch.slint";
@@ -30,6 +31,20 @@ export struct ChannelItem {
     meter: int,
     // Stacked Listen rows: the Bus channel that feeds them (0: none).
     source: int,
+}
+
+// A row of a grouped card (board 36): a group of channels, or one of an
+// open group's channels.
+export struct CardRow {
+    group: bool,
+    // The group's channels, or the channel (`first`).
+    first: int,
+    last: int,
+    expanded: bool,
+    linked: int,
+    // Index into the levels: the channel's, or the group's channels'.
+    meter: int,
+    meters: [int],
 }
 
 export struct CardItem {
@@ -53,6 +68,11 @@ export struct CardItem {
     w: length,
     h: length,
     channels: [ChannelItem],
+    // Grouped (board 36): its rows, channels, linked channels, Pro Audio.
+    rows: [CardRow],
+    total: int,
+    linked: int,
+    pro-audio: bool,
 }
 
 export struct PortItem {
@@ -520,6 +540,8 @@ export component MainScreen inherits Rectangle {
     // Arrow keys on card `i` of `cards`; Rust answers with focus-card.
     callback card-arrow(int, int, int);
     callback focus-card-done();
+    // Board 36: open or close the group starting at a channel of Input card.
+    callback group-toggled(int, int);
     callback link-key(int, int, int, int);
     callback link-drag(length, length);
     callback link-drop();
@@ -801,7 +823,92 @@ export component MainScreen inherits Rectangle {
                 app: c.title;
                 toggled(v) => { root.card-toggled(c.column, c.index, v); }
                 volume-changed(v) => { root.card-volume(c.column, c.index, v); }
-                HorizontalLayout {
+                // Board 36: many channels, in groups of eight.
+                if c.rows.length > 0: VerticalLayout {
+                    spacing: 0;
+                    HorizontalLayout {
+                        height: 20px * Tokens.scale;
+                        spacing: 6px;
+                        if c.pro-audio: JBadge {
+                            y: (parent.height - self.height) / 2;
+                            horizontal-stretch: 0;
+                            text: @tr("Pro Audio");
+                        }
+                        Text {
+                            text: @tr("{0} ch", c.total) + " · " + @tr("{0} linked", c.linked);
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    for row in c.rows: Rectangle {
+                        height: (row.group ? 24px : 20px) * Tokens.scale;
+                        if row.group: TouchArea {
+                            clicked => { root.group-toggled(c.index, row.first); }
+                        }
+                        if row.group: HorizontalLayout {
+                            spacing: 6px;
+                            Text {
+                                width: 12px * Tokens.scale;
+                                text: row.expanded ? "\u{f0140}" : "\u{f0142}";
+                                color: Tokens.text-subtle;
+                                font-size: Tokens.type-body-small;
+                                vertical-alignment: center;
+                                accessible-role: none;
+                            }
+                            Text {
+                                width: 72px * Tokens.scale;
+                                text: @tr("In {0}–{1}", row.first, row.last);
+                                color: Tokens.text-strong;
+                                font-size: Tokens.type-body-small;
+                                vertical-alignment: center;
+                            }
+                            if !row.expanded: HorizontalLayout {
+                                spacing: 2px;
+                                for m in row.meters: Rectangle {
+                                    width: 6px;
+                                    height: 12px;
+                                    y: (parent.height - self.height) / 2;
+                                    background: Tokens.track;
+                                    Rectangle {
+                                        y: parent.height - self.height;
+                                        height: parent.height * clamp((root.levels[m] + 60) / 60, 0, 1);
+                                        background: Tokens.meter-safe;
+                                    }
+                                }
+                            }
+                            Rectangle { horizontal-stretch: 1; }
+                            Text {
+                                text: row.expanded ? @tr("{0} of {1} linked", row.linked, row.last - row.first + 1)
+                                    : @tr("{0} ch", row.last - row.first + 1);
+                                color: Tokens.text-subtle;
+                                font-size: Tokens.type-body-small;
+                                vertical-alignment: center;
+                            }
+                        }
+                        if !row.group: HorizontalLayout {
+                            padding-left: 18px * Tokens.scale;
+                            spacing: Tokens.space-row-gap;
+                            Text {
+                                width: 40px * Tokens.scale;
+                                text: @tr("In {0}", row.first);
+                                color: Tokens.text-subtle;
+                                font-size: Tokens.type-body-small;
+                                vertical-alignment: center;
+                            }
+                            Rectangle {
+                                JMeter {
+                                    y: (parent.height - self.height) / 2;
+                                    width: parent.width;
+                                    level: root.on && c.on && c.state == "ok" ? root.levels[row.meter] : -60;
+                                    peak: root.on && c.on && c.state == "ok" ? root.peaks[row.meter] : -60;
+                                }
+                            }
+                        }
+                    }
+                }
+                if c.rows.length == 0: HorizontalLayout {
                     spacing: 10px * Tokens.scale;
                     if c.column == 0: Rectangle {
                         width: 40px * Tokens.scale;

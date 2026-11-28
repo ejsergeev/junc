@@ -85,6 +85,39 @@ pub struct Card {
     pub exclusive: bool,
     pub volume: u16,
     pub channels: Vec<Channel>,
+    /// More than eight channels show in groups of eight (board 36); empty
+    /// otherwise.
+    pub groups: Vec<ChannelGroup>,
+    /// The Input takes its card in Pro Audio (F15).
+    pub pro_audio: bool,
+}
+
+/// Channels `first`..=`last` of a card, shown open or as one row.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ChannelGroup {
+    pub first: u8,
+    pub last: u8,
+    pub expanded: bool,
+}
+
+/// Cards wider than this show their channels in groups (board 36).
+pub const GROUP_ABOVE: usize = 8;
+
+/// Groups of eight for `n` channels, the first open.
+pub fn groups(n: usize) -> Vec<ChannelGroup> {
+    if n <= GROUP_ABOVE {
+        return Vec::new();
+    }
+    let n = u8::try_from(n).unwrap_or(u8::MAX);
+    (1..=n)
+        .step_by(GROUP_ABOVE)
+        .enumerate()
+        .map(|(i, first)| ChannelGroup {
+            first,
+            last: first.saturating_add(7).min(n),
+            expanded: i == 0,
+        })
+        .collect()
 }
 
 /// A group of Bus channels: a stereo pair or a single channel.
@@ -320,6 +353,15 @@ fn input_card(d: &Describe, j: &JunctionView, i: &InputView) -> Card {
     } else {
         i.links.clone()
     };
+    // A card the Input takes whole (Pro Audio) has as many channels as
+    // its capture side, linked or not (board 36).
+    let card_width = i
+        .matcher
+        .device
+        .as_ref()
+        .and_then(|name| d.devices.iter().find(|dev| &dev.name == name))
+        .map_or(0, |dev| u8::try_from(dev.input_channels).unwrap_or(u8::MAX));
+    let n = width(&links, &i.suppressed, 0).max(card_width);
     Card {
         id: i.id.clone(),
         title: input_title(d, i),
@@ -328,10 +370,9 @@ fn input_card(d: &Describe, j: &JunctionView, i: &InputView) -> Card {
         state,
         exclusive: i.exclusive,
         volume: i.volume,
-        channels: channels(
-            width(&links, &i.suppressed, 0),
-            &gain_node_name(&j.id, &i.id),
-        ),
+        channels: channels(n, &gain_node_name(&j.id, &i.id)),
+        groups: groups(usize::from(n)),
+        pro_audio: i.matcher.profile.as_deref() == Some(junc_core::proaudio::PRO_AUDIO),
     }
 }
 
@@ -352,6 +393,8 @@ fn listen_card(d: &Describe, j: &JunctionView, l: &ListenView) -> Card {
             width(&l.links, &l.suppressed, 1),
             &listen_node_name(&j.id, &l.id),
         ),
+        groups: Vec::new(),
+        pro_audio: false,
     }
 }
 

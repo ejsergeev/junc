@@ -123,6 +123,62 @@ pub fn card_height(rows: usize, footer: bool) -> f32 {
     HEADER + PAD + n * ROW + (n - 1.0) * ROW_GAP + PAD + if footer { FOOTER } else { 0.0 }
 }
 
+/// A grouped card (board 36): its info line, a group's row, an open
+/// group's channel row.
+pub const INFO: f32 = 20.0;
+pub const GROUP_ROW: f32 = 24.0;
+pub const CHANNEL_ROW: f32 = 20.0;
+
+/// Height of Input or Listen card `c`: one row per channel, or its
+/// groups of eight (board 36).
+pub fn height_of(c: &crate::main_view::Card) -> f32 {
+    if c.groups.is_empty() {
+        return card_height(c.channels.len(), true);
+    }
+    let rows: f32 = c
+        .groups
+        .iter()
+        .map(|g| {
+            GROUP_ROW
+                + if g.expanded {
+                    group_rows(g) * CHANNEL_ROW
+                } else {
+                    0.0
+                }
+        })
+        .sum();
+    HEADER + PAD + INFO + rows + PAD + FOOTER
+}
+
+fn group_rows(g: &crate::main_view::ChannelGroup) -> f32 {
+    f32::from(g.last - g.first + 1)
+}
+
+/// Centre of channel `ch` (1-based) of card `c` from its top: its row, or
+/// its group's row while the group is closed.
+pub fn channel_centre(c: &crate::main_view::Card, ch: u8) -> f32 {
+    if c.groups.is_empty() {
+        return row_centre(usize::from(ch).saturating_sub(1));
+    }
+    let mut y = HEADER + PAD + INFO;
+    for g in &c.groups {
+        if (g.first..=g.last).contains(&ch) {
+            return if g.expanded {
+                y + GROUP_ROW + f32::from(ch - g.first) * CHANNEL_ROW + CHANNEL_ROW / 2.0
+            } else {
+                y + GROUP_ROW / 2.0
+            };
+        }
+        y += GROUP_ROW
+            + if g.expanded {
+                group_rows(g) * CHANNEL_ROW
+            } else {
+                0.0
+            };
+    }
+    row_centre(usize::from(ch).saturating_sub(1))
+}
+
 /// Centre of row `i` (0-based) from the card's top.
 pub fn row_centre(i: usize) -> f32 {
     #[allow(clippy::cast_precision_loss)]
@@ -154,12 +210,7 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
     } else {
         [(x(0.0), w), (x(1.0), w), (x(2.0), w)]
     };
-    let (inputs, in_bottom) = stack(
-        columns[0].0,
-        w,
-        0.0,
-        m.inputs.iter().map(|c| card_height(c.channels.len(), true)),
-    );
+    let (inputs, in_bottom) = stack(columns[0].0, w, 0.0, m.inputs.iter().map(height_of));
     let (bus, bus_bottom) = stack(
         columns[1].0,
         w,
@@ -175,10 +226,7 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
         columns[2].0,
         w,
         listen_top,
-        m.listens
-            .iter()
-            .filter(|_| listen)
-            .map(|c| card_height(c.channels.len(), true)),
+        m.listens.iter().filter(|_| listen).map(height_of),
     );
     let empty_h = bus.first().map_or_else(|| card_height(2, false), |r| r.h);
     let empty_inputs = inputs.is_empty().then_some(Rect {
@@ -196,11 +244,10 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
     let in_bottom = empty_inputs.map_or(in_bottom, |r| r.y + r.h);
     let listen_bottom = empty_listens.map_or(listen_bottom, |r| r.y + r.h);
 
-    let row_of = |rects: &[Rect], card: usize, ch: u8| -> Option<f32> {
-        rects
-            .get(card)
-            .map(|r| r.y + row_centre(usize::from(ch).saturating_sub(1)))
-    };
+    let row_of =
+        |rects: &[Rect], cards: &[crate::main_view::Card], card: usize, ch: u8| -> Option<f32> {
+            Some(rects.get(card)?.y + channel_centre(cards.get(card)?, ch))
+        };
     let bus_row = |ch: u8| -> Option<(Rect, f32)> {
         m.bus.iter().zip(&bus).find_map(|(g, r)| {
             let i = g.channels.iter().position(|c| c.number == ch)?;
@@ -213,7 +260,7 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
                 let r = inputs.get(card)?;
                 Some(Point {
                     x: r.x + r.w,
-                    y: row_of(&inputs, card, ch)?,
+                    y: row_of(&inputs, &m.inputs, card, ch)?,
                 })
             }
             End::BusIn { ch } => bus_row(ch).map(|(r, y)| Point { x: r.x, y }),
@@ -222,7 +269,7 @@ pub fn layout(m: &Main, width: f32, listen: bool) -> Layout {
                 let r = listens.get(card)?;
                 Some(Point {
                     x: r.x,
-                    y: row_of(&listens, card, ch)?,
+                    y: row_of(&listens, &m.listens, card, ch)?,
                 })
             }
         }

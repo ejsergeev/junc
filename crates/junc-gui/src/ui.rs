@@ -3,7 +3,7 @@
 //! The Slint side: the generated window and assigning [`theme::Tokens`]
 //! to its `Tokens` global in one pass (architecture §7.7 step 4).
 
-use crate::layout::{Layout, Point, Rect, row_centre};
+use crate::layout::{Layout, Point, Rect, channel_centre, row_centre};
 use crate::main_view::{self, Card, CardState, End, Icon, Main};
 use crate::meter_service::Slot;
 use crate::picker::{Entry, Group, Offer};
@@ -299,8 +299,16 @@ pub fn canvas(m: &Main, l: &Layout, hovered: Option<usize>, meter_base: usize) -
         };
     let none = |_: u8| 0u8;
     for (i, (c, r)) in m.inputs.iter().zip(&l.inputs).enumerate() {
-        out.cards
-            .push(card(0, i, c, r, channels(&c.channels, &none)));
+        let items = channels(&c.channels, &none);
+        let mut item = card(0, i, c, r, items.clone());
+        if !c.groups.is_empty() {
+            let linked = |ch: u8| m.links.iter().any(|k| k.from == End::Input { card: i, ch });
+            item.rows = ModelRc::new(VecModel::from(group_rows(c, &items, &linked)));
+            item.total = int(c.channels.len());
+            item.linked = int(c.channels.iter().filter(|ch| linked(ch.number)).count());
+            item.pro_audio = c.pro_audio;
+        }
+        out.cards.push(item);
     }
     for (i, (g, r)) in m.bus.iter().zip(&l.bus).enumerate() {
         out.cards.push(CardItem {
@@ -349,14 +357,25 @@ pub fn canvas(m: &Main, l: &Layout, hovered: Option<usize>, meter_base: usize) -
             });
         };
     for (i, (c, r)) in m.inputs.iter().zip(&l.inputs).enumerate() {
-        for (k, ch) in c.channels.iter().enumerate() {
+        // A closed group of channels (board 36) has one port, its first
+        // channel's, linked when any of them is.
+        let closed = |ch: u8| {
+            c.groups
+                .iter()
+                .find(|g| !g.expanded && (g.first..=g.last).contains(&ch))
+        };
+        for ch in &c.channels {
+            let members = match closed(ch.number) {
+                Some(g) if g.first != ch.number => continue,
+                Some(g) => g.first..=g.last,
+                None => ch.number..=ch.number,
+            };
             let state = if c.state == CardState::Offline {
                 "offline"
             } else if c.enabled
-                && linked(End::Input {
-                    card: i,
-                    ch: ch.number,
-                })
+                && members
+                    .clone()
+                    .any(|n| linked(End::Input { card: i, ch: n }))
             {
                 "linked"
             } else {
@@ -364,7 +383,7 @@ pub fn canvas(m: &Main, l: &Layout, hovered: Option<usize>, meter_base: usize) -
             };
             port(
                 r.x + r.w,
-                r.y + row_centre(k),
+                r.y + channel_centre(c, ch.number),
                 state,
                 0,
                 i,
@@ -404,7 +423,7 @@ pub fn canvas(m: &Main, l: &Layout, hovered: Option<usize>, meter_base: usize) -
     }
     if !l.stacked {
         for (i, (c, r)) in m.listens.iter().zip(&l.listens).enumerate() {
-            for (k, ch) in c.channels.iter().enumerate() {
+            for ch in &c.channels {
                 let state = if c.state == CardState::Offline {
                     "offline"
                 } else if linked(End::Listen {
@@ -417,7 +436,7 @@ pub fn canvas(m: &Main, l: &Layout, hovered: Option<usize>, meter_base: usize) -
                 };
                 port(
                     r.x,
-                    r.y + row_centre(k),
+                    r.y + channel_centre(c, ch.number),
                     state,
                     2,
                     i,
@@ -496,6 +515,38 @@ pub fn port_end(column: i32, card: i32, ch: i32, side: i32) -> Option<End> {
         (1, _) => End::BusOut { ch },
         _ => End::Listen { card, ch },
     })
+}
+
+/// A grouped card's rows (board 36): each group's row, then its channels
+/// while it is open.
+fn group_rows(c: &Card, items: &[ChannelItem], linked: &dyn Fn(u8) -> bool) -> Vec<CardRow> {
+    let mut out = Vec::new();
+    for g in &c.groups {
+        let members: Vec<&ChannelItem> = items
+            .iter()
+            .filter(|ch| (i32::from(g.first)..=i32::from(g.last)).contains(&ch.number))
+            .collect();
+        out.push(CardRow {
+            group: true,
+            first: i32::from(g.first),
+            last: i32::from(g.last),
+            expanded: g.expanded,
+            linked: int((g.first..=g.last).filter(|&n| linked(n)).count()),
+            meters: ModelRc::new(VecModel::from(
+                members.iter().map(|ch| ch.meter).collect::<Vec<_>>(),
+            )),
+            ..CardRow::default()
+        });
+        if g.expanded {
+            out.extend(members.iter().map(|ch| CardRow {
+                group: false,
+                first: ch.number,
+                meter: ch.meter,
+                ..CardRow::default()
+            }));
+        }
+    }
+    out
 }
 
 fn card(column: i32, i: usize, c: &Card, r: &Rect, channels: Vec<ChannelItem>) -> CardItem {
