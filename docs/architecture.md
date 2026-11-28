@@ -1457,6 +1457,16 @@ once all are filled) fills the built-in template with
 returns to the templates. "Cable" goes to the New Cable draft (board
 27), which asks for its two apps.
 
+As built (B22, export preset): Ctrl+E or the context menu's Export
+preset… opens board 46's dialog for the selected Junction: the file name
+(`<id>.junc.toml`, editable), where it goes (`$XDG_CONFIG_HOME/junc/
+presets`), and what the preset holds (Inputs, Bus, Links, Listen), with a
+"device-specific" badge where it names this machine's devices (device or
+monitor Inputs; Listen outputs to a named device). Export (Enter) reads
+the config (`GetConfig`) and writes `Preset::from_junction`'s file on the
+actions thread, as `junc preset export -o` does; a toast says where. Not
+built: leaving parts out (the board's checkboxes show what goes in).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
