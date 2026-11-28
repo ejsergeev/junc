@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.ejsergeev.junc",
+  "name": "JUNC",
+  "version": "0.1.0",
+  "author": "ejsergeev",
+  "license": "GPL-3.0-or-later",
+  "description": "JUNC audio routing in the bar: how many Junctions are on, which apps are being captured, and a switch for each.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "JUNC",
+    "description": "Junctions on, the capture dot, and a popup with a switch for each Junction and Cable.",
+    "category": "Audio",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

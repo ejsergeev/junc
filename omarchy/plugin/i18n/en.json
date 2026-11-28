@@ -1,0 +1,11 @@
+{
+  "popup.on": "%1 on",
+  "popup.capturing": "Capturing: %1",
+  "popup.empty": "No Junctions yet. Open JUNC to make one.",
+  "popup.notRunning": "JUNC is not running.",
+  "popup.open": "Open JUNC",
+  "row.junction": { "one": "Junction · %1 Input", "other": "Junction · %1 Inputs" },
+  "row.cable": "Cable",
+  "row.defaultInput": "Default input",
+  "row.defaultOutput": "Default output"
+}
