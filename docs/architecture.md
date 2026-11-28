@@ -1382,6 +1382,15 @@ The window imports through `junc import ID… --as junction|cable` (one
 call per kind, on a thread), so the CLI's builder stays the only one;
 juncd then shows the new Junctions. The old setups keep running.
 
+As built (B21, Use as default): the header's Default button names the
+role ("Default input", "Default output") and opens board 37's menu: two
+check rows and what they mean. A Junction is one default at a time
+(`DefaultRole`), so checking the other row moves it, and unchecking
+makes it none (`Junction.SetDefault`; juncd lets the old holder of the
+role go). The sidebar row shows a "Default input"/"Default output"
+badge. The scenarios' base config no longer makes Virtual Mic the
+default input: boards 1–34 show no default.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
