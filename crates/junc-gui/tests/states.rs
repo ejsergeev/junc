@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 47)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -891,4 +891,22 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
             .main()
             .is_some_and(|m| m.inputs[2].groups[1].expanded)
     );
+    drop((w, app, _mock));
+
+    // Board 47: the config file does not validate; the banner says where,
+    // Open file opens it, Esc dismisses it.
+    let (w, _app, mock) = open("configError");
+    let view = w.global::<View>();
+    assert_eq!(
+        view.get_config_error(),
+        "Config error in junctions.toml line 14: unknown key 'volum'. Using last good config."
+    );
+    view.invoke_open_config();
+    assert!(
+        mock.opened()
+            .is_some_and(|f| f.ends_with(".config/junc/junctions.toml"))
+    );
+    key(&w, Key::Escape);
+    settle();
+    assert_eq!(view.get_config_error(), "");
 }
