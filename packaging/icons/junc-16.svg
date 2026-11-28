@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- JUNC app icon, pixel-aligned for 16-24 px (design board 50). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <rect x="0.5" y="0.5" width="15" height="15" fill="#1a1b26" stroke="#7aa2f7" stroke-width="1"/>
+  <rect x="3" y="3" width="3" height="3" fill="#7aa2f7"/>
+  <rect x="10" y="10" width="3" height="3" fill="#7aa2f7"/>
+  <path d="M6 4.5h2.5v7h1.5" fill="none" stroke="#7aa2f7" stroke-width="1"/>
+</svg>
