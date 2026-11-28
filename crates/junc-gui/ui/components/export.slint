@@ -1,0 +1,171 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Export preset (design board 46): the file name, where it goes, what the
+// preset holds and which parts are tied to this machine's devices (they
+// match by name on import and show offline until the device is there).
+// Enter exports, Esc cancels.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+import { JBadge } from "badge.slint";
+import { ExportRow } from "../view.slint";
+
+export component JExport inherits Rectangle {
+    in property <string> title;
+    in-out property <string> file;
+    in property <string> dir;
+    in property <[ExportRow]> rows;
+    callback export();
+    callback cancelled();
+    width: 640px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: @tr("Export preset");
+
+    public function open() { name.focus(); name.select-all(); }
+
+    VerticalLayout {
+        padding: 20px * Tokens.scale;
+        spacing: 14px * Tokens.scale;
+        Text {
+            text: @tr("Export preset") + " · " + root.title;
+            font-size: Tokens.type-heading;
+            color: Tokens.text-strong;
+        }
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Text {
+                width: 96px * Tokens.scale;
+                text: @tr("File name");
+                color: Tokens.text-default;
+                vertical-alignment: center;
+            }
+            Rectangle {
+                height: Tokens.size-control;
+                border-width: Tokens.border;
+                border-color: Tokens.accent;
+                background: Tokens.control-focus-fill;
+                name := TextInput {
+                    x: Tokens.space-control-pad-x;
+                    width: parent.width - 2 * Tokens.space-control-pad-x;
+                    height: parent.height;
+                    vertical-alignment: center;
+                    single-line: true;
+                    text <=> root.file;
+                    color: Tokens.text-strong;
+                    selection-background-color: Tokens.text-selection-fill;
+                    accessible-label: @tr("File name");
+                    key-pressed(e) => {
+                        if e.text == Key.Escape { root.cancelled(); return accept; }
+                        reject
+                    }
+                    accepted => { root.export(); }
+                }
+            }
+        }
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Text {
+                width: 96px * Tokens.scale;
+                text: @tr("Save to");
+                color: Tokens.text-default;
+                vertical-alignment: center;
+            }
+            Rectangle {
+                height: Tokens.size-control;
+                border-width: Tokens.border;
+                border-color: Tokens.line-divider;
+                Text {
+                    x: Tokens.space-control-pad-x;
+                    text: root.dir;
+                    color: Tokens.text-default;
+                    vertical-alignment: center;
+                }
+            }
+        }
+        Rectangle {
+            background: Tokens.surface-card;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            VerticalLayout {
+                padding: Tokens.border;
+                for r[i] in root.rows: Rectangle {
+                    height: 44px * Tokens.scale;
+                    accessible-role: list-item;
+                    accessible-label: r.title;
+                    accessible-description: r.detail;
+                    if i > 0: Rectangle {
+                        y: 0;
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
+                    HorizontalLayout {
+                        padding-left: 14px * Tokens.scale;
+                        padding-right: 14px * Tokens.scale;
+                        spacing: 12px * Tokens.scale;
+                        Rectangle {
+                            width: 16px * Tokens.scale;
+                            height: 16px * Tokens.scale;
+                            y: (parent.height - self.height) / 2;
+                            border-width: Tokens.border;
+                            border-color: Tokens.accent;
+                            background: Tokens.accent.with-alpha(0.25);
+                            Text {
+                                text: "\u{f012c}";
+                                color: Tokens.accent;
+                                font-size: Tokens.type-body-small;
+                                accessible-role: none;
+                            }
+                        }
+                        Text {
+                            width: 80px * Tokens.scale;
+                            text: r.title;
+                            color: Tokens.text-strong;
+                            vertical-alignment: center;
+                            accessible-role: none;
+                        }
+                        Text {
+                            horizontal-stretch: 1;
+                            text: r.detail;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                            overflow: elide;
+                            accessible-role: none;
+                        }
+                        if r.device: JBadge {
+                            y: (parent.height - self.height) / 2;
+                            text: @tr("device-specific");
+                            kind: "caution";
+                        }
+                    }
+                }
+            }
+        }
+        Text {
+            text: @tr("Device-specific items are matched by name on import. Devices that aren't there show as offline until you plug them in.");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+            wrap: word-wrap;
+        }
+        HorizontalLayout {
+            alignment: end;
+            spacing: Tokens.space-row-gap;
+            JButton {
+                text: @tr("Cancel");
+                shortcut: "Esc";
+                show-key: true;
+                clicked => { root.cancelled(); }
+            }
+            JButton {
+                text: @tr("Export");
+                shortcut: "Enter";
+                show-key: true;
+                primary: true;
+                enabled: root.file != "";
+                clicked => { root.export(); }
+            }
+        }
+    }
+}

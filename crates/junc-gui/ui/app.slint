@@ -16,6 +16,7 @@ import { CableScreen } from "screens/cable.slint";
 import { ServiceDown } from "screens/service-down.slint";
 import { SettingsScreen } from "screens/settings.slint";
 import { JImport, ImportItem } from "components/import.slint";
+import { JExport } from "components/export.slint";
 import { JMeter } from "components/meter.slint";
 import { JSwitch } from "components/switch.slint";
 import { JSlider } from "components/slider.slint";
@@ -244,6 +245,10 @@ export component AppWindow inherits Window {
             }
             if e.modifiers.shift && (e.text == "n" || e.text == "N") && View.selected != "" {
                 View.adding-bus = true;
+                return accept;
+            }
+            if !e.modifiers.shift && (e.text == "e" || e.text == "E") && View.selected != "" {
+                View.open-export();
                 return accept;
             }
             if !e.modifiers.shift && (e.text == "d" || e.text == "D") && View.selected != "" {
@@ -639,7 +644,7 @@ export component AppWindow inherits Window {
                 { text: @tr("Rename"), shortcut: "F2", enabled: true },
                 { text: @tr("Duplicate"), shortcut: "Ctrl+D", enabled: true },
                 { text: parent.item.enabled ? @tr("Turn off") : @tr("Turn on"), shortcut: "Space", enabled: true },
-                { text: @tr("Export preset…"), shortcut: "Ctrl+E", enabled: false, separator: true },
+                { text: @tr("Export preset…"), shortcut: "Ctrl+E", enabled: true, separator: true },
                 { text: @tr("Import preset…"), shortcut: "Ctrl+I", enabled: false },
                 { text: @tr("Delete…"), shortcut: "Ctrl+Delete", enabled: true, separator: true, destructive: true },
             ];
@@ -651,6 +656,7 @@ export component AppWindow inherits Window {
                 if i == 0 { View.select(row.id); View.renaming = true; }
                 if i == 1 { View.duplicate(row.id); }
                 if i == 2 { View.junction-toggled(row.id, !row.enabled); }
+                if i == 3 { View.select(row.id); View.open-export(); }
                 if i == 5 { View.select(row.id); View.confirming = true; }
             }
             closed => { View.menu-index = -1; shortcuts.focus(); }
@@ -711,5 +717,23 @@ export component AppWindow inherits Window {
             if View.toast-undo { View.undo-default(); } else { View.open-news(); }
         }
         dismissed => { View.toast-dismissed(); }
+    }
+
+    // Board 46: Export preset of the selected Junction.
+    if View.export-open: Rectangle {
+        background: Tokens.surface-desktop.with-alpha(0.6);
+        TouchArea { }
+        JExport {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 3;
+            height: self.preferred-height;
+            title: View.export-title;
+            file <=> View.export-file;
+            dir: View.export-dir;
+            rows: View.export-rows;
+            init => { self.open(); }
+            export => { View.export-run(); shortcuts.focus(); }
+            cancelled => { View.export-open = false; shortcuts.focus(); }
+        }
     }
 }

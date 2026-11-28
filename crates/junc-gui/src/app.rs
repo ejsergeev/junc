@@ -391,6 +391,10 @@ pub fn install(
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
         let c = call.clone();
+        view.on_open_export(move || c(&App::open_export));
+        let c = call.clone();
+        view.on_export_run(move || c(&App::export_run));
+        let c = call.clone();
         view.on_slot_pick(move |i| c(&|a| a.pick_slot(i)));
         let c = call.clone();
         view.on_slot_chosen(move |i| c(&|a| a.slot_chosen(i)));
@@ -1060,6 +1064,133 @@ impl App {
             format!("{}/releases/tag/v{version}", env!("CARGO_PKG_REPOSITORY")).into(),
         );
         view.set_toast(w.global::<Words>().invoke_updated(version.into()));
+    }
+
+    /// Where presets go: `$XDG_CONFIG_HOME/junc/presets`, else
+    /// `~/.config/junc/presets`.
+    fn presets_dir() -> PathBuf {
+        std::env::var_os("XDG_CONFIG_HOME")
+            .filter(|v| !v.is_empty())
+            .map(PathBuf::from)
+            .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".config")))
+            .unwrap_or_default()
+            .join("junc/presets")
+    }
+
+    /// Board 46: the selected Junction as a preset: what goes in, which
+    /// parts are tied to this machine's devices, the file name.
+    pub fn open_export(&mut self) {
+        let (Some(w), Some(m), Some(d)) = (self.window.upgrade(), &self.main, &self.describe)
+        else {
+            return;
+        };
+        let Some(j) = d.junctions.iter().find(|j| j.id == m.id) else {
+            return;
+        };
+        let words = w.global::<Words>();
+        let names = |cards: &[main_view::Card]| -> String {
+            cards
+                .iter()
+                .map(|c| c.title.clone())
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let groups: Vec<SharedString> = m
+            .bus
+            .iter()
+            .map(|g| {
+                if g.channels.len() == 2 {
+                    words.invoke_bus_pair(i32::from(g.first))
+                } else {
+                    words.invoke_bus_channel(i32::from(g.first))
+                }
+            })
+            .collect();
+        let bus = groups
+            .into_iter()
+            .reduce(|a, b| words.invoke_list_comma(a, b))
+            .unwrap_or_default();
+        let rows = vec![
+            ui::ExportRow {
+                title: words.invoke_export_inputs(),
+                detail: names(&m.inputs).into(),
+                device: j
+                    .inputs
+                    .iter()
+                    .any(|i| i.matcher.device.is_some() || i.matcher.monitor.is_some()),
+            },
+            ui::ExportRow {
+                title: words.invoke_export_bus(),
+                detail: bus,
+                device: false,
+            },
+            ui::ExportRow {
+                title: words.invoke_export_links(),
+                detail: words.invoke_export_links_detail(count(m.links.len())),
+                device: false,
+            },
+            ui::ExportRow {
+                title: words.invoke_export_listen(),
+                detail: names(&m.listens).into(),
+                device: j.listens.iter().any(|l| l.target != "default"),
+            },
+        ];
+        let view = w.global::<View>();
+        view.set_export_title(m.name.as_str().into());
+        view.set_export_file(format!("{}.junc.toml", m.id).into());
+        let dir = Self::presets_dir();
+        let shown = std::env::var_os("HOME")
+            .and_then(|h| {
+                dir.strip_prefix(&h)
+                    .ok()
+                    .map(|r| format!("~/{}", r.display()))
+            })
+            .unwrap_or_else(|| dir.display().to_string());
+        view.set_export_dir(shown.into());
+        view.set_export_rows(ModelRc::new(VecModel::from(rows)));
+        view.set_export_open(true);
+    }
+
+    /// Board 46's Export.
+    fn export_run(&mut self) {
+        let (Some(w), Some(id)) = (self.window.upgrade(), self.selected.clone()) else {
+            return;
+        };
+        let view = w.global::<View>();
+        let file = view.get_export_file().trim().to_owned();
+        view.set_export_open(false);
+        if file.is_empty() || file.contains('/') {
+            return;
+        }
+        let path = Self::presets_dir().join(file).display().to_string();
+        self.actions
+            .send(Command::ExportPreset { junction: id, path });
+    }
+
+    /// What exporting a preset came to: a toast either way.
+    pub fn exported(&mut self, result: Result<String, String>) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let words = w.global::<Words>();
+        let view = w.global::<View>();
+        self.undo = None;
+        view.set_toast_undo(false);
+        view.set_toast_news("".into());
+        view.set_toast(match result {
+            Ok(path) => {
+                let shown = std::env::var_os("HOME")
+                    .and_then(|h| {
+                        std::path::Path::new(&path)
+                            .strip_prefix(&h)
+                            .ok()
+                            .map(|r| format!("~/{}", r.display()))
+                    })
+                    .unwrap_or(path);
+                words.invoke_exported_to(shown.into())
+            }
+            Err(e) => words.invoke_export_failed(e.into()),
+        });
     }
 
     /// Board 47's banner: the config file's first error, unless dismissed.
@@ -2442,6 +2573,14 @@ pub fn tray_current(e: &crate::tray::Event) {
     let app = CURRENT.with(|c| c.borrow().clone());
     if let Some(a) = app {
         a.borrow_mut().tray_event(e);
+    }
+}
+
+/// Gives the current controller what exporting a preset came to.
+pub fn exported_current(result: Result<String, String>) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().exported(result);
     }
 }
 

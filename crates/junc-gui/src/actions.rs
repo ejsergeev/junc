@@ -45,6 +45,9 @@ pub enum Command {
     Service(Option<bool>),
     /// A web page in the browser (`xdg-open`).
     Open(String),
+    /// Board 46: write Junction `junction` as a preset file at `path`
+    /// (`junc preset export`'s result, from `GetConfig`).
+    ExportPreset { junction: String, path: String },
     /// Board 24: the setups juncd could import (`ScanImportable`).
     ImportScan,
     /// Board 24: import these setups, each as a Cable or not
@@ -262,6 +265,18 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
         | Command::Service(_)
         | Command::Open(_)
         | Command::Import(_) => {}
+        Command::ExportPreset { junction: id, path } => {
+            let daemon = DaemonProxy::builder(conn)
+                .cache_properties(zbus::proxy::CacheProperties::No)
+                .build()
+                .await
+                .map_err(text)?;
+            let (current, _) = daemon.get_config().await.map_err(text)?;
+            let result = export(&current, id, path);
+            let _ = slint::invoke_from_event_loop(move || {
+                crate::app::exported_current(result);
+            });
+        }
         Command::ImportScan => {
             let found = DaemonProxy::builder(conn)
                 .cache_properties(zbus::proxy::CacheProperties::No)
@@ -306,4 +321,24 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// Writes Junction `id` of config text `config` as a preset at `path`;
+/// returns the path written, or why not.
+pub fn export(config: &str, id: &str, path: &str) -> Result<String, String> {
+    let store =
+        Store::open(config, "junctions.toml").map_err(|d| format!("{} diagnostics", d.len()))?;
+    let j = store
+        .config()
+        .junction
+        .iter()
+        .find(|j| j.id == id)
+        .ok_or_else(|| format!("no Junction {id}"))?;
+    let text = junc_core::preset::Preset::from_junction(j).to_toml();
+    let file = std::path::Path::new(path);
+    if let Some(dir) = file.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
+    }
+    std::fs::write(file, text).map_err(|e| format!("{path}: {e}"))?;
+    Ok(path.to_owned())
 }

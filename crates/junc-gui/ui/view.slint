@@ -15,6 +15,14 @@ export struct SlotItem {
     app: bool,
 }
 
+// What a preset holds (board 46), and whether it is tied to this
+// machine's devices.
+export struct ExportRow {
+    title: string,
+    detail: string,
+    device: bool,
+}
+
 // One row of the onboarding system check (checks.rs).
 export struct CheckItem {
     // doctor's id: "pipewire", "wireplumber", "pipewire-pulse", "jack".
@@ -41,6 +49,15 @@ export global Words {
     public pure function bluetooth-note() -> string { @tr("Its mic switches the headset to the call profile (HFP): playback drops to call quality.") }
     public pure function add-anyway() -> string { @tr("Add anyway") }
     public pure function choose-another-mic() -> string { @tr("Choose another mic") }
+    // TRANSLATORS: what a preset holds (design board 46).
+    public pure function export-inputs() -> string { @tr("Inputs") }
+    public pure function export-bus() -> string { @tr("Bus") }
+    public pure function export-links() -> string { @tr("Links") }
+    public pure function export-listen() -> string { @tr("Listen") }
+    public pure function export-links-detail(n: int) -> string { @tr("{n} Link between Inputs, Bus and Listen" | "{n} Links between Inputs, Bus and Listen" % n) }
+    // TRANSLATORS: the toast after Export preset; {0} is the file.
+    public pure function exported-to(file: string) -> string { @tr("Exported to {0}", file) }
+    public pure function export-failed(why: string) -> string { @tr("Could not export: {0}", why) }
     // TRANSLATORS: what a template's slot takes (design board 49).
     public pure function slot-kind(kind: string) -> string {
         kind == "hardware-input" ? @tr("Hardware input")
@@ -195,6 +212,12 @@ export global View {
     // The card (index into `cards`) the arrow keys move the focus to.
     in-out property <int> focus-card: -1;
     in-out property <LinkItem> pending;
+    // Board 46: Export preset, for the selected Junction.
+    in-out property <bool> export-open;
+    in-out property <string> export-title;
+    in-out property <string> export-file;
+    in-out property <string> export-dir;
+    in-out property <[ExportRow]> export-rows;
     // Board 49: a template's slots, ready when all are filled, the picker
     // of what fills one.
     in-out property <string> slot-template;
@@ -344,6 +367,9 @@ export global View {
     callback import-toggled(int);
     callback import-cable(int, bool);
     callback import-run();
+    // Board 46.
+    callback open-export();
+    callback export-run();
     // Board 49.
     callback slot-pick(int);
     callback slot-chosen(int);

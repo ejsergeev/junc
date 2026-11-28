@@ -134,6 +134,9 @@ struct Fixture {
     slot_fill: Vec<[String; 2]>,
     #[serde(default)]
     slot_picker: Option<i32>,
+    /// Export preset open on the selected Junction (board 46).
+    #[serde(default)]
+    export: bool,
     /// Input channels ALSA reports for the graph's USB cards whatever the
     /// profile (board 35: "2 of 18 channels").
     #[serde(default)]
@@ -252,6 +255,7 @@ pub struct Scenario {
     pub template: Option<String>,
     pub slot_fill: Vec<[String; 2]>,
     pub slot_picker: Option<i32>,
+    pub export: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -435,6 +439,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         template: f.template,
         slot_fill: f.slot_fill,
         slot_picker: f.slot_picker,
+        export: f.export,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -476,6 +481,10 @@ struct MockState {
     resolved: Option<String>,
     /// What the window last opened with xdg-open.
     opened: Option<String>,
+    /// Where the window asked to export a preset (board 46); answered at
+    /// the next flush.
+    exported: Option<String>,
+    export_asked: bool,
 }
 
 impl std::fmt::Debug for Mock {
@@ -503,6 +512,8 @@ impl Mock {
                 import_asked: false,
                 resolved: None,
                 opened: None,
+                exported: None,
+                export_asked: false,
             })),
         }
     }
@@ -533,6 +544,15 @@ impl Mock {
         if let (Some(a), Some(on)) = (&app, service) {
             a.borrow_mut().set_service(Some(on));
         }
+        let exported = {
+            let mut s = self.inner.borrow_mut();
+            std::mem::take(&mut s.export_asked)
+                .then(|| s.exported.clone())
+                .flatten()
+        };
+        if let (Some(a), Some(path)) = (&app, exported) {
+            a.borrow_mut().exported(Ok(path));
+        }
         let found = {
             let mut s = self.inner.borrow_mut();
             std::mem::take(&mut s.import_asked).then(|| s.importables.clone())
@@ -545,6 +565,11 @@ impl Mock {
     /// What the window last copied.
     pub fn copied(&self) -> Option<String> {
         self.inner.borrow().copied.clone()
+    }
+
+    /// Where the window last exported a preset (board 46).
+    pub fn exported(&self) -> Option<String> {
+        self.inner.borrow().exported.clone()
     }
 
     /// What the window last opened with xdg-open (board 47).
@@ -590,6 +615,10 @@ impl Actions for Mock {
                 Command::Open(what) => s.opened = Some(what.clone()),
                 Command::ResolveLink { action, .. } => s.resolved = Some(action.clone()),
                 Command::ImportScan => s.import_asked = true,
+                Command::ExportPreset { path, .. } => {
+                    s.exported = Some(path.clone());
+                    s.export_asked = true;
+                }
                 Command::Import(items) => {
                     if let Some(c) = s.config.as_mut() {
                         Self::import(c, &s.importables, items);
@@ -722,6 +751,7 @@ impl Mock {
             | Command::Service(_)
             | Command::Open(_)
             | Command::ImportScan
+            | Command::ExportPreset { .. }
             | Command::Import(_) => {}
         }
     }
@@ -869,6 +899,9 @@ pub fn open(
         if let Some(i) = s.slot_picker {
             app.borrow_mut().pick_slot(i);
         }
+    }
+    if s.export {
+        app.borrow_mut().open_export();
     }
     if let Some(v) = &s.updated {
         app.borrow_mut().show_updated(v);
