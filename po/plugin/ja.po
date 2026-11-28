@@ -1,0 +1,60 @@
+# JUNC Omarchy bar plugin messages, Japanese.
+# This file is distributed under the same license as the junc package
+# (GPL-3.0-or-later).
+# Machine-drafted with the GUI's terms; corrections welcome.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-plugin\n"
+"Report-Msgid-Bugs-To: https://github.com/ejsergeev/junc/issues\n"
+"Last-Translator: machine-drafted\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. popup.capturing
+#: omarchy/plugin/i18n/en.json
+msgid "Capturing: %1"
+msgstr "取り込み中: %1"
+
+#. popup.empty
+#: omarchy/plugin/i18n/en.json
+msgid "No Junctions yet. Open JUNC to make one."
+msgstr "ジャンクションはまだありません。JUNC を開いて作成してください。"
+
+#. popup.notRunning
+#: omarchy/plugin/i18n/en.json
+msgid "JUNC is not running."
+msgstr "JUNC は実行されていません。"
+
+#. popup.on
+#: omarchy/plugin/i18n/en.json
+msgid "%1 on"
+msgstr "%1 件オン"
+
+#. popup.open
+#: omarchy/plugin/i18n/en.json
+msgid "Open JUNC"
+msgstr "JUNC を開く"
+
+#. row.cable
+#: omarchy/plugin/i18n/en.json
+msgid "Cable"
+msgstr "ケーブル"
+
+#. row.defaultInput
+#: omarchy/plugin/i18n/en.json
+msgid "Default input"
+msgstr "既定の入力"
+
+#. row.defaultOutput
+#: omarchy/plugin/i18n/en.json
+msgid "Default output"
+msgstr "既定の出力"
+
+#. row.junction
+#: omarchy/plugin/i18n/en.json
+msgid "Junction · %1 Input"
+msgid_plural "Junction · %1 Inputs"
+msgstr[0] "ジャンクション · 入力 %1 件"

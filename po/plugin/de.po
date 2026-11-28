@@ -1,0 +1,61 @@
+# JUNC Omarchy bar plugin messages, German.
+# This file is distributed under the same license as the junc package
+# (GPL-3.0-or-later).
+# Machine-drafted with the GUI's terms; corrections welcome.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-plugin\n"
+"Report-Msgid-Bugs-To: https://github.com/ejsergeev/junc/issues\n"
+"Last-Translator: machine-drafted\n"
+"Language-Team: none\n"
+"Language: de\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. popup.capturing
+#: omarchy/plugin/i18n/en.json
+msgid "Capturing: %1"
+msgstr "Erfasst: %1"
+
+#. popup.empty
+#: omarchy/plugin/i18n/en.json
+msgid "No Junctions yet. Open JUNC to make one."
+msgstr "Noch keine Junctions. Öffne JUNC, um eine anzulegen."
+
+#. popup.notRunning
+#: omarchy/plugin/i18n/en.json
+msgid "JUNC is not running."
+msgstr "JUNC läuft nicht."
+
+#. popup.on
+#: omarchy/plugin/i18n/en.json
+msgid "%1 on"
+msgstr "%1 an"
+
+#. popup.open
+#: omarchy/plugin/i18n/en.json
+msgid "Open JUNC"
+msgstr "JUNC öffnen"
+
+#. row.cable
+#: omarchy/plugin/i18n/en.json
+msgid "Cable"
+msgstr "Kabel"
+
+#. row.defaultInput
+#: omarchy/plugin/i18n/en.json
+msgid "Default input"
+msgstr "Standardeingang"
+
+#. row.defaultOutput
+#: omarchy/plugin/i18n/en.json
+msgid "Default output"
+msgstr "Standardausgang"
+
+#. row.junction
+#: omarchy/plugin/i18n/en.json
+msgid "Junction · %1 Input"
+msgid_plural "Junction · %1 Inputs"
+msgstr[0] "Junction · %1 Eingang"
+msgstr[1] "Junction · %1 Eingänge"
