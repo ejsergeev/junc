@@ -65,11 +65,21 @@ hypr ws 2
 t=$(wait_links "== 0" 1) || fail "meters still running 1 s after the window left: $t"
 echo "hidden: meter stream and links gone ${t} ms after the window left"
 sleep 0.5
-a=$(ticks); sleep 3; b=$(ticks)
-(( b == a )) || {
+# Each thread's ticks before and after, to name the one that woke.
+threads() {
   for task in /proc/$gui/task/*; do
-    echo "  $(cat "$task/comm"): $(awk '{print $14 + $15}' "$task/stat") ticks"
+    echo "${task##*/} $(cat "$task/comm" 2>/dev/null) $(awk '{print $14 + $15}' "$task/stat" 2>/dev/null)"
   done
+}
+before=$(threads)
+a=$(ticks); sleep 3; b=$(ticks)
+after=$(threads)
+(( b == a )) || {
+  echo "  ticks per thread in those 3 s (tid name: before -> after):"
+  while read -r tid name t; do
+    old=$(awk -v id="$tid" '$1 == id {print $3}' <<<"$before")
+    echo "  $tid $name: ${old:-new} -> $t$( [[ -n $old && $t != "$old" ]] && echo '  <- woke')"
+  done <<<"$after"
   fail "the hidden window took $((b - a)) ticks of CPU in 3 s"
 }
 echo "hidden: no CPU in 3 s while hidden"
