@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- JUNC symbolic icon (design board 50) for the tray and menus: one colour,
+     filled shapes so icon themes can recolour it. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+  <path fill="#bebebe" fill-rule="evenodd" d="M0 0h24v24H0z M2 2v20h20V2z M5 5h4v4H5z M15 15h4v4h-4z M9 6h5v10h1v2h-3V8H9z"/>
+</svg>

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=JUNC
+GenericName=Audio routing
+Comment=Route apps and devices through Junctions and Cables
+Exec=junc-gui
+Icon=junc
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;
+Keywords=PipeWire;audio;routing;microphone;speakers;
+StartupNotify=true
+StartupWMClass=junc
