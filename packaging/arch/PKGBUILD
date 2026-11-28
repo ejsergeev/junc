@@ -75,6 +75,7 @@ package_junc-gui() {
   optdepends=('libx11: run under X11'
               'libxcursor: run under X11'
               'libxi: run under X11'
+              'libxkbcommon-x11: run under X11'
               'libxrandr: run under X11'
               'noto-fonts-cjk: Japanese, Chinese and Korean text'
               'ttf-jetbrains-mono-nerd: the intended monospace font (Omarchy has it)'
