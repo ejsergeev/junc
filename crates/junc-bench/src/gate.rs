@@ -114,6 +114,18 @@ pub fn inject(results: &mut Metrics, spec: &str) -> Result<(), String> {
 mod tests {
     use super::*;
 
+    #[test]
+    fn the_shipped_thresholds_parse() {
+        for f in ["thresholds.toml", "gui-thresholds.toml"] {
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../bench")
+                .join(f);
+            let text = std::fs::read_to_string(&path).expect("read");
+            let t: Result<Thresholds, _> = toml::from_str(&text);
+            assert!(t.is_ok_and(|t| !t.metrics.is_empty()), "{f}");
+        }
+    }
+
     fn limits() -> Thresholds {
         toml::from_str(
             r#"

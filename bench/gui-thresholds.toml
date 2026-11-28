@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# GUI performance gate (B26, docs/architecture.md §11.4): the PRD targets,
+# checked by scripts/gui/perf.sh --hyprland on the owner's laptop (GPU,
+# Hyprland). CI runs the same bench under Xvfb and only tracks the numbers.
+
+[metrics.gui_first_frame_ms]        # process start → first frame with juncd's state
+max = 300
+unit = "ms"
+
+[metrics.gui_pss_kb]                # ten Junctions, the first one's columns metered
+max = 81920
+unit = "kB"
+
+[metrics.gui_cpu_meters_pct]        # % of one core, visible, every meter moving
+max = 2
+unit = "%"
+
+[metrics.gui_cpu_hidden_pct]        # % of one core, on a hidden special workspace
+max = 0
+unit = "%"
+
+[metrics.gui_drag_render_p95_ms]    # one frame's rendering while a link is dragged
+max = 16
+unit = "ms"

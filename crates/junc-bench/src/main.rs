@@ -5,6 +5,7 @@
 //!
 //! ```text
 //! junc-bench run [--out FILE] [--quick]       # under scripts/ci/with-pipewire.sh
+//! junc-bench gui [--out FILE] [--secs N] [--hyprland WORKSPACE]   # scripts/gui/perf.sh
 //! junc-bench compare RESULTS --baseline FILE --thresholds FILE [--inject metric=factor]…
 //! ```
 //!
@@ -13,6 +14,7 @@
 #![forbid(unsafe_code)]
 
 mod gate;
+mod gui;
 mod latency;
 mod run;
 
@@ -45,6 +47,55 @@ fn read<T: for<'de> Deserialize<'de>>(path: &str, toml_file: bool) -> Result<T, 
     }
 }
 
+fn bins() -> Result<PathBuf, String> {
+    std::env::current_exe()
+        .map_err(|e| e.to_string())?
+        .parent()
+        .map(PathBuf::from)
+        .ok_or_else(|| "no binary directory".to_owned())
+}
+
+fn write_results(metrics: Metrics, out: Option<String>) -> Result<(), String> {
+    let results = Results {
+        arch: std::env::consts::ARCH.to_owned(),
+        metrics,
+    };
+    let json = serde_json::to_string_pretty(&results).map_err(|e| e.to_string())? + "\n";
+    print!("{json}");
+    if let Some(path) = out {
+        std::fs::write(&path, &json).map_err(|e| format!("{path}: {e}"))?;
+    }
+    Ok(())
+}
+
+/// `junc-bench gui`: the GUI's numbers (B26). Tracked, not gated here:
+/// `compare` against `bench/gui-thresholds.toml` gates them.
+fn gui_cmd(args: &[String]) -> Result<bool, String> {
+    let (mut out, mut secs, mut hyprland) = (None, 10, None);
+    let mut it = args.iter();
+    while let Some(a) = it.next() {
+        match a.as_str() {
+            "--out" => out = it.next().cloned(),
+            "--secs" => {
+                secs = it
+                    .next()
+                    .and_then(|s| s.parse().ok())
+                    .ok_or("--secs needs a number")?;
+            }
+            "--hyprland" => hyprland = it.next().cloned(),
+            other => return Err(format!("unknown argument '{other}'")),
+        }
+    }
+    let opts = gui::Opts {
+        bins: bins()?,
+        secs,
+        hyprland,
+        unit: PathBuf::from("packaging/systemd/juncd.service"),
+    };
+    write_results(gui::run(&opts)?, out)?;
+    Ok(true)
+}
+
 fn run_cmd(args: &[String]) -> Result<bool, String> {
     let mut out = None;
     let mut quick = false;
@@ -56,29 +107,15 @@ fn run_cmd(args: &[String]) -> Result<bool, String> {
             other => return Err(format!("unknown argument '{other}'")),
         }
     }
-    let bins = std::env::current_exe()
-        .map_err(|e| e.to_string())?
-        .parent()
-        .map(PathBuf::from)
-        .ok_or("no binary directory")?;
     let opts = run::Opts {
-        bins,
+        bins: bins()?,
         idle_secs: if quick { 3 } else { 10 },
         churn: if quick { 10 } else { 30 },
         recoveries: if quick { 1 } else { 3 },
         cli_runs: 20,
         unit: PathBuf::from("packaging/systemd/juncd.service"),
     };
-    let metrics = run::run(&opts)?;
-    let results = Results {
-        arch: std::env::consts::ARCH.to_owned(),
-        metrics,
-    };
-    let json = serde_json::to_string_pretty(&results).map_err(|e| e.to_string())? + "\n";
-    print!("{json}");
-    if let Some(path) = out {
-        std::fs::write(&path, &json).map_err(|e| format!("{path}: {e}"))?;
-    }
+    write_results(run::run(&opts)?, out)?;
     Ok(true)
 }
 
@@ -161,6 +198,7 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.first().map(String::as_str) {
         Some("run") => run_cmd(&args[1..]),
+        Some("gui") => gui_cmd(&args[1..]),
         Some("compare") => compare_cmd(&args[1..]),
         Some("relink") => relink_cmd(&args[1..]),
         _ => return usage(),

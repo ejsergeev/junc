@@ -32,7 +32,7 @@ pub struct Opts {
 const JUNCTIONS: usize = 10;
 const RATE: usize = 48_000;
 
-struct Kill(Child);
+pub(crate) struct Kill(pub(crate) Child);
 impl Drop for Kill {
     fn drop(&mut self) {
         let _ = self.0.kill();
@@ -40,7 +40,7 @@ impl Drop for Kill {
     }
 }
 
-fn log(msg: &str) {
+pub(crate) fn log(msg: &str) {
     eprintln!("junc-bench: {msg}");
 }
 
@@ -63,7 +63,7 @@ fn config() -> String {
     s
 }
 
-fn refs<'a>(g: &'a Graph, junction: &str) -> Vec<&'a str> {
+pub(crate) fn refs<'a>(g: &'a Graph, junction: &str) -> Vec<&'a str> {
     g.links
         .values()
         .filter(|l| l.props.get("junc.junction") == Some(junction))
@@ -81,7 +81,7 @@ fn all_routed(g: &Graph) -> bool {
     })
 }
 
-fn wait_for(
+pub(crate) fn wait_for(
     rx: &Receiver<Event>,
     g: &mut Graph,
     timeout: Duration,
@@ -102,9 +102,19 @@ fn wait_for(
     None
 }
 
-fn private_bus() -> Result<(Kill, String), String> {
+pub(crate) fn private_bus() -> Result<(Kill, String), String> {
+    bus(&["--session"])
+}
+
+/// A bus from the dbus-daemon configuration file `config`.
+pub(crate) fn private_bus_with(config: &Path) -> Result<(Kill, String), String> {
+    bus(&[&format!("--config-file={}", config.display())])
+}
+
+fn bus(how: &[&str]) -> Result<(Kill, String), String> {
     let mut child = Command::new("dbus-daemon")
-        .args(["--session", "--nofork", "--nopidfile", "--print-address=1"])
+        .args(how)
+        .args(["--nofork", "--nopidfile", "--print-address=1"])
         .stdout(Stdio::piped())
         .spawn()
         .map_err(|e| format!("dbus-daemon: {e}"))?;
@@ -115,7 +125,7 @@ fn private_bus() -> Result<(Kill, String), String> {
     Ok((Kill(child), line.trim().to_owned()))
 }
 
-fn percentile(v: &mut [f64], p: f64) -> f64 {
+pub(crate) fn percentile(v: &mut [f64], p: f64) -> f64 {
     v.sort_by(f64::total_cmp);
     #[allow(
         clippy::cast_possible_truncation,
@@ -131,7 +141,7 @@ fn ms(d: Duration) -> f64 {
 }
 
 /// `Environment=K=V` lines of a systemd unit.
-fn unit_environment(unit: &Path) -> Vec<(String, String)> {
+pub(crate) fn unit_environment(unit: &Path) -> Vec<(String, String)> {
     std::fs::read_to_string(unit)
         .unwrap_or_default()
         .lines()
@@ -142,7 +152,7 @@ fn unit_environment(unit: &Path) -> Vec<(String, String)> {
 }
 
 /// A field of `/proc/<pid>/smaps_rollup`, in kB.
-fn rollup_kb(pid: u32, field: &str) -> Option<f64> {
+pub(crate) fn rollup_kb(pid: u32, field: &str) -> Option<f64> {
     let text = std::fs::read_to_string(format!("/proc/{pid}/smaps_rollup")).ok()?;
     text.lines()
         .find_map(|l| l.strip_prefix(field)?.strip_prefix(':'))
@@ -175,7 +185,7 @@ fn huge_mappings(pid: u32) -> String {
 }
 
 /// The mappings that weigh most, for the log: where memory goes.
-fn top_mappings(pid: u32) -> String {
+pub(crate) fn top_mappings(pid: u32) -> String {
     let text = std::fs::read_to_string(format!("/proc/{pid}/smaps")).unwrap_or_default();
     let mut maps: Vec<(u64, String)> = Vec::new();
     let mut name = String::new();
@@ -200,7 +210,7 @@ fn top_mappings(pid: u32) -> String {
 }
 
 /// Context switches of all threads of a process: each one is a wakeup.
-fn switches(pid: u32) -> u64 {
+pub(crate) fn switches(pid: u32) -> u64 {
     let Ok(tasks) = std::fs::read_dir(format!("/proc/{pid}/task")) else {
         return 0;
     };
@@ -226,7 +236,7 @@ fn noise(frames: usize) -> Vec<i16> {
         .collect()
 }
 
-fn pw_cat(args: &[&str], props: &str, file: &Path) -> Result<Kill, String> {
+pub(crate) fn pw_cat(args: &[&str], props: &str, file: &Path) -> Result<Kill, String> {
     Command::new("pw-cat")
         .args(args)
         .args([
