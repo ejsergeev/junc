@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 37–39)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35, 37–40)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -799,4 +799,62 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
         junc_core::model::DefaultRole::Input
     );
     assert_eq!(view.get_toast(), "");
+    drop((w, _app));
+
+    // Board 35: the USB card gives 18 inputs in Pro Audio; Enter would add
+    // its 2, Shift+Enter adds the card in Pro Audio.
+    let (w, _app, mock) = open("proAudio");
+    let view = w.global::<View>();
+    let cursor = usize::try_from(view.get_picker_cursor()).expect("cursor");
+    let row = view.get_picker_items().row_data(cursor).expect("row");
+    assert_eq!(row.detail, "2 of 18 channels");
+    assert_eq!(row.alt, "Use all channels");
+    assert!(has(&w, "Switches the device to the Pro Audio profile"));
+    let hold = |down: bool| {
+        w.window().dispatch_event(if down {
+            WindowEvent::KeyPressed {
+                text: Key::Shift.into(),
+            }
+        } else {
+            WindowEvent::KeyReleased {
+                text: Key::Shift.into(),
+            }
+        });
+    };
+    hold(true);
+    key(&w, "\n");
+    hold(false);
+    settle();
+    let added = mock.config().expect("config").junction[0]
+        .input
+        .last()
+        .cloned()
+        .expect("input");
+    assert_eq!(added.matcher.profile.as_deref(), Some("pro-audio"));
+    assert_eq!(
+        added.matcher.device.as_deref(),
+        Some("alsa_card.usb-JUNC_Test_18in-00")
+    );
+    drop((w, _app, mock));
+
+    // Board 40: a headset mic warns; Enter does not add it, Shift+Enter
+    // adds it anyway.
+    let (w, _app, mock) = open("btWarning");
+    let view = w.global::<View>();
+    let inputs = |m: &Mock| m.config().expect("config").junction[0].input.len();
+    let before = inputs(&mock);
+    assert!(has(&w, "Add anyway"));
+    key(&w, "\n");
+    settle();
+    assert_eq!(inputs(&mock), before, "Enter does not add a warned mic");
+    assert!(view.get_picker_open());
+    w.window().dispatch_event(WindowEvent::KeyPressed {
+        text: Key::Shift.into(),
+    });
+    key(&w, "\n");
+    w.window().dispatch_event(WindowEvent::KeyReleased {
+        text: Key::Shift.into(),
+    });
+    settle();
+    assert_eq!(inputs(&mock), before + 1);
 }
