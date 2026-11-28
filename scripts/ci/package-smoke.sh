@@ -14,7 +14,7 @@ sed -i '/^NoExtract/d' /etc/pacman.conf
 for i in 1 2 3; do
   pacman -Syu --noconfirm >/dev/null && pacman -U --noconfirm "${pkgs[@]}" >/dev/null \
     && pacman -S --noconfirm --needed --asdeps pipewire-pulse dbus \
-         xorg-server-xvfb libx11 libxcursor libxi libxrandr >/dev/null && break
+         xorg-server-xvfb libx11 libxcursor libxi libxkbcommon-x11 libxrandr >/dev/null && break
   (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
 done
 pacman -Q junc junc-gui
