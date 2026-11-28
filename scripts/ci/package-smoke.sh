@@ -8,6 +8,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 pkgs=(/src/.ci-cache/pkg/junc-[0-9]*.pkg.tar.* /src/.ci-cache/pkg/junc-gui-[0-9]*.pkg.tar.*)
+# The archlinux Docker image skips /usr/share/locale (NoExtract); a desktop
+# installs it, and the check reads the CLI's catalog from there.
+sed -i '/^NoExtract/d' /etc/pacman.conf
 for i in 1 2 3; do
   pacman -Syu --noconfirm >/dev/null && pacman -U --noconfirm "${pkgs[@]}" >/dev/null \
     && pacman -S --noconfirm --needed --asdeps pipewire-pulse dbus >/dev/null && break
