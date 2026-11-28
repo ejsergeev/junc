@@ -77,7 +77,9 @@ package_junc-gui() {
               'libxi: run under X11'
               'libxrandr: run under X11'
               'noto-fonts-cjk: Japanese, Chinese and Korean text'
-              'ttf-jetbrains-mono-nerd: the intended monospace font (Omarchy has it)')
+              'ttf-jetbrains-mono-nerd: the intended monospace font (Omarchy has it)'
+              'quickshell: the Omarchy bar plugin (Omarchy has it)'
+              'qt6-declarative: the Omarchy bar plugin (Omarchy has it)')
 
   cd junc
   install -Dm755 target/release/junc-gui -t "$pkgdir/usr/bin"
