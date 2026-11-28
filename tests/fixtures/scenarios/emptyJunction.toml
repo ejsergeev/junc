@@ -11,7 +11,6 @@ schema = 1
 [[junction]]
 id = "virtual-mic-for-zoom"
 name = "Virtual Mic for Zoom"
-default = "input"
 volume = 50
 bus = { channels = 4 }
 
