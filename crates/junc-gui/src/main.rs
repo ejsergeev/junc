@@ -13,6 +13,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 fn main() -> Result<(), slint::PlatformError> {
+    // The Wayland app_id / X11 class: launchers and the compositor match
+    // the window to junc.desktop and its icon by it.
+    slint::set_xdg_app_id("junc")?;
     let args: Vec<String> = std::env::args().skip(1).collect();
     if let Some(i) = args.iter().position(|a| a == "--scenario") {
         let name = args.get(i + 1).cloned().unwrap_or_default();
