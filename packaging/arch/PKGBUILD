@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Maintainer: Evgenii Sergeev <ejsergeev@gmail.com>
+#
+# Split package (docs/architecture.md §10.1): `junc` is the daemon, the CLI
+# and everything they read; `junc-gui` is the window, the tray and the
+# Omarchy bar plugin. CI builds it from the checked-out commit
+# (scripts/ci/package.sh replaces the source and pkgver).
+
+pkgbase=junc
+pkgname=(junc junc-gui)
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Audio routing for PipeWire: Junctions and Cables'
+arch=(x86_64 aarch64)
+url='https://github.com/ejsergeev/junc'
+license=(GPL-3.0-or-later)
+makedepends=(cargo clang git librsvg pipewire pkgconf)
+options=(!lto)
+source=("junc::git+https://github.com/ejsergeev/junc.git#tag=v$pkgver")
+sha256sums=('SKIP')
+
+prepare() {
+  cd junc
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$(rustc --print host-tuple)"
+}
+
+build() {
+  cd junc
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  # Panic locations of generated code name the build folder otherwise.
+  export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$srcdir=/"
+  cargo build --frozen --release -p juncd -p junc-cli -p junc-gui
+  cargo run --frozen --release -p xtask -- i18n build "$srcdir/locale"
+  local size
+  for size in 16 24 32 48 64 128 256 512; do
+    local svg=packaging/icons/junc.svg
+    (( size <= 24 )) && svg=packaging/icons/junc-16.svg
+    rsvg-convert -w "$size" -h "$size" "$svg" -o "$srcdir/junc-$size.png"
+  done
+}
+
+check() {
+  cd junc
+  export RUSTUP_TOOLCHAIN=stable CARGO_TARGET_DIR=target
+  export RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=$srcdir=/"
+  cargo test --frozen --workspace
+}
+
+package_junc() {
+  pkgdesc='Audio routing for PipeWire: Junctions and Cables (daemon and CLI)'
+  depends=(gcc-libs glibc libpipewire pipewire wireplumber)
+  optdepends=('pipewire-pulse: route PulseAudio apps'
+              'pipewire-jack: route JACK apps')
+  install=junc.install
+
+  cd junc
+  install -Dm755 target/release/juncd target/release/junc -t "$pkgdir/usr/bin"
+  install -Dm644 packaging/systemd/juncd.service -t "$pkgdir/usr/lib/systemd/user"
+  install -Dm644 packaging/dbus/io.github.ejsergeev.Junc1.service \
+    -t "$pkgdir/usr/share/dbus-1/services"
+  install -Dm644 templates/*.toml -t "$pkgdir/usr/share/junc/templates"
+  install -Dm644 skill/junc/*.md -t "$pkgdir/usr/share/junc/agent/skills/junc"
+  cp -r --no-preserve=ownership "$srcdir/locale" "$pkgdir/usr/share/locale"
+  find "$pkgdir/usr/share/locale" -type d -exec chmod 755 {} + \
+    -o -type f -exec chmod 644 {} +
+}
+
+package_junc-gui() {
+  pkgdesc='Audio routing for PipeWire: Junctions and Cables (window, tray, Omarchy bar)'
+  depends=("junc=$pkgver-$pkgrel" fontconfig gcc-libs glibc libglvnd libpipewire
+           libxkbcommon wayland)
+  optdepends=('libx11: run under X11'
+              'libxcursor: run under X11'
+              'libxi: run under X11'
+              'libxrandr: run under X11'
+              'noto-fonts-cjk: Japanese, Chinese and Korean text'
+              'ttf-jetbrains-mono-nerd: the intended monospace font (Omarchy has it)')
+
+  cd junc
+  install -Dm755 target/release/junc-gui -t "$pkgdir/usr/bin"
+  install -Dm644 packaging/desktop/junc.desktop -t "$pkgdir/usr/share/applications"
+  install -Dm644 packaging/icons/junc.svg -t "$pkgdir/usr/share/icons/hicolor/scalable/apps"
+  install -Dm644 packaging/icons/junc-symbolic.svg \
+    -t "$pkgdir/usr/share/icons/hicolor/symbolic/apps"
+  local size
+  for size in 16 24 32 48 64 128 256 512; do
+    install -Dm644 "$srcdir/junc-$size.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/junc.png"
+  done
+  # The Omarchy bar plugin; `junc omarchy install` links it for a user.
+  local plugin="$pkgdir/usr/share/junc/omarchy/plugin"
+  install -d "$plugin"
+  cp -r --no-preserve=ownership omarchy/plugin/. "$plugin"
+  rm -r "$plugin/tests"
+  find "$plugin" -type d -exec chmod 755 {} + -o -type f -exec chmod 644 {} +
+}
