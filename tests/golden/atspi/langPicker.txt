@@ -45,10 +45,10 @@ application name='junc-gui' states=[]
     button name='Import…' states=[focusable,enabled,sensitive,showing,visible] actions=click
     label name='Diagnostics' states=[enabled,sensitive,showing,visible]
     label name='Versions, Junction graph and recent logs. No audio, no personal data.' states=[enabled,sensitive,showing,visible]
-    button name='Copy bug report…' states=[focusable,showing,visible] actions=click
+    button name='Copy bug report…' states=[focusable,enabled,sensitive,showing,visible] actions=click
     label name='System check' states=[enabled,sensitive,showing,visible]
     label name='Same checks as junc doctor.' states=[enabled,sensitive,showing,visible]
-    button name='Run checks' states=[focusable,showing,visible] actions=click
+    button name='Run checks' states=[focusable,enabled,sensitive,showing,visible] actions=click
     label name='Logs' states=[enabled,sensitive,showing,visible]
     label name='journalctl --user -u juncd' states=[enabled,sensitive,showing,visible]
     button name='Open logs' states=[focusable,enabled,sensitive,showing,visible] actions=click
