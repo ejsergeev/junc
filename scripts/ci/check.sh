@@ -15,6 +15,7 @@ cargo build -p junc-gui --features scenarios --locked
 scripts/gui/atspi-check.sh default flexoki narrow sourceOff offline wireHover picker onboardCheck onboardTemplates emptyNone emptyJunction junctionOff addListen addBus inputOptions inputOptionsNarrow cable linkDrag linkKeys rename deleteConfirm contextMenu appClosed newCable serviceDown settings import langPicker useDefault defaultRestored linkOverridden proAudio btWarning multichannel configError updated templateSlots exportPreset newMenu bugReport doctorIssue gallery
 step "i18n";      command -v xgettext >/dev/null || { echo "xgettext (gettext) is missing"; exit 1; }
 cargo xtask i18n check
+step "plugin";    node --test omarchy/plugin/tests/
 step "deps";      scripts/ci/check-deps.sh
 step "deny";      cargo deny --locked check
 step "release";   cargo build --workspace --release --locked

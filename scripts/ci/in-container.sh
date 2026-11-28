@@ -7,7 +7,7 @@ set -euo pipefail
 for i in 1 2 3; do
   pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny dbus \
     wireplumber pipewire-pulse libpulse pipewire-jack jack-example-tools fontconfig \
-    xorg-server-xvfb at-spi2-core python-gobject ttf-jetbrains-mono \
+    xorg-server-xvfb at-spi2-core python-gobject ttf-jetbrains-mono nodejs \
     libx11 libxext libxcursor libxrandr libxi libxkbcommon-x11 >/dev/null && break
   (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
 done
