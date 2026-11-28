@@ -1,0 +1,9 @@
+# GUI scenario: design board 39, "Link overridden" — another tool removed
+# a JUNC link: a banner names it; Restore (Enter) or Leave as is.
+board = 39
+title = "Link overridden"
+base = "default"
+
+[[notice]]
+kind = "link_overridden"
+body = '{"junction": "virtual-mic-for-zoom", "ref": "in/mic/2->2"}'

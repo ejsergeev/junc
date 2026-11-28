@@ -1,0 +1,13 @@
+# GUI scenario: design board 38, "Default restored" — the default input
+# Junction was turned off: JUNC put the previous default back; Undo makes
+# it the default again.
+board = 38
+title = "Default restored"
+base = "default"
+default_role = "input"
+off = ["virtual-mic-for-zoom"]
+select = "firefox-to-obs"
+
+[[notice]]
+kind = "default_restored"
+body = '{"kind": "input", "to": "alsa_input.usb-Generic_USB_Microphone-00.analog-stereo"}'
