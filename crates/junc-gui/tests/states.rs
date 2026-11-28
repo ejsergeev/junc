@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 47, 49)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 46, 47, 49)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -949,4 +949,29 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
             .any(|i| i.matcher.binary.as_deref() == Some("discord"))
     );
     assert_eq!(app.borrow().selected(), Some(made.id.as_str()));
+    drop((w, app, mock));
+
+    // Board 46: the preset's parts, the USB mic and HDMI Output tied to
+    // this machine; Enter exports to the presets folder; Ctrl+E opens it.
+    let (w, _app, mock) = open("exportPreset");
+    let view = w.global::<View>();
+    assert!(view.get_export_open());
+    assert_eq!(view.get_export_file(), "virtual-mic-for-zoom.junc.toml");
+    let devices: Vec<bool> = view.get_export_rows().iter().map(|r| r.device).collect();
+    assert_eq!(
+        devices,
+        [true, false, false, true],
+        "Inputs, Bus, Links, Listen"
+    );
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_export_open());
+    assert!(
+        mock.exported()
+            .is_some_and(|p| p.ends_with("junc/presets/virtual-mic-for-zoom.junc.toml"))
+    );
+    assert!(view.get_toast().starts_with("Exported to "));
+    ctrl(&w, "e");
+    settle();
+    assert!(view.get_export_open());
 }
