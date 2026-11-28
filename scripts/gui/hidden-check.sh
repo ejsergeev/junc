@@ -65,24 +65,35 @@ hypr ws 2
 t=$(wait_links "== 0" 1) || fail "meters still running 1 s after the window left: $t"
 echo "hidden: meter stream and links gone ${t} ms after the window left"
 sleep 0.5
-# Each thread's ticks before and after, to name the one that woke.
+# Each thread's ticks, time on CPU (ns, schedstat) and context switches
+# before and after, to name the one that woke. Ticks alone can hide it:
+# the process's count adds up the threads' exact times, theirs are each
+# rounded down.
 threads() {
   for task in /proc/$gui/task/*; do
-    echo "${task##*/} $(cat "$task/comm" 2>/dev/null) $(awk '{print $14 + $15}' "$task/stat" 2>/dev/null)"
+    local ns sw
+    ns=$(cut -d' ' -f1 "$task/schedstat" 2>/dev/null)
+    sw=$(awk '/ctxt_switches/ {n += $2} END {print n}' "$task/status" 2>/dev/null)
+    echo "${task##*/} $(tr " " _ <"$task/comm" 2>/dev/null) $(awk '{print $14 + $15}' "$task/stat" 2>/dev/null) ${ns:-0} ${sw:-0}"
   done
 }
 before=$(threads)
 a=$(ticks); sleep 3; b=$(ticks)
 after=$(threads)
 (( b == a )) || {
-  echo "  ticks per thread in those 3 s (tid name: before -> after):"
-  while read -r tid name t; do
-    old=$(awk -v id="$tid" '$1 == id {print $3}' <<<"$before")
-    echo "  $tid $name: ${old:-new} -> $t$( [[ -n $old && $t != "$old" ]] && echo '  <- woke')"
+  echo "  per thread in those 3 s (tid name: ticks, CPU time, context switches):"
+  while read -r tid name t ns sw; do
+    read -r ot ons osw < <(awk -v id="$tid" '$1 == id {print $3, $4, $5}' <<<"$before") || true
+    if [[ -z ${ot:-} ]]; then
+      echo "  $tid $name: new, $t ticks, $((ns / 1000)) us, $sw switches  <- started in those 3 s"
+    else
+      echo "  $tid $name: $ot -> $t ticks, +$(((ns - ons) / 1000)) us, +$((sw - osw)) switches$( ((ns != ons)) && echo '  <- ran')"
+    fi
+    ot=
   done <<<"$after"
-  # A thread that ended meanwhile leaves its ticks to the process alone.
-  while read -r tid name t; do
-    grep -q "^$tid " <<<"$after" || echo "  $tid $name: $t -> exited  <- ended in those 3 s"
+  # A thread that ended meanwhile leaves its time to the process alone.
+  while read -r tid name t _; do
+    grep -q "^$tid " <<<"$after" || echo "  $tid $name: $t ticks -> exited  <- ended in those 3 s"
   done <<<"$before"
   fail "the hidden window took $((b - a)) ticks of CPU in 3 s"
 }
