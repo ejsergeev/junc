@@ -1417,6 +1417,20 @@ call profile (`candidates[].bluetooth.switches_to_call`) warns in the
 warning colour; Enter does not add it, Add anyway (Shift+Enter) does,
 Choose another mic (↑) moves up (board 40).
 
+As built (B21, multichannel Input): an Input card with more than eight
+channels shows them in groups of eight (board 36, `main_view::groups`):
+an info line ("Pro Audio" badge for a card taken whole, "18 ch · 2
+linked"), then each group's row, "In 1–8" with "2 of 8 linked" while
+open, or mini meters and "8 ch" while closed, and an open group's
+channel rows ("In 1" with its meter). The first group starts open; a
+click opens or closes one, kept by Input and first channel. A Pro Audio
+Input has as many channels as its card's capture side
+(`devices[].input_channels`), linked or not. The layout gives such a
+card fixed rows (`layout::INFO`, `GROUP_ROW`, `CHANNEL_ROW`) so ports and
+links meet them (`layout::channel_centre`); a closed group has one port,
+its first channel's, where its channels' links meet. Not built: ← → on
+a focused group (a click opens it).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and

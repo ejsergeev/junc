@@ -487,9 +487,18 @@ de/ja, AT-SPI dump, keyboard test):
   and Japanese catalogs for the CLI and the GUI (Japanese CLI new, both
   machine-drafted); `ar` shows English in the CLI and the GUI (board 32).
   Boards 33 and 34 are the `default` goldens in `de` and `ja`.
-- [ ] **B21** [auto] Pro Audio prompt, multichannel Input, use as default,
+- [x] **B21** [auto] Pro Audio prompt, multichannel Input, use as default,
   default restored, link overridden, Bluetooth warning. Req: F15, F16, F17,
   F18.
+  Done 2026-11-28 (architecture §7.2, as built), one PR per part: the
+  Default menu (board 37, one role at a time, a badge in the sidebar);
+  juncd's notices in the window: a removed link's banner with Restore
+  and Leave as is (39) and the restored default's toast with Undo (38);
+  the picker's offers: Use all channels for a USB card with more inputs
+  in Pro Audio (35) and the headset-mic warning with Add anyway (40); an
+  Input of more than eight channels in groups of eight (36). Not built:
+  the removed link drawn dashed (39), naming the tool that removed it,
+  ← → on channel groups.
 - [ ] **B22** [auto] Bug report, doctor issue, updated, export preset, config
   error, new menu, template slots. Req: F19, F20, F22, F24.
 
