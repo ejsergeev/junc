@@ -80,6 +80,10 @@ after=$(threads)
     old=$(awk -v id="$tid" '$1 == id {print $3}' <<<"$before")
     echo "  $tid $name: ${old:-new} -> $t$( [[ -n $old && $t != "$old" ]] && echo '  <- woke')"
   done <<<"$after"
+  # A thread that ended meanwhile leaves its ticks to the process alone.
+  while read -r tid name t; do
+    grep -q "^$tid " <<<"$after" || echo "  $tid $name: $t -> exited  <- ended in those 3 s"
+  done <<<"$before"
   fail "the hidden window took $((b - a)) ticks of CPU in 3 s"
 }
 echo "hidden: no CPU in 3 s while hidden"
