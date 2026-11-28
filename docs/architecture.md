@@ -834,7 +834,8 @@ the GUI if it cannot run `junc`.
 
 As built in B7: the stream starts with the current state (one `capture`
 line, one `junction` line per Junction with `name`, `kind`, `enabled`,
-`status`), then prints changes only. It follows `GraphChanged`, `Notice`
+`status`, and since B23 `default` (`none`, `input`, `output`) and `inputs`,
+the number of Inputs), then prints changes only. It follows `GraphChanged`, `Notice`
 (`{"event":"notice","kind":…,"body":{…}}`) and changes of `CaptureApps`,
 `Revision` and `Junctions`, re-reading `Describe` and printing what differs
 (a deleted Junction gives `{"event":"junction","id":…,"removed":true}`). It

@@ -1139,8 +1139,17 @@ fn watch_streams_junction_changes() {
         v["event"] == "capture" && v["apps"] == serde_json::json!([])
     });
     w.expect("initial junction", |v| {
-        v["event"] == "junction" && v["id"] == "obs" && v["enabled"] == true
+        v["event"] == "junction"
+            && v["id"] == "obs"
+            && v["enabled"] == true
+            && v["default"] == "none"
+            && v["inputs"] == 0
     });
+    e.ok(&["default", "obs", "--as", "input"]);
+    w.expect("obs the default input", |v| {
+        v["event"] == "junction" && v["id"] == "obs" && v["default"] == "input"
+    });
+    e.ok(&["default", "obs", "--clear"]);
     e.ok(&["disable", "obs"]);
     w.expect("obs off", |v| {
         v["event"] == "junction" && v["id"] == "obs" && v["enabled"] == false

@@ -6,7 +6,7 @@
 //!
 //! ```text
 //! {"event":"capture","apps":["Spotify"]}
-//! {"event":"junction","id":"zoom","name":"Zoom Mic","kind":"junction","enabled":true,"status":"active"}
+//! {"event":"junction","id":"zoom","name":"Zoom Mic","kind":"junction","enabled":true,"status":"active","default":"input","inputs":3}
 //! {"event":"graph","generation":7}
 //! {"event":"notice","kind":"link_overridden","body":{…}}
 //! {"event":"junction","id":"old","removed":true}
@@ -17,6 +17,7 @@ use crate::client::Client;
 use crate::edit::Result;
 use futures_util::StreamExt;
 use futures_util::stream::{BoxStream, select_all};
+use junc_core::model::DefaultRole;
 use junc_ipc::view::{Describe, JunctionView};
 use junc_l10n::{tr, trf};
 use serde_json::{Value, json};
@@ -39,6 +40,8 @@ struct Seen {
     name: String,
     enabled: bool,
     status: String,
+    default: DefaultRole,
+    inputs: usize,
 }
 
 struct Printer {
@@ -85,6 +88,8 @@ impl Printer {
                 name: j.name.clone(),
                 enabled: j.enabled,
                 status: status_name(j),
+                default: j.default,
+                inputs: j.inputs.len(),
             };
             if self.junctions.get(&j.id) != Some(&seen) {
                 let text = format!(
@@ -98,6 +103,7 @@ impl Printer {
                     &json!({
                         "event": "junction", "id": j.id, "name": j.name, "kind": j.kind,
                         "enabled": j.enabled, "status": seen.status,
+                        "default": j.default, "inputs": seen.inputs,
                     }),
                     &text,
                 );
