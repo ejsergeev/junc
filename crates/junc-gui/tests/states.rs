@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 46, 47, 49)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 46–49)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -974,4 +974,23 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     ctrl(&w, "e");
     settle();
     assert!(view.get_export_open());
+    drop((w, _app, mock));
+
+    // Board 48: six built-in templates and the fixtures' preset; the
+    // preset (no slots) is added as it is; Ctrl+I lists presets only.
+    let (w, app, mock) = open("newMenu");
+    let view = w.global::<View>();
+    let count = |m: &Mock| m.config().expect("config").junction.len();
+    let before = count(&mock);
+    assert!(view.get_tpl_open());
+    assert_eq!(view.get_tpl_items().row_count(), 7);
+    view.set_tpl_cursor(6);
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_tpl_open());
+    assert_eq!(count(&mock), before + 1);
+    assert_eq!(app.borrow().selected(), Some("virtual-mic-for-zoom-2"));
+    ctrl(&w, "i");
+    settle();
+    assert_eq!(view.get_tpl_items().row_count(), 1);
 }
