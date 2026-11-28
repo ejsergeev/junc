@@ -109,11 +109,27 @@ msgid "One app straight into another"
 msgstr ""
 
 #: crates/junc-gui/ui/app.slint
+msgid "From template…"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
 msgid "Undo"
 msgstr ""
 
 #: crates/junc-gui/ui/app.slint
 msgid "What's new"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "Search templates and presets"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "use"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint
+msgid "No presets yet: export one with Ctrl+E."
 msgstr ""
 
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
@@ -784,7 +800,7 @@ msgstr ""
 msgid "e.g. {0}"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Mic + App"
 msgstr ""
 
@@ -792,7 +808,7 @@ msgstr ""
 msgid "Your mic and one app mixed into one input."
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Combine Inputs"
 msgstr ""
 
@@ -800,7 +816,7 @@ msgstr ""
 msgid "Two or more hardware inputs as one device."
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Separate tracks"
 msgstr ""
 
@@ -808,7 +824,7 @@ msgstr ""
 msgid "Mic and one app on separate Bus channels, for editing later."
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Stream mix"
 msgstr ""
 
@@ -816,7 +832,7 @@ msgstr ""
 msgid "Mic, game and voice chat mixed into one input for streaming."
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Start empty"
 msgstr ""
 
@@ -1074,6 +1090,18 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Built-in"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Your presets"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "preset"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint

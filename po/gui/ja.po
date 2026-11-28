@@ -118,12 +118,28 @@ msgid "One app straight into another"
 msgstr "あるアプリの音を別のアプリへ直接"
 
 #: crates/junc-gui/ui/app.slint
+msgid "From template…"
+msgstr "テンプレートから…"
+
+#: crates/junc-gui/ui/app.slint
 msgid "Undo"
 msgstr "元に戻す"
 
 #: crates/junc-gui/ui/app.slint
 msgid "What's new"
 msgstr "新機能"
+
+#: crates/junc-gui/ui/app.slint
+msgid "Search templates and presets"
+msgstr "テンプレートとプリセットを検索"
+
+#: crates/junc-gui/ui/app.slint
+msgid "use"
+msgstr "使う"
+
+#: crates/junc-gui/ui/app.slint
+msgid "No presets yet: export one with Ctrl+E."
+msgstr "プリセットはまだありません。Ctrl+E で書き出せます。"
 
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
 msgid "Dismiss"
@@ -789,7 +805,7 @@ msgstr "あるアプリの音を別のアプリへ直接送ります。"
 msgid "e.g. {0}"
 msgstr "例: {0}"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Mic + App"
 msgstr "マイク + アプリ"
 
@@ -797,7 +813,7 @@ msgstr "マイク + アプリ"
 msgid "Your mic and one app mixed into one input."
 msgstr "マイクと 1 つのアプリを 1 つの入力にまとめます。"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Combine Inputs"
 msgstr "入力をまとめる"
 
@@ -805,7 +821,7 @@ msgstr "入力をまとめる"
 msgid "Two or more hardware inputs as one device."
 msgstr "複数のハードウェア入力を 1 つのデバイスに。"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Separate tracks"
 msgstr "トラックを分ける"
 
@@ -813,7 +829,7 @@ msgstr "トラックを分ける"
 msgid "Mic and one app on separate Bus channels, for editing later."
 msgstr "マイクとアプリを別々のバスチャンネルに。後で編集できます。"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Stream mix"
 msgstr "配信ミックス"
 
@@ -821,7 +837,7 @@ msgstr "配信ミックス"
 msgid "Mic, game and voice chat mixed into one input for streaming."
 msgstr "マイク、ゲーム、ボイスチャットを配信用の 1 つの入力に。"
 
-#: crates/junc-gui/ui/screens/onboarding.slint
+#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/view.slint
 msgid "Start empty"
 msgstr "空から始める"
 
@@ -1080,6 +1096,18 @@ msgstr "それでも追加"
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
 msgstr "別のマイクを選ぶ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Built-in"
+msgstr "組み込み"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Your presets"
+msgstr "自分のプリセット"
+
+#: crates/junc-gui/ui/view.slint
+msgid "preset"
+msgstr "プリセット"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Links"
