@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 47)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 47)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -909,4 +909,16 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     key(&w, Key::Escape);
     settle();
     assert_eq!(view.get_config_error(), "");
+    drop((w, _app, mock));
+
+    // Board 43: juncd was updated; What's new opens the release notes.
+    let (w, _app, mock) = open("updated");
+    let view = w.global::<View>();
+    assert_eq!(view.get_toast(), "JUNC updated to 1.1 · audio kept running");
+    view.invoke_open_news();
+    assert!(
+        mock.opened()
+            .is_some_and(|u| u.ends_with("/releases/tag/v1.1"))
+    );
+    assert_eq!(view.get_toast(), "");
 }
