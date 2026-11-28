@@ -1,0 +1,7 @@
+# GUI scenario: design board 37, "Use as default" — the header's Default
+# menu: Virtual Mic for Zoom is the default input; the sidebar says so.
+board = 37
+title = "Use as default"
+base = "default"
+default_role = "input"
+defaults = true
