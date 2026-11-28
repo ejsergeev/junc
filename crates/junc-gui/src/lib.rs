@@ -20,6 +20,7 @@ pub mod main_view;
 pub mod meter_service;
 pub mod meters;
 pub mod onboarding;
+pub mod perf;
 pub mod picker;
 #[cfg(feature = "scenarios")]
 pub mod scenario;

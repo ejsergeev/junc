@@ -8,7 +8,7 @@ for i in 1 2 3; do
   pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire cargo-deny dbus \
     wireplumber pipewire-pulse libpulse pipewire-jack jack-example-tools fontconfig \
     xorg-server-xvfb at-spi2-core python-gobject ttf-jetbrains-mono nodejs \
-    libx11 libxext libxcursor libxrandr libxi libxkbcommon-x11 >/dev/null && break
+    libx11 libxext libxcursor libxrandr libxi libxkbcommon-x11 mesa >/dev/null && break
   (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
 done
 id builder >/dev/null 2>&1 || useradd -m builder
@@ -21,4 +21,6 @@ exec su builder -c 'export CARGO_HOME=/src/.ci-cache/cargo CARGO_TARGET_DIR=/src
   && { (( t < 600 )) || { echo "layer-2 suite over its 10 min budget"; exit 1; }; } \
   && scripts/ci/with-pipewire.sh scripts/gui/hidden-check.sh \
   && s=$SECONDS && scripts/ci/bench.sh && cat target/bench-results.json \
-  && echo "== bench took $((SECONDS - s)) s"'
+  && echo "== bench took $((SECONDS - s)) s" \
+  && s=$SECONDS && scripts/gui/perf.sh >/dev/null && cat target/gui-bench-results.json \
+  && echo "== GUI bench took $((SECONDS - s)) s"'

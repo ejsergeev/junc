@@ -18,7 +18,9 @@ fn main() -> Result<(), slint::PlatformError> {
         let name = args.get(i + 1).cloned().unwrap_or_default();
         return scenario(&name, &args);
     }
+    junc_gui::perf::init();
     let window = ui::AppWindow::new()?;
+    junc_gui::perf::mark("window");
     // The Wayland app_id / X11 class: launchers and the compositor match
     // the window to junc.desktop and its icon by it. It needs the platform
     // the window just started, and must come before the window is shown.
@@ -95,6 +97,7 @@ fn main() -> Result<(), slint::PlatformError> {
         Ok(d) => Rc::new(d),
         Err(_) => Rc::new(Nowhere),
     };
+    junc_gui::perf::mark("services");
     let controller = app::install(&window, actions, meters.clone(), levels);
     if let Some(file) = onboarding::state_file() {
         controller.borrow_mut().onboard_with(file);
@@ -102,7 +105,11 @@ fn main() -> Result<(), slint::PlatformError> {
     app::set_current(&controller);
     // Without a session bus the window shows juncd as unreachable.
     let _ = daemon::follow(None, move |d| {
-        let _ = slint::invoke_from_event_loop(move || app::update_current(d));
+        let _ = slint::invoke_from_event_loop(move || {
+            let junctions = d.as_ref().is_some_and(|d| !d.junctions.is_empty());
+            app::update_current(d);
+            junc_gui::perf::live(junctions);
+        });
     });
     let _ = daemon::notices(None, |kind, body| {
         let _ = slint::invoke_from_event_loop(move || app::notice_current(&kind, &body));
@@ -114,6 +121,7 @@ fn main() -> Result<(), slint::PlatformError> {
     .ok()
     .filter(|(_, shown)| *shown)
     .map(|(t, _)| t);
+    junc_gui::perf::mark("loop");
     let background = args.iter().any(|a| a == "--background");
     let run = if let Some(t) = tray {
         controller.borrow_mut().set_tray(t);

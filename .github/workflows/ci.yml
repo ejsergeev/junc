@@ -62,7 +62,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: bench-${{ matrix.arch }}
-          path: .ci-cache/target/bench-results.json
+          path: |
+            .ci-cache/target/bench-results.json
+            .ci-cache/target/gui-bench-results.json
           if-no-files-found: ignore
       - name: Restore cache ownership
         if: always()

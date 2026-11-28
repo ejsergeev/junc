@@ -2364,6 +2364,25 @@ impl App {
     }
 
     /// The pointer moved while dragging a link, to `p` on the canvas.
+    /// A link drag across the canvas for the frame-time measure (B26):
+    /// the first Input port drawn, where it starts, and where its first
+    /// free target is.
+    pub fn drag_path(&self) -> Option<(End, Point, Point)> {
+        let (m, l) = (self.main.as_ref()?, self.layout.as_ref()?);
+        let (from, a) = linking::ports(m, l)
+            .into_iter()
+            .find(|(e, _)| matches!(e, End::Input { .. }))?;
+        let to = linking::targets(m, l, from).first().copied()?;
+        Some((from, a, linking::at(m, l, to)?))
+    }
+
+    /// Asks the window for a frame even when nothing changed (B26).
+    pub fn request_frame(&self) {
+        if let Some(w) = self.window.upgrade() {
+            w.window().request_redraw();
+        }
+    }
+
     pub fn link_drag(&mut self, p: Point) {
         let (Some(m), Some(l), Some(k)) = (&self.main, &self.layout, self.linking.as_mut()) else {
             return;
@@ -2434,7 +2453,8 @@ impl App {
         self.show_linking();
     }
 
-    fn link_cancel(&mut self) {
+    /// Drops the link being made.
+    pub fn link_cancel(&mut self) {
         self.linking = None;
         self.show_linking();
     }
@@ -2813,6 +2833,11 @@ thread_local! {
 /// Makes `app` the one [`update_current`] reaches (GUI thread).
 pub fn set_current(app: &Rc<RefCell<App>>) {
     CURRENT.with(|c| *c.borrow_mut() = Some(app.clone()));
+}
+
+/// The controller [`set_current`] made current (GUI thread).
+pub fn current() -> Option<Rc<RefCell<App>>> {
+    CURRENT.with(|c| c.borrow().clone())
 }
 
 /// Gives the current controller juncd's new snapshot; call it on the GUI
