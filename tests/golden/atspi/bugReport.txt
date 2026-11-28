@@ -1,0 +1,67 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Settings' states=[enabled,sensitive,showing,visible]
+    button name='Close' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='General' states=[enabled,sensitive,showing,visible]
+    label name='Start at login' states=[enabled,sensitive,showing,visible]
+    label name='Runs juncd as a systemd user service, so Junctions exist before you open the app.' states=[enabled,sensitive,showing,visible]
+    toggle button name='Start at login' desc='off' states=[enabled,sensitive,showing,visible] actions=click
+    label name='Default sample rate' states=[enabled,sensitive,showing,visible]
+    label name='Used for new Junctions and Cables.' states=[enabled,sensitive,showing,visible]
+    label name='Follow PipeWire' states=[enabled,sensitive,showing,visible]
+    label name='Follow Omarchy (Setup > Language)' states=[enabled,sensitive,showing,visible]
+    label name='Current language: English' states=[enabled,sensitive,showing,visible]
+    toggle button name='Follow Omarchy (Setup > Language)' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+    label name='Language' states=[enabled,sensitive,showing,visible]
+    label name='Follows Omarchy. Turn off the switch above to pick one.' states=[enabled,sensitive,showing,visible]
+    label name='English' states=[enabled,sensitive,showing,visible]
+    label name='Appearance' states=[enabled,sensitive,showing,visible]
+    label name='Follow Omarchy theme' states=[enabled,sensitive,showing,visible]
+    label name='Retints with omarchy-theme-set. Off: use the theme JUNC ships with.' states=[enabled,sensitive,showing,visible]
+    toggle button name='Follow Omarchy theme' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+    label name='About' states=[enabled,sensitive,showing,visible]
+    label name='Version' states=[enabled,sensitive,showing,visible]
+    label name='JUNC for Linux' states=[enabled,sensitive,showing,visible]
+    label name='0.1.0' states=[enabled,sensitive,showing,visible]
+    label name='License' states=[enabled,sensitive,showing,visible]
+    label name='Free software under the GNU GPL.' states=[enabled,sensitive,showing,visible]
+    label name='GPL-3.0-or-later' states=[enabled,sensitive,showing,visible]
+    button name='Source code' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Existing setups' states=[enabled,sensitive,showing,visible]
+    label name='Bring in null-sink and pw-loopback setups.' states=[enabled,sensitive,showing,visible]
+    button name='Import…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Diagnostics' states=[enabled,sensitive,showing,visible]
+    label name='Versions, Junction graph and recent logs. No audio, no personal data.' states=[enabled,sensitive,showing,visible]
+    button name='Copy bug report…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='System check' states=[enabled,sensitive,showing,visible]
+    label name='Same checks as junc doctor.' states=[enabled,sensitive,showing,visible]
+    button name='Run checks' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Logs' states=[enabled,sensitive,showing,visible]
+    label name='journalctl --user -u juncd' states=[enabled,sensitive,showing,visible]
+    button name='Open logs' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    panel name='Copy bug report' states=[enabled,sensitive,showing,visible]
+      label name='Copy bug report' states=[enabled,sensitive,showing,visible]
+      label name='Paste it into an issue. JUNC sends nothing by itself.' states=[enabled,sensitive,showing,visible]
+      list item name='Versions' desc='JUNC, PipeWire, WirePlumber, kernel' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='Junction graph' desc='Junctions, Cables, Links, sample rate, quantum' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='Recent logs' desc="juncd's recent log" states=[focusable,enabled,sensitive,showing,visible]
+      list item name='Audio' desc='Never included' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='Personal data' desc='User name and home paths replaced with ~' states=[focusable,enabled,sensitive,showing,visible]
+      label name='junc 0.1.0 · juncd 0.1.0 · PipeWire 1.6.9 · WirePlumber 0.5.18 · kernel 7.2 (aarch64)\ngraph: 1 Junction, 1 Cable · 12 links · 48000 Hz · quantum 1024\nconfig: ~/.config/junc/junctions.toml (valid)\n… 200 log lines' states=[enabled,sensitive,showing,visible]
+      label name='Same report in a terminal: junc doctor --bug-report' states=[enabled,sensitive,showing,visible]
+      button name='Cancel' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      button name='Save to file…' states=[focusable,enabled,sensitive,showing,visible] actions=click
+      button name='Copy' desc='Enter' states=[focusable,enabled,sensitive,showing,visible] actions=click

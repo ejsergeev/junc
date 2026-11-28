@@ -1,0 +1,7 @@
+# GUI scenario: design board 41, "Bug report" — Settings › Diagnostics ›
+# Copy bug report…: what it holds and never does, its first lines.
+board = 41
+title = "Bug report"
+base = "default"
+settings = true
+report = true

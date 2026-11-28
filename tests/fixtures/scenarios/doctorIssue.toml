@@ -1,0 +1,33 @@
+# GUI scenario: design board 42, "Doctor issue" — Settings › Run checks
+# finds one issue: a device runs at another sample rate.
+board = 42
+title = "Doctor issue"
+base = "default"
+settings = true
+doctor = true
+
+[[check]]
+id = "pipewire"
+status = "ok"
+detail = "running 1.6.9"
+
+[[check]]
+id = "wireplumber"
+status = "ok"
+detail = "running"
+
+[[check]]
+id = "pipewire-pulse"
+status = "ok"
+detail = "running"
+
+[[check]]
+id = "clock"
+status = "ok"
+detail = "48000 Hz, quantum 1024 (21.3 ms)"
+
+[[check]]
+id = "rates"
+status = "warn"
+detail = "HDMI Output runs at 44.1 kHz, the graph at 48 kHz: audio is resampled"
+fix = 'pw-metadata -n settings 0 clock.allowed-rates "[ 44100 48000 ]"'

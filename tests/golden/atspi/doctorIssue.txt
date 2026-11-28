@@ -1,0 +1,29 @@
+application name='junc-gui' states=[]
+  frame name='JUNC' states=[focusable,enabled,sensitive,showing,visible]
+    label name='Junctions' states=[enabled,sensitive,showing,visible]
+    button name='Settings' desc='Ctrl+,' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    list item name='Virtual Mic for Zoom' states=[focusable,enabled,sensitive,selectable,selected,showing,visible] actions=click
+      toggle button name='Virtual Mic for Zoom' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Spotify, Soundux, USB Microphone' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Virtual Mic for Zoom volume' states=[focusable,enabled,sensitive,showing,visible] value=50 [0..150] step=1
+    list item name='Firefox → OBS' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
+      toggle button name='Firefox → OBS' desc='on' states=[pressed,enabled,sensitive,showing,visible] actions=click
+      label name='Cable' states=[enabled,sensitive,showing,visible]
+      unknown name='' states=[enabled,sensitive,showing,visible]
+      slider name='Firefox → OBS volume' states=[focusable,enabled,sensitive,showing,visible] value=100 [0..150] step=1
+    button name='New' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    label name='Settings › Run checks' states=[enabled,sensitive,showing,visible]
+    label name='System check' states=[enabled,sensitive,showing,visible]
+    label name='1 issue found.' states=[enabled,sensitive,showing,visible]
+    list box name='System check' states=[enabled,sensitive,showing,visible]
+      list item name='PipeWire' desc='ok: running 1.6.9' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='WirePlumber' desc='ok: running' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='pipewire-pulse' desc='ok: running' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='Quantum' desc='ok: 48000 Hz, quantum 1024 (21.3 ms)' states=[focusable,enabled,sensitive,showing,visible]
+      list item name='Sample rate' desc='mismatch: HDMI Output runs at 44.1 kHz, the graph at 48 kHz: audio is resampled' states=[focusable,enabled,sensitive,showing,visible]
+        label name='pw-metadata -n settings 0 clock.allowed-rates "[ 44100 48000 ]"' states=[enabled,sensitive,showing,visible]
+        button name='Copy' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Run again' desc='R' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Copy bug report' desc='Ctrl+Shift+C' states=[focusable,enabled,sensitive,showing,visible] actions=click
+    button name='Back to Settings' desc='Esc' states=[focusable,enabled,sensitive,showing,visible] actions=click
