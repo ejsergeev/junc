@@ -69,6 +69,8 @@ pub struct App {
     draft: Option<Draft>,
     /// The tray, when the shell shows one (board 19).
     tray: Option<crate::tray::Tray>,
+    /// A template's slots being filled in (board 49).
+    form: Option<SlotForm>,
     /// The language picker's rows (board 31).
     languages: Vec<crate::language::Row>,
     /// Links another tool removed, waiting for Restore or Leave as is:
@@ -85,6 +87,64 @@ pub struct App {
     /// The config error the banner was dismissed for (board 47); a new
     /// one shows again.
     dismissed_error: Option<String>,
+}
+
+/// A template with slots being filled in (board 49).
+#[derive(Debug, Clone)]
+struct SlotForm {
+    template: String,
+    preset: junc_core::preset::Preset,
+    /// Per slot: the value and its name, once picked.
+    filled: Vec<Option<(String, String)>>,
+    /// The slot whose picker is open, and its rows (value, name, icon).
+    picking: Option<usize>,
+    rows: Vec<(String, String, Icon)>,
+}
+
+/// A slot's name as the form shows it: its id, capitalized ("Mic").
+fn slot_label(id: &str) -> String {
+    let mut c = id.chars();
+    c.next()
+        .map(|f| f.to_uppercase().chain(c).collect())
+        .unwrap_or_default()
+}
+
+/// What can fill a slot of `kind`, from juncd's candidates: (value, name,
+/// icon). Apps by binary, devices and outputs by node name.
+fn slot_choices(d: &Describe, kind: junc_core::preset::SlotKind) -> Vec<(String, String, Icon)> {
+    use junc_core::preset::SlotKind;
+    let mut out: Vec<(String, String, Icon)> = Vec::new();
+    if kind == SlotKind::Output {
+        out.push(("default".to_owned(), String::new(), Icon::Speaker));
+    }
+    for c in &d.candidates {
+        let row = match (kind, c.kind.as_str()) {
+            (SlotKind::App, "app_playback") => c.binary.clone().map(|b| {
+                let name = c.app.clone().unwrap_or_else(|| b.clone());
+                (b, name, Icon::App)
+            }),
+            (SlotKind::HardwareInput, "source") => {
+                Some((c.node.clone(), c.description.clone(), Icon::Mic))
+            }
+            (SlotKind::Output | SlotKind::Monitor, "sink") => Some((
+                c.node.clone(),
+                c.description.clone(),
+                if kind == SlotKind::Monitor {
+                    Icon::Monitor
+                } else {
+                    Icon::Speaker
+                },
+            )),
+            _ => None,
+        };
+        if let Some(r) = row
+            && !out.iter().any(|o| o.0 == r.0)
+        {
+            out.push(r);
+        }
+    }
+    out.sort_by_key(|r| (r.0 != "default", r.1.to_lowercase()));
+    out
 }
 
 /// The sidebar id of the draft Cable (a config id has no `+`).
@@ -220,6 +280,7 @@ pub fn install(
         received: None,
         draft: None,
         tray: None,
+        form: None,
         languages: Vec::new(),
         overridden: Vec::new(),
         holders: BTreeMap::new(),
@@ -329,6 +390,19 @@ pub fn install(
         view.on_recheck(move || c(&App::recheck));
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
+        let c = call.clone();
+        view.on_slot_pick(move |i| c(&|a| a.pick_slot(i)));
+        let c = call.clone();
+        view.on_slot_chosen(move |i| c(&|a| a.slot_chosen(i)));
+        let c = call.clone();
+        view.on_slots_create(move || c(&App::create_from_slots));
+        let c = call.clone();
+        view.on_slots_back(move || {
+            c(&|a| {
+                a.form = None;
+                a.set_step(Some(Step::Templates));
+            });
+        });
         let c = call.clone();
         view.on_group_toggled(move |card, first| c(&|a| a.toggle_group(card, first)));
         let c = call.clone();
@@ -637,6 +711,7 @@ impl App {
                 None => 0,
                 Some(Step::Check) => 1,
                 Some(Step::Templates) => 2,
+                Some(Step::Slots) => 3,
             });
         }
         if first {
@@ -686,12 +761,166 @@ impl App {
     /// A starting point from onboarding. "Start empty" is a New Junction;
     /// templates with slots ask for them first (board 49, B22). Juncd
     /// starts at login from then on (F9, on by default after onboarding).
-    fn template(&mut self, id: &str) {
+    pub fn template(&mut self, id: &str) {
         if id == "start-empty" {
             self.new_junction();
             self.finish_onboarding();
             self.actions.send(Command::Service(Some(true)));
+            return;
         }
+        if id == "cable" {
+            // A Cable is two apps: the New Cable draft asks for them.
+            self.finish_onboarding();
+            self.actions.send(Command::Service(Some(true)));
+            self.new_cable();
+            return;
+        }
+        let Some(preset) = junc_core::preset::builtin(id) else {
+            return;
+        };
+        self.form = Some(SlotForm {
+            template: id.to_owned(),
+            filled: vec![None; preset.header.slot.len()],
+            preset,
+            picking: None,
+            rows: Vec::new(),
+        });
+        self.set_step(Some(Step::Slots));
+        self.show_slots();
+    }
+
+    /// Board 49: the slots and what fills them.
+    fn show_slots(&mut self) {
+        let (Some(f), Some(w)) = (&self.form, self.window.upgrade()) else {
+            return;
+        };
+        let words = w.global::<Words>();
+        let items: Vec<ui::SlotItem> = f
+            .preset
+            .header
+            .slot
+            .iter()
+            .zip(&f.filled)
+            .map(|(s, fill)| ui::SlotItem {
+                label: slot_label(&s.id).into(),
+                detail: words.invoke_slot_kind(s.kind.as_str().into()),
+                value: fill
+                    .as_ref()
+                    .map(|(_, label)| label.as_str())
+                    .unwrap_or_default()
+                    .into(),
+                app: s.kind == junc_core::preset::SlotKind::App,
+            })
+            .collect();
+        let view = w.global::<View>();
+        view.set_slot_template(f.template.as_str().into());
+        view.set_slot_ready(f.filled.iter().all(Option::is_some));
+        view.set_slot_items(ModelRc::new(VecModel::from(items)));
+    }
+
+    /// Board 49: the picker of what can fill slot `i`.
+    pub fn pick_slot(&mut self, i: i32) {
+        let Some(d) = self.describe.clone() else {
+            return;
+        };
+        let Some(f) = self.form.as_mut() else { return };
+        let Some(slot) = usize::try_from(i)
+            .ok()
+            .and_then(|i| f.preset.header.slot.get(i))
+        else {
+            return;
+        };
+        f.rows = slot_choices(&d, slot.kind);
+        f.picking = usize::try_from(i).ok();
+        if let Some(w) = self.window.upgrade() {
+            let words = w.global::<Words>();
+            let items: Vec<ui::PickerItem> = f
+                .rows
+                .iter()
+                .enumerate()
+                .map(|(k, (value, label, icon))| ui::PickerItem {
+                    group: if k == 0 {
+                        words
+                            .invoke_slot_group(slot.kind.as_str().into())
+                            .to_uppercase()
+                            .into()
+                    } else {
+                        SharedString::new()
+                    },
+                    text: if value == "default" {
+                        words.invoke_default_output()
+                    } else {
+                        label.as_str().into()
+                    },
+                    icon: ui::glyph(*icon).into(),
+                    ..ui::PickerItem::default()
+                })
+                .collect();
+            let view = w.global::<View>();
+            view.set_slot_picker_items(ModelRc::new(VecModel::from(items)));
+            view.set_slot_picker_cursor(0);
+            view.set_slot_picker_open(true);
+        }
+    }
+
+    /// A choice for the slot being picked.
+    pub fn slot_chosen(&mut self, i: i32) {
+        let Some(f) = self.form.as_mut() else { return };
+        if let (Some(slot), Some((value, label, _))) = (
+            f.picking.take(),
+            usize::try_from(i).ok().and_then(|i| f.rows.get(i)).cloned(),
+        ) && let Some(cell) = f.filled.get_mut(slot)
+        {
+            let label = match (label.is_empty(), self.window.upgrade()) {
+                (true, Some(w)) => w.global::<Words>().invoke_default_output().to_string(),
+                _ => label,
+            };
+            *cell = Some((value, label));
+        }
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_slot_picker_open(false);
+        }
+        self.show_slots();
+    }
+
+    /// Board 49's Create: the template filled in becomes a Junction,
+    /// selected when juncd shows it.
+    fn create_from_slots(&mut self) {
+        let Some(f) = self.form.take() else { return };
+        let fills: BTreeMap<String, junc_core::preset::Fill> = f
+            .preset
+            .header
+            .slot
+            .iter()
+            .zip(f.filled)
+            .filter_map(|(s, fill)| {
+                let (value, label) = fill?;
+                Some((
+                    s.id.clone(),
+                    junc_core::preset::Fill {
+                        value,
+                        label: Some(label),
+                    },
+                ))
+            })
+            .collect();
+        let Ok(j) = f.preset.fill(&fills) else {
+            self.form = None;
+            return;
+        };
+        self.creating = Some(
+            self.sidebar
+                .junctions
+                .iter()
+                .map(|r| r.id.clone())
+                .collect(),
+        );
+        self.actions.send(Command::Edit {
+            junction: String::new(),
+            edit: Edit::AddJunction(Box::new(j)),
+        });
+        self.finish_onboarding();
+        self.actions.send(Command::Service(Some(true)));
     }
 
     /// Board 25: Settings in the main area; Start at login is asked

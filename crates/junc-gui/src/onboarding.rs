@@ -17,6 +17,8 @@ pub enum Step {
     Check,
     /// Step 2: pick a starting point (board 9).
     Templates,
+    /// Step 2 of a template with slots: pick what fills them (board 49).
+    Slots,
 }
 
 /// The state file.

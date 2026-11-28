@@ -6,6 +6,15 @@ import { CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
 import { PickerItem } from "components/picker.slint";
 import { ImportItem } from "components/import.slint";
 
+// One slot of a template (board 49): its name, what it takes, what fills
+// it ("" while empty).
+export struct SlotItem {
+    label: string,
+    detail: string,
+    value: string,
+    app: bool,
+}
+
 // One row of the onboarding system check (checks.rs).
 export struct CheckItem {
     // doctor's id: "pipewire", "wireplumber", "pipewire-pulse", "jack".
@@ -32,6 +41,19 @@ export global Words {
     public pure function bluetooth-note() -> string { @tr("Its mic switches the headset to the call profile (HFP): playback drops to call quality.") }
     public pure function add-anyway() -> string { @tr("Add anyway") }
     public pure function choose-another-mic() -> string { @tr("Choose another mic") }
+    // TRANSLATORS: what a template's slot takes (design board 49).
+    public pure function slot-kind(kind: string) -> string {
+        kind == "hardware-input" ? @tr("Hardware input")
+            : kind == "app" ? @tr("An app that is playing")
+            : kind == "output" ? @tr("An output device")
+            : @tr("What an output plays")
+    }
+    public pure function slot-group(kind: string) -> string {
+        kind == "hardware-input" ? @tr("Hardware inputs")
+            : kind == "app" ? @tr("Running apps")
+            : kind == "output" ? @tr("Output devices")
+            : @tr("System audio")
+    }
     // TRANSLATORS: board 43's toast; {0} is the new version.
     public pure function updated(version: string) -> string { @tr("JUNC updated to {0} · audio kept running", version) }
     // TRANSLATORS: board 47's banner: the file, the line, juncd's message.
@@ -173,7 +195,17 @@ export global View {
     // The card (index into `cards`) the arrow keys move the focus to.
     in-out property <int> focus-card: -1;
     in-out property <LinkItem> pending;
-    // Onboarding (boards 8, 9): 0 none, 1 the system check, 2 templates.
+    // Board 49: a template's slots, ready when all are filled, the picker
+    // of what fills one.
+    in-out property <string> slot-template;
+    in-out property <bool> slot-ready;
+    in-out property <[SlotItem]> slot-items;
+    in-out property <bool> slot-picker-open;
+    in-out property <[PickerItem]> slot-picker-items;
+    in-out property <int> slot-picker-cursor;
+    in-out property <string> slot-picker-search;
+    // Onboarding (boards 8, 9, 49): 0 none, 1 the system check, 2
+    // templates, 3 a template's slots.
     in-out property <int> onboarding;
     in-out property <[CheckItem]> checks;
     // Board 25: Settings in the main area; Start at login as systemd
@@ -312,6 +344,11 @@ export global View {
     callback import-toggled(int);
     callback import-cable(int, bool);
     callback import-run();
+    // Board 49.
+    callback slot-pick(int);
+    callback slot-chosen(int);
+    callback slots-create();
+    callback slots-back();
     // Board 25.
     callback open-settings();
     callback start-at-login-changed(bool);

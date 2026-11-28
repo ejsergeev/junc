@@ -7,8 +7,8 @@ import { Tokens } from "tokens.slint";
 import { JMenu } from "components/menu.slint";
 import { JBadge } from "components/badge.slint";
 import { JToast } from "components/toast.slint";
-import { View, Words, JunctionItem, CheckItem } from "view.slint";
-import { OnboardingCheck, OnboardingTemplates } from "screens/onboarding.slint";
+import { View, Words, JunctionItem, CheckItem, SlotItem } from "view.slint";
+import { OnboardingCheck, OnboardingTemplates, OnboardingSlots } from "screens/onboarding.slint";
 import { EmptyNone } from "screens/empty.slint";
 import { PickerItem } from "components/picker.slint";
 import { MainScreen, CardItem, PortItem, LinkItem, ChannelItem } from "screens/main.slint";
@@ -20,7 +20,7 @@ import { JMeter } from "components/meter.slint";
 import { JSwitch } from "components/switch.slint";
 import { JSlider } from "components/slider.slint";
 import { JButton, JIconButton } from "components/button.slint";
-export { Tokens, View, Words, JunctionItem, CheckItem, PickerItem, CardItem, PortItem, LinkItem, ChannelItem, ImportItem }
+export { Tokens, View, Words, JunctionItem, CheckItem, SlotItem, PickerItem, CardItem, PortItem, LinkItem, ChannelItem, ImportItem }
 export { GalleryWindow } from "gallery.slint";
 
 // One Junction in the sidebar: name and switch; what feeds it; its meter
@@ -283,6 +283,23 @@ export component AppWindow inherits Window {
         init => { self.focus(); }
         back => { View.onboarding-back(); }
         chosen(id) => { View.template-chosen(id); }
+    }
+    if View.onboarding == 3: OnboardingSlots {
+        width: root.width;
+        height: root.height;
+        template: View.slot-template;
+        slots: View.slot-items;
+        ready: View.slot-ready;
+        picker-open: View.slot-picker-open;
+        picker-items: View.slot-picker-items;
+        picker-cursor <=> View.slot-picker-cursor;
+        picker-search <=> View.slot-picker-search;
+        init => { self.focus(); }
+        pick(i) => { View.slot-pick(i); }
+        chosen(i) => { View.slot-chosen(i); }
+        picker-closed => { View.slot-picker-open = false; }
+        create => { View.slots-create(); }
+        back => { View.slots-back(); }
     }
     if View.onboarding == 0: HorizontalLayout {
         x: 0;

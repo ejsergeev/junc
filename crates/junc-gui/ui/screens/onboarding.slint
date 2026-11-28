@@ -10,7 +10,8 @@ import { JButton } from "../components/button.slint";
 import { JCheckRow } from "../components/check-row.slint";
 import { JKbd } from "../components/kbd.slint";
 import { JLogo } from "../components/logo.slint";
-import { CheckItem } from "../view.slint";
+import { CheckItem, SlotItem } from "../view.slint";
+import { JPicker, PickerItem } from "../components/picker.slint";
 
 // What a check is, in the UI language.
 component CheckWords {
@@ -321,3 +322,147 @@ export component OnboardingTemplates inherits Rectangle {
         }
     }
 }
+
+// Step 2 of a template with slots (design board 49): one row per slot,
+// its select opening a picker of what can fill it; Create (Enter) once
+// all are filled, Back (Esc).
+export component OnboardingSlots inherits Rectangle {
+    // The template's id (templates/<id>.toml), for its title.
+    in property <string> template;
+    in property <[SlotItem]> slots;
+    in property <bool> ready;
+    in property <bool> picker-open;
+    in property <[PickerItem]> picker-items;
+    in-out property <int> picker-cursor;
+    in-out property <string> picker-search;
+    callback pick(int);
+    callback chosen(int);
+    callback picker-closed();
+    callback create();
+    callback back();
+    background: Tokens.surface-window;
+    forward-focus: keys;
+
+    property <string> title: root.template == "mic-plus-app" ? @tr("Mic + App")
+        : root.template == "combine-inputs" ? @tr("Combine Inputs")
+        : root.template == "separate-tracks" ? @tr("Separate tracks")
+        : root.template == "stream-mix" ? @tr("Stream mix") : root.template;
+    // The row whose picker is open, for the picker's place.
+    property <int> picking: -1;
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == "\n" && root.ready { root.create(); return accept; }
+            if e.text == Key.Escape { root.back(); return accept; }
+            reject
+        }
+    }
+
+    form := VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: max(24px, (parent.height - self.preferred-height) / 2.6);
+        width: min(680px * Tokens.scale, parent.width - 48px);
+        height: self.preferred-height;
+        spacing: 12px * Tokens.scale;
+        Text {
+            text: @tr("Step {0} of {1}", 2, 2) + " · " + root.title;
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-caption;
+        }
+        Text {
+            text: root.title;
+            color: Tokens.text-strong;
+            font-size: Tokens.type-display;
+            accessible-role: AccessibleRole.text;
+        }
+        Text {
+            text: @tr("Pick what the template needs. You can change everything later.");
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            background: Tokens.surface-card;
+            VerticalLayout {
+                padding: Tokens.border;
+                for s[i] in root.slots: Rectangle {
+                    height: 52px * Tokens.scale;
+                    if i > 0: Rectangle {
+                        y: 0;
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
+                    HorizontalLayout {
+                        padding-left: 14px * Tokens.scale;
+                        padding-right: 14px * Tokens.scale;
+                        spacing: Tokens.space-row-gap;
+                        Text {
+                            width: 88px * Tokens.scale;
+                            text: s.label;
+                            color: Tokens.text-strong;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            horizontal-stretch: 1;
+                            text: s.detail;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                        }
+                        JButton {
+                            y: (parent.height - self.height) / 2;
+                            width: 300px * Tokens.scale;
+                            text: s.value != "" ? s.value : s.app ? @tr("Choose an app") : @tr("Choose");
+                            icon: "\u{f0140}";
+                            clicked => {
+                                root.picking = i;
+                                root.pick(i);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        HorizontalLayout {
+            padding-top: 6px * Tokens.scale;
+            JButton {
+                text: @tr("Back");
+                shortcut: "Esc";
+                show-key: true;
+                clicked => { root.back(); }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            JButton {
+                text: @tr("Create Junction");
+                shortcut: "Enter";
+                show-key: true;
+                primary: true;
+                enabled: root.ready;
+                clicked => { root.create(); }
+            }
+        }
+    }
+
+    if root.picker-open: Rectangle {
+        TouchArea { clicked => { root.picker-closed(); keys.focus(); } }
+        JPicker {
+            x: min(form.x + form.width + 12px, root.width - self.width - 12px);
+            y: form.y + 120px * Tokens.scale + root.picking * 52px * Tokens.scale;
+            height: self.preferred-height;
+            title: @tr("Choose");
+            placeholder: @tr("Search");
+            search-icon: "\u{f0349}";
+            hints: true;
+            pick-word: @tr("pick");
+            max-list-height: 300px * Tokens.scale;
+            items: root.picker-items;
+            search <=> root.picker-search;
+            cursor <=> root.picker-cursor;
+            init => { self.open(); }
+            picked(i) => { root.chosen(i); keys.focus(); }
+            closed => { root.picker-closed(); keys.focus(); }
+        }
+    }
+}
+

@@ -126,6 +126,14 @@ struct Fixture {
     /// (board 43).
     #[serde(default)]
     updated: Option<String>,
+    /// Onboarding's template with slots chosen (board 49), slots filled
+    /// as `[slot id, choice's name]`, and the picker of this slot open.
+    #[serde(default)]
+    template: Option<String>,
+    #[serde(default)]
+    slot_fill: Vec<[String; 2]>,
+    #[serde(default)]
+    slot_picker: Option<i32>,
     /// Input channels ALSA reports for the graph's USB cards whatever the
     /// profile (board 35: "2 of 18 channels").
     #[serde(default)]
@@ -241,6 +249,9 @@ pub struct Scenario {
     pub notices: Vec<NoticeFixture>,
     pub cursor_on: Option<String>,
     pub updated: Option<String>,
+    pub template: Option<String>,
+    pub slot_fill: Vec<[String; 2]>,
+    pub slot_picker: Option<i32>,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -368,6 +379,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         None => None,
         Some("check") => Some(Step::Check),
         Some("templates") => Some(Step::Templates),
+        Some("slots") => Some(Step::Slots),
         Some(o) => {
             return Err(format!(
                 "{name}: onboarding {o:?} is not check or templates"
@@ -420,6 +432,9 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         notices: f.notice,
         cursor_on: f.cursor_on,
         updated: f.updated,
+        template: f.template,
+        slot_fill: f.slot_fill,
+        slot_picker: f.slot_picker,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -830,6 +845,30 @@ pub fn open(
     }
     if s.defaults {
         window.global::<crate::ui::View>().set_defaults_open(true);
+    }
+    if let Some(t) = &s.template {
+        app.borrow_mut().template(t);
+        let view = window.global::<crate::ui::View>();
+        for [slot, name] in &s.slot_fill {
+            let items = view.get_slot_items();
+            let Some(i) = (0..items.row_count()).find(|&i| {
+                items
+                    .row_data(i)
+                    .is_some_and(|r| r.label.to_lowercase() == *slot)
+            }) else {
+                continue;
+            };
+            app.borrow_mut().pick_slot(i32::try_from(i).unwrap_or(0));
+            let rows = view.get_slot_picker_items();
+            if let Some(k) = (0..rows.row_count())
+                .find(|&k| rows.row_data(k).is_some_and(|r| r.text == name.as_str()))
+            {
+                app.borrow_mut().slot_chosen(i32::try_from(k).unwrap_or(0));
+            }
+        }
+        if let Some(i) = s.slot_picker {
+            app.borrow_mut().pick_slot(i);
+        }
     }
     if let Some(v) = &s.updated {
         app.borrow_mut().show_updated(v);
