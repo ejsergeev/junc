@@ -63,6 +63,60 @@ pub fn parse(json: &str) -> Result<Vec<Row>, String> {
     Ok(rows)
 }
 
+/// One finding of `junc doctor` (board 42): every check, with doctor's
+/// own words.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Finding {
+    pub id: String,
+    /// `ok`, `mismatch` (doctor's `warn`), `missing` or `down`.
+    pub state: &'static str,
+    pub detail: String,
+    pub fix: String,
+}
+
+/// Every finding of doctor's JSON, in its order.
+pub fn findings(json: &str) -> Result<Vec<Finding>, String> {
+    let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    let list = v
+        .pointer("/data/checks")
+        .unwrap_or(&v)
+        .as_array()
+        .ok_or("no checks in doctor's answer")?;
+    Ok(list
+        .iter()
+        .map(|c| Finding {
+            id: c["id"].as_str().unwrap_or("").to_owned(),
+            state: match c["status"].as_str().unwrap_or("") {
+                "ok" => "ok",
+                "warn" => "mismatch",
+                "down" => "down",
+                _ => "missing",
+            },
+            detail: c["detail"].as_str().unwrap_or("").to_owned(),
+            fix: c["fix"].as_str().unwrap_or("").to_owned(),
+        })
+        .collect())
+}
+
+/// Runs `junc doctor --json` and returns every finding (board 42). Blocks.
+pub fn run_all() -> Result<Vec<Finding>, String> {
+    let out = Command::new(junc())
+        .args(["doctor", "--json"])
+        .output()
+        .map_err(|e| format!("junc doctor: {e}"))?;
+    findings(&String::from_utf8_lossy(&out.stdout))
+}
+
+/// Runs `junc doctor --bug-report` (board 41): the report to paste into
+/// an issue, names and home paths already replaced. Blocks.
+pub fn bug_report() -> Result<String, String> {
+    let out = Command::new(junc())
+        .args(["doctor", "--bug-report"])
+        .output()
+        .map_err(|e| format!("junc doctor --bug-report: {e}"))?;
+    Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
 /// Whether onboarding may go on: nothing missing or stopped.
 pub fn passed(rows: &[Row]) -> bool {
     !rows.is_empty() && rows.iter().all(|r| matches!(r.state, "ok" | "mismatch"))
@@ -161,6 +215,27 @@ mod tests {
         let failed = r#"{"junc":1,"ok":false,"error":{"code":"E_NO_SYSTEMD","message":"x"}}"#;
         assert_eq!(service_enabled(failed), None);
         assert_eq!(service_enabled("not json"), None);
+    }
+
+    #[test]
+    fn every_finding_keeps_doctor_s_words_and_fix() {
+        let all = findings(&golden("rate-mismatch")).expect("parse");
+        let ids: Vec<&str> = all.iter().map(|f| f.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            [
+                "pipewire",
+                "wireplumber",
+                "pipewire-pulse",
+                "jack",
+                "clock",
+                "rates",
+                "juncd"
+            ]
+        );
+        assert_eq!(all[5].state, "mismatch");
+        assert!(all[5].fix.starts_with("pw-metadata"));
+        assert_eq!(all[6].state, "down");
     }
 
     #[test]
