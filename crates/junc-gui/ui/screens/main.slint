@@ -567,8 +567,13 @@ export component MainScreen inherits Rectangle {
     in property <string> overridden;
     callback restore-link();
     callback leave-link();
-    // A banner under the header: off (board 18) or a removed link.
-    property <bool> banner: !root.on || root.overridden != "";
+    // Board 47: the config file's error; the answers.
+    in property <string> config-error;
+    callback open-config();
+    callback dismiss-config-error();
+    // A banner under the header: off (board 18), a config error, or a
+    // removed link, in that order.
+    property <bool> banner: !root.on || root.config-error != "" || root.overridden != "";
     // Board 22: what deleting it removes, and what stays.
     in property <[string]> delete-lines;
     in property <string> delete-note;
@@ -671,8 +676,23 @@ export component MainScreen inherits Rectangle {
                 }
             }
         }
+        // Board 47: the file on disk does not validate.
+        if root.on && root.config-error != "": Rectangle {
+            height: 50px * Tokens.scale;
+            JBanner {
+                x: root.pad;
+                y: 14px * Tokens.scale;
+                width: parent.width - 2 * root.pad;
+                kind: "error";
+                text: root.config-error;
+                action: @tr("Open file");
+                secondary: @tr("Dismiss");
+                activated => { root.open-config(); }
+                secondary-activated => { root.dismiss-config-error(); }
+            }
+        }
         // Board 39: another tool removed a link; put it back or leave it.
-        if root.on && root.overridden != "": Rectangle {
+        if root.on && root.config-error == "" && root.overridden != "": Rectangle {
             height: 50px * Tokens.scale;
             JBanner {
                 x: root.pad;

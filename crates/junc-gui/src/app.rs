@@ -82,6 +82,9 @@ pub struct App {
     /// Groups of channels opened or closed by hand: (Input id, first
     /// channel) → open (board 36).
     groups_open: BTreeMap<(String, u8), bool>,
+    /// The config error the banner was dismissed for (board 47); a new
+    /// one shows again.
+    dismissed_error: Option<String>,
 }
 
 /// The sidebar id of the draft Cable (a config id has no `+`).
@@ -222,6 +225,7 @@ pub fn install(
         holders: BTreeMap::new(),
         undo: None,
         groups_open: BTreeMap::new(),
+        dismissed_error: None,
         picker: None,
         picking: Picking::Input,
         options: None,
@@ -327,6 +331,10 @@ pub fn install(
         view.on_open_settings(move || c(&App::open_settings));
         let c = call.clone();
         view.on_group_toggled(move |card, first| c(&|a| a.toggle_group(card, first)));
+        let c = call.clone();
+        view.on_open_config(move || c(&|a| a.open_config()));
+        let c = call.clone();
+        view.on_dismiss_config_error(move || c(&App::dismiss_config_error));
         let c = call.clone();
         view.on_restore_link(move || c(&|a| a.resolve_link("restore")));
         let c = call.clone();
@@ -775,6 +783,48 @@ impl App {
             action: action.to_owned(),
         });
         self.refresh();
+    }
+
+    /// Board 47's banner: the config file's first error, unless dismissed.
+    fn config_error_text(&self, words: &Words) -> SharedString {
+        let Some(e) = self.describe.as_ref().and_then(|d| d.config_error.first()) else {
+            return SharedString::new();
+        };
+        let text = match &e.location {
+            Some(l) => words.invoke_config_error_at(
+                l.file.as_str().into(),
+                i32::try_from(l.line).unwrap_or(0),
+                e.message.as_str().into(),
+            ),
+            None => words.invoke_config_error(e.message.as_str().into()),
+        };
+        if self.dismissed_error.as_deref() == Some(text.as_str()) {
+            return SharedString::new();
+        }
+        text
+    }
+
+    /// Board 47: hides the banner until another error comes.
+    fn dismiss_config_error(&mut self) {
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            self.dismissed_error = Some(view.get_config_error().to_string());
+            view.set_config_error("".into());
+        }
+    }
+
+    /// Board 47: the config file in the desktop's editor (`xdg-open`).
+    fn open_config(&self) {
+        let Some(file) = self.describe.as_ref().map(|d| d.config_file.clone()) else {
+            return;
+        };
+        let file = match (file.strip_prefix("~/"), std::env::var_os("HOME")) {
+            (Some(rest), Some(home)) => {
+                std::path::Path::new(&home).join(rest).display().to_string()
+            }
+            _ => file,
+        };
+        self.actions.send(Command::Open(file));
     }
 
     /// Board 39's banner text for the selected Junction, if a link of it
@@ -1917,6 +1967,7 @@ impl App {
                 view.set_selected(m.id.as_str().into());
                 self.show_cable();
                 view.set_overridden(self.overridden_text(&w.global::<Words>()));
+                view.set_config_error(self.config_error_text(&w.global::<Words>()));
             }
             None => {
                 view.set_selected("".into());

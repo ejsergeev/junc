@@ -119,6 +119,9 @@ struct Fixture {
     /// Notices juncd sends once the window is up (boards 38, 39).
     #[serde(default)]
     notice: Vec<NoticeFixture>,
+    /// The config file on disk does not validate (board 47).
+    #[serde(default)]
+    config_error: Option<ConfigErrorFixture>,
     /// Input channels ALSA reports for the graph's USB cards whatever the
     /// profile (board 35: "2 of 18 channels").
     #[serde(default)]
@@ -133,6 +136,14 @@ struct Fixture {
     link: Option<String>,
     #[serde(default)]
     link_keys: bool,
+}
+
+/// A config error: where and what.
+#[derive(Debug, Deserialize, Clone)]
+#[serde(deny_unknown_fields)]
+struct ConfigErrorFixture {
+    line: usize,
+    message: String,
 }
 
 /// A `Notice` signal: its kind and JSON body.
@@ -365,7 +376,24 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         title: f.title,
         theme: f.theme.unwrap_or_else(|| "dark".to_owned()),
         size: f.size.map_or((1440, 900), |[w, h]| (w, h)),
-        describe: config.as_ref().map(|c| settle(c, graph.clone(), &state)),
+        describe: config.as_ref().map(|c| {
+            let mut d = settle(c, graph.clone(), &state);
+            // Board 47: a hand edit that does not validate.
+            if let Some(e) = &f.config_error {
+                d.config_error.push(view::Diag {
+                    code: junc_core::diag::codes::UNKNOWN_KEY.to_owned(),
+                    severity: "error".to_owned(),
+                    message: e.message.clone(),
+                    location: Some(view::Loc {
+                        file: "junctions.toml".to_owned(),
+                        line: e.line,
+                        column: 1,
+                    }),
+                    hint: None,
+                });
+            }
+            d
+        }),
         hover: f.hover,
         hide_listen: f.hide_listen,
         select: f.select,
@@ -425,6 +453,8 @@ struct MockState {
     import_asked: bool,
     /// How the window answered a link_overridden notice.
     resolved: Option<String>,
+    /// What the window last opened with xdg-open.
+    opened: Option<String>,
 }
 
 impl std::fmt::Debug for Mock {
@@ -451,6 +481,7 @@ impl Mock {
                 importables: s.importables.clone(),
                 import_asked: false,
                 resolved: None,
+                opened: None,
             })),
         }
     }
@@ -495,6 +526,11 @@ impl Mock {
         self.inner.borrow().copied.clone()
     }
 
+    /// What the window last opened with xdg-open (board 47).
+    pub fn opened(&self) -> Option<String> {
+        self.inner.borrow().opened.clone()
+    }
+
     /// How the window answered a link_overridden notice (board 39).
     pub fn resolved(&self) -> Option<String> {
         self.inner.borrow().resolved.clone()
@@ -530,6 +566,7 @@ impl Actions for Mock {
                 Command::Check => s.checking = true,
                 Command::Copy(text) => s.copied = Some(text.clone()),
                 Command::OpenLogs => s.logs_opened = true,
+                Command::Open(what) => s.opened = Some(what.clone()),
                 Command::ResolveLink { action, .. } => s.resolved = Some(action.clone()),
                 Command::ImportScan => s.import_asked = true,
                 Command::Import(items) => {

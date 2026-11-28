@@ -32,6 +32,13 @@ export global Words {
     public pure function bluetooth-note() -> string { @tr("Its mic switches the headset to the call profile (HFP): playback drops to call quality.") }
     public pure function add-anyway() -> string { @tr("Add anyway") }
     public pure function choose-another-mic() -> string { @tr("Choose another mic") }
+    // TRANSLATORS: board 47's banner: the file, the line, juncd's message.
+    public pure function config-error-at(file: string, line: int, message: string) -> string {
+        @tr("Config error in {0} line {1}: {2}. Using last good config.", file, line, message)
+    }
+    public pure function config-error(message: string) -> string {
+        @tr("Config error: {0}. Using last good config.", message)
+    }
     // TRANSLATORS: board 38's toast; {0} is the device now the default.
     public pure function default-input-restored(device: string) -> string { @tr("Default input restored to {0}", device) }
     public pure function default-output-restored(device: string) -> string { @tr("Default output restored to {0}", device) }
@@ -215,6 +222,8 @@ export global View {
     in-out property <bool> defaults-open;
     // Board 39: a link another tool removed, for the selected Junction.
     in-out property <string> overridden;
+    // Board 47: the config file's error, the banner's text.
+    in-out property <string> config-error;
     // Board 38: the toast, and whether it can undo.
     in-out property <string> toast;
     in-out property <bool> toast-undo;
@@ -277,6 +286,9 @@ export global View {
     // Board 39: put the link back, or leave it removed.
     callback restore-link();
     callback leave-link();
+    // Board 47.
+    callback open-config();
+    callback dismiss-config-error();
     // Board 38.
     callback undo-default();
     callback toast-dismissed();

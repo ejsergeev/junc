@@ -205,6 +205,11 @@ export component AppWindow inherits Window {
                 View.renaming = true;
                 return accept;
             }
+            // Board 47: Esc dismisses a config error's banner.
+            if e.text == Key.Escape && View.config-error != "" {
+                View.dismiss-config-error();
+                return accept;
+            }
             // Board 39: Enter puts a removed link back.
             if e.text == "\n" && View.overridden != "" && !e.modifiers.control {
                 View.restore-link();
@@ -494,6 +499,9 @@ export component AppWindow inherits Window {
             defaults-open <=> View.defaults-open;
             defaults-closed => { shortcuts.focus(); }
             overridden: View.overridden;
+            config-error: View.config-error;
+            open-config => { View.open-config(); }
+            dismiss-config-error => { View.dismiss-config-error(); }
             restore-link => { View.restore-link(); }
             leave-link => { View.leave-link(); }
             turn-on => { View.junction-toggled(View.selected, true); }
