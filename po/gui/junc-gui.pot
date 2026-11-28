@@ -112,6 +112,10 @@ msgstr ""
 msgid "Undo"
 msgstr ""
 
+#: crates/junc-gui/ui/app.slint
+msgid "What's new"
+msgstr ""
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
 msgid "Dismiss"
 msgstr ""
@@ -1030,6 +1034,10 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "JUNC updated to {0} · audio kept running"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint

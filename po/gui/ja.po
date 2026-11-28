@@ -121,6 +121,10 @@ msgstr "あるアプリの音を別のアプリへ直接"
 msgid "Undo"
 msgstr "元に戻す"
 
+#: crates/junc-gui/ui/app.slint
+msgid "What's new"
+msgstr "新機能"
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint crates/junc-gui/ui/screens/main.slint
 msgid "Dismiss"
 msgstr "閉じる"
@@ -1036,6 +1040,10 @@ msgstr "それでも追加"
 #: crates/junc-gui/ui/view.slint
 msgid "Choose another mic"
 msgstr "別のマイクを選ぶ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "JUNC updated to {0} · audio kept running"
+msgstr "JUNC を {0} に更新しました · 音声は途切れていません"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Config error in {0} line {1}: {2}. Using last good config."
