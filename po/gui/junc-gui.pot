@@ -4,6 +4,14 @@ msgstr ""
 "Project-Id-Version: junc-gui\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Default input"
+msgstr ""
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Default output"
+msgstr ""
+
 #: crates/junc-gui/ui/app.slint
 msgid "Off · apps see silence"
 msgstr ""
@@ -472,6 +480,22 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Remove input"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Default device"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Use as default input"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Use as default output"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Apps that follow the system default use this Junction. Turning it off or deleting it restores the previous default."
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint

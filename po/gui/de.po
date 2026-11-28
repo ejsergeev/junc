@@ -13,6 +13,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Default input"
+msgstr "Standardeingang"
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Default output"
+msgstr "Standardausgang"
+
 #: crates/junc-gui/ui/app.slint
 msgid "Off · apps see silence"
 msgstr "Aus · Apps hören Stille"
@@ -482,6 +490,22 @@ msgstr "Kanal {0} speist"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Remove input"
 msgstr "Eingang entfernen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Default device"
+msgstr "Standardgerät"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Use as default input"
+msgstr "Als Standardeingang nutzen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Use as default output"
+msgstr "Als Standardausgang nutzen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Apps that follow the system default use this Junction. Turning it off or deleting it restores the previous default."
+msgstr "Apps, die dem Systemstandard folgen, nutzen diese Junction. Ausschalten oder Löschen stellt den vorherigen Standard wieder her."
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "{n} App"

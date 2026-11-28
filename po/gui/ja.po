@@ -13,6 +13,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Default input"
+msgstr "既定の入力"
+
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/main.slint
+msgid "Default output"
+msgstr "既定の出力"
+
 #: crates/junc-gui/ui/app.slint
 msgid "Off · apps see silence"
 msgstr "オフ · アプリには無音"
@@ -481,6 +489,22 @@ msgstr "チャンネル {0} の送り先"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Remove input"
 msgstr "入力を削除"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Default device"
+msgstr "既定のデバイス"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Use as default input"
+msgstr "既定の入力として使う"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Use as default output"
+msgstr "既定の出力として使う"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Apps that follow the system default use this Junction. Turning it off or deleting it restores the previous default."
+msgstr "システムの既定に従うアプリはこのジャンクションを使います。オフにするか削除すると、以前の既定に戻ります。"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "{n} App"
