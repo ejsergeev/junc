@@ -506,6 +506,8 @@ pub fn install(
     {
         let c = call.clone();
         view.on_picker_picked(move |i| c(&|a| a.pick(i)));
+        let c = call.clone();
+        view.on_picker_picked_alt(move |i| c(&|a| a.pick_alt(i)));
     }
     {
         let c = call.clone();
@@ -845,6 +847,7 @@ impl App {
                     },
                     added: false,
                     icon: SharedString::new(),
+                    ..ui::PickerItem::default()
                 }
             })
             .collect();
@@ -1288,6 +1291,35 @@ impl App {
         self.actions.send(Command::Edit {
             junction: m.id.clone(),
             edit,
+        });
+        self.close_picker();
+    }
+
+    /// A row's alternative (Shift+Enter): all of a card's channels in Pro
+    /// Audio (board 35), or a Bluetooth headset mic despite the call
+    /// profile (board 40).
+    fn pick_alt(&mut self, i: i32) {
+        let (Some((entries, shown)), Some(m)) = (&self.picker, &self.main) else {
+            return;
+        };
+        let Some(e) = usize::try_from(i)
+            .ok()
+            .and_then(|i| shown.get(i))
+            .and_then(|&i| entries.get(i))
+        else {
+            return;
+        };
+        let matcher = match (&e.offer, &e.pick) {
+            (picker::Offer::ProAudio { matcher, .. }, _) => (**matcher).clone(),
+            (picker::Offer::Bluetooth { .. }, Pick::Input(m)) => m.clone(),
+            _ => return,
+        };
+        self.actions.send(Command::Edit {
+            junction: m.id.clone(),
+            edit: Edit::AddInput {
+                matcher: Box::new(matcher),
+                label: e.label.clone(),
+            },
         });
         self.close_picker();
     }

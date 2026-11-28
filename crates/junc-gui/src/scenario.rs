@@ -119,6 +119,13 @@ struct Fixture {
     /// Notices juncd sends once the window is up (boards 38, 39).
     #[serde(default)]
     notice: Vec<NoticeFixture>,
+    /// Input channels ALSA reports for the graph's USB cards whatever the
+    /// profile (board 35: "2 of 18 channels").
+    #[serde(default)]
+    usb_capture: Option<u32>,
+    /// The picker's cursor on the row with this text (boards 35, 40).
+    #[serde(default)]
+    cursor_on: Option<String>,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -217,6 +224,7 @@ pub struct Scenario {
     pub default_role: Option<String>,
     pub defaults: bool,
     pub notices: Vec<NoticeFixture>,
+    pub cursor_on: Option<String>,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -288,6 +296,18 @@ pub fn load(name: &str) -> Result<Scenario, String> {
     }
     if let Some(out) = &f.default_output {
         graph.defaults.sink = Some(out.clone());
+    }
+    if let Some(n) = f.usb_capture {
+        for d in graph
+            .devices
+            .values_mut()
+            .filter(|d| d.props.get("device.api") == Some("alsa"))
+        {
+            d.usb_channels = Some(junc_core::proaudio::UsbChannels {
+                playback: n,
+                capture: n,
+            });
+        }
     }
     let config = if state == "down" {
         None
@@ -365,6 +385,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         default_role: f.default_role,
         defaults: f.defaults,
         notices: f.notice,
+        cursor_on: f.cursor_on,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -695,7 +716,7 @@ pub fn open(
     meters: Option<Rc<crate::meter_service::MeterService>>,
     levels: crate::meter_service::Levels,
 ) -> (Rc<RefCell<App>>, Mock) {
-    use slint::ComponentHandle;
+    use slint::{ComponentHandle, Model};
     let mock = Mock::new(s);
     let app = crate::app::install(window, Rc::new(mock.clone()), meters, levels);
     mock.attach(&app);
@@ -727,6 +748,15 @@ pub fn open(
     }
     if s.picker {
         app.borrow_mut().open_picker();
+    }
+    if let Some(text) = &s.cursor_on {
+        let view = window.global::<crate::ui::View>();
+        let items = view.get_picker_items();
+        if let Some(i) = (0..items.row_count())
+            .find(|&i| items.row_data(i).is_some_and(|r| r.text == text.as_str()))
+        {
+            view.set_picker_cursor(i32::try_from(i).unwrap_or(0));
+        }
     }
     if s.listen_picker {
         app.borrow_mut().open_listen_picker();

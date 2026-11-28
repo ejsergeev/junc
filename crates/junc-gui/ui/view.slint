@@ -23,6 +23,15 @@ export global Words {
     public pure function capturing(apps: string) -> string { @tr("Capturing: {0}", apps) }
     public pure function open-junc() -> string { @tr("Open JUNC") }
     public pure function quit() -> string { @tr("Quit") }
+    // TRANSLATORS: the Add Input picker's offers (design boards 35, 40).
+    public pure function of-channels(now: int, all: int) -> string { @tr("{0} of {1} channels", now, all) }
+    public pure function more-in-pro-audio() -> string { @tr("more in Pro Audio") }
+    public pure function pro-audio-note() -> string { @tr("Switches the device to the Pro Audio profile") }
+    public pure function use-all-channels() -> string { @tr("Use all channels") }
+    public pure function bluetooth-playback() -> string { @tr("A2DP · hi-fi playback") }
+    public pure function bluetooth-note() -> string { @tr("Its mic switches the headset to the call profile (HFP): playback drops to call quality.") }
+    public pure function add-anyway() -> string { @tr("Add anyway") }
+    public pure function choose-another-mic() -> string { @tr("Choose another mic") }
     // TRANSLATORS: board 38's toast; {0} is the device now the default.
     public pure function default-input-restored(device: string) -> string { @tr("Default input restored to {0}", device) }
     public pure function default-output-restored(device: string) -> string { @tr("Default output restored to {0}", device) }
@@ -322,5 +331,7 @@ export global View {
     callback options-remove();
     callback picker-search-edited(string);
     callback picker-picked(int);
+    // Boards 35, 40: the row's alternative (Shift+Enter).
+    callback picker-picked-alt(int);
     callback picker-closed();
 }

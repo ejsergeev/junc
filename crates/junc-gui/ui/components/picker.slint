@@ -11,6 +11,7 @@
 // what to do when the one sought is missing (board 17).
 
 import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
 import { ControlState } from "state.slint";
 
 export struct PickerItem {
@@ -21,6 +22,14 @@ export struct PickerItem {
     added: bool,
     // A Nerd Font glyph before the text; "" for none.
     icon: string,
+    // Shown under the row while the cursor is on it (boards 35, 40); a
+    // warning holds Enter, so the row needs its alternative.
+    note: string,
+    warn: bool,
+    // The alternative pick (Shift+Enter) and, for a warning, the way back
+    // to the rows above (↑).
+    alt: string,
+    back: string,
 }
 
 export component JPicker inherits Rectangle {
@@ -39,6 +48,8 @@ export component JPicker inherits Rectangle {
     in-out property <string> search;
     in-out property <int> cursor: 0;
     callback picked(int);
+    // The row's alternative: Use all channels, Add anyway (Shift+Enter).
+    callback picked-alt(int);
     callback closed();
     callback search-edited(string);
 
@@ -54,8 +65,13 @@ export component JPicker inherits Rectangle {
         root.cursor = clamp(root.cursor + d, 0, max(0, root.items.length - 1));
     }
     function choose() {
-        if root.cursor < root.items.length && !root.items[root.cursor].added {
+        if root.cursor < root.items.length && !root.items[root.cursor].added && !root.items[root.cursor].warn {
             root.picked(root.cursor);
+        }
+    }
+    function choose-alt() {
+        if root.cursor < root.items.length && !root.items[root.cursor].added && root.items[root.cursor].alt != "" {
+            root.picked-alt(root.cursor);
         }
     }
 
@@ -98,6 +114,7 @@ export component JPicker inherits Rectangle {
                 key-pressed(e) => {
                     if e.text == Key.DownArrow { root.step(1); return accept; }
                     if e.text == Key.UpArrow { root.step(-1); return accept; }
+                    if e.text == "\n" && e.modifiers.shift { root.choose-alt(); return accept; }
                     if e.text == "\n" { root.choose(); return accept; }
                     if e.text == Key.Escape { root.closed(); return accept; }
                     // Focus trap: Tab stays in the picker.
@@ -186,6 +203,50 @@ export component JPicker inherits Rectangle {
                         color: Tokens.text-subtle;
                         font-size: Tokens.type-body-small;
                         accessible-role: none;
+                    }
+                }
+            }
+            // Boards 35, 40: what the row means, under it while chosen.
+            if item.note != "" && i == root.cursor && !item.added: Rectangle {
+                border-width: Tokens.border;
+                border-color: Tokens.control-hover-border;
+                VerticalLayout {
+                    padding: 10px * Tokens.scale;
+                    padding-left: 32px * Tokens.scale;
+                    spacing: 8px * Tokens.scale;
+                    HorizontalLayout {
+                        spacing: 6px;
+                        if item.warn: Text {
+                            text: "\u{f0026}";
+                            color: Tokens.status-warn;
+                            font-size: Tokens.type-body-small;
+                            accessible-role: none;
+                        }
+                        Text {
+                            text: item.note;
+                            color: item.warn ? Tokens.status-warn : Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            wrap: word-wrap;
+                            horizontal-stretch: 1;
+                        }
+                    }
+                    if item.alt != "": HorizontalLayout {
+                        alignment: start;
+                        JButton {
+                            text: item.alt;
+                            shortcut: "Shift+Enter";
+                            show-key: true;
+                            clicked => { root.picked-alt(i); }
+                        }
+                    }
+                    if item.back != "": HorizontalLayout {
+                        alignment: start;
+                        JButton {
+                            text: item.back;
+                            shortcut: "↑";
+                            show-key: true;
+                            clicked => { root.step(-1); field.focus(); }
+                        }
                     }
                 }
             }

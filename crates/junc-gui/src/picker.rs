@@ -53,6 +53,25 @@ pub struct Entry {
     /// The Junction already has an Input or Listen output taking this.
     pub added: bool,
     pub pick: Pick,
+    /// What the row says when the cursor is on it (boards 35, 40).
+    pub offer: Offer,
+}
+
+/// More about a hardware input, shown under its row.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub enum Offer {
+    #[default]
+    None,
+    /// The card gives more inputs in Pro Audio (F15, board 35): `now` of
+    /// `all` channels; the alternative pick takes them all.
+    ProAudio {
+        now: u32,
+        all: Option<u32>,
+        matcher: Box<Match>,
+    },
+    /// A Bluetooth headset mic that switches the headset to its call
+    /// profile (F18, board 40); adding it needs Shift+Enter.
+    Bluetooth { profile: String },
 }
 
 impl Entry {
@@ -97,6 +116,34 @@ fn fed_by(d: &Describe, id: &str) -> BTreeSet<String> {
     found
 }
 
+/// The Pro Audio offer of the sound card capture node `node` belongs to:
+/// ALSA names the node `alsa_input.<card>.<profile>` and the card
+/// `alsa_card.<card>` (board 35).
+fn pro_audio(d: &Describe, node: &str) -> Offer {
+    let Some(card) = node
+        .strip_prefix("alsa_input.")
+        .and_then(|rest| rest.rsplit_once('.').map(|(card, _)| card))
+    else {
+        return Offer::None;
+    };
+    d.devices
+        .iter()
+        .find(|dev| dev.name.strip_prefix("alsa_card.") == Some(card))
+        .and_then(|dev| {
+            let o = dev.pro_audio?;
+            Some(Offer::ProAudio {
+                now: o.now,
+                all: o.all,
+                matcher: Box::new(Match {
+                    device: Some(dev.name.clone()),
+                    profile: Some(junc_core::proaudio::PRO_AUDIO.to_owned()),
+                    ..Match::default()
+                }),
+            })
+        })
+        .unwrap_or_default()
+}
+
 /// The rows for Junction `junction`, grouped and sorted by name.
 pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
     let Some(me) = d.junctions.iter().find(|j| j.id == junction) else {
@@ -104,7 +151,7 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
     };
     let added = |m: &Match| me.inputs.iter().any(|i| same(&i.matcher, m));
     let mut out: Vec<Entry> = Vec::new();
-    let mut push = |group: Group, label: String, matcher: Match, cable: bool| {
+    let mut push = |group: Group, label: String, matcher: Match, cable: bool, offer: Offer| {
         if out
             .iter()
             .any(|e| e.group == group && e.matcher().is_some_and(|m| same(m, &matcher)))
@@ -122,6 +169,7 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
             cable,
             added: added(&matcher),
             pick: Pick::Input(matcher),
+            offer,
         });
     };
     for c in &d.candidates {
@@ -135,21 +183,39 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
                     app: c.binary.is_none().then(|| name.clone()),
                     ..Match::default()
                 };
-                push(Group::Apps, name, matcher, false);
+                push(Group::Apps, name, matcher, false, Offer::None);
             }
             "source" => {
                 let matcher = Match {
                     device: Some(c.node.clone()),
                     ..Match::default()
                 };
-                push(Group::Hardware, c.description.clone(), matcher, false);
+                let offer = match &c.bluetooth {
+                    Some(b) if b.switches_to_call => Offer::Bluetooth {
+                        profile: b.profile.clone().unwrap_or_default(),
+                    },
+                    _ => pro_audio(d, &c.node),
+                };
+                push(
+                    Group::Hardware,
+                    c.description.clone(),
+                    matcher,
+                    false,
+                    offer,
+                );
             }
             "sink" => {
                 let matcher = Match {
                     monitor: Some(c.node.clone()),
                     ..Match::default()
                 };
-                push(Group::System, c.description.clone(), matcher, false);
+                push(
+                    Group::System,
+                    c.description.clone(),
+                    matcher,
+                    false,
+                    Offer::None,
+                );
             }
             _ => {}
         }
@@ -168,6 +234,7 @@ pub fn entries(d: &Describe, junction: &str) -> Vec<Entry> {
             j.name.clone(),
             matcher,
             j.kind == junc_core::model::Kind::Cable,
+            Offer::None,
         );
     }
     out.sort_by_key(|a| (a.group, a.label.to_lowercase()));
@@ -195,6 +262,7 @@ pub fn outputs(d: &Describe, junction: &str) -> Vec<Entry> {
         cable: false,
         added: me.listens.iter().any(|l| l.target == "default"),
         pick: Pick::Listen("default".into()),
+        offer: Offer::None,
     }];
     let mut devices: Vec<Entry> = d
         .candidates
@@ -215,6 +283,7 @@ pub fn outputs(d: &Describe, junction: &str) -> Vec<Entry> {
             cable: false,
             added: goes_to(&c.node),
             pick: Pick::Listen(c.node.clone()),
+            offer: Offer::None,
         })
         .collect();
     devices.sort_by_key(|e| e.label.to_lowercase());
@@ -263,6 +332,7 @@ pub fn cable_apps(d: &Describe, junction: &str, to: bool) -> Vec<Entry> {
             } else {
                 Pick::CableFrom(matcher)
             },
+            offer: Offer::None,
         });
     }
     out.sort_by_key(|e| e.label.to_lowercase());

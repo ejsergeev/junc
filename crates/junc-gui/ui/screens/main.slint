@@ -564,6 +564,7 @@ export component MainScreen inherits Rectangle {
     callback add-bus-closed();
     callback picker-search-edited(string);
     callback picker-picked(int);
+    callback picker-picked-alt(int);
     callback picker-closed();
 
     background: Tokens.surface-window;
@@ -975,6 +976,7 @@ export component MainScreen inherits Rectangle {
             init => { self.open(); }
             search-edited(t) => { root.picker-search-edited(t); }
             picked(i) => { root.picker-picked(i); }
+            picked-alt(i) => { root.picker-picked-alt(i); }
             closed => { root.picker-closed(); }
         }
     }

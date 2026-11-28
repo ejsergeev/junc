@@ -6,10 +6,10 @@
 use crate::layout::{Layout, Point, Rect, row_centre};
 use crate::main_view::{self, Card, CardState, End, Icon, Main};
 use crate::meter_service::Slot;
-use crate::picker::{Entry, Group};
+use crate::picker::{Entry, Group, Offer};
 use crate::state::Row;
 use crate::theme::{self, Color};
-use slint::{ModelRc, VecModel};
+use slint::{ModelRc, SharedString, VecModel};
 
 /// The code Slint generates from `ui/app.slint`; the workspace lints do
 /// not apply to it.
@@ -182,16 +182,49 @@ pub fn picker(words: &Words<'_>, entries: &[Entry], shown: &[usize]) -> Vec<Pick
             } else {
                 e.label.as_str().into()
             };
+            let (detail, note, warn, alt, back) = match &e.offer {
+                Offer::ProAudio { now, all, .. } => (
+                    match all {
+                        Some(all) => words.invoke_of_channels(
+                            i32::try_from(*now).unwrap_or(0),
+                            i32::try_from(*all).unwrap_or(0),
+                        ),
+                        None => words.invoke_more_in_pro_audio(),
+                    },
+                    words.invoke_pro_audio_note(),
+                    false,
+                    words.invoke_use_all_channels(),
+                    SharedString::new(),
+                ),
+                Offer::Bluetooth { .. } => (
+                    words.invoke_bluetooth_playback(),
+                    words.invoke_bluetooth_note(),
+                    true,
+                    words.invoke_add_anyway(),
+                    words.invoke_choose_another_mic(),
+                ),
+                Offer::None => (
+                    if e.cable {
+                        words.invoke_cable()
+                    } else {
+                        SharedString::new()
+                    },
+                    SharedString::new(),
+                    false,
+                    SharedString::new(),
+                    SharedString::new(),
+                ),
+            };
             PickerItem {
                 group: group.into(),
                 text,
-                detail: if e.cable {
-                    words.invoke_cable()
-                } else {
-                    "".into()
-                },
+                detail,
                 added: e.added,
                 icon: glyph(e.icon).into(),
+                note,
+                warn,
+                alt,
+                back,
             }
         })
         .collect()

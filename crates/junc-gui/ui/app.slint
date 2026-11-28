@@ -585,6 +585,7 @@ export component AppWindow inherits Window {
             add-bus-closed => { shortcuts.focus(); }
             picker-search-edited(t) => { View.picker-search-edited(t); }
             picker-picked(i) => { View.picker-picked(i); }
+            picker-picked-alt(i) => { View.picker-picked-alt(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
         }
         if !View.settings-open && View.selected == "" && View.daemon-state != "down" && View.daemon-state != "waiting_for_pipewire": EmptyNone {
