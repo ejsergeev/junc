@@ -99,6 +99,15 @@ immediately; there is no dry run for them.
 - Destructive commands need `--yes` (`junc delete`); pass it only after the
   user confirmed in the conversation.
 
+## Omarchy
+
+`junc omarchy install` adds the JUNC bar module (Junctions on, the capture
+dot, a switch for each) and an "Audio routing · JUNC" row under Setup in
+the Omarchy menu; `junc omarchy uninstall` takes both out again and
+`junc omarchy status` shows what is there. It changes the user's desktop:
+ask first. JUNC binds no key; if the user wants one, suggest Super+Shift+J
+for `junc-gui` (free in Omarchy's defaults) and let them add it.
+
 ## Reading results
 
 Every command with `--json` prints one document:
