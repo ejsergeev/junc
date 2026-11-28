@@ -17,1047 +17,892 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Junc-Machine-Drafted: yes\n"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "not running"
 msgstr "実行されていません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
-msgid ""
-"the config file has an error ({at}{msg}); the last good config is in use"
+msgid "the config file has an error ({at}{msg}); the last good config is in use"
 msgstr "設定ファイルにエラーがあります ({at}{msg})。最後に正常だった設定を使っています"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "running {v}, connected to PipeWire, config revision {rev}"
 msgstr "{v} を実行中、PipeWire に接続済み、設定リビジョン {rev}"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "running, but {state}"
 msgstr "実行中ですが {state}"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "running {v}; JUNC needs 1.0 or newer"
 msgstr "{v} を実行中。JUNC には 1.0 以降が必要です"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "running {v}"
 msgstr "{v} を実行中"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "installed but not running"
 msgstr "インストール済みですが実行されていません"
 
-#. machine-drafted
-#: crates/junc-cli/src/doctor.rs
+#: crates/junc-cli/src/doctor.rs crates/junc-cli/src/human.rs
 msgid "not installed"
 msgstr "インストールされていません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "running"
 msgstr "実行中"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "installed but not running; {why}"
 msgstr "インストール済みですが実行されていません。{why}"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "not installed; {why}"
 msgstr "インストールされていません。{why}"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "pipewire-jack: JACK apps go through PipeWire"
 msgstr "pipewire-jack: JACK アプリは PipeWire を通ります"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
-msgid ""
-"jack2 is installed: JACK apps bypass PipeWire and cannot be routed; replace "
-"it with pipewire-jack (pacman offers to remove jack2)"
+msgid "jack2 is installed: JACK apps bypass PipeWire and cannot be routed; replace it with pipewire-jack (pacman offers to remove jack2)"
 msgstr "jack2 がインストールされています: JACK アプリは PipeWire を通らないためルーティングできません。pipewire-jack に置き換えてください (pacman が jack2 の削除を提案します)"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "no JACK library; only JACK apps need one"
 msgstr "JACK ライブラリはありません。必要なのは JACK アプリだけです"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "cannot tell which JACK library is installed (no pacman)"
 msgstr "どの JACK ライブラリがインストールされているか判別できません (pacman がありません)"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "cannot read the PipeWire settings"
 msgstr "PipeWire の設定を読めません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "no clock settings found"
 msgstr "クロック設定が見つかりません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "{rate} Hz, quantum {q} ({ms} ms)"
 msgstr "{rate} Hz、クォンタム {q} ({ms} ms)"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "; forced with pw-metadata"
 msgstr "。pw-metadata で固定"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "cannot read the devices' sample rates"
 msgstr "デバイスのサンプルレートを読めません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "no clock rate found"
 msgstr "クロックレートが見つかりません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "{rate}; no hardware devices"
 msgstr "{rate}。ハードウェアデバイスはありません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "every hardware device can run at {rate}"
 msgstr "すべてのハードウェアデバイスが {rate} で動作できます"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "{device} runs at {own}, the graph at {rate}: audio is resampled"
 msgstr "{device} は {own}、グラフは {rate} で動作しています: 音声はリサンプリングされます"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "no Asahi DSP in front of the speakers: they sound thin and quiet"
 msgstr "スピーカーの前に Asahi DSP がありません: 音が薄く小さくなります"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "speakersafetyd is not running: the speakers stay quiet to protect them"
 msgstr "speakersafetyd が実行されていません: スピーカー保護のため音量が抑えられます"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
-msgid ""
-"speakersafetyd is not installed: the speakers stay quiet to protect them"
+msgid "speakersafetyd is not installed: the speakers stay quiet to protect them"
 msgstr "speakersafetyd がインストールされていません: スピーカー保護のため音量が抑えられます"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 #, rust-format
 msgid "the speakers play through the Asahi DSP ({dsp}); speakersafetyd running"
 msgstr "スピーカーは Asahi DSP ({dsp}) を通して再生されます。speakersafetyd 実行中"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "nothing gets connected without it"
 msgstr "これがないと何も接続されません"
 
-#. machine-drafted
 #: crates/junc-cli/src/doctor.rs
 msgid "apps that use PulseAudio cannot be routed"
 msgstr "PulseAudio を使うアプリをルーティングできません"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "Did you mean '{s}'?"
 msgstr "'{s}' のことですか?"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs crates/junc-cli/src/main.rs
 #, rust-format
 msgid "No Junction called '{name}'."
 msgstr "'{name}' という Junction はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "Several Junctions are called '{name}'."
 msgstr "'{name}' という Junction が複数あります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' has no Input '{id}'."
 msgstr "'{j}' に Input '{id}' はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' has no Listen output '{id}'."
 msgstr "'{j}' に Listen 出力 '{id}' はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "{from} to {to}"
 msgstr "{from} から {to}"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "{name} copy"
 msgstr "{name} のコピー"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' already has an Input '{id}'."
 msgstr "'{j}' にはすでに Input '{id}' があります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' already has a Listen output '{id}'."
 msgstr "'{j}' にはすでに Listen 出力 '{id}' があります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' has channels 1 to {n}; there is no channel {ch}."
 msgstr "'{j}' のチャンネルは 1〜{n} です。チャンネル {ch} はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' needs at least one Bus channel."
 msgstr "'{j}' には少なくとも 1 つの Bus チャンネルが必要です。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{t}' is not a channel number."
 msgstr "'{t}' はチャンネル番号ではありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{j}' has Bus channels 1 to {n}; there is no channel {b}."
 msgstr "'{j}' の Bus チャンネルは 1〜{n} です。チャンネル {b} はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "There is no link {a} → {b}."
 msgstr "{a} → {b} のリンクはありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
-msgid ""
-"{other} stays the default {role}; make this one the default with: junc "
-"switch {id}"
+msgid "{other} stays the default {role}; make this one the default with: junc switch {id}"
 msgstr "{other} が既定の {role} のままです。こちらを既定にするには: junc switch {id}"
 
-#. machine-drafted
 #: crates/junc-cli/src/edit.rs
 #, rust-format
 msgid "'{id}' is not one app into another, so it cannot be a Cable."
 msgstr "'{id}' はアプリからアプリへの接続ではないため、Cable にはできません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "active"
 msgstr "有効"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "waiting"
 msgstr "待機中"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs crates/junc-cli/src/watch.rs
 msgid "off"
 msgstr "オフ"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "unknown"
 msgstr "不明"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "default input"
 msgstr "既定の入力"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "default output"
 msgstr "既定の出力"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "No Junctions yet. Create one: junc create junction \"Zoom Mic\""
 msgstr "まだ Junction はありません。作成するには: junc create junction \"Zoom Mic\""
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "NAME"
 msgstr "名前"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "ID"
 msgstr "ID"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "STATUS"
 msgstr "状態"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "INPUTS"
 msgstr "入力"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "DEFAULT"
 msgstr "既定"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
-msgid ""
-"The config file has errors; the last good config is in use. See: junc status"
+msgid "The config file has errors; the last good config is in use. See: junc status"
 msgstr "設定ファイルにエラーがあります。最後に正常だった設定を使っています。詳細: junc status"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "juncd {v}: {state}, config revision {rev}, {count}."
 msgstr "juncd {v}: {state}、設定リビジョン {rev}、{count}。"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "{n} Junction"
 msgid_plural "{n} Junctions"
 msgstr[0] "Junction {n} 個"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "Config: {file}"
 msgstr "設定: {file}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "Capturing: {apps}"
 msgstr "取り込み中: {apps}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "hint: {h}"
 msgstr "ヒント: {h}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "app"
 msgstr "アプリ"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "device"
 msgstr "デバイス"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "monitor"
 msgstr "モニター"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "Junction"
 msgstr "Junction"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "volume {p}%"
 msgstr "音量 {p}%"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "{n} Bus channel"
 msgid_plural "{n} Bus channels"
 msgstr[0] "Bus チャンネル {n} 個"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "node {node}"
 msgstr "ノード {node}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "Delivers to {app}: {st}"
 msgstr "{app} へ送信: {st}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "Inputs:"
 msgstr "Input:"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "Listen:"
 msgstr "Listen:"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "at {file}:{line}:{col}"
 msgstr "{file}:{line}:{col}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "Dry run; nothing was changed. Applying would:"
 msgstr "ドライラン。何も変更していません。適用すると次を行います:"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "Applied:"
 msgstr "適用しました:"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "{n} graph action in the first step"
 msgid_plural "{n} graph actions in the first step"
 msgstr[0] "最初の段階のグラフ操作 {n} 件"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "; links follow once the new nodes exist"
 msgstr "。新しいノードができてからリンクします"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "fix: {f}"
 msgstr "修正: {f}"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "No agent skills folders found (~/.claude/skills, ~/.codex/skills, …)."
 msgstr "エージェントのスキルフォルダーが見つかりません (~/.claude/skills、~/.codex/skills など)。"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "linked"
 msgstr "リンク済み"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "not linked"
 msgstr "未リンク"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 msgid "your own junc, kept"
 msgstr "自分の junc のため保持"
 
-#. machine-drafted
+#: crates/junc-cli/src/human.rs crates/junc-cli/src/watch.rs
+msgid "on"
+msgstr "オン"
+
+#: crates/junc-cli/src/human.rs
+msgid "a folder of your own with JUNC's id, kept"
+msgstr "JUNC と同じ ID のユーザー独自のフォルダー(そのまま保持)"
+
+#: crates/junc-cli/src/human.rs
+msgid "Bar module"
+msgstr "バーモジュール"
+
+#: crates/junc-cli/src/human.rs
+msgid "Menu row"
+msgstr "メニュー項目"
+
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid "Tip: bind {key} to junc-gui in ~/.config/hypr/bindings.lua to open JUNC from anywhere."
+msgstr "ヒント: ~/.config/hypr/bindings.lua で {key} を junc-gui に割り当てると、どこからでも JUNC を開けます。"
+
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "from {list}"
 msgstr "{list} から"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "to {list}"
 msgstr "{list} へ"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "recorded by {list}"
 msgstr "{list} が録音中"
 
-#. machine-drafted
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "suggested: {kind}"
 msgstr "提案: {kind}"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "'{t}' is not a volume."
 msgstr "'{t}' は音量ではありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "cannot read {f}: {e}"
 msgstr "{f} を読めません: {e}"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{file}: valid"
 msgstr "{file}: 有効"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "There is no config schema version {v}."
 msgstr "設定スキーマのバージョン {v} はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{editor} did not finish cleanly"
 msgstr "{editor} が正常に終了しませんでした"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Created {name} ({id})."
 msgstr "{name} ({id}) を作成しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Created a Cable from {from} to {to} ({id})."
 msgstr "{from} から {to} への Cable を作成しました ({id})。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Renamed {old} to {new}."
 msgstr "{old} の名前を {new} に変更しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Created {id} as a copy of {name}."
 msgstr "{name} のコピーとして {id} を作成しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Delete {name}? Its routing stops."
 msgstr "{name} を削除しますか? ルーティングが止まります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Not deleting {name}."
 msgstr "{name} は削除しません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Deleted {name}."
 msgstr "{name} を削除しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Switched to {name} as the default {role}."
 msgstr "{name} を既定の {role} に切り替えました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{name} is no longer a default device."
 msgstr "{name} は既定のデバイスではなくなりました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{name} is now the default {role}."
 msgstr "{name} が既定の {role} になりました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{name} now has {n} Bus channels."
 msgstr "{name} の Bus チャンネルは {n} 個になりました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{name} now plays to {output} ({id})."
 msgstr "{name} は {output} で再生されます ({id})。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Removed Listen output {id} from {name}."
 msgstr "{name} から Listen 出力 {id} を削除しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Turned {name} on."
 msgstr "{name} をオンにしました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Turned {name} off."
 msgstr "{name} をオフにしました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{name} volume {p}%."
 msgstr "{name} の音量 {p}%。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Listen output {id} volume {p}%."
 msgstr "Listen 出力 {id} の音量 {p}%。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Input {id} volume {p}%."
 msgstr "Input {id} の音量 {p}%。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Added Input {id} to {name}."
 msgstr "{name} に Input {id} を追加しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
-msgid ""
-"Note: this is a Bluetooth headset mic. Using it switches the headset to its "
-"call profile, so playback drops to call quality while the mic is in use."
+msgid "Note: this is a Bluetooth headset mic. Using it switches the headset to its call profile, so playback drops to call quality while the mic is in use."
 msgstr "注意: これは Bluetooth ヘッドセットのマイクです。使うとヘッドセットが通話プロファイルに切り替わり、マイクの使用中は再生が通話品質に下がります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Removed Input {id} from {name}."
 msgstr "{name} から Input {id} を削除しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Turned Input {id} on."
 msgstr "Input {id} をオンにしました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Turned Input {id} off."
 msgstr "Input {id} をオフにしました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Linked {from} → {to}."
 msgstr "{from} → {to} をリンクしました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "{from} → {to} was already linked."
 msgstr "{from} → {to} はすでにリンクされています。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "Unlinked {from} → {to}."
 msgstr "{from} → {to} のリンクを解除しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
-msgid ""
-"It was not connected, so its default links were unknown: it now has only the "
-"links you set."
+msgid "It was not connected, so its default links were unknown: it now has only the links you set."
 msgstr "接続されていなかったため既定のリンクが不明でした: 設定したリンクだけになります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 msgid "No null sinks or loopbacks to import."
 msgstr "インポートできる null-sink やループバックはありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "No setup '{id}' to import."
 msgstr "インポートする構成 '{id}' はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
-msgid ""
-"Imported as {ids}. The old setups still run; remove them when the new ones "
-"work."
+msgid "Imported as {ids}. The old setups still run; remove them when the new ones work."
 msgstr "{ids} としてインポートしました。古い構成は動き続けます。新しい構成が動いたら削除してください。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 msgid "Remove all JUNC devices and links and stop juncd? Your config stays."
 msgstr "JUNC のデバイスとリンクをすべて削除し juncd を停止しますか? 設定は残ります。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 msgid "Nothing removed."
 msgstr "何も削除していません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 msgid "juncd still runs (it was started outside systemd)."
 msgstr "juncd はまだ動いています (systemd の外で起動されました)。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 #, rust-format
 msgid "cannot run {juncd}: {e}"
 msgstr "{juncd} を実行できません: {e}"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
 msgid "Some JUNC objects could not be removed."
 msgstr "一部の JUNC オブジェクトを削除できませんでした。"
 
-#. machine-drafted
 #: crates/junc-cli/src/main.rs
-msgid ""
-"JUNC is removed from the audio system. Your config is kept in ~/.config/junc."
+msgid "JUNC is removed from the audio system. Your config is kept in ~/.config/junc."
 msgstr "JUNC をオーディオシステムから取り除きました。設定は ~/.config/junc に残っています。"
 
-#. machine-drafted
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "no JUNC bar plugin at {dir}"
+msgstr "{dir} に JUNC のバープラグインがありません"
+
+#: crates/junc-cli/src/omarchy.rs crates/junc-cli/src/skill.rs
+#, rust-format
+msgid "cannot change {f}: {e}"
+msgstr "{f} を変更できません: {e}"
+
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "no Omarchy settings at {dir}"
+msgstr "{dir} に Omarchy の設定がありません"
+
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "{path} is not JUNC's; it was left alone"
+msgstr "{path} は JUNC のものではないため、変更しませんでした"
+
+#: crates/junc-cli/src/omarchy.rs
+msgid "Audio routing · JUNC"
+msgstr "オーディオルーティング · JUNC"
+
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "cannot find where to add the menu row in {path}"
+msgstr "{path} にメニュー項目を追加する位置が見つかりません"
+
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "No template '{id}'."
 msgstr "テンプレート '{id}' はありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "'{a}' is not ID=VALUE."
 msgstr "'{a}' は ID=VALUE ではありません。"
 
-#. machine-drafted
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "Created {name} ({id}) from {source}."
 msgstr "{source} から {name} ({id}) を作成しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "cannot write {f}: {e}"
 msgstr "{f} に書き込めません: {e}"
 
-#. machine-drafted
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "Exported {name} to {file}."
 msgstr "{name} を {file} に書き出しました。"
 
-#. machine-drafted
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "Tied to this computer's devices: {list}."
 msgstr "このコンピューターのデバイスに依存: {list}。"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 #, rust-format
 msgid "cannot run systemctl: {e}"
 msgstr "systemctl を実行できません: {e}"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 #, rust-format
 msgid "{unit} is not installed"
 msgstr "{unit} はインストールされていません"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 #, rust-format
 msgid "systemctl failed: {m}"
 msgstr "systemctl が失敗しました: {m}"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 msgid "starts at login"
 msgstr "ログイン時に起動"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 msgid "does not start at login (it starts when needed)"
 msgstr "ログイン時には起動しません (必要なときに起動します)"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 #, rust-format
 msgid "juncd {login}; service {active}{daemon}."
 msgstr "juncd は{login}。サービス {active}{daemon}。"
 
-#. machine-drafted
 #: crates/junc-cli/src/service.rs
 #, rust-format
 msgid ", daemon {d}"
 msgstr "、デーモン {d}"
 
-#. machine-drafted
 #: crates/junc-cli/src/skill.rs
 #, rust-format
 msgid "no JUNC skill at {dir}"
 msgstr "{dir} に JUNC スキルはありません"
 
-#. machine-drafted
-#: crates/junc-cli/src/skill.rs
-#, rust-format
-msgid "cannot change {f}: {e}"
-msgstr "{f} を変更できません: {e}"
-
-#. machine-drafted
 #: crates/junc-cli/src/watch.rs
 msgid "capturing: nothing"
 msgstr "取り込み中: なし"
 
-#. machine-drafted
 #: crates/junc-cli/src/watch.rs
 #, rust-format
 msgid "capturing: {apps}"
 msgstr "取り込み中: {apps}"
 
-#. machine-drafted
-#: crates/junc-cli/src/watch.rs
-msgid "on"
-msgstr "オン"
-
-#. machine-drafted
 #: crates/junc-cli/src/watch.rs
 #, rust-format
 msgid "{id}: removed"
 msgstr "{id}: 削除済み"
 
-#. machine-drafted
 #: crates/junc-cli/src/watch.rs
 #, rust-format
 msgid "graph changed ({g})"
 msgstr "グラフが変更されました ({g})"
 
-#. machine-drafted
 #: crates/junc-cli/src/watch.rs
 msgid "juncd is running"
 msgstr "juncd は実行中です"
 
-#. machine-drafted
 #: crates/junc-cli/src/watch.rs
 msgid "juncd stopped"
 msgstr "juncd は停止しました"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "what {out} plays"
 msgstr "{out} が再生するもの"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Junction {id}"
 msgstr "Junction {id}"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 msgid "the default output"
 msgstr "既定の出力"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Turn “{name}” on"
 msgstr "「{name}」をオンにする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Turn “{name}” off"
 msgstr "「{name}」をオフにする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Stop using “{name}” as a default device"
 msgstr "「{name}」を既定のデバイスとして使うのをやめる"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Make “{name}” the default input"
 msgstr "「{name}」を既定の入力にする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Make “{name}” the default output"
 msgstr "「{name}」を既定の出力にする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "{src} at {p}%"
 msgstr "{src} ({p}%)"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "{src}, exclusive (no longer heard on the speakers)"
 msgstr "{src}、排他 (スピーカーでは聞こえなくなります)"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Add {src} to “{name}”, turned off"
 msgstr "{src} を「{name}」に追加 (オフ)"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Add {src} to “{name}”"
 msgstr "{src} を「{name}」に追加"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Add {src} to “{name}” (routed when it appears)"
 msgstr "{src} を「{name}」に追加 (現れたときにルーティング)"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Create Cable “{name}” from {from} to {to}"
 msgstr "{from} から {to} への Cable「{name}」を作成"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Create Junction “{name}” ({n} channel)"
 msgid_plural "Create Junction “{name}” ({n} channels)"
 msgstr[0] "Junction「{name}」を作成 ({n} チャンネル)"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Play “{name}” on {out}"
 msgstr "「{name}」を {out} で再生"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Rename “{old}” to “{new}”"
 msgstr "「{old}」の名前を「{new}」に変更"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Set “{name}” volume to {p}%"
 msgstr "「{name}」の音量を {p}% に設定"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Give “{name}” {n} Bus channel"
 msgid_plural "Give “{name}” {n} Bus channels"
 msgstr[0] "「{name}」の Bus チャンネルを {n} 個にする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Change the settings of “{name}”"
 msgstr "「{name}」の設定を変更"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Turn Input {src} of “{name}” on"
 msgstr "「{name}」の Input {src} をオンにする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Turn Input {src} of “{name}” off"
 msgstr "「{name}」の Input {src} をオフにする"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Set Input {src} of “{name}” to {p}%"
 msgstr "「{name}」の Input {src} を {p}% に設定"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Change how {src} is routed into “{name}”"
 msgstr "{src} を「{name}」にルーティングする方法を変更"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Remove {src} from “{name}”"
 msgstr "{src} を「{name}」から削除"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Change how “{name}” plays on {out}"
 msgstr "「{name}」を {out} で再生する方法を変更"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Stop playing “{name}” on {out}"
 msgstr "「{name}」の {out} での再生を止める"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 #, rust-format
 msgid "Delete “{name}” and its routing"
 msgstr "「{name}」とそのルーティングを削除"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 msgid "No changes"
 msgstr "変更なし"
 
-#. machine-drafted
 #: crates/junc-ipc/src/plan.rs
 msgid "Bring the audio graph in line with the config"
-
 msgstr "オーディオグラフを設定に合わせる"

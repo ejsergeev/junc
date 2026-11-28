@@ -51,7 +51,7 @@ msgstr ""
 msgid "installed but not running"
 msgstr ""
 
-#: crates/junc-cli/src/doctor.rs
+#: crates/junc-cli/src/doctor.rs crates/junc-cli/src/human.rs
 msgid "not installed"
 msgstr ""
 
@@ -406,6 +406,29 @@ msgstr ""
 msgid "your own junc, kept"
 msgstr ""
 
+#: crates/junc-cli/src/human.rs crates/junc-cli/src/watch.rs
+msgid "on"
+msgstr ""
+
+#: crates/junc-cli/src/human.rs
+msgid "a folder of your own with JUNC's id, kept"
+msgstr ""
+
+#: crates/junc-cli/src/human.rs
+msgid "Bar module"
+msgstr ""
+
+#: crates/junc-cli/src/human.rs
+msgid "Menu row"
+msgstr ""
+
+#: crates/junc-cli/src/human.rs
+#, rust-format
+msgid ""
+"Tip: bind {key} to junc-gui in ~/.config/hypr/bindings.lua to open JUNC from "
+"anywhere."
+msgstr ""
+
 #: crates/junc-cli/src/human.rs
 #, rust-format
 msgid "from {list}"
@@ -630,6 +653,35 @@ msgid ""
 "JUNC is removed from the audio system. Your config is kept in ~/.config/junc."
 msgstr ""
 
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "no JUNC bar plugin at {dir}"
+msgstr ""
+
+#: crates/junc-cli/src/omarchy.rs crates/junc-cli/src/skill.rs
+#, rust-format
+msgid "cannot change {f}: {e}"
+msgstr ""
+
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "no Omarchy settings at {dir}"
+msgstr ""
+
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "{path} is not JUNC's; it was left alone"
+msgstr ""
+
+#: crates/junc-cli/src/omarchy.rs
+msgid "Audio routing · JUNC"
+msgstr ""
+
+#: crates/junc-cli/src/omarchy.rs
+#, rust-format
+msgid "cannot find where to add the menu row in {path}"
+msgstr ""
+
 #: crates/junc-cli/src/preset.rs
 #, rust-format
 msgid "No template '{id}'."
@@ -698,11 +750,6 @@ msgstr ""
 msgid "no JUNC skill at {dir}"
 msgstr ""
 
-#: crates/junc-cli/src/skill.rs
-#, rust-format
-msgid "cannot change {f}: {e}"
-msgstr ""
-
 #: crates/junc-cli/src/watch.rs
 msgid "capturing: nothing"
 msgstr ""
@@ -710,10 +757,6 @@ msgstr ""
 #: crates/junc-cli/src/watch.rs
 #, rust-format
 msgid "capturing: {apps}"
-msgstr ""
-
-#: crates/junc-cli/src/watch.rs
-msgid "on"
 msgstr ""
 
 #: crates/junc-cli/src/watch.rs
