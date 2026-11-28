@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 37)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -746,4 +746,25 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     ui::set_language(&junc_l10n::resolve(&sources));
     let (w, _app, _mock) = open_in("default", None);
     assert!(has(&w, "Rename"), "Arabic shows English");
+    drop((w, _app, _mock));
+
+    // Board 37: Virtual Mic for Zoom is the default input; ↓ Space makes
+    // it the default output instead, Space again none; Esc closes.
+    let (w, _app, mock) = open("useDefault");
+    let view = w.global::<View>();
+    let role = |m: &Mock| m.config().expect("config").junction[0].default;
+    assert_eq!(view.get_default_role(), "input");
+    assert!(view.get_defaults_open());
+    assert_eq!(role(&mock), junc_core::model::DefaultRole::Input);
+    key(&w, Key::DownArrow);
+    key(&w, " ");
+    settle();
+    assert_eq!(role(&mock), junc_core::model::DefaultRole::Output);
+    assert_eq!(view.get_default_role(), "output");
+    key(&w, " ");
+    settle();
+    assert_eq!(role(&mock), junc_core::model::DefaultRole::None);
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_defaults_open());
 }
