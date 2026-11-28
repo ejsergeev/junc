@@ -1431,6 +1431,14 @@ links meet them (`layout::channel_centre`); a closed group has one port,
 its first channel's, where its channels' links meet. Not built: ← → on
 a focused group (a click opens it).
 
+As built (B22, config error): when the file on disk does not validate,
+`Describe.config_error` lists why and juncd keeps the last good config;
+the Main screen shows the first error in an error banner (board 47:
+"Config error in junctions.toml line 14: unknown key 'volum'. Using last
+good config."), with Open file (`xdg-open` on the config file) and
+Dismiss (also Esc), which hides it until another error comes. A
+Junction that is off keeps its own banner; a removed link's waits.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
