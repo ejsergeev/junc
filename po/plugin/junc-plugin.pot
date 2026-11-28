@@ -1,0 +1,53 @@
+# The Omarchy bar plugin's messages, from cargo xtask i18n extract
+# (omarchy/plugin/i18n/en.json). Do not edit.
+msgid ""
+msgstr ""
+"Project-Id-Version: junc-plugin\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#. popup.capturing
+#: omarchy/plugin/i18n/en.json
+msgid "Capturing: %1"
+msgstr ""
+
+#. popup.empty
+#: omarchy/plugin/i18n/en.json
+msgid "No Junctions yet. Open JUNC to make one."
+msgstr ""
+
+#. popup.notRunning
+#: omarchy/plugin/i18n/en.json
+msgid "JUNC is not running."
+msgstr ""
+
+#. popup.on
+#: omarchy/plugin/i18n/en.json
+msgid "%1 on"
+msgstr ""
+
+#. popup.open
+#: omarchy/plugin/i18n/en.json
+msgid "Open JUNC"
+msgstr ""
+
+#. row.cable
+#: omarchy/plugin/i18n/en.json
+msgid "Cable"
+msgstr ""
+
+#. row.defaultInput
+#: omarchy/plugin/i18n/en.json
+msgid "Default input"
+msgstr ""
+
+#. row.defaultOutput
+#: omarchy/plugin/i18n/en.json
+msgid "Default output"
+msgstr ""
+
+#. row.junction
+#: omarchy/plugin/i18n/en.json
+msgid "Junction · %1 Input"
+msgid_plural "Junction · %1 Inputs"
+msgstr[0] ""
+msgstr[1] ""
