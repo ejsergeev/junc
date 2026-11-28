@@ -357,6 +357,33 @@ pub fn skill(entries: &[crate::skill::Entry]) -> String {
     table(&rows)
 }
 
+/// `junc omarchy status|install|uninstall`.
+pub fn omarchy(st: &crate::omarchy::Status) -> String {
+    use crate::omarchy::State;
+    let plugin = match st.plugin {
+        State::Linked => tr("on"),
+        State::Missing => tr("not installed"),
+        State::UsersOwn => tr("a folder of your own with JUNC's id, kept"),
+    };
+    let menu = if st.menu {
+        tr("on")
+    } else {
+        tr("not installed")
+    };
+    let mut out = table(&[
+        vec![tr("Bar module").into_owned(), plugin.into_owned()],
+        vec![tr("Menu row").into_owned(), menu.into_owned()],
+    ]);
+    if st.plugin == State::Linked {
+        out.push('\n');
+        out.push_str(&trf(
+            "Tip: bind {key} to junc-gui in ~/.config/hypr/bindings.lua to open JUNC from anywhere.",
+            &[("key", &st.keybinding)],
+        ));
+    }
+    out
+}
+
 /// One line per importable setup (`junc import scan`).
 pub fn importable(i: &junc_core::import::Importable) -> String {
     let show = |m: &junc_core::model::Match| {

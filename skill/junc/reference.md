@@ -54,6 +54,7 @@ With `--json`, every command prints one document:
 | `E_NO_SYSTEMD` | 1 | `junc service` needs systemd. Start juncd from the session's autostart instead. |
 | `E_SERVICE` | 1 | systemctl failed. See `systemctl --user status juncd`. |
 | `E_SKILL` | 1 | The skill could not be linked; the message names the folder. |
+| `E_OMARCHY` | 1 | JUNC could not be put into (or taken out of) the Omarchy bar and menu; the message names the file. |
 | `E_INTERNAL` | 1 | A bug or a version mismatch between junc and juncd. Report it with `junc doctor`. |
 
 Exit 0 means success.
@@ -96,7 +97,8 @@ Commands:
   doctor     Check PipeWire, WirePlumber, pipewire-pulse, JACK, the clock, sample rates, the Asahi speakers and juncd
   service    Start juncd at login, or not (`systemctl --user` on juncd.service)
   skill      Make the JUNC skill visible to your coding agents, or not
-  teardown   Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill. Your config stays for a reinstall
+  omarchy    Put JUNC into the Omarchy bar and menu, or take it out
+  teardown   Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill, take JUNC out of the Omarchy bar and menu. Your config stays for a reinstall
   help       Print this message or the help of the given subcommand(s)
 
 Options:
@@ -1047,10 +1049,76 @@ Options:
   -h, --help         Print help
 ```
 
+### `junc omarchy`
+
+```text
+Put JUNC into the Omarchy bar and menu, or take it out
+
+Usage: junc omarchy [OPTIONS] <COMMAND>
+
+Commands:
+  install    Add the JUNC bar module and an "Audio routing · JUNC" row under Setup in the Omarchy menu. Binds no key: Super+Shift+J is free
+  uninstall  Remove JUNC's bar module and menu row (your own files stay)
+  status     Show whether the bar module and the menu row are there
+  help       Print this message or the help of the given subcommand(s)
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc omarchy install`
+
+```text
+Add the JUNC bar module and an "Audio routing · JUNC" row under Setup in the Omarchy menu. Binds no key: Super+Shift+J is free
+
+Usage: junc omarchy install [OPTIONS]
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc omarchy uninstall`
+
+```text
+Remove JUNC's bar module and menu row (your own files stay)
+
+Usage: junc omarchy uninstall [OPTIONS]
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
+### `junc omarchy status`
+
+```text
+Show whether the bar module and the menu row are there
+
+Usage: junc omarchy status [OPTIONS]
+
+Options:
+      --json         Print one JSON document instead of text
+  -q, --quiet        Print nothing on success
+      --no-color     Do not color the output
+      --lang <CODE>  Language for messages (e.g. de, pt_BR)
+  -h, --help         Print help
+```
+
 ### `junc teardown`
 
 ```text
-Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill. Your config stays for a reinstall
+Remove everything JUNC put in the audio system: stop and disable juncd, remove its devices and links, give the defaults back, unlink the skill, take JUNC out of the Omarchy bar and menu. Your config stays for a reinstall
 
 Usage: junc teardown [OPTIONS]
 

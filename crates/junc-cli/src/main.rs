@@ -14,6 +14,7 @@ mod client;
 mod doctor;
 mod edit;
 mod human;
+mod omarchy;
 mod preset;
 mod report;
 mod service;
@@ -24,8 +25,8 @@ use clap::Parser;
 use client::Client;
 use edit::{End, Result, Source, usage};
 use junc_cli::args::{
-    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, PresetCmd, Role, ServiceCmd,
-    SkillCmd, SourceArgs, TemplateCmd,
+    BusCmd, Cli, Cmd, ConfigCmd, Create, InputCmd, ListenCmd, OmarchyCmd, PresetCmd, Role,
+    ServiceCmd, SkillCmd, SourceArgs, TemplateCmd,
 };
 use junc_ipc::ErrorBody;
 use junc_l10n::{tr, trf};
@@ -212,6 +213,33 @@ fn offline(cmd: &Cmd) -> Option<Result<Done>> {
                 Err(e) => Err(e),
             }
         }
+        Cmd::Omarchy(sub) => {
+            let run = || -> Result<omarchy::Status> {
+                let dir = omarchy::plugin_dir()?;
+                let home = std::env::var_os("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_default();
+                let config = omarchy::omarchy_config(&home);
+                match sub {
+                    OmarchyCmd::Install => omarchy::install(&config, &dir, &omarchy::omarchy_cmd),
+                    OmarchyCmd::Uninstall => {
+                        omarchy::uninstall(&config, &dir, &omarchy::omarchy_cmd)
+                    }
+                    OmarchyCmd::Status => Ok(omarchy::status(&config, &dir)),
+                }
+            };
+            match run() {
+                Ok(st) => {
+                    let text = human::omarchy(&st);
+                    Ok(Done {
+                        revision: None,
+                        data: json!(st),
+                        text,
+                    })
+                }
+                Err(e) => Err(e),
+            }
+        }
         Cmd::Doctor { bug_report } => {
             let client = Client::connect().ok();
             let facts = doctor::Facts::gather(client.as_ref());
@@ -310,6 +338,7 @@ fn run(cmd: Cmd, json_mode: bool) -> Result<Done> {
         | Cmd::Config(_)
         | Cmd::Service(_)
         | Cmd::Skill(_)
+        | Cmd::Omarchy(_)
         | Cmd::Teardown { .. }
         | Cmd::Template(_)
         | Cmd::Watch => {
@@ -894,9 +923,18 @@ fn teardown(yes: bool, json_mode: bool) -> Result<Done> {
         .and_then(|dir| skill::unlink(&home, &dir))
         .map(|e| json!(e))
         .unwrap_or(Value::Null);
+    // 4. The Omarchy bar module and menu row (best effort too).
+    let omarchy = omarchy::plugin_dir()
+        .and_then(|dir| {
+            omarchy::uninstall(&omarchy::omarchy_config(&home), &dir, &omarchy::omarchy_cmd)
+        })
+        .map(|e| json!(e))
+        .unwrap_or(Value::Null);
     Ok(Done {
         revision: None,
-        data: json!({ "service": service, "objects_removed": true, "skill": skill }),
+        data: json!({
+            "service": service, "objects_removed": true, "skill": skill, "omarchy": omarchy,
+        }),
         text: tr("JUNC is removed from the audio system. Your config is kept in ~/.config/junc.")
             .into_owned(),
     })

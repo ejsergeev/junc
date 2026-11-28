@@ -214,9 +214,13 @@ pub enum Cmd {
     /// Make the JUNC skill visible to your coding agents, or not.
     #[command(subcommand)]
     Skill(SkillCmd),
+    /// Put JUNC into the Omarchy bar and menu, or take it out.
+    #[command(subcommand)]
+    Omarchy(OmarchyCmd),
     /// Remove everything JUNC put in the audio system: stop and disable
     /// juncd, remove its devices and links, give the defaults back, unlink
-    /// the skill. Your config stays for a reinstall.
+    /// the skill, take JUNC out of the Omarchy bar and menu. Your config
+    /// stays for a reinstall.
     Teardown {
         /// Do it without asking.
         #[arg(long)]
@@ -231,6 +235,17 @@ pub enum SkillCmd {
     /// Remove JUNC's skill links (your own `junc` folders stay).
     Unlink,
     /// Show which agent folders have the skill.
+    Status,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum OmarchyCmd {
+    /// Add the JUNC bar module and an "Audio routing · JUNC" row under
+    /// Setup in the Omarchy menu. Binds no key: Super+Shift+J is free.
+    Install,
+    /// Remove JUNC's bar module and menu row (your own files stay).
+    Uninstall,
+    /// Show whether the bar module and the menu row are there.
     Status,
 }
 

@@ -965,6 +965,9 @@ fn teardown_leaves_no_junc_object() {
         .env("JUNC_JUNCD", bin("juncd"))
         .env("XDG_STATE_HOME", &state)
         .env("HOME", &e.dir)
+        // Never the Omarchy settings of whoever runs the test.
+        .env("XDG_CONFIG_HOME", e.dir.join("config"))
+        .env_remove("JUNC_OMARCHY_PLUGIN")
         .env("DBUS_SESSION_BUS_ADDRESS", &e.address)
         .stdin(Stdio::null())
         .output()

@@ -181,6 +181,11 @@ pub const CODES: &[Code] = &[
         "The skill could not be linked; the message names the folder.",
     ),
     c(
+        "E_OMARCHY",
+        1,
+        "JUNC could not be put into (or taken out of) the Omarchy bar and menu; the message names the file.",
+    ),
+    c(
         "E_INTERNAL",
         1,
         "A bug or a version mismatch between junc and juncd. Report it with `junc doctor`.",
