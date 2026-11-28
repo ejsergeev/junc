@@ -2004,6 +2004,40 @@ Channel builds: `junc-git` in the testing repo (pkgver from `git describe`).
 | Skill pointer | `junc skill link` | PR adds a pointer in the `omarchy` skill |
 | Package | own repo | PR to omacom/omarchy-pkgs: `pkgbuilds/junc/` + `.omarchy/package.json` with a GitHub release watch |
 
+As built in B23:
+
+- `omarchy/plugin/`: `manifest.json` (kinds `service` and `bar-widget`,
+  `keepLoaded`), `Service.qml` (one per shell: runs `junc --json watch`,
+  restarts it 2 s after it ends, 30 s while `junc` is missing; runs
+  `junc enable|disable -- ID` for a switch and shows it flipped at once,
+  back after 5 s if juncd never confirms; reads `hyprctl binds -j` for a
+  key bound to `junc-gui`), `BarWidget.qml` (the JUNC mark, the number on,
+  the 6 px urgent capture dot; left click the popup, right click opens
+  JUNC), `components/Popup.qml` (board 44: header, "Capturing: …", a row
+  and switch per Junction and Cable with the Default input/output badge and
+  "Junction · N Inputs" or "Cable", Open JUNC with the bound key; Up/Down,
+  Space/Enter, Escape). Everything from the config or PipeWire is shown as
+  plain text. The logic is `lib/Model.js`, tested in Node
+  (`omarchy/plugin/tests/`, CI step `plugin`), with the manifest rules of
+  `omarchy plugin validate` and the catalog keys.
+- Catalogs: `omarchy/plugin/i18n/en.json` is the source. `cargo xtask i18n
+  extract` writes `po/plugin/junc-plugin.pot` from it, translators work on
+  `po/plugin/<lang>.po`, `cargo xtask i18n plugin` writes
+  `omarchy/plugin/i18n/<lang>.json` (plural forms mapped to CLDR
+  categories), and `i18n check` fails when either is stale.
+- `junc omarchy install|uninstall|status` (`crates/junc-cli/src/omarchy.rs`):
+  links the plugin (`JUNC_OMARCHY_PLUGIN` overrides the packaged path),
+  runs `omarchy-shell shell rescanPlugins` and `omarchy-plugin-enable`,
+  and adds the menu row between `// junc: begin` and `// junc: end` right
+  after the opening brace of `extensions/omarchy-menu.jsonc` (rewritten
+  whole, in the current language). The row lands at the end of Setup:
+  user extensions are appended after Omarchy's own rows, so "next to Audio"
+  needs the upstream entry. `junc teardown` runs uninstall too.
+- `omarchy agent look plugin` is not in Omarchy 4.0.0.alpha, so the popup
+  was checked with a stand-alone Quickshell on a temporary headless monitor
+  (the plugin with Omarchy's `Commons`/`Ui` and a stand-in `junc`), in
+  English, German and Japanese.
+
 ---
 
 ## 11. Test strategy
