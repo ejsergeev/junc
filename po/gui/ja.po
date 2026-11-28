@@ -53,7 +53,7 @@ msgstr "{0} の音量"
 msgid "Junctions"
 msgstr "ジャンクション"
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/settings.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Settings"
 msgstr "設定"
 
@@ -201,11 +201,11 @@ msgstr "未実行"
 msgid "mismatch"
 msgstr "不一致"
 
-#: crates/junc-gui/ui/components/check-row.slint
+#: crates/junc-gui/ui/components/check-row.slint crates/junc-gui/ui/components/report.slint
 msgid "Copy"
 msgstr "コピー"
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/components/report.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr "キャンセル"
 
@@ -321,6 +321,66 @@ msgstr "リンク済み"
 #: crates/junc-gui/ui/components/port.slint
 msgid "offline"
 msgstr "オフライン"
+
+#: crates/junc-gui/ui/components/report.slint crates/junc-gui/ui/screens/doctor.slint
+msgid "Copy bug report"
+msgstr "バグ報告をコピー"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Paste it into an issue. JUNC sends nothing by itself."
+msgstr "Issue に貼り付けてください。JUNC が自分で送信することはありません。"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Versions"
+msgstr "バージョン"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "JUNC, PipeWire, WirePlumber, kernel"
+msgstr "JUNC、PipeWire、WirePlumber、カーネル"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Junction graph"
+msgstr "ジャンクションのグラフ"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Junctions, Cables, Links, sample rate, quantum"
+msgstr "ジャンクション、ケーブル、接続、サンプルレート、クォンタム"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Recent logs"
+msgstr "最近のログ"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "juncd's recent log"
+msgstr "juncd の最近のログ"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Audio"
+msgstr "音声"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Never included"
+msgstr "含めません"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Personal data"
+msgstr "個人データ"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "User name and home paths replaced with ~"
+msgstr "ユーザー名とホームのパスは ~ に置き換え"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Collecting…"
+msgstr "収集中…"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Same report in a terminal: {0}"
+msgstr "ターミナルで同じ報告: {0}"
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Save to file…"
+msgstr "ファイルに保存…"
 
 #: crates/junc-gui/ui/components/switch.slint
 msgid "on"
@@ -449,6 +509,51 @@ msgstr "{0} は元の入力に戻ります。"
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "Delete Cable"
 msgstr "ケーブルを削除"
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/settings.slint
+msgid "Run checks"
+msgstr "チェックを実行"
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
+msgid "System check"
+msgstr "システムチェック"
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
+msgid "Checking…"
+msgstr "確認中…"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Everything checks out."
+msgstr "問題はありません。"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "{n} issue found."
+msgid_plural "{n} issues found."
+msgstr[0] "{n} 件の問題があります。"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Quantum"
+msgstr "クォンタム"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Sample rate"
+msgstr "サンプルレート"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Speakers"
+msgstr "スピーカー"
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/service-down.slint
+msgid "junc daemon"
+msgstr "junc デーモン"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Run again"
+msgstr "再実行"
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Back to Settings"
+msgstr "設定に戻る"
 
 #: crates/junc-gui/ui/screens/empty.slint
 msgid "No Junctions yet"
@@ -761,10 +866,6 @@ msgstr "JACK アプリからジャンクションが見える"
 msgid "Step {0} of {1}"
 msgstr "ステップ {0}/{1}"
 
-#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
-msgid "System check"
-msgstr "システムチェック"
-
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Welcome to JUNC"
 msgstr "JUNC へようこそ"
@@ -776,10 +877,6 @@ msgstr "JUNC は PipeWire の上で動きます。必要な部品がインスト
 #: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "running"
 msgstr "実行中"
-
-#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
-msgid "Checking…"
-msgstr "確認中…"
 
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "junc doctor did not answer."
@@ -910,10 +1007,6 @@ msgid "{0} is not running"
 msgstr "{0} は実行されていません"
 
 #: crates/junc-gui/ui/screens/service-down.slint
-msgid "junc daemon"
-msgstr "junc デーモン"
-
-#: crates/junc-gui/ui/screens/service-down.slint
 msgid "Running · waiting for PipeWire"
 msgstr "実行中 · PipeWire を待機中"
 
@@ -1036,10 +1129,6 @@ msgstr "バグ報告をコピー…"
 #: crates/junc-gui/ui/screens/settings.slint
 msgid "Same checks as junc doctor."
 msgstr "junc doctor と同じチェックです。"
-
-#: crates/junc-gui/ui/screens/settings.slint
-msgid "Run checks"
-msgstr "チェックを実行"
 
 #: crates/junc-gui/ui/screens/settings.slint
 msgid "Logs"

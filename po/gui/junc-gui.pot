@@ -44,7 +44,7 @@ msgstr ""
 msgid "Junctions"
 msgstr ""
 
-#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/settings.slint
+#: crates/junc-gui/ui/app.slint crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/settings.slint
 msgid "Settings"
 msgstr ""
 
@@ -192,11 +192,11 @@ msgstr ""
 msgid "mismatch"
 msgstr ""
 
-#: crates/junc-gui/ui/components/check-row.slint
+#: crates/junc-gui/ui/components/check-row.slint crates/junc-gui/ui/components/report.slint
 msgid "Copy"
 msgstr ""
 
-#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/screens/main.slint
+#: crates/junc-gui/ui/components/confirm.slint crates/junc-gui/ui/components/export.slint crates/junc-gui/ui/components/import.slint crates/junc-gui/ui/components/report.slint crates/junc-gui/ui/screens/main.slint
 msgid "Cancel"
 msgstr ""
 
@@ -312,6 +312,66 @@ msgstr ""
 
 #: crates/junc-gui/ui/components/port.slint
 msgid "offline"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint crates/junc-gui/ui/screens/doctor.slint
+msgid "Copy bug report"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Paste it into an issue. JUNC sends nothing by itself."
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Versions"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "JUNC, PipeWire, WirePlumber, kernel"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Junction graph"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Junctions, Cables, Links, sample rate, quantum"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Recent logs"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "juncd's recent log"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Audio"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Never included"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Personal data"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "User name and home paths replaced with ~"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Collecting…"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Same report in a terminal: {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/components/report.slint
+msgid "Save to file…"
 msgstr ""
 
 #: crates/junc-gui/ui/components/switch.slint
@@ -440,6 +500,52 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/cable.slint
 msgid "Delete Cable"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/settings.slint
+msgid "Run checks"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
+msgid "System check"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
+msgid "Checking…"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Everything checks out."
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "{n} issue found."
+msgid_plural "{n} issues found."
+msgstr[0] ""
+msgstr[1] ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Quantum"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Sample rate"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Speakers"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint crates/junc-gui/ui/screens/service-down.slint
+msgid "junc daemon"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Run again"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/doctor.slint
+msgid "Back to Settings"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/empty.slint
@@ -756,10 +862,6 @@ msgstr ""
 msgid "Step {0} of {1}"
 msgstr ""
 
-#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/settings.slint
-msgid "System check"
-msgstr ""
-
 #: crates/junc-gui/ui/screens/onboarding.slint
 msgid "Welcome to JUNC"
 msgstr ""
@@ -770,10 +872,6 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
 msgid "running"
-msgstr ""
-
-#: crates/junc-gui/ui/screens/onboarding.slint crates/junc-gui/ui/screens/service-down.slint
-msgid "Checking…"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/onboarding.slint
@@ -905,10 +1003,6 @@ msgid "{0} is not running"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/service-down.slint
-msgid "junc daemon"
-msgstr ""
-
-#: crates/junc-gui/ui/screens/service-down.slint
 msgid "Running · waiting for PipeWire"
 msgstr ""
 
@@ -1030,10 +1124,6 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/settings.slint
 msgid "Same checks as junc doctor."
-msgstr ""
-
-#: crates/junc-gui/ui/screens/settings.slint
-msgid "Run checks"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/settings.slint
