@@ -311,6 +311,17 @@ pub fn install(
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
         let c = call.clone();
+        view.on_set_default(move |role| {
+            c(&|a| {
+                if let Some(path) = a.selected.clone().and_then(|id| a.path(&id)) {
+                    a.actions.send(Command::SetDefault {
+                        path,
+                        role: role.to_string(),
+                    });
+                }
+            });
+        });
+        let c = call.clone();
         view.on_follow_language_changed(move |on| {
             c(&|a| a.choose_language((!on).then(ui::language)));
         });
@@ -1663,6 +1674,14 @@ impl App {
                 view.set_offline(i32::try_from(m.offline).unwrap_or(0));
                 view.set_waiting(i32::try_from(m.waiting).unwrap_or(0));
                 view.set_listen_count(i32::try_from(m.listens.len()).unwrap_or(0));
+                view.set_default_role(
+                    match m.default {
+                        DefaultRole::Input => "input",
+                        DefaultRole::Output => "output",
+                        DefaultRole::None => "none",
+                    }
+                    .into(),
+                );
                 let (lines, note) = removal_words(&w.global::<Words>(), &main_view::removal(m));
                 view.set_delete_lines(ModelRc::new(VecModel::from(lines)));
                 view.set_delete_note(note);

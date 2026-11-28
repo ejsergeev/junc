@@ -5,6 +5,7 @@
 
 import { Tokens } from "tokens.slint";
 import { JMenu } from "components/menu.slint";
+import { JBadge } from "components/badge.slint";
 import { View, Words, JunctionItem, CheckItem } from "view.slint";
 import { OnboardingCheck, OnboardingTemplates } from "screens/onboarding.slint";
 import { EmptyNone } from "screens/empty.slint";
@@ -76,6 +77,12 @@ component SidebarRow inherits Rectangle {
         }
         HorizontalLayout {
             spacing: 6px;
+            // Board 37: the default it is, before what feeds it.
+            if root.item.default-role != "none": JBadge {
+                y: (parent.height - self.height) / 2;
+                text: root.item.default-role == "input" ? @tr("Default input") : @tr("Default output");
+                kind: "state";
+            }
             if root.item.cable || root.item.icons != "": Text {
                 text: root.item.cable ? "\u{f0054}" : root.item.icons;
                 color: Tokens.text-subtle;
@@ -471,6 +478,10 @@ export component AppWindow inherits Window {
             bus-channels: View.bus-channels;
             cable: View.cable;
             on: View.junction-on;
+            default-role: View.default-role;
+            set-default(r) => { View.set-default(r); }
+            defaults-open <=> View.defaults-open;
+            defaults-closed => { shortcuts.focus(); }
             turn-on => { View.junction-toggled(View.selected, true); }
             apps: View.apps;
             devices: View.devices;

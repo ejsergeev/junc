@@ -346,6 +346,90 @@ component InputOptions inherits Rectangle {
     }
 }
 
+// Board 37: the default role of a Junction, two check rows and what they
+// mean. Space or Enter checks the row under the cursor (one role at a
+// time: checking the other moves it), Esc closes.
+component DefaultMenu inherits Rectangle {
+    in property <string> role;
+    in-out property <int> cursor;
+    callback chosen(string);
+    callback closed();
+    width: 320px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: @tr("Default device");
+    public function open() { keys.focus(); }
+    function toggle(i: int) {
+        if i == 0 { root.chosen(root.role == "input" ? "none" : "input"); }
+        if i == 1 { root.chosen(root.role == "output" ? "none" : "output"); }
+    }
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.DownArrow { root.cursor = 1; return accept; }
+            if e.text == Key.UpArrow { root.cursor = 0; return accept; }
+            if e.text == " " || e.text == "\n" { root.toggle(root.cursor); return accept; }
+            if e.text == Key.Escape { root.closed(); return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        padding: 6px;
+        spacing: 2px;
+        for row[i] in [
+            { text: @tr("Use as default input"), on: root.role == "input" },
+            { text: @tr("Use as default output"), on: root.role == "output" },
+        ]: line := Rectangle {
+            height: Tokens.size-control;
+            property <bool> current: i == root.cursor;
+            background: self.current ? Tokens.control-hover-fill : transparent;
+            border-width: self.current ? Tokens.border : 0;
+            border-color: Tokens.control-hover-border;
+            accessible-role: checkbox;
+            accessible-label: row.text;
+            accessible-checkable: true;
+            accessible-checked: row.on;
+            accessible-action-default => { root.toggle(i); }
+            TouchArea {
+                clicked => { root.cursor = i; root.toggle(i); }
+                moved => { root.cursor = i; }
+            }
+            HorizontalLayout {
+                padding-left: Tokens.space-row-pad-x;
+                spacing: 10px;
+                Rectangle {
+                    width: 14px * Tokens.scale;
+                    height: 14px * Tokens.scale;
+                    y: (parent.height - self.height) / 2;
+                    border-width: Tokens.border;
+                    border-color: row.on ? Tokens.accent : Tokens.line-divider;
+                    background: row.on ? Tokens.accent.with-alpha(0.25) : transparent;
+                    if row.on: Text {
+                        text: "\u{f012c}";
+                        color: Tokens.accent;
+                        font-size: Tokens.type-caption;
+                        accessible-role: none;
+                    }
+                }
+                Text {
+                    text: row.text;
+                    color: line.current ? Tokens.accent : Tokens.text-strong;
+                    vertical-alignment: center;
+                    accessible-role: none;
+                }
+            }
+        }
+        Text {
+            text: @tr("Apps that follow the system default use this Junction. Turning it off or deleting it restores the previous default.");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-body-small;
+            wrap: word-wrap;
+            accessible-role: none;
+        }
+    }
+}
+
 export component MainScreen inherits Rectangle {
     // The Junction.
     in property <string> title;
@@ -444,6 +528,19 @@ export component MainScreen inherits Rectangle {
     callback delete-junction();
     // Board 26: the header's name field is open.
     in-out property <bool> renaming;
+    // Board 37: its default role, the menu open, where it opens.
+    in property <string> default-role: "none";
+    in-out property <bool> defaults-open;
+    // Where the Default button sits: after the title and the pencil.
+    property <length> defaults-x: root.pad + title-width.preferred-width + 2 * Tokens.space-row-gap + Tokens.size-control;
+    title-width := Text {
+        visible: false;
+        text: root.title;
+        font-size: Tokens.type-display;
+        accessible-role: none;
+    }
+    callback set-default(string);
+    callback defaults-closed();
     // Board 22: what deleting it removes, and what stays.
     in property <[string]> delete-lines;
     in property <string> delete-note;
@@ -526,8 +623,12 @@ export component MainScreen inherits Rectangle {
                 // Board 11 has no Default menu until something feeds it.
                 if root.apps + root.devices > 0: JButton {
                     y: (parent.height - self.height) / 2;
-                    text: @tr("Default");
+                    text: root.default-role == "input" ? @tr("Default input")
+                        : root.default-role == "output" ? @tr("Default output") : @tr("Default");
                     icon: "\u{f0140}";
+                    controlled: true;
+                    checked: root.default-role != "none";
+                    clicked => { root.defaults-open = true; }
                 }
                 Text {
                     text: root.node + " · " + @tr("{0} ch", root.bus-channels);
@@ -878,6 +979,20 @@ export component MainScreen inherits Rectangle {
                 root.adding-bus = false;
                 root.add-bus-closed();
             }
+        }
+    }
+
+    // Board 37: the default role, under its button.
+    if root.defaults-open: Rectangle {
+        TouchArea { clicked => { root.defaults-open = false; root.defaults-closed(); } }
+        DefaultMenu {
+            x: root.defaults-x;
+            y: 52px * Tokens.scale;
+            height: self.preferred-height;
+            role: root.default-role;
+            init => { self.open(); }
+            chosen(r) => { root.set-default(r); }
+            closed => { root.defaults-open = false; root.defaults-closed(); }
         }
     }
 

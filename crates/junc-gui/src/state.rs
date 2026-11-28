@@ -5,7 +5,7 @@
 //! turns it into Slint models.
 
 use crate::main_view::{self, CardState, Icon};
-use junc_core::model::Kind;
+use junc_core::model::{DefaultRole, Kind};
 use junc_ipc::view::{Describe, JunctionView};
 
 /// One sidebar row.
@@ -30,6 +30,8 @@ pub struct Row {
     pub waiting: usize,
     /// A new Cable the window holds, not in juncd yet (board 27).
     pub draft: bool,
+    /// `input`, `output` or `none`: the system default it is (board 37).
+    pub default: String,
     pub volume: u16,
 }
 
@@ -92,6 +94,12 @@ pub fn snapshot(d: Option<&Describe>) -> Snapshot {
                         .count(),
                     volume: j.volume,
                     draft: j.path.is_empty(),
+                    default: match j.default {
+                        DefaultRole::Input => "input",
+                        DefaultRole::Output => "output",
+                        DefaultRole::None => "none",
+                    }
+                    .to_owned(),
                 }
             })
             .collect(),

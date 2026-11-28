@@ -21,6 +21,9 @@ pub enum Command {
     Delete { path: String },
     /// A new display name (`Junction.Rename`; the id stays).
     Rename { path: String, name: String },
+    /// The system default it is (`Junction.SetDefault`: `none`, `input`,
+    /// `output`; board 37).
+    SetDefault { path: String, role: String },
     /// A config change to one Junction (`GetConfig` → `Apply`).
     Edit { junction: String, edit: Edit },
     /// A new empty Junction (`Daemon.CreateJunction`).
@@ -203,6 +206,14 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
                 .await
                 .map_err(text)?
                 .delete(true)
+                .await
+                .map_err(text)?;
+        }
+        Command::SetDefault { path, role } => {
+            junction(conn, path)
+                .await
+                .map_err(text)?
+                .set_default(role)
                 .await
                 .map_err(text)?;
         }

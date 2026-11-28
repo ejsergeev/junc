@@ -15,6 +15,7 @@ use crate::onboarding::Step;
 use junc_core::backend::{Backend, MockBackend};
 use junc_core::graph::{Graph, Props};
 use junc_core::model::Config;
+use junc_core::model::DefaultRole;
 use junc_core::reconcile::Reconciler;
 use junc_ipc::view::{self, DefaultsView, Describe};
 use serde::Deserialize;
@@ -108,6 +109,13 @@ struct Fixture {
     /// Settings' language picker open, Follow Omarchy off (board 31).
     #[serde(default)]
     lang_picker: bool,
+    /// The selected Junction made this default (`input`, `output`), as
+    /// its menu would (board 37).
+    #[serde(default)]
+    default_role: Option<String>,
+    /// Its Default menu open.
+    #[serde(default)]
+    defaults: bool,
     /// The Options panel of this Input card (0-based) open.
     options: Option<i32>,
     /// A link being made, as `"<input> <channel> -> <bus channel>"`, by the
@@ -195,6 +203,8 @@ pub struct Scenario {
     importables: Vec<junc_core::import::Importable>,
     pub import: bool,
     pub lang_picker: bool,
+    pub default_role: Option<String>,
+    pub defaults: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -340,6 +350,8 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         importables: f.importable,
         import: f.import,
         lang_picker: f.lang_picker,
+        default_role: f.default_role,
+        defaults: f.defaults,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -555,6 +567,23 @@ impl Mock {
                     c.junction.remove(i);
                 }
             }
+            Command::SetDefault { path, role } => {
+                // As juncd: one Junction per role; the old one lets go.
+                let role = match role.as_str() {
+                    "input" => DefaultRole::Input,
+                    "output" => DefaultRole::Output,
+                    _ => DefaultRole::None,
+                };
+                if let Some(i) = find(c, path) {
+                    for (k, j) in c.junction.iter_mut().enumerate() {
+                        if k == i {
+                            j.default = role;
+                        } else if role != DefaultRole::None && j.default == role {
+                            j.default = DefaultRole::None;
+                        }
+                    }
+                }
+            }
             Command::Rename { path, name } => {
                 if let Some(i) = find(c, path) {
                     c.junction[i].name.clone_from(name);
@@ -693,6 +722,15 @@ pub fn open(
     if s.import {
         app.borrow_mut().open_import();
         mock.flush();
+    }
+    if let Some(role) = &s.default_role {
+        window
+            .global::<crate::ui::View>()
+            .invoke_set_default(role.as_str().into());
+        mock.flush();
+    }
+    if s.defaults {
+        window.global::<crate::ui::View>().set_defaults_open(true);
     }
     if s.lang_picker {
         let lang = crate::ui::language();
