@@ -241,7 +241,7 @@ impl Item {
 
     #[zbus(property)]
     fn icon_name(&self) -> &str {
-        "audio-card"
+        "junc-symbolic"
     }
 
     #[zbus(property)]
