@@ -68,6 +68,7 @@ const SCENARIOS: &[&str] = &[
     "updated",
     "templateSlots",
     "exportPreset",
+    "newMenu",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.

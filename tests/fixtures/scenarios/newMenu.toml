@@ -1,0 +1,6 @@
+# GUI scenario: design board 48, "New menu" — New › From template…: the
+# built-in templates and your presets.
+board = 48
+title = "New menu"
+base = "default"
+templates = true

@@ -1,0 +1,14 @@
+# JUNC preset. Import it with `junc preset import FILE`.
+schema = 1
+
+[preset]
+name = "Virtual Mic for Zoom"
+
+[junction]
+id = "virtual-mic-for-zoom"
+name = "Virtual Mic for Zoom"
+bus = { channels = 2 }
+
+[[junction.input]]
+id = "spotify"
+match = { binary = "spotify" }

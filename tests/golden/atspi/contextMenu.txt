@@ -130,7 +130,7 @@ application name='junc-gui' states=[]
       list item name='Export preset…' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
         unknown name='' states=[enabled,sensitive,showing,visible]
           label name='Ctrl+E' states=[enabled,sensitive,showing,visible]
-      list item name='Import preset…' states=[focusable,showing,visible] actions=click
+      list item name='Import preset…' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
         unknown name='' states=[enabled,sensitive,showing,visible]
           label name='Ctrl+I' states=[enabled,sensitive,showing,visible]
       list item name='Delete…' states=[focusable,enabled,sensitive,selectable,showing,visible] actions=click
