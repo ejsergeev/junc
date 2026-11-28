@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–40, 43, 46–49)
+//! The Main screen's states of B18 and B19 (design boards 12–18, 20–27, 30, 31, 35–43, 46–49)
 //! against their scenarios' mock IPC, on Slint's testing backend: what
 //! each shows and that the keyboard and the pointer change the config the
 //! way juncd would be asked to (F3, F4, F5, F6, F8, F11).
@@ -993,4 +993,44 @@ fn the_main_screen_states_work_from_the_keyboard_and_pointer() {
     ctrl(&w, "i");
     settle();
     assert_eq!(view.get_tpl_items().row_count(), 1);
+    drop((w, app, mock));
+
+    // Board 42: one issue among doctor's checks; R runs them again; Esc
+    // goes back to Settings.
+    let (w, _app, _mock) = open("doctorIssue");
+    let view = w.global::<View>();
+    assert!(view.get_doctor_open());
+    assert_eq!(view.get_doctor_issues(), 1);
+    assert_eq!(view.get_doctor_items().row_count(), 5);
+    assert!(has(&w, "1 issue found."));
+    key(&w, "r");
+    assert!(view.get_doctor_checking());
+    settle();
+    assert!(!view.get_doctor_checking());
+    key(&w, Key::Escape);
+    settle();
+    assert!(!view.get_doctor_open());
+    assert!(view.get_settings_open());
+    drop((w, _app, _mock));
+
+    // Board 41: the report's first lines; Enter copies all of it; Save
+    // writes it to ~/junc-bug-report.md.
+    let (w, _app, mock) = open("bugReport");
+    let view = w.global::<View>();
+    assert!(view.get_report_open());
+    assert!(view.get_report_preview().starts_with("junc 0.1.0"));
+    key(&w, "\n");
+    settle();
+    assert!(!view.get_report_open());
+    assert!(
+        mock.copied()
+            .is_some_and(|t| t.starts_with("## JUNC bug report"))
+    );
+    view.invoke_open_report();
+    settle();
+    view.invoke_report_save();
+    assert!(
+        mock.saved()
+            .is_some_and(|p| p.ends_with("junc-bug-report.md"))
+    );
 }
