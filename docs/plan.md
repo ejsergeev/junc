@@ -528,8 +528,18 @@ Omarchy and packaging:
   In progress: PKGBUILD, icons, desktop entry and the CI build + fresh
   container smoke test done (2026-11-28); `junc-keyring`, signing and
   publishing wait for B24.
-- [ ] **B26** [auto] GUI perf gates: cold start, PSS, CPU with meters, CPU
+- [x] **B26** [auto] GUI perf gates: cold start, PSS, CPU with meters, CPU
   hidden, frame time while dragging (owner laptop for GPU numbers).
+  Done 2026-11-28 (architecture §11.4, as built): `junc-bench gui` and
+  `scripts/gui/perf.sh` drive the shipped junc-gui (timings behind
+  `JUNC_GUI_PERF`) against juncd with ten Junctions; `--hyprland` on a
+  temporary headless monitor gates `bench/gui-thresholds.toml`, CI tracks
+  the Xvfb numbers on both arches. Owner's M1, five runs: first frame
+  114–193 ms, PSS 77.8–79.0 MB, 0.6–0.7 % CPU metered, drag render p95
+  8.5–8.7 ms, hidden 0 % (one run one tick, from Slint's, winit's and
+  Mesa's threads; owner decision below). Found on the way: the real
+  junc-gui did not start at all after B25's app id (fixed in #76, and
+  the package smoke test now starts it). PSS is 1–2 MB under its target.
 - [ ] **B27** [owner] Beta walkthrough with the real USB interface, once,
   following a script the developer writes (every screen, every F-ID). Owner
   reports issues; developer files them.
@@ -629,3 +639,4 @@ decisions log once the owner answers.
 | 2026-11-26 | The bench measures juncd's PSS with transparent huge pages disabled for juncd (runner THP moved the same binary between 5.8 and 7.5 MB); the gate's limits stay | owner |
 | 2026-11-27 | The debug-build latency tests (`enable_stays_fast`, `calls_answer_within_50_ms`) measure a slow round once more before failing (aarch64 runners stalled whole rounds); the gates stay | owner |
 | 2026-11-27 | The tray's StatusNotifierItem and DBusMenu are written on zbus 6 instead of using `ksni` (Unlicense, not allowed by `deny.toml`; it brings zbus 5 and tokio) | owner |
+| 2026-11-28 | The hidden-window CPU gate stays at 0 ticks for the whole process; a rare single tick, from library threads (zbus 5 in Slint's winit backend, winit's clipboard, Mesa), is rerun, and the 2 Hz library wakeup is reported upstream | owner |
