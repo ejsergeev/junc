@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! `cargo xtask i18n extract|check|build` (docs/architecture.md §8).
+//! `cargo xtask i18n extract|check|plugin|build` (docs/architecture.md §8).
 //!
 //! - `extract` writes `po/cli/junc.pot` from every `tr`, `trf` and `trn`
 //!   call in the crates' sources (GNU xgettext ≥ 0.24 reads Rust).
@@ -11,6 +11,8 @@
 //! - `build [DIR]` compiles `po/cli/<lang>.po` into
 //!   `DIR/<lang>/LC_MESSAGES/junc.mo` (default `target/locale`), with
 //!   junc-l10n's own writer, so no gettext tools are needed for it.
+//! - `plugin` writes the Omarchy bar plugin's JSON catalogs from
+//!   `po/plugin/<lang>.po` (see the end of this file).
 //!
 //! The GUI's messages are the `@tr(…)` of `crates/junc-gui/ui/` (the
 //! component gallery's demo text excepted): `extract` also writes
@@ -458,6 +460,7 @@ pub fn check(root: &Path) -> Vec<String> {
         }
     }
     out.extend(check_gui(root));
+    out.extend(check_plugin(root));
     out
 }
 
@@ -542,6 +545,209 @@ pub fn build(root: &Path, out: &Path) -> Result<Vec<String>, String> {
         langs.push(lang);
     }
     Ok(langs)
+}
+
+// The Omarchy bar plugin (B23). Omarchy plugins read flat JSON catalogs,
+// one per Omarchy language code, keyed by the plugin's own keys
+// (`popup.on`), with plural entries as objects keyed by CLDR category. The
+// English catalog `omarchy/plugin/i18n/en.json` is the source: `extract`
+// writes `po/plugin/junc-plugin.pot` from it (msgid the English, a plural
+// entry's `one`/`other` as msgid/msgid_plural), translators work on
+// `po/plugin/<lang>.po` like the CLI's and the GUI's, and `plugin` writes
+// `omarchy/plugin/i18n/<lang>.json` back from them. `check` fails when the
+// template or a JSON catalog is stale.
+
+/// Where the plugin's `.po` files are.
+pub fn plugin_po_dir(root: &Path) -> PathBuf {
+    root.join("po/plugin")
+}
+
+/// Where the plugin reads its JSON catalogs.
+pub fn plugin_json_dir(root: &Path) -> PathBuf {
+    root.join("omarchy/plugin/i18n")
+}
+
+/// The English catalog: key → text or plural forms.
+fn plugin_english(root: &Path) -> Result<BTreeMap<String, serde_json::Value>, String> {
+    let path = plugin_json_dir(root).join("en.json");
+    let text = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+    let map: BTreeMap<String, serde_json::Value> =
+        serde_json::from_str(&text).map_err(|e| format!("{}: {e}", path.display()))?;
+    let mut seen = BTreeSet::new();
+    for (key, value) in &map {
+        let id = match value {
+            serde_json::Value::String(s) => s.clone(),
+            serde_json::Value::Object(o) => match (o.get("one"), o.get("other")) {
+                (Some(serde_json::Value::String(one)), Some(serde_json::Value::String(_))) => {
+                    one.clone()
+                }
+                _ => return Err(format!("en.json: {key} needs one and other")),
+            },
+            _ => return Err(format!("en.json: {key} is not text")),
+        };
+        if !seen.insert(id.clone()) {
+            return Err(format!(
+                "en.json: {id:?} is there twice; a .po can tell them apart only by text"
+            ));
+        }
+    }
+    Ok(map)
+}
+
+/// The plugin's template.
+pub fn extract_plugin(root: &Path) -> Result<String, String> {
+    let mut out = String::from(
+        "# The Omarchy bar plugin's messages, from cargo xtask i18n extract\n\
+         # (omarchy/plugin/i18n/en.json). Do not edit.\n\
+         msgid \"\"\n\
+         msgstr \"\"\n\
+         \"Project-Id-Version: junc-plugin\\n\"\n\
+         \"Content-Type: text/plain; charset=UTF-8\\n\"\n",
+    );
+    for (key, value) in plugin_english(root)? {
+        out.push_str(&format!("\n#. {key}\n#: omarchy/plugin/i18n/en.json\n"));
+        match value {
+            serde_json::Value::Object(o) => {
+                let s = |k: &str| {
+                    o.get(k)
+                        .and_then(|v| v.as_str())
+                        .unwrap_or_default()
+                        .to_owned()
+                };
+                out.push_str(&format!("msgid {}\n", po_string(&s("one"))));
+                out.push_str(&format!("msgid_plural {}\n", po_string(&s("other"))));
+                out.push_str("msgstr[0] \"\"\nmsgstr[1] \"\"\n");
+            }
+            v => {
+                out.push_str(&format!(
+                    "msgid {}\n",
+                    po_string(v.as_str().unwrap_or_default())
+                ));
+                out.push_str("msgstr \"\"\n");
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// CLDR plural category of each gettext plural form, by language: the
+/// form order of the Plural-Forms each language uses. A language with
+/// plural messages has to be listed here before its catalog builds.
+fn cldr_forms(lang: &str) -> Option<&'static [&'static str]> {
+    Some(match lang.split('-').next().unwrap_or(lang) {
+        "ja" | "ko" | "zh" | "th" | "vi" | "id" | "ms" => &["other"],
+        "ru" | "uk" | "pl" | "hr" | "sr" => &["one", "few", "many"],
+        "cs" | "sk" => &["one", "few", "other"],
+        "de" | "en" | "nl" | "sv" | "da" | "no" | "nb" | "fi" | "et" | "it" | "es" | "pt"
+        | "ca" | "el" | "bg" | "hu" | "tr" | "fr" | "hi" | "bn" | "fa" | "is" => &["one", "other"],
+        _ => return None,
+    })
+}
+
+/// `(language, JSON text)` for every `po/plugin/<lang>.po`. Untranslated
+/// messages are left out, so they fall back to English.
+pub fn build_plugin(root: &Path) -> Result<Vec<(String, String)>, String> {
+    let english = plugin_english(root)?;
+    let key_of: BTreeMap<String, &str> = english
+        .iter()
+        .map(|(k, v)| {
+            let id = v
+                .as_str()
+                .or_else(|| v.get("one").and_then(|x| x.as_str()))
+                .unwrap_or_default();
+            (id.to_owned(), k.as_str())
+        })
+        .collect();
+    let mut out = Vec::new();
+    for (name, path) in catalogs(&plugin_po_dir(root)) {
+        let lang = name.trim_end_matches(".po").to_owned();
+        let po = std::fs::read_to_string(&path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| parse(&t))
+            .map_err(|e| format!("plugin/{name}: {e}"))?;
+        let mut json = BTreeMap::new();
+        for e in &po.entries {
+            let Some(key) = key_of.get(&e.msgid) else {
+                return Err(format!("plugin/{name}: {:?} is not in en.json", e.msgid));
+            };
+            if e.msgstr.iter().all(String::is_empty) {
+                continue;
+            }
+            let value = if e.plural.is_some() {
+                let forms = cldr_forms(&lang).ok_or_else(|| {
+                    format!("plugin/{name}: add {lang}'s plural categories to cldr_forms")
+                })?;
+                if forms.len() != e.msgstr.len() {
+                    return Err(format!(
+                        "plugin/{name}:{}: {} forms, {lang} has {}",
+                        e.line,
+                        e.msgstr.len(),
+                        forms.len()
+                    ));
+                }
+                serde_json::Value::Object(
+                    forms
+                        .iter()
+                        .zip(&e.msgstr)
+                        .map(|(c, s)| ((*c).to_owned(), serde_json::Value::String(s.clone())))
+                        .collect(),
+                )
+            } else {
+                serde_json::Value::String(e.msgstr[0].clone())
+            };
+            json.insert((*key).to_owned(), value);
+        }
+        let text = serde_json::to_string_pretty(&json).map_err(|e| e.to_string())? + "\n";
+        out.push((lang, text));
+    }
+    Ok(out)
+}
+
+/// The plugin's template, catalogs and JSON files.
+fn check_plugin(root: &Path) -> Vec<String> {
+    let dir = plugin_po_dir(root);
+    let pot = dir.join("junc-plugin.pot");
+    let Ok(text) = std::fs::read_to_string(&pot) else {
+        return vec![format!(
+            "{} is missing: run cargo xtask i18n extract",
+            pot.display()
+        )];
+    };
+    let mut out = Vec::new();
+    match extract_plugin(root) {
+        Ok(fresh) if fresh != text => {
+            out.push("po/plugin/junc-plugin.pot is stale: run cargo xtask i18n extract".to_owned());
+        }
+        Ok(_) => {}
+        Err(e) => out.push(e),
+    }
+    let template = match parse(&text) {
+        Ok(t) => t,
+        Err(e) => return vec![format!("junc-plugin.pot: {e}")],
+    };
+    for (name, path) in catalogs(&dir) {
+        match std::fs::read_to_string(&path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| parse(&t))
+        {
+            Ok(po) => out.extend(check_catalog(&format!("plugin/{name}"), &po, &template)),
+            Err(e) => out.push(format!("plugin/{name}: {e}")),
+        }
+    }
+    match build_plugin(root) {
+        Ok(files) => {
+            for (lang, json) in files {
+                let path = plugin_json_dir(root).join(format!("{lang}.json"));
+                if std::fs::read_to_string(&path).ok().as_deref() != Some(json.as_str()) {
+                    out.push(format!(
+                        "omarchy/plugin/i18n/{lang}.json is stale: run cargo xtask i18n plugin"
+                    ));
+                }
+            }
+        }
+        Err(e) => out.push(e),
+    }
+    out
 }
 
 #[cfg(test)]

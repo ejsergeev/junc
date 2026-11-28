@@ -6,8 +6,9 @@
 //! - `skill-ref`: regenerate `skill/junc/reference.md` from the CLI.
 //! - `skill-check`: check the agent skill (commands parse, config examples
 //!   validate, links resolve, reference is fresh).
-//! - `i18n extract|check|build [DIR]`: the message template, catalog
-//!   checks, and compiled catalogs (see `i18n.rs`).
+//! - `i18n extract|check|plugin|build [DIR]`: the message templates,
+//!   catalog checks, the bar plugin's JSON catalogs and compiled catalogs
+//!   (see `i18n.rs`).
 
 #![forbid(unsafe_code)]
 
@@ -93,6 +94,15 @@ fn i18n_task() -> ExitCode {
                     .and_then(|()| std::fs::write(&path, t))
                     .map_err(|e| format!("{}: {e}", path.display()))
             }) {
+                Ok(()) => println!("wrote {}", path.display()),
+                Err(e) => return fail(e),
+            }
+            let path = i18n::plugin_po_dir(&root).join("junc-plugin.pot");
+            match i18n::extract_plugin(&root).and_then(|t| {
+                std::fs::create_dir_all(i18n::plugin_po_dir(&root))
+                    .and_then(|()| std::fs::write(&path, t))
+                    .map_err(|e| format!("{}: {e}", path.display()))
+            }) {
                 Ok(()) => {
                     println!("wrote {}", path.display());
                     ExitCode::SUCCESS
@@ -100,6 +110,19 @@ fn i18n_task() -> ExitCode {
                 Err(e) => fail(e),
             }
         }
+        Some("plugin") => match i18n::build_plugin(&root) {
+            Ok(files) => {
+                for (lang, json) in files {
+                    let path = i18n::plugin_json_dir(&root).join(format!("{lang}.json"));
+                    if let Err(e) = std::fs::write(&path, json) {
+                        return fail(format!("{}: {e}", path.display()));
+                    }
+                    println!("wrote {}", path.display());
+                }
+                ExitCode::SUCCESS
+            }
+            Err(e) => fail(e),
+        },
         Some("check") => {
             let problems = i18n::check(&root);
             for p in &problems {
@@ -125,7 +148,7 @@ fn i18n_task() -> ExitCode {
             }
         }
         _ => {
-            eprintln!("usage: cargo xtask i18n extract|check|build [DIR]");
+            eprintln!("usage: cargo xtask i18n extract|check|plugin|build [DIR]");
             ExitCode::from(2)
         }
     }
