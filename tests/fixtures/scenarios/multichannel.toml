@@ -1,0 +1,56 @@
+# GUI scenario: design board 36, "Multichannel Input" — after Use all
+# channels: an 18-input card in Pro Audio, its channels in groups of
+# eight, the first open.
+board = 36
+title = "Multichannel Input"
+base = "default"
+graph = "usb-18in-proaudio.json"
+config = """
+schema = 1
+
+[[junction]]
+id = "virtual-mic-for-zoom"
+name = "Virtual Mic for Zoom"
+volume = 50
+bus = { channels = 4 }
+
+[[junction.input]]
+id = "spotify"
+match = { binary = "spotify" }
+volume = 70
+exclusive = true
+
+[[junction.input]]
+id = "soundux"
+match = { binary = "soundux" }
+links = [[1, 3], [2, 4]]
+
+[[junction.input]]
+id = "interface"
+match = { device = "alsa_card.usb-JUNC_Test_18in-00", profile = "pro-audio" }
+name = "JUNC Test 18in"
+links = [[1, 1], [2, 2]]
+
+[[junction.listen]]
+id = "builtin"
+target = "default"
+volume = 80
+links = [[1, 1], [2, 2]]
+
+[[junction.listen]]
+id = "hdmi"
+target = "alsa_output.platform-hdmi.hdmi-stereo"
+links = [[1, 1], [2, 2], [3, 1], [4, 2]]
+
+[[junction]]
+id = "firefox-to-obs"
+name = "Firefox → OBS"
+kind = "cable"
+
+[[junction.input]]
+id = "firefox"
+match = { binary = "firefox" }
+
+[junction.cable]
+to = { binary = "obs" }
+"""
