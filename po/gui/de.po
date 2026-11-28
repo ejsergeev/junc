@@ -117,6 +117,10 @@ msgstr "Ein virtuelles Mikrofon und ein Lautsprecher"
 msgid "One app straight into another"
 msgstr "Eine App direkt in eine andere"
 
+#: crates/junc-gui/ui/app.slint
+msgid "Undo"
+msgstr "Rückgängig"
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
 msgstr "Schließen"
@@ -550,6 +554,14 @@ msgid "Default"
 msgstr "Standard"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Leave as is"
+msgstr "So lassen"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Junction is off — apps see silence"
 msgstr "Junction ist aus – Apps hören Stille"
 
@@ -976,6 +988,26 @@ msgstr "JUNC öffnen"
 #: crates/junc-gui/ui/view.slint
 msgid "Quit"
 msgstr "Beenden"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default input restored to {0}"
+msgstr "Standardeingang wieder auf {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default output restored to {0}"
+msgstr "Standardausgang wieder auf {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Another app removed the link {0} → {1}"
+msgstr "Eine andere App hat die Verbindung {0} → {1} entfernt"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} {1}"
+msgstr "{0} {1}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} {1} ({2})"
+msgstr "{0} {1} ({2})"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Current"

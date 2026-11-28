@@ -117,6 +117,10 @@ msgstr "仮想マイクと仮想スピーカー"
 msgid "One app straight into another"
 msgstr "あるアプリの音を別のアプリへ直接"
 
+#: crates/junc-gui/ui/app.slint
+msgid "Undo"
+msgstr "元に戻す"
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
 msgstr "閉じる"
@@ -546,6 +550,14 @@ msgid "Default"
 msgstr "デフォルト"
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Restore"
+msgstr "戻す"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Leave as is"
+msgstr "このままにする"
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Junction is off — apps see silence"
 msgstr "ジャンクションはオフです — アプリには無音が届きます"
 
@@ -972,6 +984,26 @@ msgstr "JUNC を開く"
 #: crates/junc-gui/ui/view.slint
 msgid "Quit"
 msgstr "終了"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default input restored to {0}"
+msgstr "既定の入力を {0} に戻しました"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default output restored to {0}"
+msgstr "既定の出力を {0} に戻しました"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Another app removed the link {0} → {1}"
+msgstr "別のアプリが {0} → {1} のリンクを削除しました"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} {1}"
+msgstr "{0} {1}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} {1} ({2})"
+msgstr "{0} {1} ({2})"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Current"

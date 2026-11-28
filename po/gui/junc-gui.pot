@@ -108,6 +108,10 @@ msgstr ""
 msgid "One app straight into another"
 msgstr ""
 
+#: crates/junc-gui/ui/app.slint
+msgid "Undo"
+msgstr ""
+
 #: crates/junc-gui/ui/components/banner.slint crates/junc-gui/ui/components/toast.slint
 msgid "Dismiss"
 msgstr ""
@@ -541,6 +545,14 @@ msgid "Default"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
+msgid "Restore"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Leave as is"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
 msgid "Junction is off — apps see silence"
 msgstr ""
 
@@ -966,6 +978,26 @@ msgstr ""
 
 #: crates/junc-gui/ui/view.slint
 msgid "Quit"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default input restored to {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Default output restored to {0}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "Another app removed the link {0} → {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} {1}"
+msgstr ""
+
+#: crates/junc-gui/ui/view.slint
+msgid "{0} {1} ({2})"
 msgstr ""
 
 #: crates/junc-gui/ui/view.slint
