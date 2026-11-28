@@ -7,9 +7,10 @@
 # (not the release tag), the version 0.1.0.r<commits>.g<hash>.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
+# The PKGBUILD's makedepends, so the two lists cannot drift apart.
+mapfile -t makedepends < <(source packaging/arch/PKGBUILD; printf '%s\n' "${makedepends[@]}")
 for i in 1 2 3; do
-  pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf pipewire librsvg \
-    namcap >/dev/null && break
+  pacman -Syu --noconfirm --needed base-devel rust namcap "${makedepends[@]}" >/dev/null && break
   (( i == 3 )) && exit 1; sleep 20; pacman -Syy >/dev/null || true
 done
 id builder >/dev/null 2>&1 || useradd -m builder
