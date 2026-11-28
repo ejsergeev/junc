@@ -18,7 +18,7 @@ pub enum Part {
 }
 
 /// One change.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Edit {
     /// Turn it on or off.
     Enabled(Part, bool),
@@ -68,6 +68,9 @@ pub enum Edit {
     /// A copy of the Junction named `0` after it (board 21), its id from
     /// the name; it is no system default.
     Duplicate(String),
+    /// A Junction a template made (board 49), after the others; its id is
+    /// made unique.
+    AddJunction(Box<junc_core::model::Junction>),
     /// A new Cable (board 27) named `name` from app `from` (its Input's id
     /// from `label`) to app `to`, after the others.
     NewCable {
@@ -81,6 +84,12 @@ pub enum Edit {
 /// Applies `edit` to Junction `junction`. Returns false when it or the
 /// part is gone (someone else changed the config meanwhile).
 pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
+    if let Edit::AddJunction(j) = edit {
+        let mut j = (**j).clone();
+        j.id = unique_id(&j.id, config.junction.iter().map(|k| k.id.as_str()));
+        config.junction.push(j);
+        return true;
+    }
     if let Edit::NewCable {
         name,
         from,
@@ -169,7 +178,7 @@ pub fn apply(config: &mut Config, junction: &str, edit: &Edit) -> bool {
             return true;
         }
         // Done above: they add a Junction rather than change one.
-        Edit::Duplicate(_) | Edit::NewCable { .. } => return true,
+        Edit::Duplicate(_) | Edit::NewCable { .. } | Edit::AddJunction(_) => return true,
         Edit::RemoveInput(id) => {
             let before = j.input.len();
             j.input.retain(|i| &i.id != id);
@@ -390,6 +399,28 @@ target = "default"
             }
         ));
         assert_eq!(c.junction[0].input[1].links, Some(vec![[1, 3]]));
+    }
+
+    #[test]
+    fn a_template_filled_in_adds_a_valid_junction() {
+        let mut c = config();
+        let t = junc_core::preset::builtin("mic-plus-app").expect("template");
+        let fills: std::collections::BTreeMap<String, junc_core::preset::Fill> = [
+            (
+                "mic".to_owned(),
+                junc_core::preset::Fill::value("alsa_input.usb-mic"),
+            ),
+            ("app".to_owned(), junc_core::preset::Fill::value("spotify")),
+        ]
+        .into();
+        let j = t.fill(&fills).expect("filled");
+        assert!(apply(&mut c, "", &Edit::AddJunction(Box::new(j.clone()))));
+        assert!(apply(&mut c, "", &Edit::AddJunction(Box::new(j))));
+        let ids: Vec<&str> = c.junction.iter().skip(1).map(|j| j.id.as_str()).collect();
+        assert_eq!(ids.len(), 2);
+        assert_ne!(ids[0], ids[1], "ids made unique");
+        let text = toml::to_string(&c).expect("toml");
+        junc_core::config::load(&text, "junctions.toml").expect("still valid");
     }
 
     #[test]

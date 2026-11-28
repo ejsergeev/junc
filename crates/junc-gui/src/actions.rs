@@ -11,7 +11,7 @@ use junc_ipc::{DaemonProxy, JunctionProxy, error_body};
 use std::sync::mpsc;
 
 /// One request.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Command {
     /// Junction on or off (`Junction.SetEnabled`).
     Enabled { path: String, on: bool },
