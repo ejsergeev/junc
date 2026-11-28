@@ -1404,6 +1404,19 @@ notice does not say which tool removed a link, so the banner says
 "Another app". Not built: drawing the removed link dashed in the
 warning colour, as board 39 does.
 
+As built (B21, picker offers): a hardware input row of the Add Input
+picker can carry an offer, shown under it while the cursor is on it
+(`picker::Offer`, `JPicker`'s note, alternative and back buttons). A
+card that gives more inputs in Pro Audio (`Describe.devices[].pro_audio`;
+the card found from the node's name, `alsa_input.<card>.<profile>` ↔
+`alsa_card.<card>`) says "2 of 18 channels" and offers Use all channels
+(Shift+Enter): an Input matching the card with `profile = "pro-audio"`,
+as `junc input add --pro-audio`; Enter still adds the two channels
+(board 35). A Bluetooth headset mic whose use switches the headset to its
+call profile (`candidates[].bluetooth.switches_to_call`) warns in the
+warning colour; Enter does not add it, Add anyway (Shift+Enter) does,
+Choose another mic (↑) moves up (board 40).
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
