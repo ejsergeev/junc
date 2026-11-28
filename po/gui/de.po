@@ -299,7 +299,7 @@ msgstr "Name"
 msgid "From"
 msgstr "Von"
 
-#: crates/junc-gui/ui/screens/cable.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint
 msgid "Choose an app"
 msgstr "Wähle eine App"
 
@@ -395,7 +395,7 @@ msgstr "Apps suchen"
 msgid "Only apps that are playing or have played this session."
 msgstr "Nur Apps, die gerade spielen oder in dieser Sitzung gespielt haben."
 
-#: crates/junc-gui/ui/screens/cable.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint
 msgid "pick"
 msgstr "wählen"
 
@@ -837,6 +837,22 @@ msgstr "wählen"
 msgid "Create {0}"
 msgstr "{0} erstellen"
 
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Pick what the template needs. You can change everything later."
+msgstr "Wähle, was die Vorlage braucht. Du kannst alles später ändern."
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Choose"
+msgstr "Wählen"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Create Junction"
+msgstr "Junction erstellen"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Search"
+msgstr "Suchen"
+
 #: crates/junc-gui/ui/screens/service-down.slint
 msgid "Can't reach the audio service"
 msgstr "Audiodienst nicht erreichbar"
@@ -1046,6 +1062,38 @@ msgid "Choose another mic"
 msgstr "Anderes Mikrofon wählen"
 
 #: crates/junc-gui/ui/view.slint
+msgid "Hardware input"
+msgstr "Hardware-Eingang"
+
+#: crates/junc-gui/ui/view.slint
+msgid "An app that is playing"
+msgstr "Eine App, die gerade spielt"
+
+#: crates/junc-gui/ui/view.slint
+msgid "An output device"
+msgstr "Ein Ausgabegerät"
+
+#: crates/junc-gui/ui/view.slint
+msgid "What an output plays"
+msgstr "Was ein Ausgang abspielt"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Hardware inputs"
+msgstr "Hardware-Eingänge"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Running apps"
+msgstr "Laufende Apps"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Output devices"
+msgstr "Ausgabegeräte"
+
+#: crates/junc-gui/ui/view.slint
+msgid "System audio"
+msgstr "Systemaudio"
+
+#: crates/junc-gui/ui/view.slint
 msgid "JUNC updated to {0} · audio kept running"
 msgstr "JUNC auf {0} aktualisiert · Audio lief weiter"
 
@@ -1090,24 +1138,8 @@ msgid "current"
 msgstr "aktuell"
 
 #: crates/junc-gui/ui/view.slint
-msgid "Running apps"
-msgstr "Laufende Apps"
-
-#: crates/junc-gui/ui/view.slint
-msgid "Hardware inputs"
-msgstr "Hardware-Eingänge"
-
-#: crates/junc-gui/ui/view.slint
-msgid "System audio"
-msgstr "Systemaudio"
-
-#: crates/junc-gui/ui/view.slint
 msgid "Monitor of {0}"
 msgstr "Monitor von {0}"
-
-#: crates/junc-gui/ui/view.slint
-msgid "Output devices"
-msgstr "Ausgabegeräte"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"

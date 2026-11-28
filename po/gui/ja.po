@@ -298,7 +298,7 @@ msgstr "名前"
 msgid "From"
 msgstr "送り元"
 
-#: crates/junc-gui/ui/screens/cable.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint
 msgid "Choose an app"
 msgstr "アプリを選択"
 
@@ -394,7 +394,7 @@ msgstr "アプリを検索"
 msgid "Only apps that are playing or have played this session."
 msgstr "再生中か、このセッションで再生したアプリのみ。"
 
-#: crates/junc-gui/ui/screens/cable.slint
+#: crates/junc-gui/ui/screens/cable.slint crates/junc-gui/ui/screens/onboarding.slint
 msgid "pick"
 msgstr "選択"
 
@@ -833,6 +833,22 @@ msgstr "選択"
 msgid "Create {0}"
 msgstr "{0} を作成"
 
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Pick what the template needs. You can change everything later."
+msgstr "テンプレートに必要なものを選んでください。あとですべて変更できます。"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Choose"
+msgstr "選択"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Create Junction"
+msgstr "ジャンクションを作成"
+
+#: crates/junc-gui/ui/screens/onboarding.slint
+msgid "Search"
+msgstr "検索"
+
 #: crates/junc-gui/ui/screens/service-down.slint
 msgid "Can't reach the audio service"
 msgstr "オーディオサービスに接続できません"
@@ -1042,6 +1058,38 @@ msgid "Choose another mic"
 msgstr "別のマイクを選ぶ"
 
 #: crates/junc-gui/ui/view.slint
+msgid "Hardware input"
+msgstr "ハードウェア入力"
+
+#: crates/junc-gui/ui/view.slint
+msgid "An app that is playing"
+msgstr "再生中のアプリ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "An output device"
+msgstr "出力デバイス"
+
+#: crates/junc-gui/ui/view.slint
+msgid "What an output plays"
+msgstr "出力が再生するもの"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Hardware inputs"
+msgstr "ハードウェア入力"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Running apps"
+msgstr "実行中のアプリ"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Output devices"
+msgstr "出力デバイス"
+
+#: crates/junc-gui/ui/view.slint
+msgid "System audio"
+msgstr "システム音声"
+
+#: crates/junc-gui/ui/view.slint
 msgid "JUNC updated to {0} · audio kept running"
 msgstr "JUNC を {0} に更新しました · 音声は途切れていません"
 
@@ -1086,24 +1134,8 @@ msgid "current"
 msgstr "現在"
 
 #: crates/junc-gui/ui/view.slint
-msgid "Running apps"
-msgstr "実行中のアプリ"
-
-#: crates/junc-gui/ui/view.slint
-msgid "Hardware inputs"
-msgstr "ハードウェア入力"
-
-#: crates/junc-gui/ui/view.slint
-msgid "System audio"
-msgstr "システム音声"
-
-#: crates/junc-gui/ui/view.slint
 msgid "Monitor of {0}"
 msgstr "{0} のモニター"
-
-#: crates/junc-gui/ui/view.slint
-msgid "Output devices"
-msgstr "出力デバイス"
 
 #: crates/junc-gui/ui/view.slint
 msgid "Default output (follows system)"
