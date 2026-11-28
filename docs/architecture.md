@@ -1446,6 +1446,17 @@ re-executes without an audio gap) with What's new, which opens the
 release's notes on the repository (`xdg-open`). The first version seen
 is only remembered.
 
+As built (B22, template slots): onboarding's templates that have slots
+open a second step (board 49): one row per slot, named by its id ("Mic",
+"App") and what it takes, and a select that opens a picker of what can
+fill it from juncd's candidates (apps by binary, hardware inputs, output
+devices and the default output, system audio). Create Junction (Enter,
+once all are filled) fills the built-in template with
+`junc_core::preset::Preset::fill` and adds the Junction with one `Apply`
+(`Edit::AddJunction`, its id made unique), then selects it; Back (Esc)
+returns to the templates. "Cable" goes to the New Cable draft (board
+27), which asks for its two apps.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
