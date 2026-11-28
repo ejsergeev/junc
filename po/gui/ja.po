@@ -986,6 +986,38 @@ msgid "Quit"
 msgstr "終了"
 
 #: crates/junc-gui/ui/view.slint
+msgid "{0} of {1} channels"
+msgstr "{1} チャンネル中 {0}"
+
+#: crates/junc-gui/ui/view.slint
+msgid "more in Pro Audio"
+msgstr "Pro Audio でさらに使用可"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Switches the device to the Pro Audio profile"
+msgstr "デバイスを Pro Audio プロファイルに切り替えます"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Use all channels"
+msgstr "すべてのチャンネルを使う"
+
+#: crates/junc-gui/ui/view.slint
+msgid "A2DP · hi-fi playback"
+msgstr "A2DP · 高音質再生"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Its mic switches the headset to the call profile (HFP): playback drops to call quality."
+msgstr "このマイクを使うとヘッドセットが通話プロファイル (HFP) に切り替わり、再生が通話品質に下がります。"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Add anyway"
+msgstr "それでも追加"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Choose another mic"
+msgstr "別のマイクを選ぶ"
+
+#: crates/junc-gui/ui/view.slint
 msgid "Default input restored to {0}"
 msgstr "既定の入力を {0} に戻しました"
 

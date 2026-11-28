@@ -990,6 +990,38 @@ msgid "Quit"
 msgstr "Beenden"
 
 #: crates/junc-gui/ui/view.slint
+msgid "{0} of {1} channels"
+msgstr "{0} von {1} Kanälen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "more in Pro Audio"
+msgstr "mehr in Pro Audio"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Switches the device to the Pro Audio profile"
+msgstr "Schaltet das Gerät auf das Profil Pro Audio"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Use all channels"
+msgstr "Alle Kanäle nutzen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "A2DP · hi-fi playback"
+msgstr "A2DP · Hi-Fi-Wiedergabe"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Its mic switches the headset to the call profile (HFP): playback drops to call quality."
+msgstr "Sein Mikrofon schaltet das Headset ins Anrufprofil (HFP): Die Wiedergabe fällt auf Anrufqualität."
+
+#: crates/junc-gui/ui/view.slint
+msgid "Add anyway"
+msgstr "Trotzdem hinzufügen"
+
+#: crates/junc-gui/ui/view.slint
+msgid "Choose another mic"
+msgstr "Anderes Mikrofon wählen"
+
+#: crates/junc-gui/ui/view.slint
 msgid "Default input restored to {0}"
 msgstr "Standardeingang wieder auf {0}"
 
