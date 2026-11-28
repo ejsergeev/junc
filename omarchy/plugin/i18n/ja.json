@@ -1,0 +1,13 @@
+{
+  "popup.capturing": "取り込み中: %1",
+  "popup.empty": "ジャンクションはまだありません。JUNC を開いて作成してください。",
+  "popup.notRunning": "JUNC は実行されていません。",
+  "popup.on": "%1 件オン",
+  "popup.open": "JUNC を開く",
+  "row.cable": "ケーブル",
+  "row.defaultInput": "既定の入力",
+  "row.defaultOutput": "既定の出力",
+  "row.junction": {
+    "other": "ジャンクション · 入力 %1 件"
+  }
+}
