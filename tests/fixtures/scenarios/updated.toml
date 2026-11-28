@@ -1,0 +1,6 @@
+# GUI scenario: design board 43, "Updated" — juncd's version changed since
+# the window last ran: a quiet toast, What's new opens the release notes.
+board = 43
+title = "Updated"
+base = "default"
+updated = "1.1"

@@ -65,6 +65,7 @@ const SCENARIOS: &[&str] = &[
     "btWarning",
     "multichannel",
     "configError",
+    "updated",
 ];
 /// Every screen's languages: English, the pseudo-locale (clipping and
 /// untranslated text show), a long one and a CJK one.
