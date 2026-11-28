@@ -1391,6 +1391,19 @@ role go). The sidebar row shows a "Default input"/"Default output"
 badge. The scenarios' base config no longer makes Virtual Mic the
 default input: boards 1–34 show no default.
 
+As built (B21, notices): the window follows juncd's `Notice` signal on
+its own thread (`daemon::notices`). `link_overridden` (board 39) puts a
+warning banner under the header of that Junction: "Another app removed
+the link USB Microphone 2 (R) → Ch 2" (the ends from the reference
+`in/<input>/<a>-><b>` or `listen/<id>/<a>-><b>`), Restore (Enter) or
+Leave as is (`Daemon.ResolveLink`). `default_restored` (board 38) shows
+a toast naming the device that is the default now; Undo (Ctrl+Z) turns
+the Junction that last held the role on again and makes it the default,
+when it still exists (after a delete there is nothing to undo). The
+notice does not say which tool removed a link, so the banner says
+"Another app". Not built: drawing the removed link dashed in the
+warning colour, as board 39 does.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
