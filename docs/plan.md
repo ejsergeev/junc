@@ -499,8 +499,15 @@ de/ja, AT-SPI dump, keyboard test):
   Input of more than eight channels in groups of eight (36). Not built:
   the removed link drawn dashed (39), naming the tool that removed it,
   ← → on channel groups.
-- [ ] **B22** [auto] Bug report, doctor issue, updated, export preset, config
+- [x] **B22** [auto] Bug report, doctor issue, updated, export preset, config
   error, new menu, template slots. Req: F19, F20, F22, F24.
+  Done 2026-11-28 (architecture §7.2, as built), one PR per part: the
+  config error banner (board 47); the update toast (43); a template's
+  slots during onboarding (49); Export preset (46, Ctrl+E); the New
+  menu's templates and presets (48, Import preset… Ctrl+I); Settings'
+  System check (42) and Copy bug report (41). Not built: leaving parts
+  out of an exported preset, a preset file outside the presets folder
+  (no file chooser).
 
 Omarchy and packaging:
 

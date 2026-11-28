@@ -1479,6 +1479,15 @@ presets from `tests/fixtures/presets`, never the user's folder. Not
 built: picking a preset file outside the presets folder (there is no
 file chooser).
 
+As built (B22, doctor and bug report): Settings › Run checks shows every
+check of `junc doctor --json` in doctor's words (board 42,
+`checks::findings`), the fix of each problem to copy, and how many there
+are; Run again (R), Copy bug report (Ctrl+Shift+C), Back to Settings
+(Esc). Copy bug report… (Settings › Diagnostics, or the check) runs `junc
+doctor --bug-report` on a thread (board 41): what it holds and never
+holds, its first lines; Copy (Enter) puts it on the clipboard, Save to
+file… writes `~/junc-bug-report.md`. JUNC sends nothing itself.
+
 ### 7.3 Routing canvas
 
 Columns Inputs → Bus → Listen with a 120 px (min 72) link gutter. Card and
