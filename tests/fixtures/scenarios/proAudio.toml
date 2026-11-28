@@ -1,0 +1,10 @@
+# GUI scenario: design board 35, "Pro Audio prompt" — the Add Input
+# picker's cursor on a USB card that gives more inputs in Pro Audio:
+# "2 of 18 channels", Use all channels (Shift+Enter).
+board = 35
+title = "Pro Audio prompt"
+base = "default"
+graph = "usb-18in-stereo.json"
+usb_capture = 18
+picker = true
+cursor_on = "JUNC Test 18in Analog Stereo"

@@ -1,0 +1,9 @@
+# GUI scenario: design board 40, "Bluetooth warning" — the Add Input
+# picker's cursor on a headset mic: using it switches the headset to its
+# call profile; Add anyway (Shift+Enter) or choose another mic (↑).
+board = 40
+title = "Bluetooth warning"
+base = "default"
+graph = "bt-airpods-a2dp.json"
+picker = true
+cursor_on = "AirPods - Find My"
