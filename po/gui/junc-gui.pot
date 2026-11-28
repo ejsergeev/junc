@@ -148,7 +148,7 @@ msgstr ""
 msgid "{0} ch"
 msgstr ""
 
-#: crates/junc-gui/ui/components/channel-group.slint
+#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/main.slint
 msgid "{0} of {1} linked"
 msgstr ""
 
@@ -594,6 +594,22 @@ msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "mono"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Pro Audio"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} linked"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "In {0}–{1}"
+msgstr ""
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "In {0}"
 msgstr ""
 
 #: crates/junc-gui/ui/screens/main.slint

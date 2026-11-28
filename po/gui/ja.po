@@ -157,7 +157,7 @@ msgstr "{0} を待機中…"
 msgid "{0} ch"
 msgstr "{0} ch"
 
-#: crates/junc-gui/ui/components/channel-group.slint
+#: crates/junc-gui/ui/components/channel-group.slint crates/junc-gui/ui/screens/main.slint
 msgid "{0} of {1} linked"
 msgstr "{1} 中 {0} をリンク"
 
@@ -600,6 +600,22 @@ msgstr "ステレオ"
 #: crates/junc-gui/ui/screens/main.slint
 msgid "mono"
 msgstr "モノラル"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "Pro Audio"
+msgstr "Pro Audio"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "{0} linked"
+msgstr "{0} 本接続"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "In {0}–{1}"
+msgstr "入力 {0}–{1}"
+
+#: crates/junc-gui/ui/screens/main.slint
+msgid "In {0}"
+msgstr "入力 {0}"
 
 #: crates/junc-gui/ui/screens/main.slint
 msgid "Bus channel {0} in"
