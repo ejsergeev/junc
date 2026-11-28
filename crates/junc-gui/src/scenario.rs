@@ -140,6 +140,12 @@ struct Fixture {
     /// The New menu's template and preset picker open (board 48).
     #[serde(default)]
     templates: bool,
+    /// Settings › Run checks (board 42).
+    #[serde(default)]
+    doctor: bool,
+    /// Copy bug report open (board 41).
+    #[serde(default)]
+    report: bool,
     /// Input channels ALSA reports for the graph's USB cards whatever the
     /// profile (board 35: "2 of 18 channels").
     #[serde(default)]
@@ -155,6 +161,15 @@ struct Fixture {
     #[serde(default)]
     link_keys: bool,
 }
+
+/// What `junc doctor --bug-report` answers in a scenario (board 41).
+const BUG_REPORT: &str = "## JUNC bug report
+
+junc 0.1.0 · juncd 0.1.0 · PipeWire 1.6.9 · WirePlumber 0.5.18 · kernel 7.2 (aarch64)
+graph: 1 Junction, 1 Cable · 12 links · 48000 Hz · quantum 1024
+config: ~/.config/junc/junctions.toml (valid)
+… 200 log lines
+";
 
 /// A config error: where and what.
 #[derive(Debug, Deserialize, Clone)]
@@ -178,6 +193,8 @@ pub struct NoticeFixture {
 struct CheckFixture {
     id: String,
     status: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    detail: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     fix: Option<String>,
 }
@@ -260,11 +277,15 @@ pub struct Scenario {
     pub slot_picker: Option<i32>,
     pub export: bool,
     pub templates: bool,
+    pub doctor: bool,
+    pub report: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
     /// What the mock answers to the system check.
     checks: Vec<checks::Row>,
+    /// Every check, for Settings' System check (board 42).
+    findings: Vec<checks::Finding>,
     /// What the mock IPC settles again after each change.
     config: Option<Config>,
     graph: Graph,
@@ -396,6 +417,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
     };
     let doctor = serde_json::to_string(&f.check).map_err(|e| e.to_string())?;
     let checks = checks::parse(&doctor)?;
+    let findings = checks::findings(&doctor)?;
     Ok(Scenario {
         name: name.to_owned(),
         title: f.title,
@@ -445,10 +467,13 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         slot_picker: f.slot_picker,
         export: f.export,
         templates: f.templates,
+        doctor: f.doctor,
+        report: f.report,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
         checks,
+        findings,
         config,
         graph,
         state,
@@ -470,6 +495,7 @@ struct MockState {
     /// The answer to the last request, until [`Mock::flush`] shows it.
     pending: Option<Describe>,
     checks: Vec<checks::Row>,
+    findings: Vec<checks::Finding>,
     /// The system check was asked for and not answered yet.
     checking: bool,
     /// What the window last put on the clipboard.
@@ -490,6 +516,10 @@ struct MockState {
     /// the next flush.
     exported: Option<String>,
     export_asked: bool,
+    doctor_asked: bool,
+    report_asked: bool,
+    /// Where the window saved the bug report.
+    saved: Option<String>,
 }
 
 impl std::fmt::Debug for Mock {
@@ -508,6 +538,7 @@ impl Mock {
                 app: Weak::new(),
                 pending: None,
                 checks: s.checks.clone(),
+                findings: s.findings.clone(),
                 checking: false,
                 copied: None,
                 logs_opened: false,
@@ -519,6 +550,9 @@ impl Mock {
                 opened: None,
                 exported: None,
                 export_asked: false,
+                doctor_asked: false,
+                report_asked: false,
+                saved: None,
             })),
         }
     }
@@ -549,6 +583,21 @@ impl Mock {
         if let (Some(a), Some(on)) = (&app, service) {
             a.borrow_mut().set_service(Some(on));
         }
+        let (doctor, report) = {
+            let mut s = self.inner.borrow_mut();
+            (
+                std::mem::take(&mut s.doctor_asked),
+                std::mem::take(&mut s.report_asked),
+            )
+        };
+        if let (Some(a), true) = (&app, doctor) {
+            // The fixture's checks, in doctor's words.
+            let rows = self.inner.borrow().findings.clone();
+            a.borrow_mut().set_findings(rows);
+        }
+        if let (Some(a), true) = (&app, report) {
+            a.borrow_mut().set_report(BUG_REPORT.to_owned());
+        }
         let exported = {
             let mut s = self.inner.borrow_mut();
             std::mem::take(&mut s.export_asked)
@@ -570,6 +619,11 @@ impl Mock {
     /// What the window last copied.
     pub fn copied(&self) -> Option<String> {
         self.inner.borrow().copied.clone()
+    }
+
+    /// Where the window saved the bug report (board 41).
+    pub fn saved(&self) -> Option<String> {
+        self.inner.borrow().saved.clone()
     }
 
     /// Where the window last exported a preset (board 46).
@@ -620,6 +674,9 @@ impl Actions for Mock {
                 Command::Open(what) => s.opened = Some(what.clone()),
                 Command::ResolveLink { action, .. } => s.resolved = Some(action.clone()),
                 Command::ImportScan => s.import_asked = true,
+                Command::Doctor => s.doctor_asked = true,
+                Command::BugReport => s.report_asked = true,
+                Command::Save { path, .. } => s.saved = Some(path.clone()),
                 Command::ExportPreset { path, .. } => {
                     s.exported = Some(path.clone());
                     s.export_asked = true;
@@ -757,6 +814,9 @@ impl Mock {
             | Command::Open(_)
             | Command::ImportScan
             | Command::ExportPreset { .. }
+            | Command::Doctor
+            | Command::BugReport
+            | Command::Save { .. }
             | Command::Import(_) => {}
         }
     }
@@ -912,6 +972,14 @@ pub fn open(
     }
     if s.templates {
         app.borrow_mut().open_templates(false);
+    }
+    if s.doctor {
+        app.borrow_mut().open_doctor();
+        mock.flush();
+    }
+    if s.report {
+        app.borrow_mut().open_report();
+        mock.flush();
     }
     if let Some(v) = &s.updated {
         app.borrow_mut().show_updated(v);

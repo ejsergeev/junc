@@ -434,6 +434,14 @@ pub fn install(
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
         let c = call.clone();
+        view.on_open_doctor(move || c(&App::open_doctor));
+        let c = call.clone();
+        view.on_open_report(move || c(&App::open_report));
+        let c = call.clone();
+        view.on_report_copy(move || c(&App::report_copy));
+        let c = call.clone();
+        view.on_report_save(move || c(&App::report_save));
+        let c = call.clone();
         view.on_open_templates(move |presets| c(&|a| a.open_templates(presets)));
         let c = call.clone();
         view.on_tpl_search_edited(move |t| c(&|a| a.show_templates(t.as_str())));
@@ -1255,6 +1263,87 @@ impl App {
         self.presets = Some(dir);
     }
 
+    /// Board 42: Settings › Run checks, every check of `junc doctor`.
+    pub fn open_doctor(&mut self) {
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_doctor_checking(true);
+            view.set_doctor_open(true);
+        }
+        self.actions.send(Command::Doctor);
+    }
+
+    /// What doctor found (board 42).
+    pub fn set_findings(&mut self, rows: Vec<checks::Finding>) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let issues = rows.iter().filter(|r| r.state != "ok").count();
+        let items: Vec<ui::FindingItem> = rows
+            .into_iter()
+            .map(|r| ui::FindingItem {
+                id: r.id.into(),
+                state: r.state.into(),
+                detail: r.detail.into(),
+                fix: r.fix.into(),
+            })
+            .collect();
+        let view = w.global::<View>();
+        view.set_doctor_issues(count(issues));
+        view.set_doctor_items(ModelRc::new(VecModel::from(items)));
+        view.set_doctor_checking(false);
+    }
+
+    /// Board 41: the bug report, from `junc doctor --bug-report`.
+    pub fn open_report(&mut self) {
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_report_text("".into());
+            view.set_report_open(true);
+        }
+        self.actions.send(Command::BugReport);
+    }
+
+    /// The report's text; the dialog previews its first lines.
+    pub fn set_report(&mut self, text: String) {
+        if let Some(w) = self.window.upgrade() {
+            let preview: Vec<&str> = text
+                .lines()
+                .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
+                .take(4)
+                .collect();
+            let view = w.global::<View>();
+            view.set_report_preview(preview.join("\n").into());
+            view.set_report_text(text.into());
+        }
+    }
+
+    /// Board 41's Copy: the report on the clipboard.
+    fn report_copy(&mut self) {
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            self.actions
+                .send(Command::Copy(view.get_report_text().to_string()));
+            view.set_report_open(false);
+        }
+    }
+
+    /// Board 41's Save to file…: `~/junc-bug-report.md`.
+    fn report_save(&mut self) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let view = w.global::<View>();
+        let home = std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_default();
+        self.actions.send(Command::Save {
+            path: home.join("junc-bug-report.md").display().to_string(),
+            text: view.get_report_text().to_string(),
+        });
+        view.set_report_open(false);
+    }
+
     /// Where presets go: `$XDG_CONFIG_HOME/junc/presets`, else
     /// `~/.config/junc/presets`.
     fn presets_dir(&self) -> PathBuf {
@@ -2020,9 +2109,10 @@ impl App {
 
     /// Selects Junction `id`.
     pub fn select(&mut self, id: &str) {
-        // A row leaves Settings (board 25).
+        // A row leaves Settings (board 25) and its System check (42).
         if let Some(w) = self.window.upgrade() {
             w.global::<View>().set_settings_open(false);
+            w.global::<View>().set_doctor_open(false);
         }
         if self.selected.as_deref() != Some(id) {
             self.selected = Some(id.to_owned());
@@ -2770,6 +2860,22 @@ pub fn tray_current(e: &crate::tray::Event) {
     let app = CURRENT.with(|c| c.borrow().clone());
     if let Some(a) = app {
         a.borrow_mut().tray_event(e);
+    }
+}
+
+/// Gives the current controller doctor's findings (board 42).
+pub fn findings_current(rows: Vec<checks::Finding>) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().set_findings(rows);
+    }
+}
+
+/// Gives the current controller the bug report's text (board 41).
+pub fn report_current(text: String) {
+    let app = CURRENT.with(|c| c.borrow().clone());
+    if let Some(a) = app {
+        a.borrow_mut().set_report(text);
     }
 }
 

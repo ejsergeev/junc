@@ -116,6 +116,8 @@ export component SettingsScreen inherits Rectangle {
     callback open-source();
     callback import();
     callback open-logs();
+    callback open-report();
+    callback open-doctor();
     callback close();
     background: Tokens.surface-window;
     forward-focus: keys;
@@ -263,23 +265,21 @@ export component SettingsScreen inherits Rectangle {
                         }
                     }
                     Row {
-                        later: true;
                         title: @tr("Diagnostics");
                         detail: @tr("Versions, Junction graph and recent logs. No audio, no personal data.");
                         JButton {
                             y: (parent.height - self.height) / 2;
                             text: @tr("Copy bug report…");
-                            enabled: false;
+                            clicked => { root.open-report(); }
                         }
                     }
                     Row {
-                        later: true;
                         title: @tr("System check");
                         detail: @tr("Same checks as junc doctor.");
                         JButton {
                             y: (parent.height - self.height) / 2;
                             text: @tr("Run checks");
-                            enabled: false;
+                            clicked => { root.open-doctor(); }
                         }
                     }
                     Row {

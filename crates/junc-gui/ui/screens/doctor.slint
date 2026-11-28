@@ -1,0 +1,115 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// System check (design board 42): Settings › Run checks shows every check
+// of `junc doctor` in its words, what fixes each problem, how many there
+// are. Run again (R), Copy bug report (Ctrl+Shift+C), Back to Settings
+// (Esc).
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "../components/button.slint";
+import { JCheckRow } from "../components/check-row.slint";
+import { FindingItem } from "../view.slint";
+
+export component DoctorScreen inherits Rectangle {
+    in property <[FindingItem]> items;
+    in property <bool> checking;
+    in property <int> issues;
+    callback again();
+    callback report();
+    callback back();
+    callback copy(string);
+    background: Tokens.surface-window;
+    forward-focus: keys;
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if (e.text == "r" || e.text == "R") && !e.modifiers.control && !root.checking { root.again(); return accept; }
+            if (e.text == "c" || e.text == "C") && e.modifiers.control && e.modifiers.shift { root.report(); return accept; }
+            if e.text == Key.Escape { root.back(); return accept; }
+            reject
+        }
+    }
+
+    VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: max(24px, (parent.height - self.preferred-height) / 2.6);
+        width: min(680px * Tokens.scale, parent.width - 48px);
+        height: self.preferred-height;
+        spacing: 12px * Tokens.scale;
+        Text {
+            text: @tr("Settings") + " › " + @tr("Run checks");
+            color: Tokens.text-subtle;
+            font-size: Tokens.type-caption;
+        }
+        Text {
+            text: @tr("System check");
+            color: Tokens.text-strong;
+            font-size: Tokens.type-display;
+            accessible-role: AccessibleRole.text;
+        }
+        Text {
+            text: root.checking ? @tr("Checking…")
+                : root.issues == 0 ? @tr("Everything checks out.")
+                : @tr("{n} issue found." | "{n} issues found." % root.issues);
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            height: list.preferred-height;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            background: Tokens.surface-card;
+            accessible-role: AccessibleRole.list;
+            accessible-label: @tr("System check");
+            list := VerticalLayout {
+                padding: Tokens.border;
+                for c[i] in root.items: VerticalLayout {
+                    if i > 0: Rectangle {
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
+                    JCheckRow {
+                        name: c.id == "pipewire" ? "PipeWire"
+                            : c.id == "wireplumber" ? "WirePlumber"
+                            : c.id == "jack" ? "pipewire-jack"
+                            : c.id == "clock" ? @tr("Quantum")
+                            : c.id == "rates" ? @tr("Sample rate")
+                            : c.id == "asahi" ? @tr("Speakers")
+                            : c.id == "juncd" ? @tr("junc daemon") : c.id;
+                        name-width: 180px * Tokens.scale;
+                        detail: c.detail;
+                        state: c.state;
+                        code: c.state == "ok" ? "" : c.fix;
+                        copy(t) => { root.copy(t); }
+                    }
+                }
+            }
+        }
+        HorizontalLayout {
+            padding-top: 6px * Tokens.scale;
+            spacing: Tokens.space-row-gap;
+            alignment: start;
+            JButton {
+                text: @tr("Run again");
+                icon: "\u{f0450}";
+                shortcut: "R";
+                show-key: true;
+                enabled: !root.checking;
+                clicked => { root.again(); }
+            }
+            JButton {
+                text: @tr("Copy bug report");
+                icon: "\u{f018f}";
+                shortcut: "Ctrl+Shift+C";
+                show-key: true;
+                clicked => { root.report(); }
+            }
+            JButton {
+                text: @tr("Back to Settings");
+                icon: "\u{f0142}";
+                shortcut: "Esc";
+                show-key: true;
+                clicked => { root.back(); }
+            }
+        }
+    }
+}

@@ -15,6 +15,8 @@ import { MainScreen, CardItem, PortItem, LinkItem, ChannelItem } from "screens/m
 import { CableScreen } from "screens/cable.slint";
 import { ServiceDown } from "screens/service-down.slint";
 import { SettingsScreen } from "screens/settings.slint";
+import { DoctorScreen } from "screens/doctor.slint";
+import { JReport } from "components/report.slint";
 import { JImport, ImportItem } from "components/import.slint";
 import { JExport } from "components/export.slint";
 import { JPicker } from "components/picker.slint";
@@ -443,7 +445,17 @@ export component AppWindow inherits Window {
             width: 1px;
             background: Tokens.line-divider;
         }
-        if View.settings-open: SettingsScreen {
+        if View.doctor-open: DoctorScreen {
+            items: View.doctor-items;
+            checking: View.doctor-checking;
+            issues: View.doctor-issues;
+            init => { self.focus(); }
+            again => { View.open-doctor(); }
+            report => { View.open-report(); }
+            back => { View.doctor-open = false; }
+            copy(t) => { View.copy(t); }
+        }
+        if !View.doctor-open && View.settings-open: SettingsScreen {
             service-known: View.service-known;
             start-at-login: View.start-at-login;
             follow-theme: View.follow-theme;
@@ -467,9 +479,11 @@ export component AppWindow inherits Window {
             can-import: true;
             import => { View.open-import(); }
             open-logs => { View.open-logs(); }
+            open-report => { View.open-report(); }
+            open-doctor => { View.open-doctor(); }
             close => { View.settings-open = false; shortcuts.focus(); }
         }
-        if !View.settings-open && View.daemon-state == "waiting_for_pipewire": ServiceDown {
+        if !View.doctor-open && !View.settings-open && View.daemon-state == "waiting_for_pipewire": ServiceDown {
             checks: View.service-checks;
             checking: View.checking;
             init => { self.focus(); }
@@ -477,7 +491,7 @@ export component AppWindow inherits Window {
             open-logs => { View.open-logs(); }
             copy(t) => { View.copy(t); }
         }
-        if !View.settings-open && View.daemon-state != "waiting_for_pipewire" && View.selected != "" && View.cable: CableScreen {
+        if !View.doctor-open && !View.settings-open && View.daemon-state != "waiting_for_pipewire" && View.selected != "" && View.cable: CableScreen {
             title: View.title;
             draft: View.cable-draft;
             node: View.node;
@@ -515,7 +529,7 @@ export component AppWindow inherits Window {
             picker-picked(i) => { View.picker-picked(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
         }
-        if !View.settings-open && View.daemon-state != "waiting_for_pipewire" && View.selected != "" && !View.cable: MainScreen {
+        if !View.doctor-open && !View.settings-open && View.daemon-state != "waiting_for_pipewire" && View.selected != "" && !View.cable: MainScreen {
             title: View.title;
             node: View.node;
             bus-channels: View.bus-channels;
@@ -624,10 +638,10 @@ export component AppWindow inherits Window {
             picker-picked-alt(i) => { View.picker-picked-alt(i); }
             picker-closed => { View.picker-closed(); shortcuts.focus(); }
         }
-        if !View.settings-open && View.selected == "" && View.daemon-state != "down" && View.daemon-state != "waiting_for_pipewire": EmptyNone {
+        if !View.doctor-open && !View.settings-open && View.selected == "" && View.daemon-state != "down" && View.daemon-state != "waiting_for_pipewire": EmptyNone {
             new-junction => { View.new-junction(); }
         }
-        if !View.settings-open && View.selected == "" && View.daemon-state == "down": Rectangle {
+        if !View.doctor-open && !View.settings-open && View.selected == "" && View.daemon-state == "down": Rectangle {
             background: Tokens.surface-window;
         }
     }
@@ -770,6 +784,23 @@ export component AppWindow inherits Window {
             search-edited(t) => { View.tpl-search-edited(t); }
             picked(i) => { View.tpl-picked(i); shortcuts.focus(); }
             closed => { View.tpl-open = false; shortcuts.focus(); }
+        }
+    }
+
+    // Board 41: Copy bug report, over Settings or the System check.
+    if View.report-open: Rectangle {
+        background: Tokens.surface-desktop.with-alpha(0.6);
+        TouchArea { }
+        JReport {
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 3;
+            height: self.preferred-height;
+            preview: View.report-preview;
+            ready: View.report-text != "";
+            init => { self.open(); }
+            copy => { View.report-copy(); }
+            save => { View.report-save(); }
+            cancelled => { View.report-open = false; }
         }
     }
 }

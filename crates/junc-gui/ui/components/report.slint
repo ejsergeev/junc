@@ -1,0 +1,148 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copy bug report (design board 41): what the report holds and what it
+// never does, its first lines, and how to get the same in a terminal.
+// Copy (Enter) puts it on the clipboard, Save to file… writes it to
+// ~/junc-bug-report.md, Esc cancels. JUNC sends nothing itself.
+
+import { Tokens } from "../tokens.slint";
+import { JButton } from "button.slint";
+
+export component JReport inherits Rectangle {
+    in property <string> preview;
+    in property <bool> ready;
+    callback copy();
+    callback save();
+    callback cancelled();
+    width: 640px * Tokens.scale;
+    background: Tokens.surface-window;
+    border-width: Tokens.border-popover;
+    border-color: Tokens.accent;
+    accessible-role: groupbox;
+    accessible-label: @tr("Copy bug report");
+    forward-focus: keys;
+
+    public function open() { keys.focus(); }
+
+    keys := FocusScope {
+        key-pressed(e) => {
+            if e.text == Key.Escape { root.cancelled(); return accept; }
+            if e.text == "\n" && root.ready { root.copy(); return accept; }
+            reject
+        }
+    }
+    VerticalLayout {
+        padding: 20px * Tokens.scale;
+        spacing: 14px * Tokens.scale;
+        Text {
+            text: @tr("Copy bug report");
+            font-size: Tokens.type-heading;
+            color: Tokens.text-strong;
+        }
+        Text {
+            text: @tr("Paste it into an issue. JUNC sends nothing by itself.");
+            color: Tokens.text-default;
+            wrap: word-wrap;
+        }
+        Rectangle {
+            background: Tokens.surface-card;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            VerticalLayout {
+                padding: Tokens.border;
+                for r[i] in [
+                    { on: true, title: @tr("Versions"), text: @tr("JUNC, PipeWire, WirePlumber, kernel") },
+                    { on: true, title: @tr("Junction graph"), text: @tr("Junctions, Cables, Links, sample rate, quantum") },
+                    { on: true, title: @tr("Recent logs"), text: @tr("juncd's recent log") },
+                    { on: false, title: @tr("Audio"), text: @tr("Never included") },
+                    { on: false, title: @tr("Personal data"), text: @tr("User name and home paths replaced with ~") },
+                ]: Rectangle {
+                    height: 32px * Tokens.scale;
+                    accessible-role: list-item;
+                    accessible-label: r.title;
+                    accessible-description: r.text;
+                    if i > 0: Rectangle {
+                        y: 0;
+                        height: Tokens.border;
+                        background: Tokens.line-divider;
+                    }
+                    HorizontalLayout {
+                        padding-left: 14px * Tokens.scale;
+                        spacing: 12px * Tokens.scale;
+                        Rectangle {
+                            width: 16px * Tokens.scale;
+                            height: 16px * Tokens.scale;
+                            y: (parent.height - self.height) / 2;
+                            border-width: Tokens.border;
+                            border-color: r.on ? Tokens.status-ok : Tokens.text-subtle;
+                            Text {
+                                text: r.on ? "\u{f012c}" : "\u{f0156}";
+                                color: r.on ? Tokens.status-ok : Tokens.text-subtle;
+                                font-size: Tokens.type-body-small;
+                                accessible-role: none;
+                            }
+                        }
+                        Text {
+                            width: 150px * Tokens.scale;
+                            text: r.title;
+                            color: Tokens.text-strong;
+                            vertical-alignment: center;
+                            accessible-role: none;
+                        }
+                        Text {
+                            text: r.text;
+                            color: Tokens.text-subtle;
+                            font-size: Tokens.type-body-small;
+                            vertical-alignment: center;
+                            accessible-role: none;
+                        }
+                    }
+                }
+            }
+        }
+        Rectangle {
+            background: Tokens.surface-desktop;
+            border-width: Tokens.border;
+            border-color: Tokens.line-divider;
+            min-height: 80px * Tokens.scale;
+            Text {
+                x: 14px * Tokens.scale;
+                y: 10px * Tokens.scale;
+                width: parent.width - 28px * Tokens.scale;
+                text: root.ready ? root.preview : @tr("Collecting…");
+                color: Tokens.text-default;
+                font-size: Tokens.type-body-small;
+                wrap: word-wrap;
+            }
+        }
+        HorizontalLayout {
+            spacing: Tokens.space-row-gap;
+            Text {
+                text: @tr("Same report in a terminal: {0}", "junc doctor --bug-report");
+                color: Tokens.text-subtle;
+                font-size: Tokens.type-body-small;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+                overflow: elide;
+            }
+            JButton {
+                text: @tr("Cancel");
+                shortcut: "Esc";
+                show-key: true;
+                clicked => { root.cancelled(); }
+            }
+            JButton {
+                text: @tr("Save to file…");
+                enabled: root.ready;
+                clicked => { root.save(); }
+            }
+            JButton {
+                text: @tr("Copy");
+                shortcut: "Enter";
+                show-key: true;
+                primary: true;
+                enabled: root.ready;
+                clicked => { root.copy(); }
+            }
+        }
+    }
+}

@@ -23,6 +23,14 @@ export struct ExportRow {
     device: bool,
 }
 
+// One check of `junc doctor` in its words (board 42).
+export struct FindingItem {
+    id: string,
+    state: string,
+    detail: string,
+    fix: string,
+}
+
 // One row of the onboarding system check (checks.rs).
 export struct CheckItem {
     // doctor's id: "pipewire", "wireplumber", "pipewire-pulse", "jack".
@@ -222,6 +230,15 @@ export global View {
     // The card (index into `cards`) the arrow keys move the focus to.
     in-out property <int> focus-card: -1;
     in-out property <LinkItem> pending;
+    // Board 42: Settings › Run checks.
+    in-out property <bool> doctor-open;
+    in-out property <bool> doctor-checking;
+    in-out property <[FindingItem]> doctor-items;
+    in-out property <int> doctor-issues;
+    // Board 41: the bug report, its first lines.
+    in-out property <bool> report-open;
+    in-out property <string> report-text;
+    in-out property <string> report-preview;
     // Board 48: the templates and presets picker.
     in-out property <bool> tpl-open;
     in-out property <[PickerItem]> tpl-items;
@@ -382,6 +399,11 @@ export global View {
     callback import-toggled(int);
     callback import-cable(int, bool);
     callback import-run();
+    // Boards 41, 42.
+    callback open-doctor();
+    callback open-report();
+    callback report-copy();
+    callback report-save();
     // Board 48: from a template (false: templates and presets) or a
     // preset (true: presets only).
     callback open-templates(bool);

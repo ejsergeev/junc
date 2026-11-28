@@ -45,6 +45,12 @@ pub enum Command {
     Service(Option<bool>),
     /// A web page in the browser (`xdg-open`).
     Open(String),
+    /// Board 42: every check of `junc doctor`.
+    Doctor,
+    /// Board 41: `junc doctor --bug-report`'s text.
+    BugReport,
+    /// Board 41: write the bug report into a file.
+    Save { path: String, text: String },
     /// Board 46: write Junction `junction` as a preset file at `path`
     /// (`junc preset export`'s result, from `GetConfig`).
     ExportPreset { junction: String, path: String },
@@ -152,6 +158,40 @@ fn local(command: &Command) -> bool {
             {
                 eprintln!("junc-gui: xdg-open is not available to open {url}");
             }
+            true
+        }
+        Command::Doctor => {
+            let _ = std::thread::Builder::new()
+                .name("junc-doctor".into())
+                .spawn(|| {
+                    let rows = crate::checks::run_all().unwrap_or_else(|e| {
+                        eprintln!("junc-gui: {e}");
+                        Vec::new()
+                    });
+                    let _ = slint::invoke_from_event_loop(move || {
+                        crate::app::findings_current(rows);
+                    });
+                });
+            true
+        }
+        Command::BugReport => {
+            let _ = std::thread::Builder::new()
+                .name("junc-report".into())
+                .spawn(|| {
+                    let text = crate::checks::bug_report().unwrap_or_else(|e| e);
+                    let _ = slint::invoke_from_event_loop(move || {
+                        crate::app::report_current(text);
+                    });
+                });
+            true
+        }
+        Command::Save { path, text } => {
+            let result = std::fs::write(path, text)
+                .map(|()| path.clone())
+                .map_err(|e| format!("{path}: {e}"));
+            let _ = slint::invoke_from_event_loop(move || {
+                crate::app::exported_current(result);
+            });
             true
         }
         Command::Import(items) => {
@@ -264,7 +304,10 @@ async fn run(conn: &zbus::Connection, command: &Command) -> Result<(), String> {
         | Command::OpenLogs
         | Command::Service(_)
         | Command::Open(_)
-        | Command::Import(_) => {}
+        | Command::Import(_)
+        | Command::Doctor
+        | Command::BugReport
+        | Command::Save { .. } => {}
         Command::ExportPreset { junction: id, path } => {
             let daemon = DaemonProxy::builder(conn)
                 .cache_properties(zbus::proxy::CacheProperties::No)
