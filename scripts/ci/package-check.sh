@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # What package-smoke.sh checks in the fresh container, as a user, against
 # an isolated PipeWire: the installed files, the CLI's catalogs, juncd
-# through D-Bus activation, and junc doctor.
+# through D-Bus activation, junc doctor, and that junc-gui starts.
 set -euo pipefail
 fail() { echo "package: $*"; exit 1; }
 for f in /usr/bin/juncd /usr/bin/junc /usr/bin/junc-gui \
@@ -31,4 +31,12 @@ pgrep -x juncd >/dev/null || fail "juncd was not activated"
 junc --json doctor > /tmp/doctor.json || true
 cat /tmp/doctor.json
 grep -q '"juncd"' /tmp/doctor.json || fail "junc doctor did not report juncd"
+# The installed GUI opens its window and keeps it (under X11 with the
+# optdepends it lists for that; a missing platform once ended it at once).
+Xvfb :90 -screen 0 1280x800x24 -nolisten tcp >/tmp/xvfb.log 2>&1 & xvfb=$!
+sleep 1
+DISPLAY=:90 WAYLAND_DISPLAY='' junc-gui >/tmp/gui.log 2>&1 & gui=$!
+sleep 3
+kill -0 "$gui" 2>/dev/null || { cat /tmp/gui.log; fail "junc-gui ended at start"; }
+kill "$gui" "$xvfb"
 echo "== package smoke test ok"
