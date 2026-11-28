@@ -71,6 +71,9 @@ pub struct App {
     tray: Option<crate::tray::Tray>,
     /// A template's slots being filled in (board 49).
     form: Option<SlotForm>,
+    /// Board 48's rows and those the search shows.
+    tpl_rows: Vec<TplRow>,
+    tpl_shown: Vec<usize>,
     /// Where presets are, when not the user's (scenarios).
     presets: Option<PathBuf>,
     /// The language picker's rows (board 31).
@@ -89,6 +92,41 @@ pub struct App {
     /// The config error the banner was dismissed for (board 47); a new
     /// one shows again.
     dismissed_error: Option<String>,
+}
+
+/// The built-in templates in board 48's order, with their glyphs.
+const TEMPLATES: [(&str, &str); 6] = [
+    ("cable", "\u{f0054}"),
+    ("mic-plus-app", "\u{f036c}"),
+    ("combine-inputs", "\u{f00f8}"),
+    ("separate-tracks", "\u{f066a}"),
+    ("stream-mix", "\u{f0430}"),
+    ("start-empty", "\u{f0415}"),
+];
+
+/// A row of board 48's picker.
+#[derive(Debug, Clone)]
+enum TplRow {
+    Builtin(String, &'static str),
+    /// A preset file in the presets folder.
+    Preset(PathBuf),
+}
+
+impl TplRow {
+    fn name(&self, words: &Words) -> String {
+        match self {
+            Self::Builtin(id, _) => words.invoke_template_title(id.as_str().into()).to_string(),
+            Self::Preset(path) => path
+                .file_name()
+                .map(|f| {
+                    f.to_string_lossy()
+                        .trim_end_matches(".toml")
+                        .trim_end_matches(".junc")
+                        .to_owned()
+                })
+                .unwrap_or_default(),
+        }
+    }
 }
 
 /// A template with slots being filled in (board 49).
@@ -283,6 +321,8 @@ pub fn install(
         draft: None,
         tray: None,
         form: None,
+        tpl_rows: Vec::new(),
+        tpl_shown: Vec::new(),
         presets: None,
         languages: Vec::new(),
         overridden: Vec::new(),
@@ -393,6 +433,12 @@ pub fn install(
         view.on_recheck(move || c(&App::recheck));
         let c = call.clone();
         view.on_open_settings(move || c(&App::open_settings));
+        let c = call.clone();
+        view.on_open_templates(move |presets| c(&|a| a.open_templates(presets)));
+        let c = call.clone();
+        view.on_tpl_search_edited(move |t| c(&|a| a.show_templates(t.as_str())));
+        let c = call.clone();
+        view.on_tpl_picked(move |i| c(&|a| a.tpl_picked(i)));
         let c = call.clone();
         view.on_open_export(move || c(&App::open_export));
         let c = call.clone();
@@ -785,8 +831,13 @@ impl App {
         let Some(preset) = junc_core::preset::builtin(id) else {
             return;
         };
+        self.open_form(id, preset);
+    }
+
+    /// Board 49's form for `preset`, titled by template id or name.
+    fn open_form(&mut self, title: &str, preset: junc_core::preset::Preset) {
         self.form = Some(SlotForm {
-            template: id.to_owned(),
+            template: title.to_owned(),
             filled: vec![None; preset.header.slot.len()],
             preset,
             picking: None,
@@ -794,6 +845,136 @@ impl App {
         });
         self.set_step(Some(Step::Slots));
         self.show_slots();
+    }
+
+    /// Board 48: the built-in templates and the presets in the presets
+    /// folder (`presets_only`: those alone, for Import preset…).
+    pub fn open_templates(&mut self, presets_only: bool) {
+        let mut rows: Vec<TplRow> = Vec::new();
+        if !presets_only {
+            rows.extend(
+                TEMPLATES
+                    .iter()
+                    .map(|(id, glyph)| TplRow::Builtin((*id).to_owned(), glyph)),
+            );
+        }
+        let mut presets: Vec<PathBuf> = std::fs::read_dir(self.presets_dir())
+            .map(|d| {
+                d.flatten()
+                    .map(|e| e.path())
+                    .filter(|p| p.extension().is_some_and(|x| x == "toml"))
+                    .collect()
+            })
+            .unwrap_or_default();
+        presets.sort();
+        rows.extend(presets.into_iter().map(TplRow::Preset));
+        self.tpl_rows = rows;
+        if let Some(w) = self.window.upgrade() {
+            let view = w.global::<View>();
+            view.set_tpl_search("".into());
+            view.set_tpl_cursor(0);
+            view.set_tpl_open(true);
+        }
+        self.show_templates("");
+    }
+
+    fn show_templates(&mut self, search: &str) {
+        let Some(w) = self.window.upgrade() else {
+            return;
+        };
+        let words = w.global::<Words>();
+        let search = search.to_lowercase();
+        self.tpl_shown = (0..self.tpl_rows.len())
+            .filter(|&i| {
+                self.tpl_rows[i]
+                    .name(&words)
+                    .to_lowercase()
+                    .contains(&search)
+            })
+            .collect();
+        let mut last = None;
+        let items: Vec<ui::PickerItem> = self
+            .tpl_shown
+            .iter()
+            .map(|&i| {
+                let r = &self.tpl_rows[i];
+                let group = matches!(r, TplRow::Preset(_));
+                let caption = if last == Some(group) {
+                    SharedString::new()
+                } else {
+                    last = Some(group);
+                    if group {
+                        words.invoke_your_presets()
+                    } else {
+                        words.invoke_built_in()
+                    }
+                    .to_uppercase()
+                    .into()
+                };
+                ui::PickerItem {
+                    group: caption,
+                    text: r.name(&words).into(),
+                    detail: if group {
+                        words.invoke_preset_word()
+                    } else {
+                        SharedString::new()
+                    },
+                    icon: match r {
+                        TplRow::Builtin(_, glyph) => (*glyph).into(),
+                        TplRow::Preset(_) => "\u{f01da}".into(),
+                    },
+                    ..ui::PickerItem::default()
+                }
+            })
+            .collect();
+        w.global::<View>()
+            .set_tpl_items(ModelRc::new(VecModel::from(items)));
+    }
+
+    /// Board 48: a template starts as onboarding's would; a preset with
+    /// slots asks for them, else it is added as it is.
+    fn tpl_picked(&mut self, i: i32) {
+        let Some(row) = usize::try_from(i)
+            .ok()
+            .and_then(|i| self.tpl_shown.get(i))
+            .and_then(|&i| self.tpl_rows.get(i))
+            .cloned()
+        else {
+            return;
+        };
+        if let Some(w) = self.window.upgrade() {
+            w.global::<View>().set_tpl_open(false);
+        }
+        match row {
+            TplRow::Builtin(id, _) => self.template(&id),
+            TplRow::Preset(path) => {
+                let text = std::fs::read_to_string(&path).unwrap_or_default();
+                let file = path
+                    .file_name()
+                    .map(|f| f.to_string_lossy().into_owned())
+                    .unwrap_or_default();
+                let Ok(loaded) = junc_core::preset::load(&text, &file) else {
+                    return;
+                };
+                let preset = loaded.preset;
+                if preset.header.slot.is_empty() {
+                    self.creating = Some(
+                        self.sidebar
+                            .junctions
+                            .iter()
+                            .map(|r| r.id.clone())
+                            .collect(),
+                    );
+                    self.actions.send(Command::Edit {
+                        junction: String::new(),
+                        edit: Edit::AddJunction(Box::new(preset.junction)),
+                    });
+                } else {
+                    let name = preset.header.name.clone();
+                    self.open_form(&name, preset);
+                }
+            }
+        }
     }
 
     /// Board 49: the slots and what fills them.

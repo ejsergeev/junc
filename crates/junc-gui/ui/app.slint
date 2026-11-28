@@ -17,6 +17,7 @@ import { ServiceDown } from "screens/service-down.slint";
 import { SettingsScreen } from "screens/settings.slint";
 import { JImport, ImportItem } from "components/import.slint";
 import { JExport } from "components/export.slint";
+import { JPicker } from "components/picker.slint";
 import { JMeter } from "components/meter.slint";
 import { JSwitch } from "components/switch.slint";
 import { JSlider } from "components/slider.slint";
@@ -245,6 +246,10 @@ export component AppWindow inherits Window {
             }
             if e.modifiers.shift && (e.text == "n" || e.text == "N") && View.selected != "" {
                 View.adding-bus = true;
+                return accept;
+            }
+            if !e.modifiers.shift && (e.text == "i" || e.text == "I") {
+                View.open-templates(true);
                 return accept;
             }
             if !e.modifiers.shift && (e.text == "e" || e.text == "E") && View.selected != "" {
@@ -645,7 +650,7 @@ export component AppWindow inherits Window {
                 { text: @tr("Duplicate"), shortcut: "Ctrl+D", enabled: true },
                 { text: parent.item.enabled ? @tr("Turn off") : @tr("Turn on"), shortcut: "Space", enabled: true },
                 { text: @tr("Export preset…"), shortcut: "Ctrl+E", enabled: true, separator: true },
-                { text: @tr("Import preset…"), shortcut: "Ctrl+I", enabled: false },
+                { text: @tr("Import preset…"), shortcut: "Ctrl+I", enabled: true },
                 { text: @tr("Delete…"), shortcut: "Ctrl+Delete", enabled: true, separator: true, destructive: true },
             ];
             init => { self.open(); }
@@ -657,13 +662,15 @@ export component AppWindow inherits Window {
                 if i == 1 { View.duplicate(row.id); }
                 if i == 2 { View.junction-toggled(row.id, !row.enabled); }
                 if i == 3 { View.select(row.id); View.open-export(); }
+                if i == 4 { View.open-templates(true); }
                 if i == 5 { View.select(row.id); View.confirming = true; }
             }
             closed => { View.menu-index = -1; shortcuts.focus(); }
         }
     }
 
-    // New: a Junction or a Cable (templates and presets come with B22).
+    // New (board 48): a Junction, a Cable, from a template or one of your
+    // presets, or a preset's file.
     if root.new-menu: Rectangle {
         TouchArea { clicked => { root.new-menu = false; shortcuts.focus(); } }
         JMenu {
@@ -674,6 +681,8 @@ export component AppWindow inherits Window {
             items: [
                 { text: @tr("Junction"), detail: @tr("A virtual mic and speaker"), shortcut: "Ctrl+Shift+J", enabled: true },
                 { text: @tr("Cable"), detail: @tr("One app straight into another"), shortcut: "Ctrl+Shift+K", enabled: true },
+                { text: @tr("From template…"), shortcut: "›", enabled: true, separator: true },
+                { text: @tr("Import preset…"), shortcut: "Ctrl+I", enabled: true },
             ];
             init => { self.open(); }
             activated(i) => {
@@ -681,6 +690,8 @@ export component AppWindow inherits Window {
                 shortcuts.focus();
                 if i == 0 { View.new-junction(); }
                 if i == 1 { View.new-cable(); }
+                if i == 2 { View.open-templates(false); }
+                if i == 3 { View.open-templates(true); }
             }
             closed => { root.new-menu = false; shortcuts.focus(); }
         }
@@ -734,6 +745,31 @@ export component AppWindow inherits Window {
             init => { self.open(); }
             export => { View.export-run(); shortcuts.focus(); }
             cancelled => { View.export-open = false; shortcuts.focus(); }
+        }
+    }
+
+    // Board 48: the built-in templates and your presets, beside the New
+    // menu.
+    if View.tpl-open: Rectangle {
+        TouchArea { clicked => { View.tpl-open = false; shortcuts.focus(); } }
+        JPicker {
+            x: root.sidebar-width + 8px;
+            y: root.height - 45px * Tokens.scale - self.height - 8px;
+            height: self.preferred-height;
+            title: @tr("From template…");
+            placeholder: @tr("Search templates and presets");
+            search-icon: "\u{f0349}";
+            hints: true;
+            pick-word: @tr("use");
+            max-list-height: 360px * Tokens.scale;
+            note: View.tpl-items.length == 0 ? @tr("No presets yet: export one with Ctrl+E.") : "";
+            items: View.tpl-items;
+            search <=> View.tpl-search;
+            cursor <=> View.tpl-cursor;
+            init => { self.open(); }
+            search-edited(t) => { View.tpl-search-edited(t); }
+            picked(i) => { View.tpl-picked(i); shortcuts.focus(); }
+            closed => { View.tpl-open = false; shortcuts.focus(); }
         }
     }
 }

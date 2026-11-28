@@ -49,6 +49,16 @@ export global Words {
     public pure function bluetooth-note() -> string { @tr("Its mic switches the headset to the call profile (HFP): playback drops to call quality.") }
     public pure function add-anyway() -> string { @tr("Add anyway") }
     public pure function choose-another-mic() -> string { @tr("Choose another mic") }
+    // TRANSLATORS: the built-in templates (as onboarding names them) and
+    // the picker's groups (design board 48).
+    public pure function template-title(id: string) -> string {
+        id == "cable" ? @tr("Cable") : id == "mic-plus-app" ? @tr("Mic + App")
+            : id == "combine-inputs" ? @tr("Combine Inputs") : id == "separate-tracks" ? @tr("Separate tracks")
+            : id == "stream-mix" ? @tr("Stream mix") : id == "start-empty" ? @tr("Start empty") : id
+    }
+    public pure function built-in() -> string { @tr("Built-in") }
+    public pure function your-presets() -> string { @tr("Your presets") }
+    public pure function preset-word() -> string { @tr("preset") }
     // TRANSLATORS: what a preset holds (design board 46).
     public pure function export-inputs() -> string { @tr("Inputs") }
     public pure function export-bus() -> string { @tr("Bus") }
@@ -212,6 +222,11 @@ export global View {
     // The card (index into `cards`) the arrow keys move the focus to.
     in-out property <int> focus-card: -1;
     in-out property <LinkItem> pending;
+    // Board 48: the templates and presets picker.
+    in-out property <bool> tpl-open;
+    in-out property <[PickerItem]> tpl-items;
+    in-out property <string> tpl-search;
+    in-out property <int> tpl-cursor;
     // Board 46: Export preset, for the selected Junction.
     in-out property <bool> export-open;
     in-out property <string> export-title;
@@ -367,6 +382,11 @@ export global View {
     callback import-toggled(int);
     callback import-cable(int, bool);
     callback import-run();
+    // Board 48: from a template (false: templates and presets) or a
+    // preset (true: presets only).
+    callback open-templates(bool);
+    callback tpl-search-edited(string);
+    callback tpl-picked(int);
     // Board 46.
     callback open-export();
     callback export-run();

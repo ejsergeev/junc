@@ -137,6 +137,9 @@ struct Fixture {
     /// Export preset open on the selected Junction (board 46).
     #[serde(default)]
     export: bool,
+    /// The New menu's template and preset picker open (board 48).
+    #[serde(default)]
+    templates: bool,
     /// Input channels ALSA reports for the graph's USB cards whatever the
     /// profile (board 35: "2 of 18 channels").
     #[serde(default)]
@@ -256,6 +259,7 @@ pub struct Scenario {
     pub slot_fill: Vec<[String; 2]>,
     pub slot_picker: Option<i32>,
     pub export: bool,
+    pub templates: bool,
     pub options: Option<i32>,
     pub link: Option<String>,
     pub link_keys: bool,
@@ -440,6 +444,7 @@ pub fn load(name: &str) -> Result<Scenario, String> {
         slot_fill: f.slot_fill,
         slot_picker: f.slot_picker,
         export: f.export,
+        templates: f.templates,
         options: f.options,
         link: f.link,
         link_keys: f.link_keys,
@@ -904,6 +909,9 @@ pub fn open(
     }
     if s.export {
         app.borrow_mut().open_export();
+    }
+    if s.templates {
+        app.borrow_mut().open_templates(false);
     }
     if let Some(v) = &s.updated {
         app.borrow_mut().show_updated(v);
